@@ -1,0 +1,26 @@
+{
+  "configuration": {
+    "className": "com.liferay.headless.delivery.dto.v1_0.StructuredContent",
+    "parameters": {
+      "containsHeaders": "true",
+      "createStrategy": "UPSERT",
+      "importStrategy": "ON_ERROR_FAIL",
+      "updateStrategy": "UPDATE"
+    },
+    "taskItemDelegateName": "DEFAULT"
+  },
+  "items": [
+    {
+      "contentFields": [],
+      "contentStructureId": 12345,
+      "externalReferenceCode": "NXC-HERO-001",
+      "title": "Nexcent Hero Fixture"
+    },
+    {
+      "contentFields": [],
+      "contentStructureId": 12345,
+      "externalReferenceCode": "UNRELATED-CONTENT-001",
+      "title": "Unrelated Fixture"
+    }
+  ]
+}

@@ -14,3 +14,18 @@ nexcent-lab-status:
     urls:
         - index.js
     useESM: true
+
+nexcent-hero:
+    cssURLs:
+        - style.css
+    friendlyURLMapping: nexcent-hero
+    htmlElementName: nexcent-hero
+    instanceable: false
+    name: Nexcent Hero
+    portletCategoryName: category.client-extensions
+    properties:
+        - "structure-identifier=NXC Landing Hero"
+    type: customElement
+    urls:
+        - index.js
+    useESM: true

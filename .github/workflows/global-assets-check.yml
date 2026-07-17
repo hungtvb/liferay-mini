@@ -1,0 +1,63 @@
+name: Global Assets Check
+
+on:
+  pull_request:
+    paths:
+      - "client-extensions/nexcent-global-assets/**"
+      - "client-extensions/nexcent-landing-elements/**"
+      - ".github/workflows/global-assets-check.yml"
+  push:
+    branches:
+      - main
+    paths:
+      - "client-extensions/nexcent-global-assets/**"
+      - "client-extensions/nexcent-landing-elements/**"
+      - ".github/workflows/global-assets-check.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  validate-global-assets:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Verify Client Extension files
+        run: |
+          test -f client-extensions/nexcent-global-assets/client-extension.yaml
+          test -f client-extensions/nexcent-global-assets/assets/global.css
+          test -f client-extensions/nexcent-global-assets/assets/global.js
+
+      - name: Verify company-scoped configuration
+        run: |
+          yaml=client-extensions/nexcent-global-assets/client-extension.yaml
+          test "$(grep -c "scope: company" "$yaml")" -eq 2
+          grep -q "type: globalCSS" "$yaml"
+          grep -q "type: globalJS" "$yaml"
+          grep -q "scriptLocation: head" "$yaml"
+          grep -q "data-senna-track: permanent" "$yaml"
+
+      - name: Verify shared design foundation
+        run: |
+          css=client-extensions/nexcent-global-assets/assets/global.css
+          grep -q -- "--nxc-color-primary" "$css"
+          grep -q -- "--nxc-container-width" "$css"
+          grep -q ".nxc-button" "$css"
+          grep -q ".nxc-visually-hidden" "$css"
+
+      - name: Verify shared browser utilities
+        run: |
+          js=client-extensions/nexcent-global-assets/assets/global.js
+          grep -q "window.Nexcent" "$js"
+          grep -q "getPortalContext" "$js"
+          grep -q "nexcent:\${name}" "$js"
+
+      - name: Ensure component bundle does not redefine global tokens
+        run: |
+          if grep -R --line-number -- "--nxc-color-primary:" client-extensions/nexcent-landing-elements/src; then
+            echo "Global tokens must be defined only in nexcent-global-assets."
+            exit 1
+          fi

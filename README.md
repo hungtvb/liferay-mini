@@ -88,7 +88,7 @@ Then open:
 9. [Build the shared Headless API client](docs/lab-guide/08-shared-headless-api-client.md)
 10. [Build the dynamic Hero component](docs/lab-guide/09-dynamic-hero.md)
 11. [Build the Services and Features components](docs/lab-guide/10-dynamic-services-features.md)
-12. Add global design tokens and shared utilities
+12. [Add Global CSS and JavaScript](docs/lab-guide/11-global-css-js.md)
 13. Import content from Excel
 14. Test and submit the final project
 
@@ -120,6 +120,8 @@ Liferay DXP 2026 introduced the new object-based Liferay CMS. This course intent
 liferay-mini/
 ├── bundles/                       # generated locally, ignored by Git
 ├── client-extensions/
+│   ├── nexcent-global-assets/
+│   └── nexcent-landing-elements/
 ├── configs/
 ├── docs/lab-guide/
 ├── sample-data/

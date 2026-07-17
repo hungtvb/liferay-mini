@@ -1,0 +1,16 @@
+// Keep initBundle reproducible for course exercises.
+tasks.named("initBundle").configure {
+	doLast {
+		def elasticsearchDirectory = new File("${rootProject.projectDir}/bundles/data/elasticsearch7")
+
+		if (elasticsearchDirectory.exists()) {
+			delete(elasticsearchDirectory)
+		}
+
+		def osgiStateDirectory = new File("${rootProject.projectDir}/bundles/osgi/state")
+
+		if (osgiStateDirectory.exists()) {
+			delete(osgiStateDirectory)
+		}
+	}
+}

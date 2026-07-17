@@ -1,6 +1,0 @@
-nexcent-theme-css:
-    clayURL: css/clay.css
-    frontendTokenDefinitionJSON: src/frontend-token-definition.json
-    mainURL: css/main.css
-    name: Nexcent Theme CSS
-    type: themeCSS

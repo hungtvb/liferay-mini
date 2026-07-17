@@ -89,8 +89,9 @@ Then open:
 10. [Build the dynamic Hero component](docs/lab-guide/09-dynamic-hero.md)
 11. [Build the Services and Features components](docs/lab-guide/10-dynamic-services-features.md)
 12. [Add Global CSS and JavaScript](docs/lab-guide/11-global-css-js.md)
-13. Import content from Excel
-14. Test and submit the final project
+13. [Import Web Content from Excel](docs/lab-guide/12-excel-importer.md)
+14. Build the deployable Batch Client Extension
+15. Test and submit the final project
 
 ## Target architecture
 
@@ -135,19 +136,33 @@ liferay-mini/
 
 ## Sample content
 
-Starter migration content is available in three formats:
+Version-controlled migration sources are available in:
 
 ```text
 sample-data/
 ├── assets/
 ├── csv/
 ├── excel/
-│   └── nexcent-content.xlsx
+│   └── README.md
 └── json/
     └── landing-content.json
 ```
 
-The current workbook contains `Instructions`, `Heroes`, `Services`, and `Features` sheets. Lab 12 regenerates it with the `ServicesIntro` sheet before implementing the Excel importer.
+Generate the Excel sample after installing frontend dependencies:
+
+```bash
+cd client-extensions/nexcent-landing-elements
+npm install
+npm run generate:workbook
+```
+
+This produces:
+
+```text
+sample-data/excel/nexcent-content.xlsx
+```
+
+with `Instructions`, `Heroes`, `ServicesIntro`, `Services`, and `Features` sheets. The generated workbook and selected files from `sample-data/assets/` are the input for Lab 12.
 
 These files are migration input, not frontend hard-coded data.
 

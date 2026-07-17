@@ -1,13 +1,13 @@
 # Liferay Mini Project Lab
 
-Build a dynamic Nexcent landing page on **Liferay DXP 2026.Q1.1 LTS** using Custom Element Client Extensions, Classic Web Content, Headless APIs, and Excel/Batch migration flows.
+Build a dynamic Nexcent landing page on **Liferay DXP 2026.Q1.1 LTS** using Custom Element Client Extensions, Classic Web Content, Headless APIs, Style Books, and Excel/Batch migration flows.
 
 ## Course style
 
 This repository follows the structure used by modern courses on [learn.liferay.com](https://learn.liferay.com):
 
 - `main` is the maintained course source with reviewed implementation history.
-- `final` is the stable reference snapshot created after Lab 14 passes every required check.
+- `final` is the stable reference snapshot created after all required checks pass.
 - Lessons are completed in order.
 - Each lesson includes objectives, steps, snippets, checkpoints, troubleshooting, and knowledge checks.
 
@@ -89,14 +89,18 @@ Then open:
 10. [Build the dynamic Hero component](docs/lab-guide/09-dynamic-hero.md)
 11. [Build the Services and Features components](docs/lab-guide/10-dynamic-services-features.md)
 12. [Add Global CSS and JavaScript](docs/lab-guide/11-global-css-js.md)
-13. [Import Web Content from Excel](docs/lab-guide/12-excel-importer.md)
-14. [Build the deployable Batch Client Extension](docs/lab-guide/13-batch-client-extension.md)
-15. [Final integration, QA, and submission](docs/lab-guide/14-final-integration.md)
+13. [Build and apply a Liferay Style Book](docs/lab-guide/11.5-style-book.md)
+14. [Import Web Content from Excel](docs/lab-guide/12-excel-importer.md)
+15. [Build the deployable Batch Client Extension](docs/lab-guide/13-batch-client-extension.md)
+16. [Final integration, QA, and submission](docs/lab-guide/14-final-integration.md)
 
 ## Target architecture
 
 ```text
 Liferay Page
+├── Nexcent Theme CSS Client Extension
+│   └── frontend-token-definition.json
+├── Nexcent Default Style Book
 ├── Global CSS Client Extension
 ├── Global JavaScript Client Extension
 ├── Nexcent Hero Custom Element
@@ -104,6 +108,12 @@ Liferay Page
 ├── Nexcent Features Custom Element
 └── Nexcent Content Importer Custom Element
 
+Style Book
+        ↓
+--nxc-style-* variables
+        ↓
+Global CSS aliases
+        ↓
 Custom Elements
         ↓
 Headless Delivery REST API
@@ -117,9 +127,27 @@ Batch Engine jsont export
 Nexcent Batch Client Extension
 ```
 
-## Important 2026 note
+## Styling responsibility
+
+| Layer | Responsibility |
+|---|---|
+| Theme CSS | Complete `clay.css`/`main.css` and frontend token definitions |
+| Style Book | Editor-selected colors, typography, width, spacing, and radius |
+| Global CSS | Shared aliases, button foundation, focus styles, accessibility utilities |
+| Component CSS | Hero, Services, and Features-specific layout |
+| Web Content | Text, images, HTML, links, and list data |
+
+The Style Book does not replace Global CSS. Global CSS consumes Style Book values through fallbacks such as:
+
+```css
+--nxc-color-primary: var(--nxc-style-primary, #4caf4f);
+```
+
+## Important 2026 notes
 
 Liferay DXP 2026 introduced the new object-based Liferay CMS. This course intentionally uses Classic Web Content because the assignment requires imported records under **Site Content → Web Content**.
+
+Modern Liferay releases can bind Style Books to a compatible theme or Theme CSS Client Extension. Lab 11.5 uses `Nexcent Theme CSS` with a frontend token definition and enables Theme Scoped Style Books (`LPD-30204`) when the course environment exposes the flag.
 
 ## Repository structure after bootstrap
 
@@ -129,7 +157,8 @@ liferay-mini/
 ├── client-extensions/
 │   ├── nexcent-content-batch/
 │   ├── nexcent-global-assets/
-│   └── nexcent-landing-elements/
+│   ├── nexcent-landing-elements/
+│   └── nexcent-theme-css/
 ├── configs/
 ├── docs/lab-guide/
 ├── sample-data/
@@ -200,16 +229,23 @@ npm run build
 npm run generate:workbook
 ```
 
+On a bootstrapped workspace, validate the Theme CSS design pack:
+
+```bash
+./gradlew :client-extensions:nexcent-theme-css:build
+```
+
 Required GitHub Actions:
 
 ```text
 Frontend Check
 Global Assets Check
+Style Book Check
 Batch Client Extension Check
 Course Contract Check
 ```
 
-Use [`SUBMISSION.md`](SUBMISSION.md) to record runtime Liferay evidence, responsive screenshots, migration results, CI links, known limitations, and the final demo script.
+Use [`SUBMISSION.md`](SUBMISSION.md) to record runtime Liferay evidence, the applied Style Book, responsive screenshots, migration results, CI links, known limitations, and the final demo script.
 
 ## Rules
 
@@ -217,4 +253,5 @@ Use [`SUBMISSION.md`](SUBMISSION.md) to record runtime Liferay evidence, respons
 - Do not commit passwords, tokens, or machine-specific paths.
 - Do not hard-code landing-page content in frontend components.
 - Use stable external reference codes for migration.
+- Keep editor-facing visual values in the Style Book and technical utilities in Global CSS.
 - Generate Batch Client Extension payloads from the running Batch Engine instead of inventing configuration blocks or numeric IDs.

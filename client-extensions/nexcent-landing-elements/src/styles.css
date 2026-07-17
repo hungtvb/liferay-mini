@@ -75,6 +75,10 @@
     overflow-wrap: anywhere;
 }
 
+.nxc-lab-status__error {
+    color: #b42318;
+}
+
 @media (max-width: 36rem) {
     .nxc-lab-status__details {
         grid-template-columns: 1fr;

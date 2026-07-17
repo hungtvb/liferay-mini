@@ -1,0 +1,58 @@
+name: Course Contract Check
+
+on:
+  pull_request:
+    paths:
+      - "README.md"
+      - "SUBMISSION.md"
+      - "docs/lab-guide/**"
+      - "scripts/verify-course.mjs"
+      - "sample-data/**"
+      - "client-extensions/**"
+      - "gradle.properties"
+      - ".github/workflows/course-contract-check.yml"
+  push:
+    branches:
+      - main
+      - final
+    paths:
+      - "README.md"
+      - "SUBMISSION.md"
+      - "docs/lab-guide/**"
+      - "scripts/verify-course.mjs"
+      - "sample-data/**"
+      - "client-extensions/**"
+      - "gradle.properties"
+      - ".github/workflows/course-contract-check.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify-course-contract:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Verify course contract
+        run: node scripts/verify-course.mjs
+
+      - name: Verify documentation has no unresolved merge markers
+        run: |
+          if grep -R --line-number -E '^(<<<<<<<|=======|>>>>>>>)' README.md SUBMISSION.md docs; then
+            echo "Unresolved merge markers found."
+            exit 1
+          fi
+
+      - name: Verify no local bundle or Docker baseline is committed
+        run: |
+          test ! -e bundles
+          test ! -e docker-compose.yml

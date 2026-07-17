@@ -1,0 +1,64 @@
+name: Remote App Check
+
+on:
+  pull_request:
+    paths:
+      - "remote-apps/nexcent-community-app/**"
+      - "client-extensions/nexcent-remote-app-registration/**"
+      - "docs/course/08-remote-app.md"
+      - "scripts/verify-course.mjs"
+      - ".github/workflows/remote-app-check.yml"
+  push:
+    branches:
+      - main
+      - final
+    paths:
+      - "remote-apps/nexcent-community-app/**"
+      - "client-extensions/nexcent-remote-app-registration/**"
+      - "docs/course/08-remote-app.md"
+      - "scripts/verify-course.mjs"
+      - ".github/workflows/remote-app-check.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate-remote-app:
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: remote-apps/nexcent-community-app
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Type-check
+        run: npm run typecheck
+
+      - name: Build external assets
+        run: npm run build
+
+      - name: Verify deterministic output
+        run: |
+          test -f dist/index.js
+          test -f dist/style.css
+          test -f dist/index.html
+
+      - name: Verify Liferay registration
+        working-directory: .
+        run: |
+          grep -q "baseURL: http://localhost:4173" client-extensions/nexcent-remote-app-registration/client-extension.yaml
+          grep -q "htmlElementName: nexcent-community-app" client-extensions/nexcent-remote-app-registration/client-extension.yaml
+          grep -q "type: customElement" client-extensions/nexcent-remote-app-registration/client-extension.yaml
+          node scripts/verify-course.mjs

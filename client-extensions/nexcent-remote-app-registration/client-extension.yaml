@@ -1,0 +1,16 @@
+nexcent-community-remote-app:
+    baseURL: http://localhost:4173
+    cssURLs:
+        - /style.css
+    friendlyURLMapping: nexcent-community
+    htmlElementName: nexcent-community-app
+    instanceable: false
+    name: Nexcent Community Remote App
+    portletCategoryName: category.client-extensions
+    properties:
+        - "intro-structure-identifier=NXC Community Intro"
+        - "item-structure-identifier=NXC Community Card"
+    type: customElement
+    urls:
+        - /index.js
+    useESM: true

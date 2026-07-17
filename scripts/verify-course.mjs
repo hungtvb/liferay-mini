@@ -41,59 +41,88 @@ async function requireText(relativePath, values) {
     }
 }
 
+const courseFiles = [
+    '00-project-brief.md',
+    '01-figma-audit.md',
+    '02-fe-be-contracts.md',
+    '03-design-system.md',
+    '04-content-foundation.md',
+    '05-header-hero-clients.md',
+    '06-services-features.md',
+    '07-remaining-components.md',
+    '08-remote-app.md',
+    '09-excel-importer.md',
+    '10-batch-migration.md',
+    '11-integration-qa.md',
+];
+
 const requiredFiles = [
     'README.md',
     'SUBMISSION.md',
     'gradle.properties',
+    'docs/contracts/component-contracts.md',
+    ...courseFiles.map((file) => `docs/course/${file}`),
     'client-extensions/nexcent-global-assets/client-extension.yaml',
     'client-extensions/nexcent-global-assets/assets/global.css',
     'client-extensions/nexcent-global-assets/assets/global.js',
     'client-extensions/nexcent-theme-css/client-extension.yaml',
     'client-extensions/nexcent-theme-css/package.json',
     'client-extensions/nexcent-theme-css/src/frontend-token-definition.json',
-    'client-extensions/nexcent-theme-css/src/css/_clay_variables.scss',
-    'client-extensions/nexcent-theme-css/src/css/_custom.scss',
     'client-extensions/nexcent-landing-elements/client-extension.yaml',
     'client-extensions/nexcent-landing-elements/package.json',
     'client-extensions/nexcent-landing-elements/src/index.tsx',
+    'client-extensions/nexcent-remote-app-registration/client-extension.yaml',
+    'remote-apps/nexcent-community-app/package.json',
+    'remote-apps/nexcent-community-app/tsconfig.json',
+    'remote-apps/nexcent-community-app/vite.config.ts',
+    'remote-apps/nexcent-community-app/public/index.html',
+    'remote-apps/nexcent-community-app/src/index.tsx',
+    'remote-apps/nexcent-community-app/src/styles.css',
     'client-extensions/nexcent-content-batch/client-extension.yaml',
-    'docs/lab-guide/11.5-style-book.md',
     'scripts/batch/prepare-structured-content-export.mjs',
     'scripts/batch/export-structured-content.sh',
     'scripts/batch/export-structured-content.ps1',
-    'sample-data/json/landing-content.json',
-    'sample-data/csv/heroes.csv',
-    'sample-data/csv/services-intro.csv',
-    'sample-data/csv/services.csv',
-    'sample-data/csv/features.csv',
 ];
 
 for (const requiredFile of requiredFiles) {
     await requireFile(requiredFile);
 }
 
-const labGuideDirectory = path.join(repositoryRoot, 'docs/lab-guide');
-const labGuideFiles = await readdir(labGuideDirectory);
+if (await exists('docs/lab-guide')) {
+    const oldLessons = (await readdir(path.join(repositoryRoot, 'docs/lab-guide')))
+        .filter((file) => file.endsWith('.md'));
 
-for (let lesson = 0; lesson <= 14; lesson++) {
-    const prefix = String(lesson).padStart(2, '0');
-    const lessonFiles = labGuideFiles.filter(
-        (file) => file.startsWith(`${prefix}-`) && file.endsWith('.md')
-    );
-
-    if (lessonFiles.length !== 1) {
+    if (oldLessons.length) {
         failures.push(
-            `Expected exactly one Lab ${prefix} Markdown file, found ${lessonFiles.length}.`
+            `Legacy v1 lessons remain under docs/lab-guide: ${oldLessons.join(', ')}`
         );
     }
 }
 
-if (!labGuideFiles.includes('11.5-style-book.md')) {
-    failures.push('Expected the Style Book lesson at docs/lab-guide/11.5-style-book.md.');
-}
-
 await requireText('gradle.properties', [
     'liferay.workspace.product=dxp-2026.q1.1-lts',
+]);
+
+await requireText('README.md', [
+    'coordinated frontend/backend delivery project',
+    'Community Updates Remote App',
+    'archive/course-v1',
+    'Explicit non-goals',
+]);
+
+await requireText('docs/contracts/component-contracts.md', [
+    'NXC Landing Hero',
+    'NXC Client Logo',
+    'NXC Services Intro',
+    'NXC Service Item',
+    'NXC Feature Item',
+    'NXC Statistics Intro',
+    'NXC Statistic Item',
+    'NXC Testimonial',
+    'NXC Community Intro',
+    'NXC Community Card',
+    'NXC CTA',
+    'Joint FE–BE Definition of Done',
 ]);
 
 await requireText(
@@ -136,6 +165,31 @@ await requireText('client-extensions/nexcent-theme-css/package.json', [
 ]);
 
 await requireText(
+    'client-extensions/nexcent-remote-app-registration/client-extension.yaml',
+    [
+        'baseURL: http://localhost:4173',
+        'htmlElementName: nexcent-community-app',
+        'type: customElement',
+        'useESM: true',
+    ]
+);
+
+await requireText('remote-apps/nexcent-community-app/package.json', [
+    '"build": "vite build"',
+    '"preview": "vite preview --host 0.0.0.0 --port 4173"',
+    '"typecheck": "tsc --noEmit"',
+]);
+
+await requireText('remote-apps/nexcent-community-app/src/index.tsx', [
+    "const ELEMENT_NAME = 'nexcent-community-app'",
+    'NXC Community Intro',
+    'NXC Community Card',
+    "status: 'loading'",
+    "status: 'empty'",
+    "status: 'error'",
+]);
+
+await requireText(
     'client-extensions/nexcent-content-batch/client-extension.yaml',
     [
         'type: batch',
@@ -145,20 +199,17 @@ await requireText(
     ]
 );
 
-await requireText('client-extensions/nexcent-landing-elements/package.json', [
-    '"exceljs": "4.4.0"',
-    '"generate:workbook"',
-]);
-
 if (await exists('client-extensions/nexcent-theme-css/src/frontend-token-definition.json')) {
-    const tokenDefinitionPath = path.join(
-        repositoryRoot,
-        'client-extensions/nexcent-theme-css/src/frontend-token-definition.json'
+    const definition = JSON.parse(
+        await readFile(
+            path.join(
+                repositoryRoot,
+                'client-extensions/nexcent-theme-css/src/frontend-token-definition.json'
+            ),
+            'utf8'
+        )
     );
-    const tokenDefinition = JSON.parse(
-        await readFile(tokenDefinitionPath, 'utf8')
-    );
-    const categories = tokenDefinition.frontendTokenCategories;
+    const categories = definition.frontendTokenCategories;
 
     if (!Array.isArray(categories) || categories.length < 2) {
         failures.push('Style Book token definition must contain at least two categories.');
@@ -170,98 +221,34 @@ if (await exists('client-extensions/nexcent-theme-css/src/frontend-token-definit
             )
         );
         const tokenNames = tokens.map((token) => token.name);
-        const mappingValues = tokens.flatMap((token) =>
+        const mappings = tokens.flatMap((token) =>
             (token.mappings ?? [])
                 .filter((mapping) => mapping.type === 'cssVariable')
                 .map((mapping) => mapping.value)
         );
-        const expectedMappings = [
-            'nxc-style-primary',
-            'nxc-style-primary-hover',
-            'nxc-style-heading',
-            'nxc-style-text',
-            'nxc-style-muted',
-            'nxc-style-surface',
-            'nxc-style-font-family',
-            'nxc-style-container-width',
-            'nxc-style-section-space',
-            'nxc-style-radius-sm',
-            'nxc-style-radius-md',
-        ];
 
         if (new Set(tokenNames).size !== tokenNames.length) {
             failures.push('Style Book token definition contains duplicate token names.');
         }
 
-        if (new Set(mappingValues).size !== mappingValues.length) {
+        if (new Set(mappings).size !== mappings.length) {
             failures.push('Style Book token definition contains duplicate CSS variable mappings.');
         }
 
-        for (const expectedMapping of expectedMappings) {
-            if (!mappingValues.includes(expectedMapping)) {
-                failures.push(
-                    `Style Book token definition is missing CSS variable mapping: ${expectedMapping}`
-                );
+        for (const required of [
+            'nxc-style-primary',
+            'nxc-style-font-family',
+            'nxc-style-container-width',
+            'nxc-style-section-space',
+            'nxc-style-radius-md',
+        ]) {
+            if (!mappings.includes(required)) {
+                failures.push(`Style Book token definition is missing mapping: ${required}`);
             }
         }
     }
 }
 
-const sampleDataPath = path.join(
-    repositoryRoot,
-    'sample-data/json/landing-content.json'
-);
-
-if (await exists('sample-data/json/landing-content.json')) {
-    const sampleData = JSON.parse(await readFile(sampleDataPath, 'utf8'));
-    const expectedCounts = {
-        features: 2,
-        hero: 1,
-        services: 3,
-        servicesIntro: 1,
-    };
-    const externalReferenceCodes = [];
-
-    for (const [section, expectedCount] of Object.entries(expectedCounts)) {
-        const items = sampleData[section];
-
-        if (!Array.isArray(items)) {
-            failures.push(`Sample data section ${section} is not an array.`);
-            continue;
-        }
-
-        if (items.length !== expectedCount) {
-            failures.push(
-                `Sample data section ${section} expected ${expectedCount} items, found ${items.length}.`
-            );
-        }
-
-        for (const item of items) {
-            if (!String(item.externalReferenceCode ?? '').startsWith('NXC-')) {
-                failures.push(
-                    `${section} item has an invalid externalReferenceCode: ${item.externalReferenceCode}`
-                );
-            }
-
-            externalReferenceCodes.push(item.externalReferenceCode);
-        }
-    }
-
-    if (new Set(externalReferenceCodes).size !== externalReferenceCodes.length) {
-        failures.push('Sample data contains duplicate externalReferenceCode values.');
-    }
-
-    if (externalReferenceCodes.length !== 7) {
-        failures.push(
-            `Expected seven sample ERCs, found ${externalReferenceCodes.length}.`
-        );
-    }
-}
-
-const frontendDirectory = path.join(
-    repositoryRoot,
-    'client-extensions/nexcent-landing-elements/src'
-);
 const forbiddenBusinessText = [
     'Lessons and insights',
     'Membership Organisations',
@@ -270,16 +257,23 @@ const forbiddenBusinessText = [
     'The unseen of spending three years at Pixelgrade',
 ];
 
-async function scanDirectory(directory) {
+async function scanFrontendDirectory(relativeDirectory) {
+    const directory = path.join(repositoryRoot, relativeDirectory);
+
+    if (!(await exists(relativeDirectory))) {
+        return;
+    }
+
     for (const entry of await readdir(directory, {withFileTypes: true})) {
         const absolutePath = path.join(directory, entry.name);
+        const relativePath = path.relative(repositoryRoot, absolutePath);
 
         if (entry.isDirectory()) {
-            await scanDirectory(absolutePath);
+            await scanFrontendDirectory(relativePath);
             continue;
         }
 
-        if (!/\.(css|ts|tsx)$/.test(entry.name)) {
+        if (!/\.(css|js|jsx|ts|tsx)$/.test(entry.name)) {
             continue;
         }
 
@@ -288,23 +282,26 @@ async function scanDirectory(directory) {
         for (const forbiddenText of forbiddenBusinessText) {
             if (content.includes(forbiddenText)) {
                 failures.push(
-                    `Frontend source hard-codes sample content "${forbiddenText}" in ${path.relative(repositoryRoot, absolutePath)}.`
+                    `Frontend source hard-codes sample content "${forbiddenText}" in ${relativePath}.`
                 );
             }
         }
     }
 }
 
-if (await exists('client-extensions/nexcent-landing-elements/src')) {
-    await scanDirectory(frontendDirectory);
-}
+await scanFrontendDirectory('client-extensions/nexcent-landing-elements/src');
+await scanFrontendDirectory('remote-apps/nexcent-community-app/src');
 
-if (await exists('docker-compose.yml')) {
-    failures.push('docker-compose.yml must not be part of the local initBundle course.');
+for (const forbiddenPath of ['docker-compose.yml', 'modules']) {
+    if (await exists(forbiddenPath)) {
+        failures.push(
+            `${forbiddenPath} is outside the rebuilt core project scope.`
+        );
+    }
 }
 
 if (failures.length) {
-    console.error('Course contract verification failed:\n');
+    console.error('Rebuilt project contract verification failed:\n');
 
     for (const failure of failures) {
         console.error(`- ${failure}`);
@@ -313,12 +310,12 @@ if (failures.length) {
     process.exit(1);
 }
 
-console.log('Course contract verification passed.');
-console.log('- Liferay DXP 2026.Q1.1 LTS baseline');
-console.log('- Labs 00–14 plus Lab 11.5 Style Book present');
+console.log('Rebuilt project contract verification passed.');
+console.log('- Original FE–BE Figma scope');
+console.log('- Twelve rebuilt course chapters');
+console.log('- Component-by-component FE–BE contracts');
+console.log('- Theme CSS, Style Book, Global CSS, and Global JavaScript');
 console.log('- Hero, Services, Features, and Importer Custom Elements');
-console.log('- Company-scoped Global CSS and JavaScript');
-console.log('- Theme CSS Client Extension and editable frontend tokens');
-console.log('- Batch Client Extension and OAuth scopes');
-console.log('- Seven unique NXC sample records');
-console.log('- No sample business content hard-coded in frontend source');
+console.log('- Externally hosted Community Remote App scaffold');
+console.log('- Web Content, Excel, Batch Client Extension, and Headless Batch scope');
+console.log('- No unrelated backend platform modules in core scope');

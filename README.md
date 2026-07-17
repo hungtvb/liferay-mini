@@ -1,257 +1,182 @@
-# Liferay Mini Project Lab
+# Nexcent Figma-to-Liferay FE–BE Project
 
-Build a dynamic Nexcent landing page on **Liferay DXP 2026.Q1.1 LTS** using Custom Element Client Extensions, Classic Web Content, Headless APIs, Style Books, and Excel/Batch migration flows.
+Build the Nexcent landing page from the supplied Figma design on **Liferay DXP 2026.Q1.1 LTS**. This is a coordinated frontend/backend delivery project, not a general Liferay platform course.
 
-## Course style
+The Figma landing page and its detailed Style Guide are the source of truth. Every visible component is analyzed from both views:
 
-This repository follows the structure used by modern courses on [learn.liferay.com](https://learn.liferay.com):
+- **FE:** rendering, responsive behavior, accessibility, component states, and Liferay frontend technology.
+- **BE:** content ownership, Web Content fields, assets, API contract, validation, migration, and editor workflow.
 
-- `main` is the maintained course source with reviewed implementation history.
-- `final` is the stable reference snapshot created after all required checks pass.
-- Lessons are completed in order.
-- Each lesson includes objectives, steps, snippets, checkpoints, troubleshooting, and knowledge checks.
+The previous course is preserved at [`archive/course-v1`](https://github.com/hungtvb/liferay-mini/tree/archive/course-v1).
 
-## Prerequisites
+## Original project scope
 
-- Git
-- Java JDK 21
-- Blade CLI
-- Node.js LTS
-- Yarn
+### Frontend
 
-Verify the environment:
+- Extract the Figma Style Guide and implement it with Theme CSS, Style Books, Global CSS, and Global JavaScript.
+- Build at least three complete dynamic components using Custom Element Client Extensions.
+- Build one externally hosted Remote App and register it in Liferay.
+- Do not hard-code text, images, services, statistics, testimonials, or blog cards in frontend source.
+- Consume Liferay Headless APIs.
+- Implement desktop, tablet, and mobile layouts with loading, empty, and error states.
 
-```bash
-git version
-java -version
-javac -version
-blade version
-node --version
-yarn --version
-```
+### Backend
 
-## Generate the official Gradle Wrapper
+- Model the complete landing page with Classic Web Content Structures and FreeMarker preview Templates.
+- Include Text, Image, Boolean, Number, Select, and HTML/Rich Text fields where appropriate.
+- Manage assets in Documents and Media.
+- Define stable field references and external reference codes as the FE–BE contract.
+- Provide the Excel migration contract and browser importer flow.
+- Package repeatable data with a real Batch Client Extension and verify Headless Batch Engine export/import behavior.
+- Imported records must appear under **Site Content → Web Content** without duplicate ERCs or migration errors.
 
-The repository stores the course configuration as text. Use Blade CLI once to generate the official Gradle Wrapper files for the pinned product.
+## Explicit non-goals
 
-macOS or Linux:
+The core project does not require OSGi business modules, Gogo Shell, Service Builder, REST Builder BFF, or Liferay Forms. Those technologies are added only when a business requirement needs them.
 
-```bash
-chmod +x scripts/bootstrap-workspace.sh
-./scripts/bootstrap-workspace.sh
-```
-
-Windows PowerShell:
-
-```powershell
-Set-ExecutionPolicy Bypass -Scope Process
-.\scripts\bootstrap-workspace.ps1
-```
-
-## Initialize the local bundle
-
-macOS or Linux:
-
-```bash
-./gradlew initBundle
-```
-
-Windows:
-
-```powershell
-.\gradlew.bat initBundle
-```
-
-The command creates a local `bundles/` directory containing Liferay and Tomcat. This directory is ignored by Git.
-
-## Start Liferay
-
-```bash
-blade server run
-```
-
-Then open:
-
-- Portal: http://localhost:8080
-- API Explorer: http://localhost:8080/o/api
-
-## Learning path
-
-1. [Course overview and architecture](docs/lab-guide/00-course-overview.md)
-2. [Install and verify development tools](docs/lab-guide/01-install-tools.md)
-3. [Clone the workspace and run initBundle](docs/lab-guide/02-init-bundle.md)
-4. [Start Liferay and complete initial setup](docs/lab-guide/03-start-liferay.md)
-5. [Explore the site and Headless APIs](docs/lab-guide/04-headless-api.md)
-6. [Model the Hero Web Content](docs/lab-guide/05-hero-web-content.md)
-7. [Model Services and Features Web Content](docs/lab-guide/06-services-features-web-content.md)
-8. [Create and deploy the first Custom Element](docs/lab-guide/07-first-custom-element.md)
-9. [Build the shared Headless API client](docs/lab-guide/08-shared-headless-api-client.md)
-10. [Build the dynamic Hero component](docs/lab-guide/09-dynamic-hero.md)
-11. [Build the Services and Features components](docs/lab-guide/10-dynamic-services-features.md)
-12. [Add Global CSS and JavaScript](docs/lab-guide/11-global-css-js.md)
-13. [Build and apply a Liferay Style Book](docs/lab-guide/11.5-style-book.md)
-14. [Import Web Content from Excel](docs/lab-guide/12-excel-importer.md)
-15. [Build the deployable Batch Client Extension](docs/lab-guide/13-batch-client-extension.md)
-16. [Final integration, QA, and submission](docs/lab-guide/14-final-integration.md)
-
-## Target architecture
+## Delivery architecture
 
 ```text
-Liferay Page
-├── Nexcent Theme CSS Client Extension
-│   └── frontend-token-definition.json
-├── Nexcent Default Style Book
-├── Global CSS Client Extension
-├── Global JavaScript Client Extension
-├── Nexcent Hero Custom Element
-├── Nexcent Services Custom Element
-├── Nexcent Features Custom Element
-└── Nexcent Content Importer Custom Element
-
-Style Book
-        ↓
---nxc-style-* variables
-        ↓
-Global CSS aliases
-        ↓
-Custom Elements
-        ↓
-Headless Delivery REST API
-        ↓
+Figma Landing Page + Detailed Style Guide
+                    ↓
+          FE–BE component contracts
+                    ↓
+Theme CSS → Frontend Tokens → Nexcent Style Book
+                    ↓
+Global CSS aliases + Global JavaScript utilities
+                    ↓
+Liferay Content Page / Master Page
+├── Header + Footer using page/navigation configuration
+├── Hero Custom Element
+├── Client Logos collection
+├── Services Custom Element
+├── Features Custom Element
+├── Statistics collection
+├── Testimonial collection
+├── Community Updates Remote App
+└── Final CTA
+                    ↓
+Headless Delivery API
+                    ↓
 Classic Web Content + Documents and Media
 
-Published NXC Web Content
+Excel workbook + assets
         ↓
-Batch Engine jsont export
+Content Importer Custom Element
         ↓
-Nexcent Batch Client Extension
+Documents and Structured Content APIs
+
+Published NXC content
+        ↓
+Headless Batch Engine jsont export
+        ↓
+Batch Client Extension
 ```
 
-## Styling responsibility
+## Component delivery map
 
-| Layer | Responsibility |
-|---|---|
-| Theme CSS | Complete `clay.css`/`main.css` and frontend token definitions |
-| Style Book | Editor-selected colors, typography, width, spacing, and radius |
-| Global CSS | Shared aliases, button foundation, focus styles, accessibility utilities |
-| Component CSS | Hero, Services, and Features-specific layout |
-| Web Content | Text, images, HTML, links, and list data |
+| Figma component | FE delivery | BE ownership |
+|---|---|---|
+| Style Guide | Theme CSS, Style Book, Global CSS/JS | Token defaults and editor governance |
+| Header | Master Page/Fragment and responsive navigation | Site Pages, Navigation Menu, logo, CTA settings |
+| Hero | `nexcent-hero` Custom Element | `NXC Landing Hero` Structure and Template |
+| Client logos | Collection presentation | `NXC Client Logo` articles |
+| Services | `nexcent-services` Custom Element | `NXC Services Intro` and `NXC Service Item` |
+| Feature sections | `nexcent-features` Custom Element | Reusable `NXC Feature Item` articles |
+| Statistics | Collection presentation | `NXC Statistics Intro` and `NXC Statistic Item` |
+| Testimonial | Collection presentation | `NXC Testimonial` articles |
+| Community updates | Externally hosted Remote App | `NXC Community Intro` and `NXC Community Card` |
+| Final CTA | Mapped page component | `NXC CTA` article |
+| Footer | Master Page/Fragment | Navigation Menus and site settings |
+| Excel importer | `nexcent-content-importer` Custom Element | Workbook schema, validation, API permissions |
+| Repeatable migration | Deployment verification | Batch Client Extension and Batch Engine payload |
 
-The Style Book does not replace Global CSS. Global CSS consumes Style Book values through fallbacks such as:
+See [`docs/contracts/component-contracts.md`](docs/contracts/component-contracts.md) for field-level contracts.
 
-```css
---nxc-color-primary: var(--nxc-style-primary, #4caf4f);
-```
+## Rebuilt learning path
 
-## Important 2026 notes
+1. [Project brief and acceptance criteria](docs/course/00-project-brief.md)
+2. [Audit the Figma landing page and Style Guide](docs/course/01-figma-audit.md)
+3. [Define component-by-component FE–BE contracts](docs/course/02-fe-be-contracts.md)
+4. [Build Theme CSS, Style Book, Global CSS, and Global JavaScript](docs/course/03-design-system.md)
+5. [Create Web Content Structures, Templates, assets, and sample data](docs/course/04-content-foundation.md)
+6. [Implement Header, Hero, and Client Logos](docs/course/05-header-hero-clients.md)
+7. [Implement Services and Feature sections](docs/course/06-services-features.md)
+8. [Implement Statistics, Testimonial, Community Updates, CTA, and Footer](docs/course/07-remaining-components.md)
+9. [Build and register the externally hosted Remote App](docs/course/08-remote-app.md)
+10. [Build the Excel Content Importer](docs/course/09-excel-importer.md)
+11. [Build the Batch Client Extension and verify Headless Batch Engine](docs/course/10-batch-migration.md)
+12. [Run FE–BE integration, responsive QA, and final demo](docs/course/11-integration-qa.md)
 
-Liferay DXP 2026 introduced the new object-based Liferay CMS. This course intentionally uses Classic Web Content because the assignment requires imported records under **Site Content → Web Content**.
-
-Modern Liferay releases can bind Style Books to a compatible theme or Theme CSS Client Extension. Lab 11.5 uses `Nexcent Theme CSS` with a frontend token definition and enables Theme Scoped Style Books (`LPD-30204`) when the course environment exposes the flag.
-
-## Repository structure after bootstrap
+## Repository structure
 
 ```text
 liferay-mini/
-├── bundles/                       # generated locally, ignored by Git
 ├── client-extensions/
 │   ├── nexcent-content-batch/
 │   ├── nexcent-global-assets/
 │   ├── nexcent-landing-elements/
+│   ├── nexcent-remote-app-registration/
 │   └── nexcent-theme-css/
-├── configs/
-├── docs/lab-guide/
+├── remote-apps/
+│   └── nexcent-community-app/
+├── docs/
+│   ├── contracts/
+│   └── course/
 ├── sample-data/
 ├── scripts/
-│   ├── batch/
-│   └── verify-course.mjs
 ├── SUBMISSION.md
-├── gradle/
-├── gradle.properties
-├── gradlew                        # generated by the bootstrap script
-├── gradlew.bat                    # generated by the bootstrap script
-└── settings.gradle
+└── gradle.properties
 ```
 
-## Sample content
+## Local environment
 
-Version-controlled migration sources are available in:
+Required tools:
 
-```text
-sample-data/
-├── assets/
-├── csv/
-├── excel/
-│   └── README.md
-└── json/
-    └── landing-content.json
-```
+- Git
+- Java 21
+- Blade CLI
+- Node.js 22+
+- npm or Yarn
 
-Generate the Excel sample after installing frontend dependencies:
+Bootstrap and initialize the bundle:
 
 ```bash
-cd client-extensions/nexcent-landing-elements
-npm install
-npm run generate:workbook
+./scripts/bootstrap-workspace.sh
+./gradlew initBundle
+blade server run
 ```
 
-This produces:
+Portal and API Explorer:
 
 ```text
-sample-data/excel/nexcent-content.xlsx
+http://localhost:8080
+http://localhost:8080/o/api
 ```
 
-with `Instructions`, `Heroes`, `ServicesIntro`, `Services`, and `Features` sheets. The generated workbook and selected files from `sample-data/assets/` are the input for Lab 12.
+## Project acceptance criteria
 
-After the data is published in Liferay, Lab 13 exports the seven `NXC-*` articles in Batch Engine `jsont` format and creates:
+- The implemented page matches the Figma composition and detailed Style Guide.
+- Style Book changes propagate through stable Global CSS aliases.
+- Hero, Services, and Features are complete dynamic Custom Elements.
+- Community Updates runs as an externally hosted Remote App registered in Liferay.
+- No sample business content is hard-coded in TypeScript, JSX, or CSS.
+- All landing-page content can be edited or migrated through Liferay.
+- Excel import creates or updates records by ERC and does not create duplicates.
+- Batch deployment is repeatable and uses a Batch Engine-generated `jsont` contract.
+- Desktop, tablet, mobile, keyboard, loading, empty, and error states are demonstrated.
+- FE and BE evidence is recorded in [`SUBMISSION.md`](SUBMISSION.md).
 
-```text
-client-extensions/nexcent-content-batch/batch/10-structured-content.batch-engine-data.json
-```
+## Branches
 
-These files are migration input, not frontend hard-coded data.
-
-## Verify the complete course contract
-
-From the repository root:
-
-```bash
-node scripts/verify-course.mjs
-```
-
-Then validate the frontend and generated workbook:
-
-```bash
-cd client-extensions/nexcent-landing-elements
-npm install
-npm run typecheck
-npm run build
-npm run generate:workbook
-```
-
-On a bootstrapped workspace, validate the Theme CSS design pack:
-
-```bash
-./gradlew :client-extensions:nexcent-theme-css:build
-```
-
-Required GitHub Actions:
-
-```text
-Frontend Check
-Global Assets Check
-Style Book Check
-Batch Client Extension Check
-Course Contract Check
-```
-
-Use [`SUBMISSION.md`](SUBMISSION.md) to record runtime Liferay evidence, the applied Style Book, responsive screenshots, migration results, CI links, known limitations, and the final demo script.
+- `main`: reviewed rebuilt project.
+- `final`: verified reference implementation after the rebuilt course is complete.
+- `archive/course-v1`: preserved previous course before the scope reset.
 
 ## Rules
 
-- Do not commit `bundles/`.
-- Do not commit passwords, tokens, or machine-specific paths.
-- Do not hard-code landing-page content in frontend components.
-- Use stable external reference codes for migration.
-- Keep editor-facing visual values in the Style Book and technical utilities in Global CSS.
-- Generate Batch Client Extension payloads from the running Batch Engine instead of inventing configuration blocks or numeric IDs.
+- Do not commit `bundles/`, credentials, tokens, or machine-specific paths.
+- Do not use numeric environment IDs as frontend configuration.
+- Use explicit field references and stable ERC conventions.
+- Do not invent Batch Engine configuration blocks; export them from the running target version.
+- Do not introduce unrelated Liferay technologies merely to expand the syllabus.

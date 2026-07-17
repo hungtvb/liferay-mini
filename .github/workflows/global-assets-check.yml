@@ -31,19 +31,29 @@ jobs:
           test -f client-extensions/nexcent-global-assets/assets/global.css
           test -f client-extensions/nexcent-global-assets/assets/global.js
 
-      - name: Verify Global CSS configuration
+      - name: Verify company-scoped configuration
         run: |
-          grep -q "type: globalCSS" client-extensions/nexcent-global-assets/client-extension.yaml
-          grep -q "scope: company" client-extensions/nexcent-global-assets/client-extension.yaml
-          grep -q -- "--nxc-color-primary" client-extensions/nexcent-global-assets/assets/global.css
-          grep -q ".nxc-button" client-extensions/nexcent-global-assets/assets/global.css
+          yaml=client-extensions/nexcent-global-assets/client-extension.yaml
+          test "$(grep -c "scope: company" "$yaml")" -eq 2
+          grep -q "type: globalCSS" "$yaml"
+          grep -q "type: globalJS" "$yaml"
+          grep -q "scriptLocation: head" "$yaml"
+          grep -q "data-senna-track: permanent" "$yaml"
 
-      - name: Verify Global JavaScript configuration
+      - name: Verify shared design foundation
         run: |
-          grep -q "type: globalJS" client-extensions/nexcent-global-assets/client-extension.yaml
-          grep -q "data-senna-track: permanent" client-extensions/nexcent-global-assets/client-extension.yaml
-          grep -q "window.Nexcent" client-extensions/nexcent-global-assets/assets/global.js
-          grep -q "getPortalContext" client-extensions/nexcent-global-assets/assets/global.js
+          css=client-extensions/nexcent-global-assets/assets/global.css
+          grep -q -- "--nxc-color-primary" "$css"
+          grep -q -- "--nxc-container-width" "$css"
+          grep -q ".nxc-button" "$css"
+          grep -q ".nxc-visually-hidden" "$css"
+
+      - name: Verify shared browser utilities
+        run: |
+          js=client-extensions/nexcent-global-assets/assets/global.js
+          grep -q "window.Nexcent" "$js"
+          grep -q "getPortalContext" "$js"
+          grep -q "nexcent:\${name}" "$js"
 
       - name: Ensure component bundle does not redefine global tokens
         run: |

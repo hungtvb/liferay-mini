@@ -18,10 +18,11 @@ export async function portalFetch<T>(
     const url = new URL(path, window.location.origin);
     const headers = new Headers(init.headers);
     const authToken = getLiferay()?.authToken;
+    const isFormData = init.body instanceof FormData;
 
     headers.set('Accept', 'application/json');
 
-    if (init.body && !headers.has('Content-Type')) {
+    if (init.body && !isFormData && !headers.has('Content-Type')) {
         headers.set('Content-Type', 'application/json');
     }
 

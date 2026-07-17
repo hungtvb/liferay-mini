@@ -1,33 +1,46 @@
-import React from 'react';
-import {Root, createRoot} from 'react-dom/client';
+import React, {type ReactNode} from 'react';
+import {createRoot, type Root} from 'react-dom/client';
 
 import {App} from './App';
+import {Hero} from './components/Hero/Hero';
 import './styles.css';
 
-class NexcentLabStatusElement extends HTMLElement {
-    private root?: Root;
+type ElementRenderer = (element: HTMLElement) => ReactNode;
 
-    connectedCallback() {
-        if (this.root) {
-            return;
+function registerReactElement(name: string, renderer: ElementRenderer) {
+    if (customElements.get(name)) {
+        return;
+    }
+
+    class LiferayReactElement extends HTMLElement {
+        private root?: Root;
+
+        connectedCallback() {
+            if (this.root) {
+                return;
+            }
+
+            this.root = createRoot(this);
+            this.root.render(
+                <React.StrictMode>{renderer(this)}</React.StrictMode>
+            );
         }
 
-        this.root = createRoot(this);
-        this.root.render(
-            <React.StrictMode>
-                <App />
-            </React.StrictMode>
-        );
+        disconnectedCallback() {
+            this.root?.unmount();
+            this.root = undefined;
+        }
     }
 
-    disconnectedCallback() {
-        this.root?.unmount();
-        this.root = undefined;
-    }
+    customElements.define(name, LiferayReactElement);
 }
 
-const ELEMENT_NAME = 'nexcent-lab-status';
+registerReactElement('nexcent-lab-status', () => <App />);
 
-if (!customElements.get(ELEMENT_NAME)) {
-    customElements.define(ELEMENT_NAME, NexcentLabStatusElement);
-}
+registerReactElement('nexcent-hero', (element) => (
+    <Hero
+        structureIdentifier={
+            element.getAttribute('structure-identifier') ?? 'NXC Landing Hero'
+        }
+    />
+));

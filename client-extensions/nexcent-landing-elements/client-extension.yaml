@@ -15,6 +15,19 @@ nexcent-lab-status:
         - index.js
     useESM: true
 
+nexcent-content-importer:
+    cssURLs:
+        - style.css
+    friendlyURLMapping: nexcent-content-importer
+    htmlElementName: nexcent-content-importer
+    instanceable: false
+    name: Nexcent Content Importer
+    portletCategoryName: category.client-extensions
+    type: customElement
+    urls:
+        - index.js
+    useESM: true
+
 nexcent-hero:
     cssURLs:
         - style.css

@@ -1,29 +1,60 @@
-type LiferayGlobal = {
-    ThemeDisplay?: {
-        getLanguageId?: () => string;
-        getScopeGroupId?: () => string;
-        isSignedIn?: () => boolean;
-    };
-};
+import {useEffect, useState} from 'react';
 
-type LiferayWindow = Window & {
-    Liferay?: LiferayGlobal;
-};
+import {listContentStructures} from './api/structuredContent';
+import {getPortalContext} from './liferay/global';
 
-function readPortalContext() {
-    const liferay = (window as LiferayWindow).Liferay;
-
-    return {
-        host: window.location.host,
-        languageId: liferay?.ThemeDisplay?.getLanguageId?.() ?? 'unknown',
-        scopeGroupId:
-            liferay?.ThemeDisplay?.getScopeGroupId?.() ?? 'unknown',
-        signedIn: liferay?.ThemeDisplay?.isSignedIn?.() ?? false,
-    };
-}
+type ApiState =
+    | {status: 'loading'}
+    | {count: number; status: 'ready'}
+    | {message: string; status: 'error'};
 
 export function App() {
-    const context = readPortalContext();
+    const context = getPortalContext();
+    const [apiState, setApiState] = useState<ApiState>({status: 'loading'});
+
+    useEffect(() => {
+        let active = true;
+
+        if (context.scopeGroupId === 'unknown') {
+            setApiState({
+                message: 'Current site could not be resolved.',
+                status: 'error',
+            });
+
+            return () => {
+                active = false;
+            };
+        }
+
+        listContentStructures(context.scopeGroupId)
+            .then((structures) => {
+                if (active) {
+                    setApiState({count: structures.length, status: 'ready'});
+                }
+            })
+            .catch((error: unknown) => {
+                if (active) {
+                    setApiState({
+                        message:
+                            error instanceof Error
+                                ? error.message
+                                : 'Unknown API error.',
+                        status: 'error',
+                    });
+                }
+            });
+
+        return () => {
+            active = false;
+        };
+    }, [context.scopeGroupId]);
+
+    const apiStatus =
+        apiState.status === 'loading'
+            ? 'Checking…'
+            : apiState.status === 'ready'
+              ? `${apiState.count} structure(s)`
+              : apiState.message;
 
     return (
         <section className="nxc-lab-status" aria-labelledby="nxc-lab-title">
@@ -32,9 +63,9 @@ export function App() {
             <h2 id="nxc-lab-title">Nexcent Landing Page Lab</h2>
 
             <p>
-                React is mounted inside a Liferay Custom Element. The next
-                exercise replaces this status card with data from Headless
-                Delivery APIs.
+                React is mounted inside a Liferay Custom Element. The shared
+                API client now checks the current site&apos;s Web Content
+                Structures without a hard-coded site ID.
             </p>
 
             <dl className="nxc-lab-status__details">
@@ -53,6 +84,18 @@ export function App() {
                 <div>
                     <dt>Scope group</dt>
                     <dd>{context.scopeGroupId}</dd>
+                </div>
+                <div>
+                    <dt>Headless API</dt>
+                    <dd
+                        className={
+                            apiState.status === 'error'
+                                ? 'nxc-lab-status__error'
+                                : undefined
+                        }
+                    >
+                        {apiStatus}
+                    </dd>
                 </div>
             </dl>
         </section>

@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Nexcent community management landing page static prototype." />
+  <title>Nexcent — Community Management</title>
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="styles.css" />
+  <script type="module" src="app.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+
+  <header class="site-header" data-header>
+    <div class="container header-inner">
+      <a class="brand" href="#home" aria-label="Nexcent home">
+        <svg class="brand-mark" viewBox="0 0 36 28" aria-hidden="true">
+          <path d="M3 14 12 3l7 8 6-7 8 10-8 11-7-8-6 7L3 14Z" fill="currentColor"/>
+        </svg>
+        <span>Nexcent</span>
+      </a>
+
+      <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="primary-navigation" data-nav-toggle>
+        <span class="sr-only">Toggle navigation</span>
+        <span></span><span></span><span></span>
+      </button>
+
+      <nav class="primary-nav" id="primary-navigation" aria-label="Primary navigation" data-nav>
+        <ul data-navigation></ul>
+        <div class="header-actions">
+          <a class="text-link" href="#login">Login</a>
+          <a class="button button--small" href="#register">Sign up</a>
+        </div>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main-content">
+    <section class="hero section section--soft" id="home" data-section="hero" aria-busy="true"></section>
+    <section class="clients section" id="clients" data-section="clients" aria-busy="true"></section>
+    <section class="services section" id="services" data-section="services" aria-busy="true"></section>
+    <section class="feature-list" id="features" data-section="features" aria-busy="true"></section>
+    <section class="statistics section section--soft" id="statistics" data-section="statistics" aria-busy="true"></section>
+    <section class="testimonial section section--soft" id="testimonial" data-section="testimonial" aria-busy="true"></section>
+    <section class="community section" id="community" data-section="community" aria-busy="true"></section>
+    <section class="cta section section--soft" data-section="cta" aria-busy="true"></section>
+  </main>
+
+  <footer class="site-footer" data-section="footer" aria-busy="true"></footer>
+
+  <template id="loading-template">
+    <div class="container skeleton" aria-hidden="true">
+      <span></span><span></span><span></span>
+    </div>
+  </template>
+</body>
+</html>

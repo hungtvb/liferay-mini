@@ -4,6 +4,7 @@ import {createRoot, type Root} from 'react-dom/client';
 import {App} from './App';
 import {Features} from './components/Features/Features';
 import {Hero} from './components/Hero/Hero';
+import {ContentImporter} from './components/Importer/ContentImporter';
 import {Services} from './components/Services/Services';
 import './styles.css';
 
@@ -38,6 +39,7 @@ function registerReactElement(name: string, renderer: ElementRenderer) {
 }
 
 registerReactElement('nexcent-lab-status', () => <App />);
+registerReactElement('nexcent-content-importer', () => <ContentImporter />);
 
 registerReactElement('nexcent-hero', (element) => (
     <Hero

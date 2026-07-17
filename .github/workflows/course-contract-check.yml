@@ -1,14 +1,15 @@
-name: Course Contract Check
+name: Project Contract Check
 
 on:
   pull_request:
     paths:
       - "README.md"
       - "SUBMISSION.md"
-      - "docs/lab-guide/**"
+      - "docs/**"
       - "scripts/verify-course.mjs"
       - "sample-data/**"
       - "client-extensions/**"
+      - "remote-apps/**"
       - "gradle.properties"
       - ".github/workflows/course-contract-check.yml"
   push:
@@ -18,10 +19,11 @@ on:
     paths:
       - "README.md"
       - "SUBMISSION.md"
-      - "docs/lab-guide/**"
+      - "docs/**"
       - "scripts/verify-course.mjs"
       - "sample-data/**"
       - "client-extensions/**"
+      - "remote-apps/**"
       - "gradle.properties"
       - ".github/workflows/course-contract-check.yml"
   workflow_dispatch:
@@ -30,7 +32,7 @@ permissions:
   contents: read
 
 jobs:
-  verify-course-contract:
+  verify-project-contract:
     runs-on: ubuntu-latest
 
     steps:
@@ -42,7 +44,7 @@ jobs:
         with:
           node-version: 22
 
-      - name: Verify course contract
+      - name: Verify rebuilt project contract
         run: node scripts/verify-course.mjs
 
       - name: Verify documentation has no unresolved merge markers
@@ -52,7 +54,8 @@ jobs:
             exit 1
           fi
 
-      - name: Verify no local bundle or Docker baseline is committed
+      - name: Verify excluded scope is absent
         run: |
           test ! -e bundles
           test ! -e docker-compose.yml
+          test ! -e modules

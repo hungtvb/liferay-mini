@@ -9,6 +9,7 @@
   "scripts": {
     "build": "vite build",
     "dev": "vite",
+    "generate:workbook": "node scripts/generate-sample-workbook.mjs",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

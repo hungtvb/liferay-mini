@@ -1,22 +1,10 @@
-:root {
-    --nxc-color-primary: #4caf4f;
-    --nxc-color-primary-dark: #388e3b;
-    --nxc-color-text: #4d4d4d;
-    --nxc-color-muted: #717171;
-    --nxc-color-surface: #f5f7fa;
-    --nxc-color-white: #ffffff;
-    --nxc-radius-md: 0.75rem;
-    --nxc-shadow-card: 0 0.5rem 1.5rem rgb(38 50 56 / 10%);
-}
-
 .nxc-lab-status {
     background: var(--nxc-color-white);
     border: 1px solid rgb(171 190 209 / 45%);
     border-radius: var(--nxc-radius-md);
     box-shadow: var(--nxc-shadow-card);
     color: var(--nxc-color-text);
-    font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
-        sans-serif;
+    font-family: var(--nxc-font-family, Inter, system-ui, sans-serif);
     margin: 1rem 0;
     max-width: 48rem;
     padding: clamp(1.25rem, 4vw, 2rem);
@@ -36,7 +24,7 @@
 
 .nxc-lab-status__badge {
     background: #e8f5e9;
-    border-radius: 999px;
+    border-radius: var(--nxc-radius-pill, 999px);
     color: var(--nxc-color-primary-dark);
     display: inline-flex;
     font-size: 0.75rem;

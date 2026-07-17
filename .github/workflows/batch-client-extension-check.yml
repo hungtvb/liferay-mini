@@ -1,0 +1,72 @@
+name: Batch Client Extension Check
+
+on:
+  pull_request:
+    paths:
+      - "client-extensions/nexcent-content-batch/**"
+      - "scripts/batch/**"
+      - ".github/workflows/batch-client-extension-check.yml"
+  push:
+    branches:
+      - main
+    paths:
+      - "client-extensions/nexcent-content-batch/**"
+      - "scripts/batch/**"
+      - ".github/workflows/batch-client-extension-check.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate-batch-client-extension:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Verify Batch Client Extension YAML
+        run: |
+          yaml=client-extensions/nexcent-content-batch/client-extension.yaml
+          test -f "$yaml"
+          grep -q "from: batch" "$yaml"
+          grep -q "into: batch" "$yaml"
+          grep -q "type: batch" "$yaml"
+          grep -q "type: oAuthApplicationHeadlessServer" "$yaml"
+          grep -q "Liferay.Headless.Batch.Engine.everything" "$yaml"
+          grep -q "Liferay.Headless.Delivery.everything" "$yaml"
+
+      - name: Validate shell script syntax
+        run: bash -n scripts/batch/export-structured-content.sh
+
+      - name: Prepare fixture payload
+        run: |
+          node scripts/batch/prepare-structured-content-export.mjs \
+            scripts/batch/fixtures/structured-content-export.jsont \
+            /tmp/10-structured-content.batch-engine-data.json \
+            NXC-
+
+      - name: Verify prepared payload contract
+        run: |
+          node - <<'NODE'
+          const fs = require('node:fs');
+          const payload = JSON.parse(
+              fs.readFileSync('/tmp/10-structured-content.batch-engine-data.json', 'utf8')
+          );
+
+          if (
+              payload.configuration.className !==
+              'com.liferay.headless.delivery.dto.v1_0.StructuredContent'
+          ) {
+              process.exit(1);
+          }
+
+          if (payload.items.length !== 1) {
+              process.exit(1);
+          }
+
+          if (payload.items[0].externalReferenceCode !== 'NXC-HERO-001') {
+              process.exit(1);
+          }
+          NODE

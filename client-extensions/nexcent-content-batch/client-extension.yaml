@@ -1,0 +1,17 @@
+assemble:
+    - from: batch
+      into: batch
+
+nexcent-content-batch:
+    name: Nexcent Web Content Batch
+    oAuthApplicationHeadlessServer: nexcent-content-batch-oauth
+    type: batch
+
+nexcent-content-batch-oauth:
+    .serviceAddress: localhost:8080
+    .serviceScheme: http
+    name: Nexcent Web Content Batch OAuth
+    scopes:
+        - Liferay.Headless.Batch.Engine.everything
+        - Liferay.Headless.Delivery.everything
+    type: oAuthApplicationHeadlessServer

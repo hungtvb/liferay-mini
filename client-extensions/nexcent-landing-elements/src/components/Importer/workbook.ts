@@ -44,9 +44,14 @@ function normalizeCellValue(value: CellValue): unknown {
 
 function parseWorksheet(worksheet: Worksheet): Record<string, unknown>[] {
     const headerRow = worksheet.getRow(1);
-    const headers = headerRow.values
+    const rowValues: CellValue[] = Array.isArray(headerRow.values)
+        ? headerRow.values
+        : [];
+    const headers: string[] = rowValues
         .slice(1)
-        .map((value) => String(normalizeCellValue(value) ?? '').trim());
+        .map((value: CellValue) =>
+            String(normalizeCellValue(value) ?? '').trim()
+        );
     const records: Record<string, unknown>[] = [];
 
     worksheet.eachRow((row, rowNumber) => {
@@ -57,7 +62,7 @@ function parseWorksheet(worksheet: Worksheet): Record<string, unknown>[] {
         const record: Record<string, unknown> = {};
         let hasValue = false;
 
-        headers.forEach((header, index) => {
+        headers.forEach((header: string, index: number) => {
             if (!header) {
                 return;
             }

@@ -85,11 +85,12 @@ Then open:
 6. [Model the Hero Web Content](docs/lab-guide/05-hero-web-content.md)
 7. [Model Services and Features Web Content](docs/lab-guide/06-services-features-web-content.md)
 8. [Create and deploy the first Custom Element](docs/lab-guide/07-first-custom-element.md)
-9. Build the shared Headless API client
-10. Build Hero, Services, and Features
-11. Add global design tokens and shared utilities
-12. Import content from Excel
-13. Test and submit the final project
+9. [Build the shared Headless API client](docs/lab-guide/08-shared-headless-api-client.md)
+10. [Build the dynamic Hero component](docs/lab-guide/09-dynamic-hero.md)
+11. Build the Services and Features components
+12. Add global design tokens and shared utilities
+13. Import content from Excel
+14. Test and submit the final project
 
 ## Target architecture
 

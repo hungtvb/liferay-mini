@@ -14,8 +14,9 @@ nexcent-global-css:
 
 nexcent-global-js:
     name: Nexcent Global JavaScript
+    scope: company
     scriptElementAttributes:
         data-senna-track: permanent
-        defer: true
+    scriptLocation: head
     type: globalJS
     url: global.*.js

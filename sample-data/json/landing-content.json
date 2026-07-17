@@ -1,0 +1,76 @@
+{
+  "hero": [
+    {
+      "externalReferenceCode": "NXC-HERO-001",
+      "title": "Lessons and insights",
+      "highlightedText": "from 8 years",
+      "description": "Where to grow your business as a photographer: site or social media?",
+      "ctaLabel": "Register",
+      "ctaUrl": "/register",
+      "imageFile": "assets/hero-illustration.svg",
+      "imageAlt": "A person working with digital content and analytics",
+      "sortOrder": 1,
+      "active": true
+    }
+  ],
+  "services": [
+    {
+      "externalReferenceCode": "NXC-SERVICE-001",
+      "title": "Membership Organisations",
+      "descriptionHtml": "<p>Our membership management software provides full automation of membership renewals and payments.</p>",
+      "iconFile": "assets/service-membership.svg",
+      "iconAlt": "Membership organisation icon",
+      "targetUrl": "/services/membership-organisations",
+      "sortOrder": 1,
+      "active": true
+    },
+    {
+      "externalReferenceCode": "NXC-SERVICE-002",
+      "title": "National Associations",
+      "descriptionHtml": "<p>Manage associations, regional groups, and member data from one connected platform.</p>",
+      "iconFile": "assets/service-association.svg",
+      "iconAlt": "National association icon",
+      "targetUrl": "/services/national-associations",
+      "sortOrder": 2,
+      "active": true
+    },
+    {
+      "externalReferenceCode": "NXC-SERVICE-003",
+      "title": "Clubs and Groups",
+      "descriptionHtml": "<p>Give clubs and groups the tools they need to communicate, organize, and grow.</p>",
+      "iconFile": "assets/service-club.svg",
+      "iconAlt": "Clubs and groups icon",
+      "targetUrl": "/services/clubs-and-groups",
+      "sortOrder": 3,
+      "active": true
+    }
+  ],
+  "features": [
+    {
+      "externalReferenceCode": "NXC-FEATURE-001",
+      "title": "The unseen of spending three years at Pixelgrade",
+      "descriptionHtml": "<p>Build a consistent content experience and give editors control without rebuilding the frontend.</p>",
+      "imageFile": "assets/feature-content.svg",
+      "imageAlt": "People managing content on a mobile device",
+      "ctaLabel": "Learn More",
+      "ctaUrl": "/features/content-management",
+      "imagePosition": "left",
+      "backgroundVariant": "white",
+      "sortOrder": 1,
+      "active": true
+    },
+    {
+      "externalReferenceCode": "NXC-FEATURE-002",
+      "title": "How to design your site footer like we did",
+      "descriptionHtml": "<p>Reuse content, links, and assets across pages while keeping the design system consistent.</p>",
+      "imageFile": "assets/feature-security.svg",
+      "imageAlt": "A secure mobile registration experience",
+      "ctaLabel": "Learn More",
+      "ctaUrl": "/features/reusable-experiences",
+      "imagePosition": "right",
+      "backgroundVariant": "white",
+      "sortOrder": 2,
+      "active": true
+    }
+  ]
+}

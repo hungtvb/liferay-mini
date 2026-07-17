@@ -4,12 +4,16 @@ on:
   pull_request:
     paths:
       - "client-extensions/nexcent-landing-elements/**"
+      - "sample-data/json/**"
+      - "sample-data/excel/**"
       - ".github/workflows/frontend-check.yml"
   push:
     branches:
       - main
     paths:
       - "client-extensions/nexcent-landing-elements/**"
+      - "sample-data/json/**"
+      - "sample-data/excel/**"
       - ".github/workflows/frontend-check.yml"
   workflow_dispatch:
 
@@ -46,3 +50,11 @@ jobs:
         run: |
           test -f build/index.js
           test -f build/style.css
+
+      - name: Generate sample workbook
+        run: npm run generate:workbook
+
+      - name: Verify generated workbook
+        run: |
+          test -s ../../sample-data/excel/nexcent-content.xlsx
+          node -e "import('exceljs').then(async ({default: ExcelJS}) => { const workbook = new ExcelJS.Workbook(); await workbook.xlsx.readFile('../../sample-data/excel/nexcent-content.xlsx'); const names = workbook.worksheets.map((sheet) => sheet.name); const required = ['Instructions', 'Heroes', 'ServicesIntro', 'Services', 'Features']; if (required.some((name) => !names.includes(name))) process.exit(1); })"

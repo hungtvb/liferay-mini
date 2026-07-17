@@ -1,0 +1,476 @@
+{
+  "frontendTokenCategories": [
+    {
+      "frontendTokenSets": [
+        {
+          "frontendTokens": [
+            {
+              "defaultValue": "#4caf4f",
+              "editorType": "ColorPicker",
+              "label": "Primary Color",
+              "mappings": [
+                {
+                  "type": "cssVariable",
+                  "value": "nxc-style-primary"
+                }
+              ],
+              "name": "nexcentPrimaryColor",
+              "type": "String"
+            },
+            {
+              "defaultValue": "#388e3b",
+              "editorType": "ColorPicker",
+              "label": "Primary Hover Color",
+              "mappings": [
+                {
+                  "type": "cssVariable",
+                  "value": "nxc-style-primary-hover"
+                }
+              ],
+              "name": "nexcentPrimaryHoverColor",
+              "type": "String"
+            },
+            {
+              "defaultValue": "#237d31",
+              "editorType": "ColorPicker",
+              "label": "Primary Active Color",
+              "mappings": [
+                {
+                  "type": "cssVariable",
+                  "value": "nxc-style-primary-active"
+                }
+              ],
+              "name": "nexcentPrimaryActiveColor",
+              "type": "String"
+            },
+            {
+              "defaultValue": "#263238",
+              "editorType": "ColorPicker",
+              "label": "Secondary Color",
+              "mappings": [
+                {
+                  "type": "cssVariable",
+                  "value": "nxc-style-secondary"
+                }
+              ],
+              "name": "nexcentSecondaryColor",
+              "type": "String"
+            },
+            {
+              "defaultValue": "#263238",
+              "editorType": "ColorPicker",
+              "label": "Heading Color",
+              "mappings": [
+                {
+                  "type": "cssVariable",
+                  "value": "nxc-style-heading"
+                }
+              ],
+              "name": "nexcentHeadingColor",
+              "type": "String"
+            },
+            {
+              "defaultValue": "#4d4d4d",
+              "editorType": "ColorPicker",
+              "label": "Body Text Color",
+              "mappings": [
+                {
+                  "type": "cssVariable",
+                  "value": "nxc-style-text"
+                }
+              ],
+              "name": "nexcentTextColor",
+              "type": "String"
+            },
+            {
+              "defaultValue": "#717171",
+              "editorType": "ColorPicker",
+              "label": "Muted Text Color",
+              "mappings": [
+                {
+                  "type": "cssVariable",
+                  "value": "nxc-style-muted"
+                }
+              ],
+              "name": "nexcentMutedColor",
+              "type": "String"
+            },
+            {
+              "defaultValue": "#abbed1",
+              "editorType": "ColorPicker",
+              "label": "Border Color",
+              "mappings": [
+                {
+                  "type": "cssVariable",
+                  "value": "nxc-style-border"
+                }
+              ],
+              "name": "nexcentBorderColor",
+              "type": "String"
+            },
+            {
+              "defaultValue": "#f5f7fa",
+              "editorType": "ColorPicker",
+              "label": "Surface Color",
+              "mappings": [
+                {
+                  "type": "cssVariable",
+                  "value": "nxc-style-surface"
+                }
+              ],
+              "name": "nexcentSurfaceColor",
+              "type": "String"
+            },
+            {
+              "defaultValue": "#ffffff",
+              "editorType": "ColorPicker",
+              "label": "On Dark Color",
+              "mappings": [
+                {
+                  "type": "cssVariable",
+                  "value": "nxc-style-white"
+                }
+              ],
+              "name": "nexcentWhiteColor",
+              "type": "String"
+            }
+          ],
+          "label": "Colors",
+          "name": "nexcentColors"
+        },
+        {
+          "frontendTokens": [
+            {
+              "defaultValue": "Inter, system-ui, sans-serif",
+              "label": "Font Family",
+              "mappings": [
+                {
+                  "type": "cssVariable",
+                  "value": "nxc-style-font-family"
+                }
+              ],
+              "name": "nexcentFontFamily",
+              "type": "String",
+              "validValues": [
+                {
+                  "label": "Inter",
+                  "value": "Inter, system-ui, sans-serif"
+                },
+                {
+                  "label": "System UI",
+                  "value": "system-ui, sans-serif"
+                },
+                {
+                  "label": "Georgia",
+                  "value": "Georgia, serif"
+                }
+              ]
+            },
+            {
+              "defaultValue": "4rem",
+              "label": "Hero Heading Size",
+              "mappings": [
+                {
+                  "type": "cssVariable",
+                  "value": "nxc-style-hero-heading-size"
+                }
+              ],
+              "name": "nexcentHeroHeadingSize",
+              "type": "String",
+              "validValues": [
+                {
+                  "label": "Compact",
+                  "value": "3rem"
+                },
+                {
+                  "label": "Default",
+                  "value": "4rem"
+                },
+                {
+                  "label": "Large",
+                  "value": "4.5rem"
+                }
+              ]
+            },
+            {
+              "defaultValue": "2.25rem",
+              "label": "Section Heading Size",
+              "mappings": [
+                {
+                  "type": "cssVariable",
+                  "value": "nxc-style-heading-size"
+                }
+              ],
+              "name": "nexcentHeadingSize",
+              "type": "String",
+              "validValues": [
+                {
+                  "label": "Small",
+                  "value": "2rem"
+                },
+                {
+                  "label": "Default",
+                  "value": "2.25rem"
+                },
+                {
+                  "label": "Large",
+                  "value": "2.5rem"
+                }
+              ]
+            },
+            {
+              "defaultValue": "1rem",
+              "label": "Body Text Size",
+              "mappings": [
+                {
+                  "type": "cssVariable",
+                  "value": "nxc-style-body-size"
+                }
+              ],
+              "name": "nexcentBodySize",
+              "type": "String",
+              "validValues": [
+                {
+                  "label": "Small",
+                  "value": "0.875rem"
+                },
+                {
+                  "label": "Default",
+                  "value": "1rem"
+                },
+                {
+                  "label": "Large",
+                  "value": "1.125rem"
+                }
+              ]
+            },
+            {
+              "defaultValue": "600",
+              "label": "Heading Weight",
+              "mappings": [
+                {
+                  "type": "cssVariable",
+                  "value": "nxc-style-heading-weight"
+                }
+              ],
+              "name": "nexcentHeadingWeight",
+              "type": "String",
+              "validValues": [
+                {
+                  "label": "Medium",
+                  "value": "500"
+                },
+                {
+                  "label": "Semi Bold",
+                  "value": "600"
+                },
+                {
+                  "label": "Bold",
+                  "value": "700"
+                }
+              ]
+            }
+          ],
+          "label": "Typography",
+          "name": "nexcentTypography"
+        }
+      ],
+      "label": "Nexcent Brand",
+      "name": "nexcentBrand"
+    },
+    {
+      "frontendTokenSets": [
+        {
+          "frontendTokens": [
+            {
+              "defaultValue": "72rem",
+              "label": "Content Container Width",
+              "mappings": [
+                {
+                  "type": "cssVariable",
+                  "value": "nxc-style-container-width"
+                }
+              ],
+              "name": "nexcentContainerWidth",
+              "type": "String",
+              "validValues": [
+                {
+                  "label": "Compact",
+                  "value": "64rem"
+                },
+                {
+                  "label": "Default",
+                  "value": "72rem"
+                },
+                {
+                  "label": "Wide",
+                  "value": "80rem"
+                }
+              ]
+            },
+            {
+              "defaultValue": "4rem",
+              "label": "Section Vertical Spacing",
+              "mappings": [
+                {
+                  "type": "cssVariable",
+                  "value": "nxc-style-section-space"
+                }
+              ],
+              "name": "nexcentSectionSpacing",
+              "type": "String",
+              "validValues": [
+                {
+                  "label": "Compact",
+                  "value": "3rem"
+                },
+                {
+                  "label": "Default",
+                  "value": "4rem"
+                },
+                {
+                  "label": "Spacious",
+                  "value": "6rem"
+                }
+              ]
+            },
+            {
+              "defaultValue": "1.5rem",
+              "label": "Page Horizontal Gutter",
+              "mappings": [
+                {
+                  "type": "cssVariable",
+                  "value": "nxc-style-page-gutter"
+                }
+              ],
+              "name": "nexcentPageGutter",
+              "type": "String",
+              "validValues": [
+                {
+                  "label": "Compact",
+                  "value": "1rem"
+                },
+                {
+                  "label": "Default",
+                  "value": "1.5rem"
+                },
+                {
+                  "label": "Wide",
+                  "value": "2rem"
+                }
+              ]
+            },
+            {
+              "defaultValue": "4.5rem",
+              "label": "Header Height",
+              "mappings": [
+                {
+                  "type": "cssVariable",
+                  "value": "nxc-style-header-height"
+                }
+              ],
+              "name": "nexcentHeaderHeight",
+              "type": "String",
+              "validValues": [
+                {
+                  "label": "Compact",
+                  "value": "4rem"
+                },
+                {
+                  "label": "Default",
+                  "value": "4.5rem"
+                },
+                {
+                  "label": "Comfortable",
+                  "value": "5rem"
+                }
+              ]
+            },
+            {
+              "defaultValue": "0.25rem",
+              "label": "Small Radius",
+              "mappings": [
+                {
+                  "type": "cssVariable",
+                  "value": "nxc-style-radius-sm"
+                }
+              ],
+              "name": "nexcentSmallRadius",
+              "type": "String",
+              "validValues": [
+                {
+                  "label": "Square",
+                  "value": "0"
+                },
+                {
+                  "label": "Default",
+                  "value": "0.25rem"
+                },
+                {
+                  "label": "Rounded",
+                  "value": "0.5rem"
+                }
+              ]
+            },
+            {
+              "defaultValue": "0.75rem",
+              "label": "Card Radius",
+              "mappings": [
+                {
+                  "type": "cssVariable",
+                  "value": "nxc-style-radius-md"
+                }
+              ],
+              "name": "nexcentCardRadius",
+              "type": "String",
+              "validValues": [
+                {
+                  "label": "Small",
+                  "value": "0.5rem"
+                },
+                {
+                  "label": "Default",
+                  "value": "0.75rem"
+                },
+                {
+                  "label": "Large",
+                  "value": "1rem"
+                }
+              ]
+            },
+            {
+              "defaultValue": "0 0.5rem 1.5rem rgb(38 50 56 / 10%)",
+              "label": "Card Shadow",
+              "mappings": [
+                {
+                  "type": "cssVariable",
+                  "value": "nxc-style-shadow-card"
+                }
+              ],
+              "name": "nexcentCardShadow",
+              "type": "String",
+              "validValues": [
+                {
+                  "label": "None",
+                  "value": "none"
+                },
+                {
+                  "label": "Default",
+                  "value": "0 0.5rem 1.5rem rgb(38 50 56 / 10%)"
+                },
+                {
+                  "label": "Raised",
+                  "value": "0 0.75rem 2rem rgb(38 50 56 / 16%)"
+                }
+              ]
+            }
+          ],
+          "label": "Layout and Shape",
+          "name": "nexcentLayoutShape"
+        }
+      ],
+      "label": "Nexcent Layout",
+      "name": "nexcentLayout"
+    }
+  ]
+}

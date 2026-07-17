@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="480" viewBox="0 0 640 480" role="img" aria-labelledby="title desc">
+  <title id="title">Nexcent hero illustration</title>
+  <desc id="desc">A person working beside a dashboard with content cards and charts.</desc>
+  <rect width="640" height="480" rx="32" fill="#F5F7FA"/>
+  <rect x="72" y="90" width="330" height="250" rx="18" fill="#FFFFFF" stroke="#ABBED1" stroke-width="4"/>
+  <rect x="96" y="120" width="150" height="18" rx="9" fill="#4CAF4F"/>
+  <rect x="96" y="156" width="250" height="12" rx="6" fill="#C8E6C9"/>
+  <rect x="96" y="182" width="210" height="12" rx="6" fill="#E8F5E9"/>
+  <rect x="96" y="226" width="84" height="74" rx="10" fill="#E8F5E9"/>
+  <rect x="196" y="250" width="84" height="50" rx="10" fill="#C8E6C9"/>
+  <rect x="296" y="208" width="82" height="92" rx="10" fill="#4CAF4F"/>
+  <circle cx="470" cy="170" r="42" fill="#263238"/>
+  <path d="M430 232c22-34 74-34 98 0l28 94H400l30-94Z" fill="#4CAF4F"/>
+  <path d="M430 326h42l-10 92h-46l14-92Zm68 0h42l18 92h-46l-14-92Z" fill="#263238"/>
+  <circle cx="442" cy="164" r="8" fill="#FFFFFF"/>
+  <circle cx="484" cy="164" r="8" fill="#FFFFFF"/>
+  <path d="M450 190c12 10 26 10 38 0" fill="none" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round"/>
+  <circle cx="550" cy="90" r="28" fill="#E8F5E9"/>
+  <path d="M538 90h24M550 78v24" stroke="#4CAF4F" stroke-width="6" stroke-linecap="round"/>
+</svg>

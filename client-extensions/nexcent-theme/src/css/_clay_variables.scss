@@ -1,0 +1,12 @@
+// Compile-time fallbacks for Clay and OOTB fragments.
+// Runtime brand customization is exposed through Style Book CSS variables.
+
+$primary: #4caf4f;
+$secondary: #263238;
+$body-color: #4d4d4d;
+$border-color: #abbed1;
+$font-family-base: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+$border-radius: 0.25rem;
+$border-radius-lg: 0.75rem;
+$btn-border-radius: $border-radius;
+$btn-border-radius-lg: $border-radius-lg;

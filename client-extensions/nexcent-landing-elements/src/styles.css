@@ -1,0 +1,82 @@
+:root {
+    --nxc-color-primary: #4caf4f;
+    --nxc-color-primary-dark: #388e3b;
+    --nxc-color-text: #4d4d4d;
+    --nxc-color-muted: #717171;
+    --nxc-color-surface: #f5f7fa;
+    --nxc-color-white: #ffffff;
+    --nxc-radius-md: 0.75rem;
+    --nxc-shadow-card: 0 0.5rem 1.5rem rgb(38 50 56 / 10%);
+}
+
+.nxc-lab-status {
+    background: var(--nxc-color-white);
+    border: 1px solid rgb(171 190 209 / 45%);
+    border-radius: var(--nxc-radius-md);
+    box-shadow: var(--nxc-shadow-card);
+    color: var(--nxc-color-text);
+    font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+        sans-serif;
+    margin: 1rem 0;
+    max-width: 48rem;
+    padding: clamp(1.25rem, 4vw, 2rem);
+}
+
+.nxc-lab-status h2 {
+    font-size: clamp(1.5rem, 3vw, 2.25rem);
+    line-height: 1.2;
+    margin: 0 0 0.75rem;
+}
+
+.nxc-lab-status p {
+    color: var(--nxc-color-muted);
+    line-height: 1.6;
+    margin: 0;
+}
+
+.nxc-lab-status__badge {
+    background: #e8f5e9;
+    border-radius: 999px;
+    color: var(--nxc-color-primary-dark);
+    display: inline-flex;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    margin-bottom: 1rem;
+    padding: 0.4rem 0.75rem;
+    text-transform: uppercase;
+}
+
+.nxc-lab-status__details {
+    display: grid;
+    gap: 0.75rem;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    margin: 1.5rem 0 0;
+}
+
+.nxc-lab-status__details div {
+    background: var(--nxc-color-surface);
+    border-radius: 0.5rem;
+    min-width: 0;
+    padding: 0.875rem 1rem;
+}
+
+.nxc-lab-status__details dt {
+    color: var(--nxc-color-muted);
+    font-size: 0.75rem;
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+    text-transform: uppercase;
+}
+
+.nxc-lab-status__details dd {
+    font-weight: 600;
+    margin: 0;
+    overflow-wrap: anywhere;
+}
+
+@media (max-width: 36rem) {
+    .nxc-lab-status__details {
+        grid-template-columns: 1fr;
+    }
+}

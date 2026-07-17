@@ -30,6 +30,24 @@ node --version
 yarn --version
 ```
 
+## Generate the official Gradle Wrapper
+
+The repository stores the course configuration as text. Use Blade CLI once to generate the official Gradle Wrapper files for the pinned product.
+
+macOS or Linux:
+
+```bash
+chmod +x scripts/bootstrap-workspace.sh
+./scripts/bootstrap-workspace.sh
+```
+
+Windows PowerShell:
+
+```powershell
+Set-ExecutionPolicy Bypass -Scope Process
+.\scripts\bootstrap-workspace.ps1
+```
+
 ## Initialize the local bundle
 
 macOS or Linux:
@@ -102,12 +120,26 @@ liferay-mini/
 ├── configs/
 ├── docs/lab-guide/
 ├── sample-data/
+├── scripts/
 ├── gradle/
 ├── gradle.properties
 ├── gradlew
 ├── gradlew.bat
 └── settings.gradle
 ```
+
+## Sample content
+
+Starter content is stored in:
+
+```text
+sample-data/
+├── assets/
+├── csv/
+└── json/
+```
+
+These files are migration input, not frontend hard-coded data.
 
 ## Rules
 

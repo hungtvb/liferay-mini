@@ -1,11 +1,12 @@
-name: Style Book Check
+name: Design System Check
 
 on:
   pull_request:
     paths:
       - "client-extensions/nexcent-theme-css/**"
-      - "client-extensions/nexcent-global-assets/assets/global.css"
-      - "docs/lab-guide/11.5-style-book.md"
+      - "client-extensions/nexcent-global-assets/**"
+      - "docs/course/03-design-system.md"
+      - "docs/contracts/component-contracts.md"
       - "scripts/verify-course.mjs"
       - ".github/workflows/style-book-check.yml"
   push:
@@ -14,8 +15,9 @@ on:
       - final
     paths:
       - "client-extensions/nexcent-theme-css/**"
-      - "client-extensions/nexcent-global-assets/assets/global.css"
-      - "docs/lab-guide/11.5-style-book.md"
+      - "client-extensions/nexcent-global-assets/**"
+      - "docs/course/03-design-system.md"
+      - "docs/contracts/component-contracts.md"
       - "scripts/verify-course.mjs"
       - ".github/workflows/style-book-check.yml"
   workflow_dispatch:
@@ -24,7 +26,7 @@ permissions:
   contents: read
 
 jobs:
-  validate-style-book:
+  validate-design-system:
     runs-on: ubuntu-latest
 
     steps:
@@ -97,9 +99,9 @@ jobs:
           grep -q "var(--nxc-style-container-width, 72rem)" client-extensions/nexcent-global-assets/assets/global.css
           grep -q "var(--nxc-style-radius-md, 0.75rem)" client-extensions/nexcent-global-assets/assets/global.css
 
-      - name: Verify lesson and complete course contract
+      - name: Verify rebuilt design system lesson
         run: |
-          test -f docs/lab-guide/11.5-style-book.md
-          grep -q "Nexcent Default" docs/lab-guide/11.5-style-book.md
-          grep -q "LPD-30204" docs/lab-guide/11.5-style-book.md
+          test -f docs/course/03-design-system.md
+          grep -q "Nexcent Default" docs/course/03-design-system.md
+          grep -q "Figma Style Guide" docs/course/03-design-system.md
           node scripts/verify-course.mjs

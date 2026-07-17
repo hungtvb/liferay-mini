@@ -13,6 +13,15 @@
       "active": true
     }
   ],
+  "servicesIntro": [
+    {
+      "externalReferenceCode": "NXC-SERVICES-INTRO-001",
+      "title": "Manage your entire community in a single system",
+      "description": "Who is Nexcent suitable for?",
+      "sortOrder": 1,
+      "active": true
+    }
+  ],
   "services": [
     {
       "externalReferenceCode": "NXC-SERVICE-001",

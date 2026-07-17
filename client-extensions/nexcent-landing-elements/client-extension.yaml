@@ -1,0 +1,16 @@
+assemble:
+    - from: build
+      into: static
+
+nexcent-lab-status:
+    cssURLs:
+        - style.css
+    friendlyURLMapping: nexcent-lab-status
+    htmlElementName: nexcent-lab-status
+    instanceable: false
+    name: Nexcent Lab Status
+    portletCategoryName: category.client-extensions
+    type: customElement
+    urls:
+        - index.js
+    useESM: true

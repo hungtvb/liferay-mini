@@ -3,10 +3,11 @@ name: Design System Check
 on:
   pull_request:
     paths:
-      - "client-extensions/nexcent-theme-css/**"
-      - "client-extensions/nexcent-global-assets/**"
+      - "client-extensions/nexcent-theme/**"
       - "docs/course/03-design-system.md"
       - "docs/contracts/component-contracts.md"
+      - "README.md"
+      - "SUBMISSION.md"
       - "scripts/verify-course.mjs"
       - ".github/workflows/style-book-check.yml"
   push:
@@ -14,10 +15,11 @@ on:
       - main
       - final
     paths:
-      - "client-extensions/nexcent-theme-css/**"
-      - "client-extensions/nexcent-global-assets/**"
+      - "client-extensions/nexcent-theme/**"
       - "docs/course/03-design-system.md"
       - "docs/contracts/component-contracts.md"
+      - "README.md"
+      - "SUBMISSION.md"
       - "scripts/verify-course.mjs"
       - ".github/workflows/style-book-check.yml"
   workflow_dispatch:
@@ -38,20 +40,40 @@ jobs:
         with:
           node-version: 22
 
-      - name: Verify Theme CSS configuration
+      - name: Verify unified Client Extension configuration
         run: |
-          grep -q "type: themeCSS" client-extensions/nexcent-theme-css/client-extension.yaml
-          grep -q "clayURL: css/clay.css" client-extensions/nexcent-theme-css/client-extension.yaml
-          grep -q "mainURL: css/main.css" client-extensions/nexcent-theme-css/client-extension.yaml
-          grep -q "frontendTokenDefinitionJSON: src/frontend-token-definition.json" client-extensions/nexcent-theme-css/client-extension.yaml
-          grep -q '"baseTheme": "styled"' client-extensions/nexcent-theme-css/package.json
+          FILE=client-extensions/nexcent-theme/client-extension.yaml
+          grep -q "type: themeCSS" "$FILE"
+          grep -q "clayURL: css/clay.css" "$FILE"
+          grep -q "mainURL: css/main.css" "$FILE"
+          grep -q "frontendTokenDefinitionJSON: src/frontend-token-definition.json" "$FILE"
+          grep -q "type: globalCSS" "$FILE"
+          grep -q "type: globalJS" "$FILE"
+          grep -q "type: themeFavicon" "$FILE"
+          grep -q "scope: layout" "$FILE"
+          grep -q "url: favicon.svg" "$FILE"
+          grep -q '"baseTheme": "styled"' client-extensions/nexcent-theme/package.json
 
-      - name: Validate frontend token definition
+      - name: Validate frontend tokens and Style Book values
         run: |
           node <<'NODE'
           const fs = require('node:fs');
-          const file = 'client-extensions/nexcent-theme-css/src/frontend-token-definition.json';
-          const definition = JSON.parse(fs.readFileSync(file, 'utf8'));
+          const root = 'client-extensions/nexcent-theme';
+          const definition = JSON.parse(
+              fs.readFileSync(`${root}/src/frontend-token-definition.json`, 'utf8')
+          );
+          const values = JSON.parse(
+              fs.readFileSync(
+                  `${root}/style-book/nexcent-default/frontend-tokens-values.json`,
+                  'utf8'
+              )
+          );
+          const styleBook = JSON.parse(
+              fs.readFileSync(
+                  `${root}/style-book/nexcent-default/style-book.json`,
+                  'utf8'
+              )
+          );
           const categories = definition.frontendTokenCategories;
 
           if (!Array.isArray(categories) || categories.length < 2) {
@@ -64,14 +86,18 @@ jobs:
               )
           );
           const names = tokens.map((token) => token.name);
-          const mappings = tokens.flatMap((token) =>
-              (token.mappings || [])
-                  .filter((mapping) => mapping.type === 'cssVariable')
-                  .map((mapping) => mapping.value)
+          const mappings = tokens.map((token) =>
+              (token.mappings || []).find(
+                  (mapping) => mapping.type === 'cssVariable'
+              )?.value
           );
 
           if (new Set(names).size !== names.length) {
               throw new Error('Duplicate frontend token names.');
+          }
+
+          if (mappings.some((mapping) => !mapping)) {
+              throw new Error('Every token must define one CSS variable mapping.');
           }
 
           if (new Set(mappings).size !== mappings.length) {
@@ -84,24 +110,68 @@ jobs:
               'nxc-style-container-width',
               'nxc-style-section-space',
               'nxc-style-radius-md',
+              'nxc-style-header-height',
           ]) {
               if (!mappings.includes(required)) {
                   throw new Error(`Missing mapping: ${required}`);
               }
           }
 
-          console.log(`Validated ${tokens.length} Style Book tokens.`);
+          for (const token of tokens) {
+              const value = values[token.name];
+              const mapping = token.mappings.find(
+                  (item) => item.type === 'cssVariable'
+              ).value;
+
+              if (!value) {
+                  throw new Error(`Style Book is missing token: ${token.name}`);
+              }
+
+              if (value.cssVariableMapping !== mapping) {
+                  throw new Error(`Style Book mapping mismatch: ${token.name}`);
+              }
+          }
+
+          if (styleBook.name !== 'Nexcent Default') {
+              throw new Error('Unexpected Style Book name.');
+          }
+
+          if (styleBook.themeId !== 'nexcent-theme-css') {
+              throw new Error('Style Book must target nexcent-theme-css.');
+          }
+
+          if (styleBook.frontendTokensValuesPath !== 'frontend-tokens-values.json') {
+              throw new Error('Unexpected Style Book values path.');
+          }
+
+          console.log(`Validated ${tokens.length} Nexcent Style Book tokens.`);
           NODE
 
-      - name: Verify Global CSS aliases
+      - name: Verify shared assets and OOTB hooks
         run: |
-          grep -q "var(--nxc-style-primary, #4caf4f)" client-extensions/nexcent-global-assets/assets/global.css
-          grep -q "var(--nxc-style-container-width, 72rem)" client-extensions/nexcent-global-assets/assets/global.css
-          grep -q "var(--nxc-style-radius-md, 0.75rem)" client-extensions/nexcent-global-assets/assets/global.css
+          CSS=client-extensions/nexcent-theme/assets/global.css
+          JS=client-extensions/nexcent-theme/assets/global.js
+          FAVICON=client-extensions/nexcent-theme/assets/favicon.svg
+          grep -q "var(--nxc-style-primary, #4caf4f)" "$CSS"
+          grep -q "var(--nxc-style-container-width, 72rem)" "$CSS"
+          grep -q "var(--nxc-style-radius-md, 0.75rem)" "$CSS"
+          grep -q ".nxc-site-header" "$CSS"
+          grep -q ".nxc-site-footer" "$CSS"
+          grep -q ".nxc-newsletter" "$CSS"
+          grep -q "window.Nexcent" "$JS"
+          grep -q "getPortalContext" "$JS"
+          grep -q "getStyleToken" "$JS"
+          grep -q "<svg" "$FAVICON"
 
-      - name: Verify rebuilt design system lesson
+      - name: Verify obsolete theme projects are inactive
+        run: |
+          test ! -f client-extensions/nexcent-theme-css/client-extension.yaml
+          test ! -f client-extensions/nexcent-global-assets/client-extension.yaml
+
+      - name: Verify rebuilt design system contract
         run: |
           test -f docs/course/03-design-system.md
           grep -q "Nexcent Default" docs/course/03-design-system.md
           grep -q "Figma Style Guide" docs/course/03-design-system.md
+          grep -q "client-extensions/nexcent-theme" README.md
           node scripts/verify-course.mjs

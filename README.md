@@ -1,92 +1,117 @@
 # Liferay Mini Project Lab
 
-A learn.liferay-style, step-by-step lab for building a headless landing page on Liferay with Client Extensions, Web Content, Headless Delivery APIs, and an Excel-to-Web-Content migration flow.
+Build a dynamic Nexcent landing page on **Liferay DXP 2026.Q1.1 LTS** using Custom Element Client Extensions, Classic Web Content, Headless APIs, and an Excel migration flow.
 
-## What you will build
+## Course style
 
-- A responsive Nexcent landing page based on the provided Figma design.
-- Custom Element Client Extensions for Hero, Services, and Feature sections.
-- Shared global design tokens through a Theme CSS Client Extension.
-- Dynamic content loaded from Liferay Web Content through Headless Delivery APIs.
-- An Excel importer that validates sample data and creates Web Content.
-- A Batch Client Extension for repeatable seed and migration packages.
+This repository follows the structure used by modern courses on [learn.liferay.com](https://learn.liferay.com):
+
+- `main` is the starting branch for exercises.
+- `final` contains the completed reference solution.
+- Lessons are completed in order.
+- Each lesson includes objectives, steps, snippets, checkpoints, troubleshooting, and knowledge checks.
+
+## Prerequisites
+
+- Git
+- Java JDK 21
+- Blade CLI
+- Node.js LTS
+- Yarn
+
+Verify the environment:
+
+```bash
+git version
+java -version
+javac -version
+blade version
+node --version
+yarn --version
+```
+
+## Initialize the local bundle
+
+macOS or Linux:
+
+```bash
+./gradlew initBundle
+```
+
+Windows:
+
+```powershell
+.\gradlew.bat initBundle
+```
+
+The command creates a local `bundles/` directory containing Liferay and Tomcat. This directory is ignored by Git.
+
+## Start Liferay
+
+```bash
+blade server run
+```
+
+Then open:
+
+- Portal: http://localhost:8080
+- API Explorer: http://localhost:8080/o/api
 
 ## Learning path
 
-| Module | Topic | Output |
-|---|---|---|
-| 00 | Prerequisites | Tooling checklist |
-| 01 | Run Liferay locally | Working Portal container |
-| 02 | Bootstrap the workspace | Buildable Liferay Workspace |
-| 03 | First Custom Element | Hello Liferay widget |
-| 04 | Model Web Content | Hero, Service, Feature structures |
-| 05 | Consume Headless APIs | Typed API client |
-| 06 | Build Hero | Dynamic responsive Hero |
-| 07 | Build Services | Dynamic service grid |
-| 08 | Build Features | Reusable media/content sections |
-| 09 | Global CSS | Shared Figma design tokens |
-| 10 | Excel importer | Validated Web Content import |
-| 11 | Batch Client Extension | Repeatable seed package |
-| 12 | Final integration | Completed landing page and demo |
+1. [Course overview and architecture](docs/lab-guide/00-course-overview.md)
+2. [Install and verify development tools](docs/lab-guide/01-install-tools.md)
+3. [Clone the workspace and run initBundle](docs/lab-guide/02-init-bundle.md)
+4. [Start Liferay and complete initial setup](docs/lab-guide/03-start-liferay.md)
+5. Explore the site and Headless API Explorer
+6. Model Hero Web Content
+7. Model Services and Features Web Content
+8. Create the first Custom Element
+9. Build Hero, Services, and Features
+10. Add global design tokens and shared API utilities
+11. Import content from Excel
+12. Test and submit the final project
 
-Start at [`docs/lab-guide/00-course-overview.md`](docs/lab-guide/00-course-overview.md).
-
-## Baseline
-
-This lab uses the same self-hosted learning baseline as the official basic Custom Element tutorial:
-
-```bash
-docker run -it --name liferay-mini -m 8g -p 8080:8080 \
-  liferay/portal:7.4.3.132-ga132
-```
-
-Default sign-in:
+## Target architecture
 
 ```text
-Email: test@liferay.com
-Password: test
+Liferay Page
+├── Global CSS Client Extension
+├── Global JavaScript Client Extension
+├── Nexcent Hero Custom Element
+├── Nexcent Services Custom Element
+├── Nexcent Features Custom Element
+└── Nexcent Content Importer Custom Element
+
+Custom Elements
+        ↓
+Headless Delivery REST API
+        ↓
+Classic Web Content + Documents and Media
 ```
 
-Change the password when prompted.
+## Important 2026 note
 
-## Repository layout
+Liferay DXP 2026 introduced the new object-based Liferay CMS. This course intentionally uses Classic Web Content because the assignment requires imported records under **Site Content → Web Content**.
+
+## Repository structure
 
 ```text
 liferay-mini/
 ├── client-extensions/
-│   ├── nexcent-global-theme/
-│   └── nexcent-landing-elements/
+├── configs/
 ├── docs/lab-guide/
 ├── sample-data/
-│   ├── csv/
-│   └── json/
-├── scripts/
-├── .env.example
-└── docker-compose.yml
+├── gradle/
+├── gradle.properties
+├── gradlew
+├── gradlew.bat
+└── settings.gradle
 ```
 
-## Quick start
+## Rules
 
-```bash
-cp .env.example .env
-docker compose up -d
-```
-
-Wait until `http://localhost:8080` is available, then continue with Module 02.
-
-## Project rules
-
-- No landing-page text, images, or service lists may be hard-coded in UI components.
-- Runtime content must come from Liferay Headless APIs.
-- Numeric site, structure, and document IDs must not be committed.
-- Every component must implement loading, empty, and error states.
-- Import operations must be idempotent by external reference code.
-- Keep frontend, importer, and batch concerns separated.
-
-## Reference documentation
-
-- Liferay Client Extensions
-- Creating a Basic Custom Element
-- Custom Element YAML Configuration Reference
-- Headless Delivery Web Content APIs
-- Importing and Exporting Data with Batch Client Extensions
+- Do not commit `bundles/`.
+- Do not commit passwords, tokens, or machine-specific paths.
+- Do not hard-code landing-page content in frontend components.
+- Use stable external reference codes for migration.

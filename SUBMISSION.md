@@ -1,133 +1,133 @@
-# Liferay Mini Project Submission
+# Nexcent Figma-to-Liferay Project Submission
 
-> Replace every placeholder before submitting the group project.
+> Replace every placeholder before final submission.
 
-## 1. Team
+## 1. Team and Scope
 
 | Role | Name | Responsibility |
 |---|---|---|
-| Frontend | `<name>` | Custom Elements, responsive UI, Global CSS/JS |
-| Design System | `<name>` | Theme CSS, frontend tokens, Style Book |
-| Backend | `<name>` | Web Content models, APIs, Excel migration, Batch CE |
-| QA/Demo | `<name>` | Test evidence, demo flow, final report |
+| Frontend | `<name>` | Figma decomposition, Custom Elements, Remote App, responsive UI |
+| Design System | `<name>` | Theme CSS, Style Book, Global CSS/JS |
+| Backend | `<name>` | Web Content, Templates, assets, APIs, Excel and Batch migration |
+| QA/Demo | `<name>` | Contract verification, evidence, final demo |
+
+Scope deviations:
+
+```text
+<none or approved explanation>
+```
 
 ## 2. Environment
 
 | Item | Value |
 |---|---|
-| Liferay product | `dxp-2026.q1.1-lts` |
+| Liferay | `dxp-2026.q1.1-lts` |
 | Java | `<java -version>` |
 | Node.js | `<node --version>` |
 | Browser | `<browser/version>` |
-| Operating system | `<OS>` |
-| Site name/ERC | `<site>` |
+| OS | `<OS>` |
+| Site ID/ERC | `<site>` |
 | Theme CSS | `Nexcent Theme CSS` |
 | Style Book | `Nexcent Default` |
+| Remote App host | `<URL>` |
 
 ## 3. Repository Evidence
 
 - Repository: `https://github.com/hungtvb/liferay-mini`
 - Submission commit: `<full SHA>`
 - Reference branch: `final`
-- Pull requests: `<links>`
+- Rebuild PR: `<link>`
 - CI runs: `<links>`
 
-## 4. Architecture Summary
+## 4. Figma Audit and Design System
 
-```text
-Liferay Page
-├── Nexcent Theme CSS
-│   └── frontend-token-definition.json
-├── Nexcent Default Style Book
-├── Nexcent Global CSS
-├── Nexcent Global JavaScript
-├── Nexcent Hero
-├── Nexcent Services
-└── Nexcent Features
+Attach:
 
-Style Book → --nxc-style-* → Global CSS aliases → Custom Elements
+- Landing-page section inventory.
+- Style Guide screenshots or node links.
+- Color, typography, button, shadow, radius, icon, spacing, and breakpoint mapping.
+- Asset manifest.
+- Responsive decisions not explicitly shown in Figma.
 
-Custom Elements → Headless Delivery → Classic Web Content
+| Check | Result | Evidence |
+|---|---|---|
+| Theme CSS deployed | `<pass/fail>` | `<link>` |
+| `clay.css` and `main.css` generated | `<pass/fail>` | `<link>` |
+| `Nexcent Default` published | `<pass/fail>` | `<link>` |
+| Style Book applied to page | `<pass/fail>` | `<link>` |
+| Runtime `--nxc-style-primary` | `<value>` | `<link>` |
+| Global alias follows Style Book | `<pass/fail>` | `<link>` |
+| Token change required no FE rebuild | `<pass/fail>` | `<link>` |
 
-Excel Importer → Documents and Media + Structured Content APIs
+## 5. Component-by-Component FE–BE Evidence
 
-Batch Engine jsont export → Nexcent Batch Client Extension
-```
+| Component | FE delivery | BE source | Ready | Evidence |
+|---|---|---|---:|---|
+| Header | Master Page/Fragment | Navigation Menu and site branding | `<yes/no>` | `<link>` |
+| Hero | Custom Element | `NXC Landing Hero` | `<yes/no>` | `<link>` |
+| Client Logos | Collection presentation | `NXC Clients Intro` + `NXC Client Logo` | `<yes/no>` | `<link>` |
+| Services | Custom Element | `NXC Services Intro` + `NXC Service Item` | `<yes/no>` | `<link>` |
+| Features | Custom Element | `NXC Feature Item` | `<yes/no>` | `<link>` |
+| Statistics | Collection presentation | `NXC Statistics Intro` + `NXC Statistic Item` | `<yes/no>` | `<link>` |
+| Testimonial | Collection presentation | `NXC Testimonial` | `<yes/no>` | `<link>` |
+| Community Updates | External Remote App | `NXC Community Intro` + `NXC Community Card` | `<yes/no>` | `<link>` |
+| Final CTA | Mapped component | `NXC CTA` | `<yes/no>` | `<link>` |
+| Footer | Master Page/Fragment | Navigation Menus and settings | `<yes/no>` | `<link>` |
 
-Describe any deviations:
+For each component provide:
 
-```text
-<none or explanation>
-```
+- Figma node/frame.
+- Desktop/tablet/mobile screenshot.
+- Web Content or Liferay configuration screenshot.
+- API response example.
+- Loading, empty, and error evidence when applicable.
+- One backend edit reflected without rebuilding FE.
 
-## 5. Frontend Components
+## 6. Web Content Models
 
-| Component | Data source | Loading | Empty | Error | Responsive |
-|---|---|---:|---:|---:|---:|
-| Hero | `NXC Landing Hero` | ✅ | ✅ | ✅ | ✅ |
-| Services | `NXC Services Intro` + `NXC Service Item` | ✅ | ✅ | ✅ | ✅ |
-| Features | `NXC Feature Item` | ✅ | ✅ | ✅ | ✅ |
-| Content Importer | Excel + Headless APIs | ✅ | N/A | ✅ | ✅ |
+| Structure | Expected records | Template | Actual |
+|---|---:|---|---:|
+| `NXC Landing Hero` | 1 | `NXC Landing Hero Preview` | `<count>` |
+| `NXC Clients Intro` | 1 | `<template>` | `<count>` |
+| `NXC Client Logo` | Figma count | `<template>` | `<count>` |
+| `NXC Services Intro` | 1 | `<template>` | `<count>` |
+| `NXC Service Item` | 3 | `<template>` | `<count>` |
+| `NXC Feature Item` | 2 | `<template>` | `<count>` |
+| `NXC Statistics Intro` | 1 | `<template>` | `<count>` |
+| `NXC Statistic Item` | 4 | `<template>` | `<count>` |
+| `NXC Testimonial` | 1+ | `<template>` | `<count>` |
+| `NXC Community Intro` | 1 | `<template>` | `<count>` |
+| `NXC Community Card` | 3 | `<template>` | `<count>` |
+| `NXC CTA` | 1 | `<template>` | `<count>` |
 
-Evidence:
+Evidence must show explicit field references, Templates, Web Content records, Documents and Media assets, and stable ERCs.
 
-- Desktop screenshot: `<path/link>`
-- Tablet screenshot: `<path/link>`
-- Mobile screenshot: `<path/link>`
-- Signed-out error state: `<path/link>`
-- Missing-content empty state: `<path/link>`
+## 7. Custom Elements
 
-## 6. Theme CSS and Style Book Evidence
+| Custom Element | Loading | Empty | Error | Responsive | Dynamic content |
+|---|---:|---:|---:|---:|---:|
+| `nexcent-hero` | `<pass>` | `<pass>` | `<pass>` | `<pass>` | `<pass>` |
+| `nexcent-services` | `<pass>` | `<pass>` | `<pass>` | `<pass>` | `<pass>` |
+| `nexcent-features` | `<pass>` | `<pass>` | `<pass>` | `<pass>` | `<pass>` |
+| `nexcent-content-importer` | `<pass>` | N/A | `<pass>` | `<pass>` | `<pass>` |
 
-| Check | Expected | Actual | Evidence |
-|---|---|---|---|
-| Theme CSS deploy | `Nexcent Theme CSS` available | `<result>` | `<link>` |
-| Complete base styles | Generated `clay.css` and `main.css` | `<result>` | `<link>` |
-| Token definition | Nexcent Brand + Nexcent Layout categories | `<result>` | `<link>` |
-| Style Book creation | `Nexcent Default` published | `<result>` | `<link>` |
-| Theme compatibility | Style Book targets Nexcent Theme CSS | `<result>` | `<link>` |
-| Page application | Landing page uses Nexcent Default | `<result>` | `<link>` |
-| Runtime primary token | `--nxc-style-primary` resolves | `<result>` | `<link>` |
-| Global alias | `--nxc-color-primary` follows Style Book | `<result>` | `<link>` |
-| No rebuild proof | UI changes after Style Book publish only | `<result>` | `<link>` |
+No sample business content is hard-coded in TypeScript/JSX: `<yes/no>`.
 
-Attach screenshots showing:
+## 8. Remote App
 
-- **Site Menu → Design → Style Books**.
-- Nexcent Brand color and typography token sets.
-- Nexcent Layout token set.
-- Landing page Page Design Options using `Nexcent Default`.
-- Browser console values for `--nxc-style-primary` and `--nxc-color-primary`.
+| Check | Result | Evidence |
+|---|---|---|
+| Assets hosted outside Liferay | `<pass/fail>` | `<link>` |
+| Registration Client Extension deployed | `<pass/fail>` | `<link>` |
+| Widget renders in Liferay | `<pass/fail>` | `<link>` |
+| Headless content loads | `<pass/fail>` | `<link>` |
+| Independent app release demonstrated | `<pass/fail>` | `<link>` |
+| External host stopped → error state | `<pass/fail>` | `<link>` |
+| External host restarted → recovery | `<pass/fail>` | `<link>` |
 
-Record the temporary editor-controlled test:
+## 9. Headless API Evidence
 
-```text
-Primary Color changed to: <value>
-Container Width changed to: <value>
-Card Radius changed to: <value>
-React rebuild required: No
-Values restored to Figma baseline: Yes / No
-```
-
-## 7. Web Content Models
-
-| Structure | Article count | Template |
-|---|---:|---|
-| `NXC Landing Hero` | 1 | `NXC Landing Hero Preview` |
-| `NXC Services Intro` | 1 | `NXC Services Intro Preview` |
-| `NXC Service Item` | 3 | `NXC Service Item Preview` |
-| `NXC Feature Item` | 2 | `NXC Feature Item Preview` |
-
-Attach screenshots showing:
-
-- Structure fields and field references.
-- Template preview.
-- Seven articles under **Site Content → Web Content**.
-- Six assets under Documents and Media.
-
-## 8. Headless API Evidence
-
-Record successful responses for:
+Record requests and successful responses for:
 
 ```text
 GET /o/headless-delivery/v1.0/sites/{site}/content-structures
@@ -135,15 +135,9 @@ GET /o/headless-delivery/v1.0/content-structures/{id}/structured-contents
 GET /o/headless-delivery/v1.0/sites/{site}/documents
 ```
 
-Evidence file or Postman collection:
+No numeric environment ID is committed in frontend source: `<yes/no>`.
 
-```text
-<path/link>
-```
-
-No numeric environment ID is committed in frontend source: `✅ / ❌`
-
-## 9. Excel Migration Results
+## 10. Excel Importer
 
 Workbook:
 
@@ -151,52 +145,71 @@ Workbook:
 sample-data/excel/nexcent-content.xlsx
 ```
 
+Expected sheets:
+
+```text
+Instructions
+Heroes
+ClientsIntro
+Clients
+ServicesIntro
+Services
+Features
+StatisticsIntro
+Statistics
+Testimonials
+CommunityIntro
+CommunityCards
+CTA
+```
+
 | Test | Expected | Actual | Evidence |
 |---|---|---|---|
-| First import | 7 created | `<result>` | `<link>` |
-| Second import | 7 updated, 0 duplicates | `<result>` | `<link>` |
-| Missing asset | Validation blocked | `<result>` | `<link>` |
-| Duplicate ERC | Validation blocked | `<result>` | `<link>` |
-| Unsafe HTML | Validation blocked | `<result>` | `<link>` |
+| First import | All expected records created | `<result>` | `<link>` |
+| Second import | Updated, zero duplicate ERC | `<result>` | `<link>` |
+| Missing asset | Blocked before mutation | `<result>` | `<link>` |
+| Duplicate ERC | Blocked | `<result>` | `<link>` |
+| Invalid select value | Blocked | `<result>` | `<link>` |
+| Invalid URL | Blocked | `<result>` | `<link>` |
+| Unsafe HTML | Blocked | `<result>` | `<link>` |
+| Partial CTA pair | Blocked | `<result>` | `<link>` |
 
-## 10. Batch Client Extension Results
+## 11. Batch Client Extension and Headless Batch
 
-Generated payload:
-
-```text
-client-extensions/nexcent-content-batch/batch/10-structured-content.batch-engine-data.json
-```
-
-| Check | Result |
-|---|---|
-| Export format is `jsont` | `<pass/fail>` |
-| Exactly seven `NXC-*` items | `<pass/fail>` |
-| Payload packaged under `batch/` | `<pass/fail>` |
-| First deployment succeeds | `<pass/fail>` |
-| Second deployment creates no duplicate ERC | `<pass/fail>` |
-
-Tomcat/batch evidence:
+Generated payloads:
 
 ```text
-<path/link>
+client-extensions/nexcent-content-batch/batch/*.batch-engine-data.json
 ```
 
-## 11. Accessibility and Responsive QA
+| Check | Result | Evidence |
+|---|---|---|
+| Export format is `jsont` | `<pass/fail>` | `<link>` |
+| Configuration generated by running Liferay | `<pass/fail>` | `<link>` |
+| Only approved `NXC-*` ERCs | `<pass/fail>` | `<link>` |
+| Dependency order documented | `<pass/fail>` | `<link>` |
+| First deployment succeeds | `<pass/fail>` | `<link>` |
+| Second deployment creates no duplicates | `<pass/fail>` | `<link>` |
+| Failed-item behavior documented | `<pass/fail>` | `<link>` |
+
+## 12. Responsive and Accessibility QA
 
 | Check | Result | Notes |
 |---|---|---|
-| Keyboard navigation | `<pass/fail>` | `<notes>` |
-| Visible focus | `<pass/fail>` | `<notes>` |
-| Image alt text | `<pass/fail>` | `<notes>` |
-| Heading hierarchy | `<pass/fail>` | `<notes>` |
 | Mobile 320–390 px | `<pass/fail>` | `<notes>` |
 | Tablet 768 px | `<pass/fail>` | `<notes>` |
+| Desktop 1024 px | `<pass/fail>` | `<notes>` |
 | Desktop 1440 px | `<pass/fail>` | `<notes>` |
+| Keyboard navigation | `<pass/fail>` | `<notes>` |
+| Visible focus | `<pass/fail>` | `<notes>` |
+| Heading hierarchy | `<pass/fail>` | `<notes>` |
+| Image alt text | `<pass/fail>` | `<notes>` |
+| Color contrast | `<pass/fail>` | `<notes>` |
 | Reduced motion | `<pass/fail>` | `<notes>` |
+| Long content | `<pass/fail>` | `<notes>` |
+| Broken image | `<pass/fail>` | `<notes>` |
 
-## 12. Automated Checks
-
-Run and paste results:
+## 13. Automated Checks
 
 ```bash
 node scripts/verify-course.mjs
@@ -207,58 +220,58 @@ npm run typecheck
 npm run build
 npm run generate:workbook
 
-cd ../..
-./gradlew :client-extensions:nexcent-theme-css:build
+cd ../../remote-apps/nexcent-community-app
+npm install
+npm run typecheck
+npm run build
 ```
 
 CI status:
 
 ```text
-Frontend Check: <pass/fail>
-Global Assets Check: <pass/fail>
-Style Book Check: <pass/fail>
-Batch Client Extension Check: <pass/fail>
-Course Contract Check: <pass/fail>
+Landing Elements Check: <pass/fail>
+Remote App Check: <pass/fail>
+Design System Check: <pass/fail>
+Batch Migration Check: <pass/fail>
+Project Contract Check: <pass/fail>
 ```
 
-## 13. Demo Script
+## 14. Final Demo
 
-1. Show the Figma design and final Liferay page.
-2. Show Nexcent Theme CSS and the frontend token definition.
-3. Open `Nexcent Default`, change one visual token, and publish without rebuilding.
-4. Restore the Figma value and show the page using the Style Book.
-5. Edit Hero Web Content and refresh the page without rebuilding frontend code.
-6. Add a Service article and show the grid updating dynamically.
-7. Show responsive desktop and mobile layouts.
-8. Open the Excel importer and validate the sample package.
-9. Run import twice and compare `created` versus `updated` reports.
-10. Show the Batch Client Extension payload and deployment evidence.
-11. Show all green GitHub checks.
+1. Show Figma landing page and detailed Style Guide.
+2. Show component FE–BE contract.
+3. Change one Style Book token without rebuilding FE.
+4. Demonstrate Header, Hero, Services, and Features.
+5. Demonstrate Community Updates running from the external host.
+6. Stop and restore the Remote App host.
+7. Edit backend content and refresh the page.
+8. Run Excel validation and import twice.
+9. Show Batch payload and repeat deployment.
+10. Show responsive, accessibility, and CI evidence.
 
-Target duration: 10–14 minutes.
+Target duration: 12–18 minutes.
 
-## 14. Known Limitations
+## 15. Known Limitations and Retrospective
+
+Known limitations:
 
 ```text
 - <limitation>
-- <limitation>
 ```
 
-## 15. Retrospective
-
-### What worked well
+What worked well:
 
 ```text
 <answer>
 ```
 
-### Hardest technical problem
+Hardest FE–BE contract issue:
 
 ```text
 <answer>
 ```
 
-### What the team would improve next
+What the team would improve:
 
 ```text
 <answer>

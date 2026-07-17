@@ -2,7 +2,9 @@ import React, {type ReactNode} from 'react';
 import {createRoot, type Root} from 'react-dom/client';
 
 import {App} from './App';
+import {Features} from './components/Features/Features';
 import {Hero} from './components/Hero/Hero';
+import {Services} from './components/Services/Services';
 import './styles.css';
 
 type ElementRenderer = (element: HTMLElement) => ReactNode;
@@ -41,6 +43,27 @@ registerReactElement('nexcent-hero', (element) => (
     <Hero
         structureIdentifier={
             element.getAttribute('structure-identifier') ?? 'NXC Landing Hero'
+        }
+    />
+));
+
+registerReactElement('nexcent-services', (element) => (
+    <Services
+        introStructureIdentifier={
+            element.getAttribute('intro-structure-identifier') ??
+            'NXC Services Intro'
+        }
+        itemStructureIdentifier={
+            element.getAttribute('item-structure-identifier') ??
+            'NXC Service Item'
+        }
+    />
+));
+
+registerReactElement('nexcent-features', (element) => (
+    <Features
+        structureIdentifier={
+            element.getAttribute('structure-identifier') ?? 'NXC Feature Item'
         }
     />
 ));

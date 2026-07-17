@@ -1,0 +1,9 @@
+{
+  "liferayDesignPack": {
+    "baseTheme": "styled"
+  },
+  "main": "package.json",
+  "name": "@nexcent/theme",
+  "private": true,
+  "version": "0.2.0"
+}

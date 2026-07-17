@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96" viewBox="0 0 96 96" role="img" aria-labelledby="title">
+  <title id="title">Membership organisations</title>
+  <rect width="96" height="96" rx="24" fill="#E8F5E9"/>
+  <circle cx="36" cy="36" r="12" fill="#4CAF4F"/>
+  <circle cx="62" cy="40" r="10" fill="#388E3B"/>
+  <path d="M18 72c2-15 11-23 26-23s24 8 26 23H18Z" fill="#4CAF4F"/>
+  <path d="M51 72c1-11 8-18 20-18 6 0 11 2 15 6v12H51Z" fill="#388E3B" opacity=".85"/>
+</svg>

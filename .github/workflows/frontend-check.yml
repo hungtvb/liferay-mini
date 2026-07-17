@@ -1,0 +1,49 @@
+name: Frontend Check
+
+on:
+  pull_request:
+    paths:
+      - "client-extensions/nexcent-landing-elements/**"
+      - ".github/workflows/frontend-check.yml"
+  push:
+    branches:
+      - main
+    paths:
+      - "client-extensions/nexcent-landing-elements/**"
+      - ".github/workflows/frontend-check.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  typecheck-and-build:
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: client-extensions/nexcent-landing-elements
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: client-extensions/nexcent-landing-elements/package.json
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Type-check
+        run: npm run typecheck
+
+      - name: Build Client Extension
+        run: npm run build
+
+      - name: Verify deterministic output
+        run: |
+          test -f build/index.js
+          test -f build/style.css

@@ -7,6 +7,7 @@
 | Role | Name | Responsibility |
 |---|---|---|
 | Frontend | `<name>` | Custom Elements, responsive UI, Global CSS/JS |
+| Design System | `<name>` | Theme CSS, frontend tokens, Style Book |
 | Backend | `<name>` | Web Content models, APIs, Excel migration, Batch CE |
 | QA/Demo | `<name>` | Test evidence, demo flow, final report |
 
@@ -20,6 +21,8 @@
 | Browser | `<browser/version>` |
 | Operating system | `<OS>` |
 | Site name/ERC | `<site>` |
+| Theme CSS | `Nexcent Theme CSS` |
+| Style Book | `Nexcent Default` |
 
 ## 3. Repository Evidence
 
@@ -33,11 +36,16 @@
 
 ```text
 Liferay Page
+├── Nexcent Theme CSS
+│   └── frontend-token-definition.json
+├── Nexcent Default Style Book
 ├── Nexcent Global CSS
 ├── Nexcent Global JavaScript
 ├── Nexcent Hero
 ├── Nexcent Services
 └── Nexcent Features
+
+Style Book → --nxc-style-* → Global CSS aliases → Custom Elements
 
 Custom Elements → Headless Delivery → Classic Web Content
 
@@ -69,7 +77,39 @@ Evidence:
 - Signed-out error state: `<path/link>`
 - Missing-content empty state: `<path/link>`
 
-## 6. Web Content Models
+## 6. Theme CSS and Style Book Evidence
+
+| Check | Expected | Actual | Evidence |
+|---|---|---|---|
+| Theme CSS deploy | `Nexcent Theme CSS` available | `<result>` | `<link>` |
+| Complete base styles | Generated `clay.css` and `main.css` | `<result>` | `<link>` |
+| Token definition | Nexcent Brand + Nexcent Layout categories | `<result>` | `<link>` |
+| Style Book creation | `Nexcent Default` published | `<result>` | `<link>` |
+| Theme compatibility | Style Book targets Nexcent Theme CSS | `<result>` | `<link>` |
+| Page application | Landing page uses Nexcent Default | `<result>` | `<link>` |
+| Runtime primary token | `--nxc-style-primary` resolves | `<result>` | `<link>` |
+| Global alias | `--nxc-color-primary` follows Style Book | `<result>` | `<link>` |
+| No rebuild proof | UI changes after Style Book publish only | `<result>` | `<link>` |
+
+Attach screenshots showing:
+
+- **Site Menu → Design → Style Books**.
+- Nexcent Brand color and typography token sets.
+- Nexcent Layout token set.
+- Landing page Page Design Options using `Nexcent Default`.
+- Browser console values for `--nxc-style-primary` and `--nxc-color-primary`.
+
+Record the temporary editor-controlled test:
+
+```text
+Primary Color changed to: <value>
+Container Width changed to: <value>
+Card Radius changed to: <value>
+React rebuild required: No
+Values restored to Figma baseline: Yes / No
+```
+
+## 7. Web Content Models
 
 | Structure | Article count | Template |
 |---|---:|---|
@@ -80,12 +120,12 @@ Evidence:
 
 Attach screenshots showing:
 
-- Structure fields and field references
-- Template preview
-- Seven articles under **Site Content → Web Content**
-- Six assets under Documents and Media
+- Structure fields and field references.
+- Template preview.
+- Seven articles under **Site Content → Web Content**.
+- Six assets under Documents and Media.
 
-## 7. Headless API Evidence
+## 8. Headless API Evidence
 
 Record successful responses for:
 
@@ -103,7 +143,7 @@ Evidence file or Postman collection:
 
 No numeric environment ID is committed in frontend source: `✅ / ❌`
 
-## 8. Excel Migration Results
+## 9. Excel Migration Results
 
 Workbook:
 
@@ -119,7 +159,7 @@ sample-data/excel/nexcent-content.xlsx
 | Duplicate ERC | Validation blocked | `<result>` | `<link>` |
 | Unsafe HTML | Validation blocked | `<result>` | `<link>` |
 
-## 9. Batch Client Extension Results
+## 10. Batch Client Extension Results
 
 Generated payload:
 
@@ -141,7 +181,7 @@ Tomcat/batch evidence:
 <path/link>
 ```
 
-## 10. Accessibility and Responsive QA
+## 11. Accessibility and Responsive QA
 
 | Check | Result | Notes |
 |---|---|---|
@@ -154,7 +194,7 @@ Tomcat/batch evidence:
 | Desktop 1440 px | `<pass/fail>` | `<notes>` |
 | Reduced motion | `<pass/fail>` | `<notes>` |
 
-## 11. Automated Checks
+## 12. Automated Checks
 
 Run and paste results:
 
@@ -166,6 +206,9 @@ npm install
 npm run typecheck
 npm run build
 npm run generate:workbook
+
+cd ../..
+./gradlew :client-extensions:nexcent-theme-css:build
 ```
 
 CI status:
@@ -173,31 +216,35 @@ CI status:
 ```text
 Frontend Check: <pass/fail>
 Global Assets Check: <pass/fail>
+Style Book Check: <pass/fail>
 Batch Client Extension Check: <pass/fail>
 Course Contract Check: <pass/fail>
 ```
 
-## 12. Demo Script
+## 13. Demo Script
 
 1. Show the Figma design and final Liferay page.
-2. Edit Hero Web Content and refresh the page without rebuilding frontend code.
-3. Add a Service article and show the grid updating dynamically.
-4. Show responsive desktop and mobile layouts.
-5. Open the Excel importer and validate the sample package.
-6. Run import twice and compare `created` versus `updated` reports.
-7. Show the Batch Client Extension payload and deployment evidence.
-8. Show all green GitHub checks.
+2. Show Nexcent Theme CSS and the frontend token definition.
+3. Open `Nexcent Default`, change one visual token, and publish without rebuilding.
+4. Restore the Figma value and show the page using the Style Book.
+5. Edit Hero Web Content and refresh the page without rebuilding frontend code.
+6. Add a Service article and show the grid updating dynamically.
+7. Show responsive desktop and mobile layouts.
+8. Open the Excel importer and validate the sample package.
+9. Run import twice and compare `created` versus `updated` reports.
+10. Show the Batch Client Extension payload and deployment evidence.
+11. Show all green GitHub checks.
 
-Target duration: 8–12 minutes.
+Target duration: 10–14 minutes.
 
-## 13. Known Limitations
+## 14. Known Limitations
 
 ```text
 - <limitation>
 - <limitation>
 ```
 
-## 14. Retrospective
+## 15. Retrospective
 
 ### What worked well
 

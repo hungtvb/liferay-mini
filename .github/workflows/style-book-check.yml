@@ -1,0 +1,105 @@
+name: Style Book Check
+
+on:
+  pull_request:
+    paths:
+      - "client-extensions/nexcent-theme-css/**"
+      - "client-extensions/nexcent-global-assets/assets/global.css"
+      - "docs/lab-guide/11.5-style-book.md"
+      - "scripts/verify-course.mjs"
+      - ".github/workflows/style-book-check.yml"
+  push:
+    branches:
+      - main
+      - final
+    paths:
+      - "client-extensions/nexcent-theme-css/**"
+      - "client-extensions/nexcent-global-assets/assets/global.css"
+      - "docs/lab-guide/11.5-style-book.md"
+      - "scripts/verify-course.mjs"
+      - ".github/workflows/style-book-check.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate-style-book:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Verify Theme CSS configuration
+        run: |
+          grep -q "type: themeCSS" client-extensions/nexcent-theme-css/client-extension.yaml
+          grep -q "clayURL: css/clay.css" client-extensions/nexcent-theme-css/client-extension.yaml
+          grep -q "mainURL: css/main.css" client-extensions/nexcent-theme-css/client-extension.yaml
+          grep -q "frontendTokenDefinitionJSON: src/frontend-token-definition.json" client-extensions/nexcent-theme-css/client-extension.yaml
+          grep -q '"baseTheme": "styled"' client-extensions/nexcent-theme-css/package.json
+
+      - name: Validate frontend token definition
+        run: |
+          node <<'NODE'
+          const fs = require('node:fs');
+          const file = 'client-extensions/nexcent-theme-css/src/frontend-token-definition.json';
+          const definition = JSON.parse(fs.readFileSync(file, 'utf8'));
+          const categories = definition.frontendTokenCategories;
+
+          if (!Array.isArray(categories) || categories.length < 2) {
+              throw new Error('Expected at least two frontend token categories.');
+          }
+
+          const tokens = categories.flatMap((category) =>
+              (category.frontendTokenSets || []).flatMap(
+                  (tokenSet) => tokenSet.frontendTokens || []
+              )
+          );
+          const names = tokens.map((token) => token.name);
+          const mappings = tokens.flatMap((token) =>
+              (token.mappings || [])
+                  .filter((mapping) => mapping.type === 'cssVariable')
+                  .map((mapping) => mapping.value)
+          );
+
+          if (new Set(names).size !== names.length) {
+              throw new Error('Duplicate frontend token names.');
+          }
+
+          if (new Set(mappings).size !== mappings.length) {
+              throw new Error('Duplicate CSS variable mappings.');
+          }
+
+          for (const required of [
+              'nxc-style-primary',
+              'nxc-style-font-family',
+              'nxc-style-container-width',
+              'nxc-style-section-space',
+              'nxc-style-radius-md',
+          ]) {
+              if (!mappings.includes(required)) {
+                  throw new Error(`Missing mapping: ${required}`);
+              }
+          }
+
+          console.log(`Validated ${tokens.length} Style Book tokens.`);
+          NODE
+
+      - name: Verify Global CSS aliases
+        run: |
+          grep -q "var(--nxc-style-primary, #4caf4f)" client-extensions/nexcent-global-assets/assets/global.css
+          grep -q "var(--nxc-style-container-width, 72rem)" client-extensions/nexcent-global-assets/assets/global.css
+          grep -q "var(--nxc-style-radius-md, 0.75rem)" client-extensions/nexcent-global-assets/assets/global.css
+
+      - name: Verify lesson and complete course contract
+        run: |
+          test -f docs/lab-guide/11.5-style-book.md
+          grep -q "Nexcent Default" docs/lab-guide/11.5-style-book.md
+          grep -q "LPD-30204" docs/lab-guide/11.5-style-book.md
+          node scripts/verify-course.mjs

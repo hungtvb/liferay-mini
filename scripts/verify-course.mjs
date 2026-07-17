@@ -48,10 +48,16 @@ const requiredFiles = [
     'client-extensions/nexcent-global-assets/client-extension.yaml',
     'client-extensions/nexcent-global-assets/assets/global.css',
     'client-extensions/nexcent-global-assets/assets/global.js',
+    'client-extensions/nexcent-theme-css/client-extension.yaml',
+    'client-extensions/nexcent-theme-css/package.json',
+    'client-extensions/nexcent-theme-css/src/frontend-token-definition.json',
+    'client-extensions/nexcent-theme-css/src/css/_clay_variables.scss',
+    'client-extensions/nexcent-theme-css/src/css/_custom.scss',
     'client-extensions/nexcent-landing-elements/client-extension.yaml',
     'client-extensions/nexcent-landing-elements/package.json',
     'client-extensions/nexcent-landing-elements/src/index.tsx',
     'client-extensions/nexcent-content-batch/client-extension.yaml',
+    'docs/lab-guide/11.5-style-book.md',
     'scripts/batch/prepare-structured-content-export.mjs',
     'scripts/batch/export-structured-content.sh',
     'scripts/batch/export-structured-content.ps1',
@@ -66,16 +72,24 @@ for (const requiredFile of requiredFiles) {
     await requireFile(requiredFile);
 }
 
+const labGuideDirectory = path.join(repositoryRoot, 'docs/lab-guide');
+const labGuideFiles = await readdir(labGuideDirectory);
+
 for (let lesson = 0; lesson <= 14; lesson++) {
     const prefix = String(lesson).padStart(2, '0');
-    const lessonFiles = (await readdir(path.join(repositoryRoot, 'docs/lab-guide')))
-        .filter((file) => file.startsWith(`${prefix}-`) && file.endsWith('.md'));
+    const lessonFiles = labGuideFiles.filter(
+        (file) => file.startsWith(`${prefix}-`) && file.endsWith('.md')
+    );
 
     if (lessonFiles.length !== 1) {
         failures.push(
             `Expected exactly one Lab ${prefix} Markdown file, found ${lessonFiles.length}.`
         );
     }
+}
+
+if (!labGuideFiles.includes('11.5-style-book.md')) {
+    failures.push('Expected the Style Book lesson at docs/lab-guide/11.5-style-book.md.');
 }
 
 await requireText('gradle.properties', [
@@ -99,6 +113,29 @@ await requireText(
 );
 
 await requireText(
+    'client-extensions/nexcent-global-assets/assets/global.css',
+    [
+        'var(--nxc-style-primary, #4caf4f)',
+        'var(--nxc-style-container-width, 72rem)',
+        'var(--nxc-style-radius-md, 0.75rem)',
+    ]
+);
+
+await requireText(
+    'client-extensions/nexcent-theme-css/client-extension.yaml',
+    [
+        'type: themeCSS',
+        'clayURL: css/clay.css',
+        'mainURL: css/main.css',
+        'frontendTokenDefinitionJSON: src/frontend-token-definition.json',
+    ]
+);
+
+await requireText('client-extensions/nexcent-theme-css/package.json', [
+    '"baseTheme": "styled"',
+]);
+
+await requireText(
     'client-extensions/nexcent-content-batch/client-extension.yaml',
     [
         'type: batch',
@@ -112,6 +149,63 @@ await requireText('client-extensions/nexcent-landing-elements/package.json', [
     '"exceljs": "4.4.0"',
     '"generate:workbook"',
 ]);
+
+if (await exists('client-extensions/nexcent-theme-css/src/frontend-token-definition.json')) {
+    const tokenDefinitionPath = path.join(
+        repositoryRoot,
+        'client-extensions/nexcent-theme-css/src/frontend-token-definition.json'
+    );
+    const tokenDefinition = JSON.parse(
+        await readFile(tokenDefinitionPath, 'utf8')
+    );
+    const categories = tokenDefinition.frontendTokenCategories;
+
+    if (!Array.isArray(categories) || categories.length < 2) {
+        failures.push('Style Book token definition must contain at least two categories.');
+    }
+    else {
+        const tokens = categories.flatMap((category) =>
+            (category.frontendTokenSets ?? []).flatMap(
+                (tokenSet) => tokenSet.frontendTokens ?? []
+            )
+        );
+        const tokenNames = tokens.map((token) => token.name);
+        const mappingValues = tokens.flatMap((token) =>
+            (token.mappings ?? [])
+                .filter((mapping) => mapping.type === 'cssVariable')
+                .map((mapping) => mapping.value)
+        );
+        const expectedMappings = [
+            'nxc-style-primary',
+            'nxc-style-primary-hover',
+            'nxc-style-heading',
+            'nxc-style-text',
+            'nxc-style-muted',
+            'nxc-style-surface',
+            'nxc-style-font-family',
+            'nxc-style-container-width',
+            'nxc-style-section-space',
+            'nxc-style-radius-sm',
+            'nxc-style-radius-md',
+        ];
+
+        if (new Set(tokenNames).size !== tokenNames.length) {
+            failures.push('Style Book token definition contains duplicate token names.');
+        }
+
+        if (new Set(mappingValues).size !== mappingValues.length) {
+            failures.push('Style Book token definition contains duplicate CSS variable mappings.');
+        }
+
+        for (const expectedMapping of expectedMappings) {
+            if (!mappingValues.includes(expectedMapping)) {
+                failures.push(
+                    `Style Book token definition is missing CSS variable mapping: ${expectedMapping}`
+                );
+            }
+        }
+    }
+}
 
 const sampleDataPath = path.join(
     repositoryRoot,
@@ -221,9 +315,10 @@ if (failures.length) {
 
 console.log('Course contract verification passed.');
 console.log('- Liferay DXP 2026.Q1.1 LTS baseline');
-console.log('- Labs 00–14 present');
+console.log('- Labs 00–14 plus Lab 11.5 Style Book present');
 console.log('- Hero, Services, Features, and Importer Custom Elements');
 console.log('- Company-scoped Global CSS and JavaScript');
+console.log('- Theme CSS Client Extension and editable frontend tokens');
 console.log('- Batch Client Extension and OAuth scopes');
 console.log('- Seven unique NXC sample records');
 console.log('- No sample business content hard-coded in frontend source');

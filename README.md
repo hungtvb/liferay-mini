@@ -87,7 +87,7 @@ Then open:
 8. [Create and deploy the first Custom Element](docs/lab-guide/07-first-custom-element.md)
 9. [Build the shared Headless API client](docs/lab-guide/08-shared-headless-api-client.md)
 10. [Build the dynamic Hero component](docs/lab-guide/09-dynamic-hero.md)
-11. Build the Services and Features components
+11. [Build the Services and Features components](docs/lab-guide/10-dynamic-services-features.md)
 12. Add global design tokens and shared utilities
 13. Import content from Excel
 14. Test and submit the final project
@@ -145,7 +145,7 @@ sample-data/
     └── landing-content.json
 ```
 
-The Excel workbook contains `Instructions`, `Heroes`, `Services`, and `Features` sheets with dropdown validation and field names matching the Liferay Structures.
+The current workbook contains `Instructions`, `Heroes`, `Services`, and `Features` sheets. Lab 12 regenerates it with the `ServicesIntro` sheet before implementing the Excel importer.
 
 These files are migration input, not frontend hard-coded data.
 

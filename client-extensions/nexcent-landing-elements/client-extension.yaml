@@ -29,3 +29,34 @@ nexcent-hero:
     urls:
         - index.js
     useESM: true
+
+nexcent-services:
+    cssURLs:
+        - style.css
+    friendlyURLMapping: nexcent-services
+    htmlElementName: nexcent-services
+    instanceable: false
+    name: Nexcent Services
+    portletCategoryName: category.client-extensions
+    properties:
+        - "intro-structure-identifier=NXC Services Intro"
+        - "item-structure-identifier=NXC Service Item"
+    type: customElement
+    urls:
+        - index.js
+    useESM: true
+
+nexcent-features:
+    cssURLs:
+        - style.css
+    friendlyURLMapping: nexcent-features
+    htmlElementName: nexcent-features
+    instanceable: false
+    name: Nexcent Features
+    portletCategoryName: category.client-extensions
+    properties:
+        - "structure-identifier=NXC Feature Item"
+    type: customElement
+    urls:
+        - index.js
+    useESM: true

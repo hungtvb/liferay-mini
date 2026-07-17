@@ -2,13 +2,57 @@
 
 ## Overview
 
-Create reusable Web Content models for the Services grid and alternating Feature sections. Field references must stay synchronized with the JSON and CSV migration samples.
+Create reusable Web Content models for the Services grid and alternating Feature sections. The visible section title, descriptions, icons, images, links, order, and variants all come from Liferay content.
 
 ## Estimated time
 
-60–90 minutes.
+75–100 minutes.
 
-## Part 1: Create the Service Item Structure
+## Prerequisites
+
+- Labs 00–05 are complete.
+- The sample assets in `sample-data/assets/` are available.
+- You can create Structures, Templates, and Web Content in the course site.
+
+## Part 1: Create the Services Intro Structure
+
+Create:
+
+```text
+NXC Services Intro
+```
+
+| Label | Field reference | Type | Required |
+|---|---|---|---|
+| Title | `title` | Text | Yes |
+| Description | `description` | Text | Yes |
+| Sort Order | `sortOrder` | Numeric or Text | Yes |
+| Active | `active` | Boolean | Yes |
+
+Create a FreeMarker Template named `NXC Services Intro Preview`:
+
+```ftl
+<header class="nxc-services-intro-preview">
+    <h2>${title.getData()}</h2>
+    <p>${description.getData()}</p>
+</header>
+```
+
+Create and publish one article using the values in:
+
+```text
+sample-data/csv/services-intro.csv
+```
+
+Use this external reference code:
+
+```text
+NXC-SERVICES-INTRO-001
+```
+
+Separating the intro from the service cards prevents React from hard-coding the section heading while keeping each service independently editable and migration-friendly.
+
+## Part 2: Create the Service Item Structure
 
 Create:
 
@@ -42,8 +86,6 @@ Create a FreeMarker Template named `NXC Service Item Preview`:
     </#if>
 </article>
 ```
-
-## Part 2: Create sample Services
 
 Create and publish:
 
@@ -104,8 +146,6 @@ Create `NXC Feature Item Preview`:
 </section>
 ```
 
-## Part 4: Create sample Features
-
 Use `sample-data/csv/features.csv` and upload:
 
 ```text
@@ -115,7 +155,7 @@ sample-data/assets/feature-security.svg
 
 Publish both articles.
 
-## Part 5: Verify through Headless Delivery
+## Part 4: Verify through Headless Delivery
 
 ```bash
 curl \
@@ -125,19 +165,34 @@ curl \
   --user "$LIFERAY_USER:$LIFERAY_PASSWORD"
 ```
 
-Verify one Hero, three Services, and two Features are returned.
+Verify the response includes:
+
+- One Services Intro article
+- Three Service Item articles
+- Two Feature Item articles
 
 ## Checkpoint
 
-- [ ] `NXC Service Item` exists.
-- [ ] Three Service articles are published.
-- [ ] `NXC Feature Item` exists.
-- [ ] Two Feature articles are published.
-- [ ] Select values are configured correctly.
-- [ ] Field references match JSON and CSV samples.
+- [ ] `NXC Services Intro` exists and has one published article.
+- [ ] `NXC Service Item` exists and has three published articles.
+- [ ] `NXC Feature Item` exists and has two published articles.
+- [ ] Select values are configured exactly as documented.
+- [ ] Field references match the JSON and CSV samples.
+- [ ] No visible Services or Features business content must be hard-coded in React.
+
+## Troubleshooting
+
+### A Structure cannot be resolved by the frontend
+
+Check the exact Structure name and its external reference code. The frontend accepts either value but comparisons are case-insensitive only after whitespace is trimmed.
+
+### Images are missing from Headless responses
+
+Publish the article after selecting the Documents and Media asset. Confirm that the Image field reference is `icon` or `image`, not its generated field name.
 
 ## Knowledge check
 
-1. Why should Services be separate articles instead of one large HTML field?
-2. How does `sortOrder` help the frontend?
-3. Why is `imagePosition` content data rather than CSS hard-coding?
+1. Why is the Services intro a separate article instead of repeated in every service row?
+2. How does `sortOrder` make migration results deterministic?
+3. Why are `imagePosition` and `backgroundVariant` content fields rather than React conditions tied to article IDs?
+4. Why should image alt text be stored separately from the asset filename?

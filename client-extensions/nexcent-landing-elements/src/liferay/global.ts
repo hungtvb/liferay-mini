@@ -1,3 +1,10 @@
+export type PortalContext = {
+    host: string;
+    languageId: string;
+    scopeGroupId: string;
+    signedIn: boolean;
+};
+
 export type LiferayGlobal = {
     authToken?: string;
     ThemeDisplay?: {
@@ -7,15 +14,36 @@ export type LiferayGlobal = {
     };
 };
 
-type LiferayWindow = Window & {
-    Liferay?: LiferayGlobal;
+export type NexcentGlobal = {
+    dispatch?: (name: string, detail?: unknown) => void;
+    getPortalContext?: () => PortalContext;
+    version?: string;
 };
 
-export function getLiferay(): LiferayGlobal | undefined {
-    return (window as LiferayWindow).Liferay;
+type LiferayWindow = Window & {
+    Liferay?: LiferayGlobal;
+    Nexcent?: NexcentGlobal;
+};
+
+function getWindow(): LiferayWindow {
+    return window as LiferayWindow;
 }
 
-export function getPortalContext() {
+export function getLiferay(): LiferayGlobal | undefined {
+    return getWindow().Liferay;
+}
+
+export function getNexcent(): NexcentGlobal | undefined {
+    return getWindow().Nexcent;
+}
+
+export function getPortalContext(): PortalContext {
+    const globalContext = getNexcent()?.getPortalContext?.();
+
+    if (globalContext) {
+        return globalContext;
+    }
+
     const liferay = getLiferay();
 
     return {
@@ -29,13 +57,13 @@ export function getPortalContext() {
 }
 
 export function getSiteId(): string {
-    const siteId = getLiferay()?.ThemeDisplay?.getScopeGroupId?.();
+    const siteId = getPortalContext().scopeGroupId;
 
-    if (siteId === undefined || siteId === null || siteId === '') {
+    if (!siteId || siteId === 'unknown') {
         throw new Error(
-            'Unable to resolve the current Liferay site from ThemeDisplay.'
+            'Unable to resolve the current Liferay site from Nexcent Global JS or ThemeDisplay.'
         );
     }
 
-    return String(siteId);
+    return siteId;
 }

@@ -1,0 +1,21 @@
+assemble:
+    - from: assets
+      hashify: global.css
+      into: static
+    - from: assets
+      hashify: global.js
+      into: static
+
+nexcent-global-css:
+    name: Nexcent Global CSS
+    scope: company
+    type: globalCSS
+    url: global.*.css
+
+nexcent-global-js:
+    name: Nexcent Global JavaScript
+    scriptElementAttributes:
+        data-senna-track: permanent
+        defer: true
+    type: globalJS
+    url: global.*.js

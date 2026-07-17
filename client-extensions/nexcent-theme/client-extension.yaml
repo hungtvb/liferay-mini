@@ -1,0 +1,30 @@
+assemble:
+    - from: assets
+      into: static
+
+nexcent-theme-css:
+    clayURL: css/clay.css
+    frontendTokenDefinitionJSON: src/frontend-token-definition.json
+    mainURL: css/main.css
+    name: Nexcent Theme CSS
+    type: themeCSS
+
+nexcent-global-css:
+    name: Nexcent Global CSS
+    scope: layout
+    type: globalCSS
+    url: global.css
+
+nexcent-global-js:
+    name: Nexcent Global JavaScript
+    scope: layout
+    scriptElementAttributes:
+        data-senna-track: permanent
+        defer: true
+    type: globalJS
+    url: global.js
+
+nexcent-theme-favicon:
+    name: Nexcent Theme Favicon
+    type: themeFavicon
+    url: favicon.svg

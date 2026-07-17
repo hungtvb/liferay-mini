@@ -1,0 +1,51 @@
+html {
+    color-scheme: light;
+}
+
+body {
+    background: var(--nxc-style-white, #ffffff);
+    color: var(--nxc-style-text, #4d4d4d);
+    font-family: var(
+        --nxc-style-font-family,
+        Inter,
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif
+    );
+    font-size: var(--nxc-style-body-size, 1rem);
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    color: var(--nxc-style-heading, #263238);
+    font-weight: var(--nxc-style-heading-weight, 600);
+}
+
+a {
+    color: var(--nxc-style-primary, #4caf4f);
+}
+
+a:hover {
+    color: var(--nxc-style-primary-hover, #388e3b);
+}
+
+.btn-primary {
+    --btn-bg: var(--nxc-style-primary, #4caf4f);
+    --btn-border-color: var(--nxc-style-primary, #4caf4f);
+    --btn-hover-bg: var(--nxc-style-primary-hover, #388e3b);
+    --btn-hover-border-color: var(--nxc-style-primary-hover, #388e3b);
+    --btn-active-bg: var(--nxc-style-primary-active, #237d31);
+    --btn-active-border-color: var(--nxc-style-primary-active, #237d31);
+}
+
+.nxc-style-book-container {
+    margin-inline: auto;
+    max-width: var(--nxc-style-container-width, 72rem);
+    padding-inline: var(--nxc-style-page-gutter, 1.5rem);
+}

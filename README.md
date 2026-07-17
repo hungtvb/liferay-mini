@@ -13,9 +13,10 @@ The previous course is preserved at [`archive/course-v1`](https://github.com/hun
 
 ### Frontend
 
-- Extract the Figma Style Guide and implement it with Theme CSS, Style Books, Global CSS, and Global JavaScript.
+- Extract the Figma Style Guide and implement it with one unified Nexcent Theme client-extension project.
+- Provide Theme CSS, frontend tokens, the `Nexcent Default` Style Book package, Global CSS, Global JavaScript, and a theme favicon.
 - Build at least three complete dynamic components using Custom Element Client Extensions.
-- Build one externally hosted Remote App and register it in Liferay.
+- Build one externally hosted Community Updates Remote App and register it in Liferay.
 - Do not hard-code text, images, services, statistics, testimonials, or blog cards in frontend source.
 - Consume Liferay Headless APIs.
 - Implement desktop, tablet, and mobile layouts with loading, empty, and error states.
@@ -32,7 +33,7 @@ The previous course is preserved at [`archive/course-v1`](https://github.com/hun
 
 ## Explicit non-goals
 
-The core project does not require OSGi business modules, Gogo Shell, Service Builder, REST Builder BFF, or Liferay Forms. Those technologies are added only when a business requirement needs them.
+The core project does not require OSGi business modules, Gogo Shell, Service Builder, REST Builder BFF, or legacy Liferay Forms. Those technologies are added only when a business requirement needs them.
 
 ## Delivery architecture
 
@@ -41,12 +42,17 @@ Figma Landing Page + Detailed Style Guide
                     ↓
           FE–BE component contracts
                     ↓
-Theme CSS → Frontend Tokens → Nexcent Style Book
-                    ↓
-Global CSS aliases + Global JavaScript utilities
+client-extensions/nexcent-theme
+├── Theme CSS + frontend-token-definition.json
+├── Nexcent Default Style Book values
+├── Global CSS aliases and OOTB Master Page hooks
+├── Global JavaScript utilities
+└── Theme favicon
                     ↓
 Liferay Content Page / Master Page
-├── Header + Footer using page/navigation configuration
+├── OOTB Header and Footer composition
+├── OOTB Navigation Menus
+├── OOTB Newsletter Object Form
 ├── Hero Custom Element
 ├── Client Logos collection
 ├── Services Custom Element
@@ -73,12 +79,43 @@ Headless Batch Engine jsont export
 Batch Client Extension
 ```
 
+## Theme package
+
+The shared design foundation is maintained in:
+
+```text
+client-extensions/nexcent-theme/
+├── client-extension.yaml
+├── package.json
+├── assets/
+│   ├── favicon.svg
+│   ├── global.css
+│   └── global.js
+├── src/
+│   ├── css/
+│   │   ├── _clay_variables.scss
+│   │   └── _custom.scss
+│   └── frontend-token-definition.json
+└── style-book/nexcent-default/
+    ├── frontend-tokens-values.json
+    └── style-book.json
+```
+
+One `client-extension.yaml` defines four entries:
+
+- `nexcent-theme-css`
+- `nexcent-global-css`
+- `nexcent-global-js`
+- `nexcent-theme-favicon`
+
+The Style Book is a Liferay site configuration bound to the Theme CSS external reference code. Its import files are versioned beside the client extension so DEV, STG, and PROD use the same approved defaults.
+
 ## Component delivery map
 
 | Figma component | FE delivery | BE ownership |
 |---|---|---|
-| Style Guide | Theme CSS, Style Book, Global CSS/JS | Token defaults and editor governance |
-| Header | Master Page/Fragment and responsive navigation | Site Pages, Navigation Menu, logo, CTA settings |
+| Style Guide | Unified Theme package and Style Book | Token defaults and editor governance |
+| Header | OOTB Master Page composition and Navigation Bar | Site Pages, Navigation Menu, logo, CTA settings |
 | Hero | `nexcent-hero` Custom Element | `NXC Landing Hero` Structure and Template |
 | Client logos | Collection presentation | `NXC Client Logo` articles |
 | Services | `nexcent-services` Custom Element | `NXC Services Intro` and `NXC Service Item` |
@@ -87,7 +124,7 @@ Batch Client Extension
 | Testimonial | Collection presentation | `NXC Testimonial` articles |
 | Community updates | Externally hosted Remote App | `NXC Community Intro` and `NXC Community Card` |
 | Final CTA | Mapped page component | `NXC CTA` article |
-| Footer | Master Page/Fragment | Navigation Menus and site settings |
+| Footer | OOTB Master Page composition | Navigation Menus, Object Form, and site settings |
 | Excel importer | `nexcent-content-importer` Custom Element | Workbook schema, validation, API permissions |
 | Repeatable migration | Deployment verification | Batch Client Extension and Batch Engine payload |
 
@@ -98,7 +135,7 @@ See [`docs/contracts/component-contracts.md`](docs/contracts/component-contracts
 1. [Project brief and acceptance criteria](docs/course/00-project-brief.md)
 2. [Audit the Figma landing page and Style Guide](docs/course/01-figma-audit.md)
 3. [Define component-by-component FE–BE contracts](docs/course/02-fe-be-contracts.md)
-4. [Build Theme CSS, Style Book, Global CSS, and Global JavaScript](docs/course/03-design-system.md)
+4. [Build the unified Theme package and Style Book](docs/course/03-design-system.md)
 5. [Create Web Content Structures, Templates, assets, and sample data](docs/course/04-content-foundation.md)
 6. [Implement Header, Hero, and Client Logos](docs/course/05-header-hero-clients.md)
 7. [Implement Services and Feature sections](docs/course/06-services-features.md)
@@ -114,10 +151,9 @@ See [`docs/contracts/component-contracts.md`](docs/contracts/component-contracts
 liferay-mini/
 ├── client-extensions/
 │   ├── nexcent-content-batch/
-│   ├── nexcent-global-assets/
 │   ├── nexcent-landing-elements/
 │   ├── nexcent-remote-app-registration/
-│   └── nexcent-theme-css/
+│   └── nexcent-theme/
 ├── remote-apps/
 │   └── nexcent-community-app/
 ├── docs/
@@ -157,7 +193,10 @@ http://localhost:8080/o/api
 ## Project acceptance criteria
 
 - The implemented page matches the Figma composition and detailed Style Guide.
+- The unified Theme package deploys Theme CSS, Global CSS, Global JavaScript, and the favicon together.
+- `Nexcent Default` Style Book values map one-to-one to the Theme CSS frontend tokens.
 - Style Book changes propagate through stable Global CSS aliases.
+- Header, Footer, Navigation, and Newsletter use Liferay OOTB page-building capabilities.
 - Hero, Services, and Features are complete dynamic Custom Elements.
 - Community Updates runs as an externally hosted Remote App registered in Liferay.
 - No sample business content is hard-coded in TypeScript, JSX, or CSS.

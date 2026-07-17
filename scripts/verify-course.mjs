@@ -56,18 +56,23 @@ const courseFiles = [
     '11-integration-qa.md',
 ];
 
+const themeRoot = 'client-extensions/nexcent-theme';
 const requiredFiles = [
     'README.md',
     'SUBMISSION.md',
     'gradle.properties',
     'docs/contracts/component-contracts.md',
     ...courseFiles.map((file) => `docs/course/${file}`),
-    'client-extensions/nexcent-global-assets/client-extension.yaml',
-    'client-extensions/nexcent-global-assets/assets/global.css',
-    'client-extensions/nexcent-global-assets/assets/global.js',
-    'client-extensions/nexcent-theme-css/client-extension.yaml',
-    'client-extensions/nexcent-theme-css/package.json',
-    'client-extensions/nexcent-theme-css/src/frontend-token-definition.json',
+    `${themeRoot}/client-extension.yaml`,
+    `${themeRoot}/package.json`,
+    `${themeRoot}/assets/favicon.svg`,
+    `${themeRoot}/assets/global.css`,
+    `${themeRoot}/assets/global.js`,
+    `${themeRoot}/src/css/_clay_variables.scss`,
+    `${themeRoot}/src/css/_custom.scss`,
+    `${themeRoot}/src/frontend-token-definition.json`,
+    `${themeRoot}/style-book/nexcent-default/style-book.json`,
+    `${themeRoot}/style-book/nexcent-default/frontend-tokens-values.json`,
     'client-extensions/nexcent-landing-elements/client-extension.yaml',
     'client-extensions/nexcent-landing-elements/package.json',
     'client-extensions/nexcent-landing-elements/src/index.tsx',
@@ -108,6 +113,7 @@ await requireText('README.md', [
     'Community Updates Remote App',
     'archive/course-v1',
     'Explicit non-goals',
+    'client-extensions/nexcent-theme',
 ]);
 
 await requireText('docs/contracts/component-contracts.md', [
@@ -136,32 +142,39 @@ await requireText(
     ]
 );
 
-await requireText(
-    'client-extensions/nexcent-global-assets/client-extension.yaml',
-    ['type: globalCSS', 'type: globalJS', 'scope: company']
-);
+await requireText(`${themeRoot}/client-extension.yaml`, [
+    'type: themeCSS',
+    'clayURL: css/clay.css',
+    'mainURL: css/main.css',
+    'frontendTokenDefinitionJSON: src/frontend-token-definition.json',
+    'type: globalCSS',
+    'type: globalJS',
+    'type: themeFavicon',
+    'scope: layout',
+    'url: favicon.svg',
+]);
 
-await requireText(
-    'client-extensions/nexcent-global-assets/assets/global.css',
-    [
-        'var(--nxc-style-primary, #4caf4f)',
-        'var(--nxc-style-container-width, 72rem)',
-        'var(--nxc-style-radius-md, 0.75rem)',
-    ]
-);
+await requireText(`${themeRoot}/package.json`, ['"baseTheme": "styled"']);
 
-await requireText(
-    'client-extensions/nexcent-theme-css/client-extension.yaml',
-    [
-        'type: themeCSS',
-        'clayURL: css/clay.css',
-        'mainURL: css/main.css',
-        'frontendTokenDefinitionJSON: src/frontend-token-definition.json',
-    ]
-);
+await requireText(`${themeRoot}/assets/global.css`, [
+    'var(--nxc-style-primary, #4caf4f)',
+    'var(--nxc-style-container-width, 72rem)',
+    'var(--nxc-style-radius-md, 0.75rem)',
+    '.nxc-site-header',
+    '.nxc-site-footer',
+    '.nxc-newsletter',
+]);
 
-await requireText('client-extensions/nexcent-theme-css/package.json', [
-    '"baseTheme": "styled"',
+await requireText(`${themeRoot}/assets/global.js`, [
+    'window.Nexcent',
+    'getPortalContext',
+    'getStyleToken',
+    "dispatch('global-ready'",
+]);
+
+await requireText(`${themeRoot}/assets/favicon.svg`, [
+    '<svg',
+    '#4CAF4F',
 ]);
 
 await requireText(
@@ -199,15 +212,13 @@ await requireText(
     ]
 );
 
-if (await exists('client-extensions/nexcent-theme-css/src/frontend-token-definition.json')) {
+const tokenDefinitionPath = `${themeRoot}/src/frontend-token-definition.json`;
+const styleBookPath = `${themeRoot}/style-book/nexcent-default/style-book.json`;
+const styleBookValuesPath = `${themeRoot}/style-book/nexcent-default/frontend-tokens-values.json`;
+
+if (await exists(tokenDefinitionPath)) {
     const definition = JSON.parse(
-        await readFile(
-            path.join(
-                repositoryRoot,
-                'client-extensions/nexcent-theme-css/src/frontend-token-definition.json'
-            ),
-            'utf8'
-        )
+        await readFile(path.join(repositoryRoot, tokenDefinitionPath), 'utf8')
     );
     const categories = definition.frontendTokenCategories;
 
@@ -241,11 +252,52 @@ if (await exists('client-extensions/nexcent-theme-css/src/frontend-token-definit
             'nxc-style-container-width',
             'nxc-style-section-space',
             'nxc-style-radius-md',
+            'nxc-style-header-height',
         ]) {
             if (!mappings.includes(required)) {
                 failures.push(`Style Book token definition is missing mapping: ${required}`);
             }
         }
+
+        if (await exists(styleBookValuesPath)) {
+            const values = JSON.parse(
+                await readFile(path.join(repositoryRoot, styleBookValuesPath), 'utf8')
+            );
+
+            for (const token of tokens) {
+                const configured = values[token.name];
+                const mapping = token.mappings?.find(
+                    (item) => item.type === 'cssVariable'
+                )?.value;
+
+                if (!configured) {
+                    failures.push(`Style Book values are missing token: ${token.name}`);
+                }
+                else if (configured.cssVariableMapping !== mapping) {
+                    failures.push(
+                        `Style Book mapping mismatch for ${token.name}: ${configured.cssVariableMapping}`
+                    );
+                }
+            }
+        }
+    }
+}
+
+if (await exists(styleBookPath)) {
+    const styleBook = JSON.parse(
+        await readFile(path.join(repositoryRoot, styleBookPath), 'utf8')
+    );
+
+    if (styleBook.name !== 'Nexcent Default') {
+        failures.push('The default Style Book must be named Nexcent Default.');
+    }
+
+    if (styleBook.themeId !== 'nexcent-theme-css') {
+        failures.push('The Style Book must target nexcent-theme-css.');
+    }
+
+    if (styleBook.frontendTokensValuesPath !== 'frontend-tokens-values.json') {
+        failures.push('The Style Book values path is invalid.');
     }
 }
 
@@ -289,6 +341,7 @@ async function scanFrontendDirectory(relativeDirectory) {
     }
 }
 
+await scanFrontendDirectory(`${themeRoot}/assets`);
 await scanFrontendDirectory('client-extensions/nexcent-landing-elements/src');
 await scanFrontendDirectory('remote-apps/nexcent-community-app/src');
 
@@ -314,7 +367,7 @@ console.log('Rebuilt project contract verification passed.');
 console.log('- Original FE–BE Figma scope');
 console.log('- Twelve rebuilt course chapters');
 console.log('- Component-by-component FE–BE contracts');
-console.log('- Theme CSS, Style Book, Global CSS, and Global JavaScript');
+console.log('- Unified Theme CSS, Style Book, Global CSS/JS, and favicon package');
 console.log('- Hero, Services, Features, and Importer Custom Elements');
 console.log('- Externally hosted Community Remote App scaffold');
 console.log('- Web Content, Excel, Batch Client Extension, and Headless Batch scope');

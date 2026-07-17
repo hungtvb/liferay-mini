@@ -1,0 +1,90 @@
+{
+  "nexcentPrimaryColor": {
+    "cssVariableMapping": "nxc-style-primary",
+    "value": "#4caf4f"
+  },
+  "nexcentPrimaryHoverColor": {
+    "cssVariableMapping": "nxc-style-primary-hover",
+    "value": "#388e3b"
+  },
+  "nexcentPrimaryActiveColor": {
+    "cssVariableMapping": "nxc-style-primary-active",
+    "value": "#237d31"
+  },
+  "nexcentSecondaryColor": {
+    "cssVariableMapping": "nxc-style-secondary",
+    "value": "#263238"
+  },
+  "nexcentHeadingColor": {
+    "cssVariableMapping": "nxc-style-heading",
+    "value": "#263238"
+  },
+  "nexcentTextColor": {
+    "cssVariableMapping": "nxc-style-text",
+    "value": "#4d4d4d"
+  },
+  "nexcentMutedColor": {
+    "cssVariableMapping": "nxc-style-muted",
+    "value": "#717171"
+  },
+  "nexcentBorderColor": {
+    "cssVariableMapping": "nxc-style-border",
+    "value": "#abbed1"
+  },
+  "nexcentSurfaceColor": {
+    "cssVariableMapping": "nxc-style-surface",
+    "value": "#f5f7fa"
+  },
+  "nexcentWhiteColor": {
+    "cssVariableMapping": "nxc-style-white",
+    "value": "#ffffff"
+  },
+  "nexcentFontFamily": {
+    "cssVariableMapping": "nxc-style-font-family",
+    "value": "Inter, system-ui, sans-serif"
+  },
+  "nexcentHeroHeadingSize": {
+    "cssVariableMapping": "nxc-style-hero-heading-size",
+    "value": "4rem"
+  },
+  "nexcentHeadingSize": {
+    "cssVariableMapping": "nxc-style-heading-size",
+    "value": "2.25rem"
+  },
+  "nexcentBodySize": {
+    "cssVariableMapping": "nxc-style-body-size",
+    "value": "1rem"
+  },
+  "nexcentHeadingWeight": {
+    "cssVariableMapping": "nxc-style-heading-weight",
+    "value": "600"
+  },
+  "nexcentContainerWidth": {
+    "cssVariableMapping": "nxc-style-container-width",
+    "value": "72rem"
+  },
+  "nexcentSectionSpacing": {
+    "cssVariableMapping": "nxc-style-section-space",
+    "value": "4rem"
+  },
+  "nexcentPageGutter": {
+    "cssVariableMapping": "nxc-style-page-gutter",
+    "value": "1.5rem"
+  },
+  "nexcentHeaderHeight": {
+    "cssVariableMapping": "nxc-style-header-height",
+    "value": "4.5rem"
+  },
+  "nexcentSmallRadius": {
+    "cssVariableMapping": "nxc-style-radius-sm",
+    "value": "0.25rem"
+  },
+  "nexcentCardRadius": {
+    "cssVariableMapping": "nxc-style-radius-md",
+    "value": "0.75rem"
+  },
+  "nexcentCardShadow": {
+    "cssVariableMapping": "nxc-style-shadow-card",
+    "value": "0 0.5rem 1.5rem rgb(38 50 56 / 10%)"
+  }
+}

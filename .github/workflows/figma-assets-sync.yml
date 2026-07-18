@@ -9,9 +9,9 @@ on:
         default: "1:2"
       max_assets:
         description: Maximum Style Guide assets to export in one run
-        type: number
+        type: string
         required: true
-        default: 80
+        default: "80"
       prune:
         description: Remove stale files managed by the sync directory
         type: boolean
@@ -38,6 +38,11 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "22"
+
+      - name: Validate sync scripts
+        run: |
+          node --check scripts/figma-sync.mjs
+          node --check scripts/figma-style-guide-sync.mjs
 
       - name: Export Style Guide assets from Figma
         env:

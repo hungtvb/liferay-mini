@@ -111,7 +111,12 @@ export function Hero({structureIdentifier}: HeroProps) {
                     {hero.description && <p>{hero.description}</p>}
 
                     {hero.ctaLabel && hero.ctaUrl && (
-                        <a className="nxc-button nxc-button--primary" href={hero.ctaUrl}>
+                        <a
+                            className="nxc-button nxc-button--primary"
+                            href={hero.ctaUrl}
+                            rel={hero.ctaTarget === '_blank' ? 'noopener noreferrer' : undefined}
+                            target={hero.ctaTarget}
+                        >
                             {hero.ctaLabel}
                         </a>
                     )}

@@ -8,7 +8,7 @@
     padding: clamp(3.5rem, 8vw, 6rem) 1.5rem;
 }
 
-.nxc-feature--silver { background: var(--nxc-color-surface); }
+.nxc-feature--muted { background: var(--nxc-color-surface); }
 
 .nxc-feature__container {
     align-items: center;

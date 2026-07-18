@@ -7,6 +7,8 @@ The Figma landing page and its detailed Style Guide are the source of truth. Eve
 - **FE:** rendering, responsive behavior, accessibility, component states, and Liferay frontend technology.
 - **BE:** content ownership, Web Content fields, assets, API contract, validation, migration, and editor workflow.
 
+Public integration preview: `https://nexcent-liferay-static.vercel.app`. The same deployment exposes the Community Remote App assets under `/remote-app/`. Add `?source=headless&liferayBaseURL=<portal>&siteId=<site>` to run the static composition against live Structured Content.
+
 The previous course is preserved at [`archive/course-v1`](https://github.com/hungtvb/liferay-mini/tree/archive/course-v1).
 
 ## Original project scope
@@ -174,6 +176,8 @@ Required tools:
 - Blade CLI
 - Node.js 22+
 - npm or Yarn
+
+The repository includes the Gradle 8.5 Wrapper, so a machine-wide Gradle installation is not required.
 
 Bootstrap and initialize the bundle:
 

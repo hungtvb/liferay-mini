@@ -6,24 +6,24 @@ import {
     readNumber,
     readText,
 } from '../../api/structuredContent';
+import {safeLinkUrl} from '../../utils/url';
 
 export type ServiceContent = {
     active: boolean;
-    descriptionHtml: string;
+    description: string;
     iconAlt: string;
     iconUrl: string;
     id: number;
     sortOrder: number;
-    targetUrl: string;
+    linkLabel: string;
+    linkUrl: string;
     title: string;
 };
 
 export type ServicesIntroContent = {
-    active: boolean;
     description: string;
     id: number;
-    sortOrder: number;
-    title: string;
+    heading: string;
 };
 
 export function mapServiceContent(item: StructuredContent): ServiceContent {
@@ -32,12 +32,19 @@ export function mapServiceContent(item: StructuredContent): ServiceContent {
 
     return {
         active: readBoolean(fields, 'active', true),
-        descriptionHtml: readText(fields, 'descriptionHtml'),
+        description: readText(
+            fields,
+            'description',
+            readText(fields, 'descriptionHtml')
+        ),
         iconAlt: readText(fields, 'iconAlt'),
         iconUrl: icon?.contentUrl ?? '',
         id: item.id,
         sortOrder: readNumber(fields, 'sortOrder'),
-        targetUrl: readText(fields, 'targetUrl'),
+        linkLabel: readText(fields, 'linkLabel'),
+        linkUrl: safeLinkUrl(
+            readText(fields, 'linkUrl', readText(fields, 'targetUrl'))
+        ),
         title: readText(fields, 'title', item.title),
     };
 }
@@ -48,10 +55,8 @@ export function mapServicesIntroContent(
     const fields = flattenContentFields(item.contentFields);
 
     return {
-        active: readBoolean(fields, 'active', true),
         description: readText(fields, 'description'),
+        heading: readText(fields, 'heading', readText(fields, 'title', item.title)),
         id: item.id,
-        sortOrder: readNumber(fields, 'sortOrder'),
-        title: readText(fields, 'title', item.title),
     };
 }

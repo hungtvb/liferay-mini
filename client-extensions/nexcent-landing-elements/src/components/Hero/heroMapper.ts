@@ -6,10 +6,12 @@ import {
     readNumber,
     readText,
 } from '../../api/structuredContent';
+import {safeLinkUrl} from '../../utils/url';
 
 export type HeroContent = {
     active: boolean;
     ctaLabel: string;
+    ctaTarget: '_blank' | '_self';
     ctaUrl: string;
     description: string;
     highlightedText: string;
@@ -27,7 +29,9 @@ export function mapHeroContent(item: StructuredContent): HeroContent {
     return {
         active: readBoolean(fields, 'active', true),
         ctaLabel: readText(fields, 'ctaLabel'),
-        ctaUrl: readText(fields, 'ctaUrl'),
+        ctaTarget:
+            readText(fields, 'ctaTarget') === '_blank' ? '_blank' : '_self',
+        ctaUrl: safeLinkUrl(readText(fields, 'ctaUrl')),
         description: readText(fields, 'description'),
         highlightedText: readText(fields, 'highlightedText'),
         id: item.id,

@@ -8,12 +8,18 @@ import {
 } from '../../api/structuredContent';
 import {assetBasename} from './validation';
 import {
+    type ClientRow,
+    type CommunityCardRow,
+    type CtaRow,
     type FeatureRow,
     type HeroRow,
     type ImportResult,
+    type IntroMigrationRow,
     type MigrationWorkbook,
     type ServiceRow,
-    type ServicesIntroRow,
+    type StatisticRow,
+    type StatisticsIntroRow,
+    type TestimonialRow,
 } from './types';
 
 type Document = ImageValue & {
@@ -38,10 +44,23 @@ type StructuredContentPayload = {
 };
 
 type StructureMap = {
+    client: ContentStructure;
+    clientsIntro: ContentStructure;
+    communityCard: ContentStructure;
+    communityIntro: ContentStructure;
+    cta: ContentStructure;
     feature: ContentStructure;
     hero: ContentStructure;
     service: ContentStructure;
     servicesIntro: ContentStructure;
+    statistic: ContentStructure;
+    statisticsIntro: ContentStructure;
+    testimonial: ContentStructure;
+};
+
+type ImportJob = {
+    payload: StructuredContentPayload;
+    type: ImportResult['type'];
 };
 
 function slug(value: string): string {
@@ -68,6 +87,20 @@ function imageField(name: string, image: Document): ContentFieldPayload {
         contentFieldValue: {image},
         name,
     };
+}
+
+function requireDocument(
+    documents: Map<string, Document>,
+    assetPath: string,
+    contentType: string
+): Document {
+    const document = documents.get(assetPath);
+
+    if (!document) {
+        throw new Error(`Unable to resolve ${contentType} asset "${assetPath}".`);
+    }
+
+    return document;
 }
 
 async function listDocuments(siteId: string): Promise<Document[]> {
@@ -105,11 +138,17 @@ async function resolveDocuments(
     workbook: MigrationWorkbook,
     assetFiles: File[]
 ): Promise<Map<string, Document>> {
-    const referencedPaths = new Set([
-        ...workbook.heroes.map((item) => item.imageFile),
-        ...workbook.services.map((item) => item.iconFile),
-        ...workbook.features.map((item) => item.imageFile),
-    ]);
+    const referencedPaths = new Set(
+        [
+            ...workbook.heroes.map((item) => item.imageFile),
+            ...workbook.clients.map((item) => item.logoFile),
+            ...workbook.services.map((item) => item.iconFile),
+            ...workbook.features.map((item) => item.imageFile),
+            ...workbook.statistics.map((item) => item.iconFile),
+            ...workbook.testimonials.map((item) => item.customerImageFile),
+            ...workbook.communityCards.map((item) => item.thumbnailFile),
+        ].filter(Boolean)
+    );
     const selectedFiles = new Map(
         assetFiles.map((file) => [file.name.toLowerCase(), file])
     );
@@ -191,17 +230,28 @@ async function upsertStructuredContent(
     };
 }
 
+function introPayload(
+    row: IntroMigrationRow,
+    structure: ContentStructure,
+    extraFields: ContentFieldPayload[] = []
+): StructuredContentPayload {
+    return {
+        contentFields: [
+            dataField('heading', row.heading),
+            dataField('description', row.description),
+            ...extraFields,
+        ],
+        contentStructureId: structure.id,
+        externalReferenceCode: row.externalReferenceCode,
+        title: row.heading,
+    };
+}
+
 function heroPayload(
     row: HeroRow,
     structure: ContentStructure,
     documents: Map<string, Document>
 ): StructuredContentPayload {
-    const image = documents.get(row.imageFile);
-
-    if (!image) {
-        throw new Error(`Unable to resolve Hero asset "${row.imageFile}".`);
-    }
-
     return {
         contentFields: [
             dataField('title', row.title),
@@ -209,7 +259,11 @@ function heroPayload(
             dataField('description', row.description),
             dataField('ctaLabel', row.ctaLabel),
             dataField('ctaUrl', row.ctaUrl),
-            imageField('illustration', image),
+            dataField('ctaTarget', row.ctaTarget),
+            imageField(
+                'illustration',
+                requireDocument(documents, row.imageFile, 'Hero')
+            ),
             dataField('illustrationAlt', row.imageAlt),
             dataField('sortOrder', row.sortOrder),
             dataField('active', row.active),
@@ -220,20 +274,23 @@ function heroPayload(
     };
 }
 
-function servicesIntroPayload(
-    row: ServicesIntroRow,
-    structure: ContentStructure
+function clientPayload(
+    row: ClientRow,
+    structure: ContentStructure,
+    documents: Map<string, Document>
 ): StructuredContentPayload {
     return {
         contentFields: [
-            dataField('title', row.title),
-            dataField('description', row.description),
+            dataField('name', row.name),
+            imageField('logo', requireDocument(documents, row.logoFile, 'Client')),
+            dataField('logoAlt', row.logoAlt),
+            dataField('websiteUrl', row.websiteUrl),
             dataField('sortOrder', row.sortOrder),
             dataField('active', row.active),
         ],
         contentStructureId: structure.id,
         externalReferenceCode: row.externalReferenceCode,
-        title: row.title,
+        title: row.name,
     };
 }
 
@@ -242,19 +299,14 @@ function servicePayload(
     structure: ContentStructure,
     documents: Map<string, Document>
 ): StructuredContentPayload {
-    const icon = documents.get(row.iconFile);
-
-    if (!icon) {
-        throw new Error(`Unable to resolve Service asset "${row.iconFile}".`);
-    }
-
     return {
         contentFields: [
             dataField('title', row.title),
-            dataField('descriptionHtml', row.descriptionHtml),
-            imageField('icon', icon),
+            dataField('description', row.description),
+            imageField('icon', requireDocument(documents, row.iconFile, 'Service')),
             dataField('iconAlt', row.iconAlt),
-            dataField('targetUrl', row.targetUrl),
+            dataField('linkLabel', row.linkLabel),
+            dataField('linkUrl', row.linkUrl),
             dataField('sortOrder', row.sortOrder),
             dataField('active', row.active),
         ],
@@ -269,17 +321,11 @@ function featurePayload(
     structure: ContentStructure,
     documents: Map<string, Document>
 ): StructuredContentPayload {
-    const image = documents.get(row.imageFile);
-
-    if (!image) {
-        throw new Error(`Unable to resolve Feature asset "${row.imageFile}".`);
-    }
-
     return {
         contentFields: [
             dataField('title', row.title),
-            dataField('descriptionHtml', row.descriptionHtml),
-            imageField('image', image),
+            dataField('descriptionHTML', row.descriptionHTML),
+            imageField('image', requireDocument(documents, row.imageFile, 'Feature')),
             dataField('imageAlt', row.imageAlt),
             dataField('ctaLabel', row.ctaLabel),
             dataField('ctaUrl', row.ctaUrl),
@@ -294,15 +340,145 @@ function featurePayload(
     };
 }
 
+function statisticPayload(
+    row: StatisticRow,
+    structure: ContentStructure,
+    documents: Map<string, Document>
+): StructuredContentPayload {
+    return {
+        contentFields: [
+            dataField('label', row.label),
+            dataField('value', row.value),
+            dataField('valueSuffix', row.valueSuffix),
+            imageField('icon', requireDocument(documents, row.iconFile, 'Statistic')),
+            dataField('iconAlt', row.iconAlt),
+            dataField('sortOrder', row.sortOrder),
+            dataField('active', row.active),
+        ],
+        contentStructureId: structure.id,
+        externalReferenceCode: row.externalReferenceCode,
+        title: row.label,
+    };
+}
+
+function testimonialPayload(
+    row: TestimonialRow,
+    structure: ContentStructure,
+    documents: Map<string, Document>
+): StructuredContentPayload {
+    return {
+        contentFields: [
+            dataField('quote', row.quote),
+            dataField('customerName', row.customerName),
+            dataField('customerRole', row.customerRole),
+            dataField('customerCompany', row.customerCompany),
+            imageField(
+                'customerImage',
+                requireDocument(documents, row.customerImageFile, 'Testimonial')
+            ),
+            dataField('customerImageAlt', row.customerImageAlt),
+            dataField('ctaLabel', row.ctaLabel),
+            dataField('ctaUrl', row.ctaUrl),
+            dataField('sortOrder', row.sortOrder),
+            dataField('active', row.active),
+        ],
+        contentStructureId: structure.id,
+        externalReferenceCode: row.externalReferenceCode,
+        title: row.customerName,
+    };
+}
+
+function communityCardPayload(
+    row: CommunityCardRow,
+    structure: ContentStructure,
+    documents: Map<string, Document>
+): StructuredContentPayload {
+    const publishedDateField = row.publishedDate
+        ? [dataField('publishedDate', row.publishedDate)]
+        : [];
+
+    return {
+        contentFields: [
+            dataField('title', row.title),
+            dataField('summary', row.summary),
+            imageField(
+                'thumbnail',
+                requireDocument(documents, row.thumbnailFile, 'Community Card')
+            ),
+            dataField('thumbnailAlt', row.thumbnailAlt),
+            dataField('targetUrl', row.targetUrl),
+            ...publishedDateField,
+            dataField('sortOrder', row.sortOrder),
+            dataField('active', row.active),
+        ],
+        contentStructureId: structure.id,
+        externalReferenceCode: row.externalReferenceCode,
+        title: row.title,
+    };
+}
+
+function ctaPayload(
+    row: CtaRow,
+    structure: ContentStructure
+): StructuredContentPayload {
+    return {
+        contentFields: [
+            dataField('heading', row.heading),
+            dataField('ctaLabel', row.ctaLabel),
+            dataField('ctaUrl', row.ctaUrl),
+            dataField('ctaTarget', row.ctaTarget),
+            dataField('backgroundVariant', row.backgroundVariant),
+            dataField('active', row.active),
+        ],
+        contentStructureId: structure.id,
+        externalReferenceCode: row.externalReferenceCode,
+        title: row.heading,
+    };
+}
+
 async function resolveStructures(siteId: string): Promise<StructureMap> {
-    const [hero, servicesIntro, service, feature] = await Promise.all([
+    const [
+        hero,
+        clientsIntro,
+        client,
+        servicesIntro,
+        service,
+        feature,
+        statisticsIntro,
+        statistic,
+        testimonial,
+        communityIntro,
+        communityCard,
+        cta,
+    ] = await Promise.all([
         resolveContentStructure(siteId, 'NXC Landing Hero'),
+        resolveContentStructure(siteId, 'NXC Clients Intro'),
+        resolveContentStructure(siteId, 'NXC Client Logo'),
         resolveContentStructure(siteId, 'NXC Services Intro'),
         resolveContentStructure(siteId, 'NXC Service Item'),
         resolveContentStructure(siteId, 'NXC Feature Item'),
+        resolveContentStructure(siteId, 'NXC Statistics Intro'),
+        resolveContentStructure(siteId, 'NXC Statistic Item'),
+        resolveContentStructure(siteId, 'NXC Testimonial'),
+        resolveContentStructure(siteId, 'NXC Community Intro'),
+        resolveContentStructure(siteId, 'NXC Community Card'),
+        resolveContentStructure(siteId, 'NXC CTA'),
     ]);
 
-    return {feature, hero, service, servicesIntro};
+    return {
+        client,
+        clientsIntro,
+        communityCard,
+        communityIntro,
+        cta,
+        feature,
+        hero,
+        service,
+        servicesIntro,
+        statistic,
+        statisticsIntro,
+        testimonial,
+    };
 }
 
 export async function importMigrationWorkbook(
@@ -316,16 +492,21 @@ export async function importMigrationWorkbook(
 
     onProgress?.('Resolving and uploading Documents and Media assets...');
     const documents = await resolveDocuments(siteId, workbook, assetFiles);
-    const jobs: Array<{
-        payload: StructuredContentPayload;
-        type: ImportResult['type'];
-    }> = [
+    const jobs: ImportJob[] = [
         ...workbook.heroes.map((row) => ({
             payload: heroPayload(row, structures.hero, documents),
             type: 'Hero' as const,
         })),
+        ...workbook.clientsIntro.map((row) => ({
+            payload: introPayload(row, structures.clientsIntro),
+            type: 'Clients Intro' as const,
+        })),
+        ...workbook.clients.map((row) => ({
+            payload: clientPayload(row, structures.client, documents),
+            type: 'Client' as const,
+        })),
         ...workbook.servicesIntro.map((row) => ({
-            payload: servicesIntroPayload(row, structures.servicesIntro),
+            payload: introPayload(row, structures.servicesIntro),
             type: 'Services Intro' as const,
         })),
         ...workbook.services.map((row) => ({
@@ -336,6 +517,32 @@ export async function importMigrationWorkbook(
             payload: featurePayload(row, structures.feature, documents),
             type: 'Feature' as const,
         })),
+        ...workbook.statisticsIntro.map((row: StatisticsIntroRow) => ({
+            payload: introPayload(row, structures.statisticsIntro, [
+                dataField('highlightedText', row.highlightedText),
+            ]),
+            type: 'Statistics Intro' as const,
+        })),
+        ...workbook.statistics.map((row) => ({
+            payload: statisticPayload(row, structures.statistic, documents),
+            type: 'Statistic' as const,
+        })),
+        ...workbook.testimonials.map((row) => ({
+            payload: testimonialPayload(row, structures.testimonial, documents),
+            type: 'Testimonial' as const,
+        })),
+        ...workbook.communityIntro.map((row) => ({
+            payload: introPayload(row, structures.communityIntro),
+            type: 'Community Intro' as const,
+        })),
+        ...workbook.communityCards.map((row) => ({
+            payload: communityCardPayload(row, structures.communityCard, documents),
+            type: 'Community Card' as const,
+        })),
+        ...workbook.cta.map((row) => ({
+            payload: ctaPayload(row, structures.cta),
+            type: 'CTA' as const,
+        })),
     ];
     const results: ImportResult[] = [];
 
@@ -343,12 +550,34 @@ export async function importMigrationWorkbook(
         onProgress?.(
             `Importing ${index + 1}/${jobs.length}: ${job.payload.title}`
         );
-        results.push(
-            await upsertStructuredContent(siteId, job.payload, job.type)
-        );
+        try {
+            results.push(
+                await upsertStructuredContent(siteId, job.payload, job.type)
+            );
+        }
+        catch (error: unknown) {
+            results.push({
+                action: 'failed',
+                externalReferenceCode: job.payload.externalReferenceCode,
+                message:
+                    error instanceof Error
+                        ? error.message
+                        : 'Unknown import error.',
+                title: job.payload.title,
+                type: job.type,
+            });
+        }
     }
 
-    onProgress?.(`Imported ${results.length} Web Content articles.`);
+    const failureCount = results.filter(
+        (result) => result.action === 'failed'
+    ).length;
+
+    onProgress?.(
+        failureCount
+            ? `Processed ${results.length} articles with ${failureCount} failure(s).`
+            : `Imported ${results.length} Web Content articles.`
+    );
 
     return results;
 }

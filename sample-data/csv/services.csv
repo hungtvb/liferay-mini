@@ -1,4 +1,4 @@
-externalReferenceCode,title,descriptionHtml,iconFile,iconAlt,targetUrl,sortOrder,active
-NXC-SERVICE-001,Membership Organisations,"<p>Our membership management software provides full automation of membership renewals and payments.</p>",assets/service-membership.svg,Membership organisation icon,/services/membership-organisations,1,true
-NXC-SERVICE-002,National Associations,"<p>Manage associations, regional groups, and member data from one connected platform.</p>",assets/service-association.svg,National association icon,/services/national-associations,2,true
-NXC-SERVICE-003,Clubs and Groups,"<p>Give clubs and groups the tools they need to communicate, organize, and grow.</p>",assets/service-club.svg,Clubs and groups icon,/services/clubs-and-groups,3,true
+externalReferenceCode,title,description,iconFile,iconAlt,linkLabel,linkUrl,sortOrder,active
+NXC-SERVICE-001,Membership Organisations,Full automation of membership renewals and payments.,assets/service-membership.svg,,Explore membership solutions,/services/membership-organisations,1,true
+NXC-SERVICE-002,National Associations,"Manage associations, regional groups, and member data from one connected platform.",assets/service-association.svg,,Explore association solutions,/services/national-associations,2,true
+NXC-SERVICE-003,Clubs and Groups,"Give clubs and groups the tools they need to communicate, organize, and grow.",assets/service-club.svg,,Explore club solutions,/services/clubs-and-groups,3,true

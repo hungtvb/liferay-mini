@@ -9,7 +9,7 @@ Implement Community Updates as a React application hosted outside Liferay while 
 ```text
 remote-apps/nexcent-community-app
         ↓ build and serve from external host
-http://localhost:4173 or production CDN
+https://nexcent-liferay-static.vercel.app/remote-app
         ↓
 client-extensions/nexcent-remote-app-registration
         ↓
@@ -43,9 +43,9 @@ NXC Community Intro + NXC Community Card[]
 
 ```yaml
 nexcent-community-remote-app:
-    baseURL: http://localhost:4173
+    baseURL: https://nexcent-liferay-static.vercel.app/remote-app
     cssURLs:
-        - /assets/index.css
+        - /style.css
     friendlyURLMapping: nexcent-community
     htmlElementName: nexcent-community-app
     instanceable: false
@@ -53,17 +53,17 @@ nexcent-community-remote-app:
     portletCategoryName: category.client-extensions
     type: customElement
     urls:
-        - /assets/index.js
+        - /index.js
     useESM: true
 ```
 
-Use an environment-appropriate `baseURL` for shared environments.
+The committed registration targets the external Vercel host. For local-only development, temporarily use `http://localhost:4173`, deploy the registration to the local bundle, and do not commit that override.
 
 ## Local run
 
 ```bash
 cd remote-apps/nexcent-community-app
-npm install
+npm ci
 npm run build
 npm run preview -- --host 0.0.0.0 --port 4173
 ```
@@ -72,6 +72,17 @@ Then deploy only the Liferay registration:
 
 ```bash
 ./gradlew :client-extensions:nexcent-remote-app-registration:deploy
+```
+
+The repository-root Vercel build publishes the landing page and Remote App together while preserving independent Remote App assets:
+
+```text
+/
+├── index.html
+└── remote-app/
+    ├── index.html
+    ├── index.js
+    └── style.css
 ```
 
 ## Verification

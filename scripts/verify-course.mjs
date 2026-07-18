@@ -61,6 +61,10 @@ const requiredFiles = [
     'README.md',
     'SUBMISSION.md',
     'gradle.properties',
+    'gradlew',
+    'gradlew.bat',
+    'gradle/wrapper/gradle-wrapper.jar',
+    'gradle/wrapper/gradle-wrapper.properties',
     'docs/contracts/component-contracts.md',
     ...courseFiles.map((file) => `docs/course/${file}`),
     `${themeRoot}/client-extension.yaml`,
@@ -75,18 +79,23 @@ const requiredFiles = [
     `${themeRoot}/style-book/nexcent-default/frontend-tokens-values.json`,
     'client-extensions/nexcent-landing-elements/client-extension.yaml',
     'client-extensions/nexcent-landing-elements/package.json',
+    'client-extensions/nexcent-landing-elements/package-lock.json',
     'client-extensions/nexcent-landing-elements/src/index.tsx',
     'client-extensions/nexcent-remote-app-registration/client-extension.yaml',
     'remote-apps/nexcent-community-app/package.json',
+    'remote-apps/nexcent-community-app/package-lock.json',
     'remote-apps/nexcent-community-app/tsconfig.json',
     'remote-apps/nexcent-community-app/vite.config.ts',
-    'remote-apps/nexcent-community-app/public/index.html',
+    'remote-apps/nexcent-community-app/index.html',
     'remote-apps/nexcent-community-app/src/index.tsx',
     'remote-apps/nexcent-community-app/src/styles.css',
     'client-extensions/nexcent-content-batch/client-extension.yaml',
     'scripts/batch/prepare-structured-content-export.mjs',
     'scripts/batch/export-structured-content.sh',
     'scripts/batch/export-structured-content.ps1',
+    'scripts/assemble-vercel-output.mjs',
+    'prototypes/nexcent-static/headless-adapter.mjs',
+    'prototypes/nexcent-static/headless-adapter.test.mjs',
 ];
 
 for (const requiredFile of requiredFiles) {
@@ -180,7 +189,7 @@ await requireText(`${themeRoot}/assets/favicon.svg`, [
 await requireText(
     'client-extensions/nexcent-remote-app-registration/client-extension.yaml',
     [
-        'baseURL: http://localhost:4173',
+        'baseURL: https://nexcent-liferay-static.vercel.app/remote-app',
         'htmlElementName: nexcent-community-app',
         'type: customElement',
         'useESM: true',
@@ -191,6 +200,26 @@ await requireText('remote-apps/nexcent-community-app/package.json', [
     '"build": "vite build"',
     '"preview": "vite preview --host 0.0.0.0 --port 4173"',
     '"typecheck": "tsc --noEmit"',
+]);
+
+await requireText(
+    'client-extensions/nexcent-landing-elements/src/components/Importer/workbook.ts',
+    [
+        'ClientsIntro',
+        'Clients',
+        'StatisticsIntro',
+        'Statistics',
+        'Testimonials',
+        'CommunityIntro',
+        'CommunityCards',
+        'CTA',
+    ]
+);
+
+await requireText('prototypes/nexcent-static/app.js', [
+    'loadHeadlessPage',
+    "mode: 'headless'",
+    'liferayBaseURL',
 ]);
 
 await requireText('remote-apps/nexcent-community-app/src/index.tsx', [
@@ -369,6 +398,8 @@ console.log('- Twelve rebuilt course chapters');
 console.log('- Component-by-component FE–BE contracts');
 console.log('- Unified Theme CSS, Style Book, Global CSS/JS, and favicon package');
 console.log('- Hero, Services, Features, and Importer Custom Elements');
-console.log('- Externally hosted Community Remote App scaffold');
-console.log('- Web Content, Excel, Batch Client Extension, and Headless Batch scope');
+console.log('- Externally hosted and deployable Community Remote App');
+console.log('- Complete 12-sheet Excel importer contract');
+console.log('- Static mock and live Headless data adapters');
+console.log('- Web Content, Batch Client Extension, and Headless Batch scope');
 console.log('- No unrelated backend platform modules in core scope');

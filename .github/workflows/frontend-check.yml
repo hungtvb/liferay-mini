@@ -38,7 +38,10 @@ jobs:
           node-version: 22
 
       - name: Install dependencies
-        run: npm install --no-audit --no-fund
+        run: npm ci --no-audit --no-fund
+
+      - name: Test importer validation
+        run: npm test
 
       - name: Type-check
         run: npm run typecheck
@@ -57,4 +60,4 @@ jobs:
       - name: Verify generated workbook
         run: |
           test -s ../../sample-data/excel/nexcent-content.xlsx
-          node -e "import('exceljs').then(async ({default: ExcelJS}) => { const workbook = new ExcelJS.Workbook(); await workbook.xlsx.readFile('../../sample-data/excel/nexcent-content.xlsx'); const names = workbook.worksheets.map((sheet) => sheet.name); const required = ['Instructions', 'Heroes', 'ServicesIntro', 'Services', 'Features']; if (required.some((name) => !names.includes(name))) process.exit(1); })"
+          node -e "import('exceljs').then(async ({default: ExcelJS}) => { const workbook = new ExcelJS.Workbook(); await workbook.xlsx.readFile('../../sample-data/excel/nexcent-content.xlsx'); const names = workbook.worksheets.map((sheet) => sheet.name); const required = ['Instructions', 'Heroes', 'ClientsIntro', 'Clients', 'ServicesIntro', 'Services', 'Features', 'StatisticsIntro', 'Statistics', 'Testimonials', 'CommunityIntro', 'CommunityCards', 'CTA']; if (required.some((name) => !names.includes(name))) process.exit(1); })"

@@ -37,19 +37,32 @@ export function ContentImporter() {
     const counts = useMemo(
         () =>
             workbook
-                ? {
-                      features: workbook.features.length,
-                      heroes: workbook.heroes.length,
-                      services: workbook.services.length,
-                      servicesIntro: workbook.servicesIntro.length,
-                      total:
-                          workbook.features.length +
-                          workbook.heroes.length +
-                          workbook.services.length +
-                          workbook.servicesIntro.length,
-                  }
+                ? [
+                      ['Heroes', workbook.heroes.length],
+                      ['Clients intro', workbook.clientsIntro.length],
+                      ['Clients', workbook.clients.length],
+                      ['Services intro', workbook.servicesIntro.length],
+                      ['Services', workbook.services.length],
+                      ['Features', workbook.features.length],
+                      ['Statistics intro', workbook.statisticsIntro.length],
+                      ['Statistics', workbook.statistics.length],
+                      ['Testimonials', workbook.testimonials.length],
+                      ['Community intro', workbook.communityIntro.length],
+                      ['Community cards', workbook.communityCards.length],
+                      ['CTA', workbook.cta.length],
+                  ] as Array<[string, number]>
                 : undefined,
         [workbook]
+    );
+    const totalCount = counts?.reduce((total, [, count]) => total + count, 0);
+    const importSummary = useMemo(
+        () => ({
+            created: results.filter((result) => result.action === 'created').length,
+            failed: results.filter((result) => result.action === 'failed').length,
+            skipped: 0,
+            updated: results.filter((result) => result.action === 'updated').length,
+        }),
+        [results]
     );
 
     const resetValidation = () => {
@@ -135,9 +148,15 @@ export function ContentImporter() {
             );
 
             setResults(imported);
-            setStatus('done');
+            const failureCount = imported.filter(
+                (result) => result.action === 'failed'
+            ).length;
+
+            setStatus(failureCount ? 'error' : 'done');
             setStatusMessage(
-                `Migration completed: ${imported.length} articles processed.`
+                failureCount
+                    ? `Migration completed with ${failureCount} failure(s). Download the report for details.`
+                    : `Migration completed: ${imported.length} articles processed.`
             );
         }
         catch (error: unknown) {
@@ -148,6 +167,27 @@ export function ContentImporter() {
                     : 'The migration failed unexpectedly.'
             );
         }
+    };
+
+    const downloadReport = () => {
+        const report = {
+            completedAt: new Date().toISOString(),
+            results,
+            siteId: getSiteId(),
+            summary: importSummary,
+            workbook: workbookFile?.name,
+        };
+        const url = URL.createObjectURL(
+            new Blob([JSON.stringify(report, null, 2)], {
+                type: 'application/json',
+            })
+        );
+        const anchor = document.createElement('a');
+
+        anchor.download = `nexcent-import-report-${Date.now()}.json`;
+        anchor.href = url;
+        anchor.click();
+        URL.revokeObjectURL(url);
     };
 
     return (
@@ -181,8 +221,7 @@ export function ContentImporter() {
                         type="file"
                     />
                     <small>
-                        Required sheets: Heroes, ServicesIntro, Services,
-                        Features.
+                        Required sheets: all 12 landing-page content groups.
                     </small>
                 </div>
 
@@ -238,11 +277,12 @@ export function ContentImporter() {
 
             {counts && (
                 <dl className="nxc-importer__counts">
-                    <div><dt>Heroes</dt><dd>{counts.heroes}</dd></div>
-                    <div><dt>Services Intro</dt><dd>{counts.servicesIntro}</dd></div>
-                    <div><dt>Services</dt><dd>{counts.services}</dd></div>
-                    <div><dt>Features</dt><dd>{counts.features}</dd></div>
-                    <div><dt>Total</dt><dd>{counts.total}</dd></div>
+                    {counts.map(([label, count]) => (
+                        <div key={label}><dt>{label}</dt><dd>{count}</dd></div>
+                    ))}
+                    <div className="nxc-importer__count-total">
+                        <dt>Total</dt><dd>{totalCount}</dd>
+                    </div>
                 </dl>
             )}
 
@@ -268,7 +308,24 @@ export function ContentImporter() {
 
             {results.length > 0 && (
                 <div className="nxc-importer__results">
-                    <h3>Import report</h3>
+                    <div className="nxc-importer__report-header">
+                        <div>
+                            <h3>Import report</h3>
+                            <p>
+                                Created {importSummary.created} · Updated{' '}
+                                {importSummary.updated} · Skipped{' '}
+                                {importSummary.skipped} · Failed{' '}
+                                {importSummary.failed}
+                            </p>
+                        </div>
+                        <button
+                            className="nxc-button nxc-importer__secondary-button"
+                            onClick={downloadReport}
+                            type="button"
+                        >
+                            Download report
+                        </button>
+                    </div>
                     <div className="nxc-importer__table-wrapper">
                         <table>
                             <thead>
@@ -277,6 +334,7 @@ export function ContentImporter() {
                                     <th>Type</th>
                                     <th>Title</th>
                                     <th>External reference code</th>
+                                    <th>Message</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -286,6 +344,7 @@ export function ContentImporter() {
                                         <td>{result.type}</td>
                                         <td>{result.title}</td>
                                         <td><code>{result.externalReferenceCode}</code></td>
+                                        <td>{result.message ?? '—'}</td>
                                     </tr>
                                 ))}
                             </tbody>

@@ -1,6 +1,6 @@
 # Nexcent static landing page
 
-A framework-free static prototype derived from the Nexcent Figma composition already audited for this project.
+A framework-free landing page derived from the audited Nexcent Figma composition. It renders one normalized page model from either version-controlled mock JSON or live Liferay Headless Delivery content.
 
 ## Run
 
@@ -19,21 +19,34 @@ The Vercel project is connected to `hungtvb/liferay-mini` with:
 
 ```text
 Production branch: main
-Root directory: prototypes/nexcent-static
+Root directory: repository root
 Framework preset: Other
 ```
 
 Production URL: `https://nexcent-liferay-static.vercel.app`
 
-Pull requests should create Preview Deployments; changes merged to `main` should create Production Deployments.
+Pull requests should create Preview Deployments; changes merged to `main` should create Production Deployments. The repository build also publishes the independently built Community Remote App at `/remote-app/`.
 
 ## Data boundary
 
 - `data/mock-content.json` is normalized mock page data.
 - `data/headless-config.json` records the Liferay delivery owner, Structure identifiers and endpoint templates for each section.
-- `app.js` renders only the normalized shape. A future Headless adapter should map Liferay `contentFields` into that shape.
+- `headless-adapter.mjs` discovers Structures by name/ERC, fetches their Structured Content, and maps `contentFields` into the same normalized shape.
+- `app.js` renders only the normalized shape.
 
-Use `?source=headless` to exercise the data-source selection branch. It currently logs the Headless contract and falls back to mock data because this prototype has no live Liferay runtime.
+Mock mode is the default. Live Headless mode requires a portal base URL and site ID:
+
+```text
+http://localhost:4173/?source=headless&liferayBaseURL=http://localhost:8080&siteId=20117
+```
+
+When served from another origin, configure Liferay CORS and cookie/auth policy for that preview origin. The production Liferay page normally uses the Custom Elements and Collection Displays directly; this switch exists for contract integration and visual comparison.
+
+Run the adapter contract test with:
+
+```bash
+node --test prototypes/nexcent-static/headless-adapter.test.mjs
+```
 
 ## Figma scope
 

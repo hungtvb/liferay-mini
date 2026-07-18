@@ -1,12 +1,20 @@
-import ExcelJS, {type CellValue, type Worksheet} from 'exceljs';
+import {type CellValue, type Worksheet} from 'exceljs';
 
 import {type RawWorkbook} from './types';
 
 export const REQUIRED_SHEETS = [
     'Heroes',
+    'ClientsIntro',
+    'Clients',
     'ServicesIntro',
     'Services',
     'Features',
+    'StatisticsIntro',
+    'Statistics',
+    'Testimonials',
+    'CommunityIntro',
+    'CommunityCards',
+    'CTA',
 ] as const;
 
 function normalizeCellValue(value: CellValue): unknown {
@@ -86,6 +94,7 @@ function parseWorksheet(worksheet: Worksheet): Record<string, unknown>[] {
 }
 
 export async function parseMigrationWorkbook(file: File): Promise<RawWorkbook> {
+    const {default: ExcelJS} = await import('exceljs');
     const workbook = new ExcelJS.Workbook();
     const buffer = await file.arrayBuffer();
 

@@ -1,14 +1,5 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "builds": [
-    {"src": "index.html", "use": "@vercel/static"},
-    {"src": "styles.css", "use": "@vercel/static"},
-    {"src": "app.js", "use": "@vercel/static"},
-    {"src": "data/*.json", "use": "@vercel/static"},
-    {"src": "assets/*", "use": "@vercel/static"}
-  ],
-  "routes": [
-    {"src": "/", "dest": "/index.html"},
-    {"handle": "filesystem"}
-  ]
+  "buildCommand": "echo 'Publishing Nexcent static prototype'",
+  "outputDirectory": "."
 }

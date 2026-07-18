@@ -36,9 +36,9 @@
     "title": "Manage your entire community in a single system",
     "description": "Who is Nexcent suitable for?",
     "items": [
-      {"externalReferenceCode": "NXC-SERVICE-001", "title": "Membership Organisations", "descriptionHtml": "<p>Full automation of membership renewals, communications and payments.</p>", "icon": "members"},
-      {"externalReferenceCode": "NXC-SERVICE-002", "title": "National Associations", "descriptionHtml": "<p>Manage associations, regional groups and member data from one connected platform.</p>", "icon": "association"},
-      {"externalReferenceCode": "NXC-SERVICE-003", "title": "Clubs And Groups", "descriptionHtml": "<p>Give clubs and groups the tools they need to communicate, organise and grow.</p>", "icon": "clubs"}
+      {"externalReferenceCode": "NXC-SERVICE-001", "title": "Membership Organisations", "descriptionHtml": "<p>Full automation of membership renewals, communications and payments.</p>", "icon": "members", "link": {"label": "Explore membership solutions", "url": "#community"}},
+      {"externalReferenceCode": "NXC-SERVICE-002", "title": "National Associations", "descriptionHtml": "<p>Manage associations, regional groups and member data from one connected platform.</p>", "icon": "association", "link": {"label": "Explore association solutions", "url": "#community"}},
+      {"externalReferenceCode": "NXC-SERVICE-003", "title": "Clubs And Groups", "descriptionHtml": "<p>Give clubs and groups the tools they need to communicate, organise and grow.</p>", "icon": "clubs", "link": {"label": "Explore club solutions", "url": "#community"}}
     ]
   },
   "features": [
@@ -49,6 +49,7 @@
       "descriptionHtml": "<p>Build a consistent content experience and give editors control without rebuilding the frontend. Reuse structured content across pages while keeping presentation predictable.</p>",
       "image": {"url": "assets/feature-content.svg", "alt": "People managing reusable content blocks on a mobile screen"},
       "imagePosition": "left",
+      "backgroundVariant": "default",
       "cta": {"label": "Learn More", "url": "#community"}
     },
     {
@@ -58,6 +59,7 @@
       "descriptionHtml": "<p>Reuse content, links and assets across pages while keeping the design system consistent. A shared page shell reduces drift and gives editors safer controls.</p>",
       "image": {"url": "assets/feature-security.svg", "alt": "A secure mobile registration experience"},
       "imagePosition": "right",
+      "backgroundVariant": "muted",
       "cta": {"label": "Learn More", "url": "#community"}
     }
   ],
@@ -86,15 +88,15 @@
     "title": "Caring is the new marketing",
     "description": "The Nexcent blog is the best place to read about the latest membership insights, trends and community growth stories.",
     "items": [
-      {"externalReferenceCode": "NXC-COMMUNITY-001", "title": "Creating streamlined safeguarding processes with OneRen", "url": "#community", "artLabel": "01", "colors": ["#7CB982", "#2F6F4E"]},
-      {"externalReferenceCode": "NXC-COMMUNITY-002", "title": "What are your safeguarding responsibilities and how can you manage them?", "url": "#community", "artLabel": "02", "colors": ["#9BB7C9", "#40596B"]},
-      {"externalReferenceCode": "NXC-COMMUNITY-003", "title": "Revamping the membership model with Triathlon Australia", "url": "#community", "artLabel": "03", "colors": ["#E4B979", "#9A6130"]}
+      {"externalReferenceCode": "NXC-COMMUNITY-001", "title": "Creating streamlined safeguarding processes with OneRen", "summary": "A practical guide to safer and simpler community operations.", "publishedDate": "2026-06-12", "url": "#community", "artLabel": "01", "colors": ["#7CB982", "#2F6F4E"]},
+      {"externalReferenceCode": "NXC-COMMUNITY-002", "title": "What are your safeguarding responsibilities and how can you manage them?", "summary": "A clear checklist for growing member organisations.", "publishedDate": "2026-06-26", "url": "#community", "artLabel": "02", "colors": ["#9BB7C9", "#40596B"]},
+      {"externalReferenceCode": "NXC-COMMUNITY-003", "title": "Revamping the membership model with Triathlon Australia", "summary": "How a national organisation redesigned its membership journey.", "publishedDate": "2026-07-08", "url": "#community", "artLabel": "03", "colors": ["#E4B979", "#9A6130"]}
     ]
   },
   "cta": {
     "externalReferenceCode": "NXC-CTA-001",
-    "title": "Pellentesque suscipit fringilla libero eu.",
-    "cta": {"label": "Get a Demo", "url": "#register"}
+    "title": "Ready to grow your community with confidence?",
+    "cta": {"label": "Get a Demo", "url": "#register", "target": "_self"}
   },
   "footer": {
     "copyright": "Copyright © 2026 Nexcent ltd.",

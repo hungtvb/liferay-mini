@@ -18,6 +18,7 @@
 .idea
 /bundles
 /bootstrap-workspace-tmp
+/.vercel-static
 /gradle-*.properties
 .env
 *.log

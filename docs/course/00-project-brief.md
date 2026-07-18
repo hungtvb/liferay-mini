@@ -64,7 +64,8 @@ See:
 ## Asset scope
 
 - Figma is the source of truth for logo, client logos, icons, illustrations, portraits, and community images.
-- PR #11 provides an automated Figma REST export mechanism but does not itself prove that real assets have been exported.
+- PR #11 provides the automated Figma REST export mechanism; workflow run #1 and merged PR #13 prove one real full-page reference export and deterministic manifest.
+- That accepted thumbnail is comparison evidence only. Component-ready logo, icon, illustration, portrait, and community-image exports are still required before replacing placeholders.
 - Approved assets must be named, export-enabled, or mapped explicitly by node ID.
 - A generated asset PR must pass visual review before replacing placeholders.
 - Immutable application-shell assets belong with Client Extensions or their static host.

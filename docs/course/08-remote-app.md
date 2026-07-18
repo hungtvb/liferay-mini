@@ -1,5 +1,12 @@
 # 08 — Build and Register the Externally Hosted Remote App
 
+## Current delivery status (2026-07-18)
+
+- **Implemented and source-verified:** the React/Vite app, duplicate-registration guard, portal-context discovery, loading/empty/error states, and Classic Headless Delivery adapter.
+- **Externally hosted:** the repository Vercel build publishes immutable app assets at `https://nexcent-liferay-static.vercel.app/remote-app/` while keeping the landing preview at `/`.
+- **Automated evidence:** `npm run typecheck`, `npm run build`, the repository Vercel assembly, and the **Remote App Check** workflow pass for [PR #12](https://github.com/hungtvb/liferay-mini/pull/12).
+- **Runtime acceptance still required:** deploy the registration Client Extension to a clean `dxp-2026.q1.1-lts` bundle, grant the intended Headless permissions, and capture the widget/content/recovery checks below. A successful Vercel preview is external-host evidence, not proof that Liferay registration or live Headless access succeeded.
+
 ## Goal
 
 Implement Community Updates as a React application hosted outside Liferay while registered as a Custom Element widget.
@@ -9,7 +16,7 @@ Implement Community Updates as a React application hosted outside Liferay while 
 ```text
 remote-apps/nexcent-community-app
         ↓ build and serve from external host
-http://localhost:4173 or production CDN
+https://nexcent-liferay-static.vercel.app/remote-app
         ↓
 client-extensions/nexcent-remote-app-registration
         ↓
@@ -43,9 +50,9 @@ NXC Community Intro + NXC Community Card[]
 
 ```yaml
 nexcent-community-remote-app:
-    baseURL: http://localhost:4173
+    baseURL: https://nexcent-liferay-static.vercel.app/remote-app
     cssURLs:
-        - /assets/index.css
+        - /style.css
     friendlyURLMapping: nexcent-community
     htmlElementName: nexcent-community-app
     instanceable: false
@@ -53,17 +60,17 @@ nexcent-community-remote-app:
     portletCategoryName: category.client-extensions
     type: customElement
     urls:
-        - /assets/index.js
+        - /index.js
     useESM: true
 ```
 
-Use an environment-appropriate `baseURL` for shared environments.
+The committed registration targets the external Vercel host. For local-only development, temporarily use `http://localhost:4173`, deploy the registration to the local bundle, and do not commit that override.
 
 ## Local run
 
 ```bash
 cd remote-apps/nexcent-community-app
-npm install
+npm ci
 npm run build
 npm run preview -- --host 0.0.0.0 --port 4173
 ```
@@ -72,6 +79,17 @@ Then deploy only the Liferay registration:
 
 ```bash
 ./gradlew :client-extensions:nexcent-remote-app-registration:deploy
+```
+
+The repository-root Vercel build publishes the landing page and Remote App together while preserving independent Remote App assets:
+
+```text
+/
+├── index.html
+└── remote-app/
+    ├── index.html
+    ├── index.js
+    └── style.css
 ```
 
 ## Verification
@@ -83,8 +101,8 @@ Then deploy only the Liferay registration:
 
 ## Checkpoint
 
-- [ ] Application assets are not served by Liferay.
+- [x] Application assets are built and hosted outside Liferay.
 - [ ] Widget registration appears in Liferay.
 - [ ] The app calls Headless Delivery successfully.
-- [ ] External-host failure is visible and does not break the page.
-- [ ] The app can be released independently.
+- [x] External-host failure has an implemented, source-tested error state.
+- [x] The app has an independent build and release path.

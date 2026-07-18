@@ -53,10 +53,11 @@ Adopt only after parity evidence
 
 - Unified Theme CSS, Global CSS, Global JavaScript, and favicon Client Extensions.
 - Hero, Services, Features, and Content Importer Custom Elements.
-- Community Remote App source and Liferay registration scaffold.
-- Classic Web Content contracts, sample data, Excel import flow, and Batch CE flow.
-- Static Nexcent prototype with mock JSON and a Vercel deployment.
-- PR #11 adds a Figma REST asset-sync workflow.
+- Community Remote App source, deterministic external build, Vercel assets, and Liferay registration.
+- Classic Web Content contracts, complete 12-group Excel import flow, sample workbook/assets, validation tests, per-record reports, and Batch CE flow.
+- Static Nexcent prototype with mock JSON, an opt-in Classic Headless Delivery adapter, adapter tests, and a combined Vercel deployment.
+- Complete Gradle 8.5 Wrapper files and reproducible npm lockfiles.
+- PR #11 added the Figma REST asset-sync workflow; run #1 exported a full-page reference thumbnail, reviewed and merged through PR #13.
 
 ### Not yet proven on a clean Liferay 2026.Q1.1 runtime
 
@@ -72,7 +73,9 @@ Adopt only after parity evidence
 
 ### Static prototype boundary
 
-The Vercel site is a visual and data-contract prototype. It currently loads `data/mock-content.json`; it is not evidence of a live Liferay Headless API integration. The committed illustrations, logos, and icons remain placeholders until a real Figma export PR replaces them.
+The Vercel site is a visual and data-contract prototype. Mock mode remains the default, while `?source=headless&liferayBaseURL=<portal>&siteId=<site>` activates the tested Classic Headless Delivery adapter. This is implementation evidence for the adapter, but it is not evidence that a clean target Liferay instance has published the expected content or permissions.
+
+The committed component illustrations, logos, and icons remain placeholders. PR #13 accepts only the generated full-page Figma thumbnail as visual reference evidence; it does not qualify as component-level production asset replacement.
 
 ## Asset strategy
 
@@ -132,7 +135,7 @@ A partial deployment must be detectable and rerunnable. Runtime evidence must re
 
 ## Figma automation audit
 
-PR #11 is directionally valid, with these constraints:
+PR #11 and the first controlled run establish a valid synchronization path, with these constraints:
 
 - A Personal Access Token needs the granular `file_content:read` scope and only accesses files already visible to its owner.
 - Personal Access Tokens have a maximum lifetime of 90 days and require rotation.
@@ -140,9 +143,10 @@ PR #11 is directionally valid, with these constraints:
 - Low-access seats can be limited to as few as six Tier 1 requests per month; actual allowance may be lower.
 - One sync consumes at least one node-tree request plus one or more batched image-render requests.
 - The script cannot infer which visual layers are approved assets. Layers must use the naming convention, have Figma export settings, or be mapped by node ID.
-- No real Figma asset has been committed until a generated PR is visually reviewed.
+- Workflow run #1 successfully exported node `204:686` and its manifest, but GitHub repository settings prevented Actions from opening the PR automatically. The generated branch was reviewed through PR #13 instead.
+- The accepted output is a full-page reference thumbnail. Production logo, icon, illustration, testimonial, and community assets still require explicit layer prefixes, export settings, or node mappings and separate visual acceptance.
 
-The first real sync is therefore a controlled acceptance test, not a repeatedly runnable discovery loop.
+The first reference sync is complete. Component-level export remains a controlled acceptance process, not a repeatedly runnable discovery loop.
 
 ## Evidence states
 

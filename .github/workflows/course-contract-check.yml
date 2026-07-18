@@ -8,9 +8,13 @@ on:
       - "docs/**"
       - "scripts/verify-course.mjs"
       - "sample-data/**"
+      - "prototypes/nexcent-static/**"
       - "client-extensions/**"
       - "remote-apps/**"
       - "gradle.properties"
+      - "gradlew"
+      - "gradlew.bat"
+      - "gradle/wrapper/**"
       - ".github/workflows/course-contract-check.yml"
   push:
     branches:
@@ -22,9 +26,13 @@ on:
       - "docs/**"
       - "scripts/verify-course.mjs"
       - "sample-data/**"
+      - "prototypes/nexcent-static/**"
       - "client-extensions/**"
       - "remote-apps/**"
       - "gradle.properties"
+      - "gradlew"
+      - "gradlew.bat"
+      - "gradle/wrapper/**"
       - ".github/workflows/course-contract-check.yml"
   workflow_dispatch:
 
@@ -46,6 +54,16 @@ jobs:
 
       - name: Verify rebuilt project contract
         run: node scripts/verify-course.mjs
+
+      - name: Verify Gradle Wrapper files
+        run: |
+          test -x gradlew
+          test -s gradlew.bat
+          test -s gradle/wrapper/gradle-wrapper.jar
+          grep -q "gradle-8.5-bin.zip" gradle/wrapper/gradle-wrapper.properties
+
+      - name: Test static Headless adapter
+        run: node --test prototypes/nexcent-static/headless-adapter.test.mjs
 
       - name: Verify documentation has no unresolved merge markers
         run: |

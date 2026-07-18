@@ -1,5 +1,5 @@
 nexcent-community-remote-app:
-    baseURL: http://localhost:4173
+    baseURL: https://nexcent-liferay-static.vercel.app/remote-app
     cssURLs:
         - /style.css
     friendlyURLMapping: nexcent-community

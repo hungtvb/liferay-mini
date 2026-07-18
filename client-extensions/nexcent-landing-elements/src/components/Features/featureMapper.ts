@@ -6,10 +6,11 @@ import {
     readNumber,
     readText,
 } from '../../api/structuredContent';
+import {safeLinkUrl} from '../../utils/url';
 
 export type FeatureContent = {
     active: boolean;
-    backgroundVariant: 'silver' | 'white';
+    backgroundVariant: 'default' | 'muted';
     ctaLabel: string;
     ctaUrl: string;
     descriptionHtml: string;
@@ -32,17 +33,25 @@ function readChoice<T extends string>(
 export function mapFeatureContent(item: StructuredContent): FeatureContent {
     const fields = flattenContentFields(item.contentFields);
     const image = readImage(fields, 'image');
+    const rawBackgroundVariant = readText(fields, 'backgroundVariant');
 
     return {
         active: readBoolean(fields, 'active', true),
-        backgroundVariant: readChoice(
-            readText(fields, 'backgroundVariant'),
-            ['white', 'silver'] as const,
-            'white'
-        ),
+        backgroundVariant:
+            rawBackgroundVariant === 'silver'
+                ? 'muted'
+                : readChoice(
+                      rawBackgroundVariant,
+                      ['default', 'muted'] as const,
+                      'default'
+                  ),
         ctaLabel: readText(fields, 'ctaLabel'),
-        ctaUrl: readText(fields, 'ctaUrl'),
-        descriptionHtml: readText(fields, 'descriptionHtml'),
+        ctaUrl: safeLinkUrl(readText(fields, 'ctaUrl')),
+        descriptionHtml: readText(
+            fields,
+            'descriptionHTML',
+            readText(fields, 'descriptionHtml')
+        ),
         id: item.id,
         imageAlt: readText(fields, 'imageAlt'),
         imagePosition: readChoice(

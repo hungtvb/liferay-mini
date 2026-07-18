@@ -8,7 +8,14 @@ Source of truth for factual constraints: [`docs/architecture/liferay-2026-q1-aud
 
 ### NXC-AUD-01 — Run the first controlled Figma asset sync
 
-Status: **BLOCKED — token and approved Figma layer mappings required**
+Status: **PARTIALLY COMPLETE — reference export accepted; component assets pending**
+
+Evidence:
+
+- Workflow run #1 authenticated successfully and exported node `204:686` plus a deterministic manifest.
+- The generated branch was pushed even though repository settings blocked GitHub Actions from opening the PR automatically.
+- [PR #13](https://github.com/hungtvb/liferay-mini/pull/13) was created through the GitHub connector, visually reviewed, and merged as reference evidence.
+- The accepted file is a full-page thumbnail, not the production component asset set.
 
 Acceptance criteria:
 
@@ -16,7 +23,7 @@ Acceptance criteria:
 - `FIGMA_TOKEN` exists as a GitHub Actions secret and is never printed or committed.
 - Token expiry date and rotation owner are recorded outside source control.
 - Approved layers use `asset/<format>/<path>`, existing export settings, or explicit node mappings.
-- One workflow run creates a generated asset PR.
+- One workflow run pushes a generated branch and either opens a PR or prints the manual PR URL when repository settings prohibit Actions-created PRs.
 - Generated logo, icons, illustrations, photos, and manifest are visually compared with Figma.
 - Placeholder files are replaced only after review.
 - Tier 1 request consumption and any 429 response headers are recorded.
@@ -85,7 +92,7 @@ Acceptance criteria:
 
 ### NXC-AUD-06 — Replace placeholder assets and wire the manifest
 
-Status: **BLOCKED BY NXC-AUD-01**
+Status: **BLOCKED — component-level Figma mappings/exports required**
 
 Acceptance criteria:
 
@@ -96,7 +103,14 @@ Acceptance criteria:
 
 ### NXC-AUD-07 — Replace static mock loading with a Liferay data adapter
 
-Status: **NOT STARTED**
+Status: **IMPLEMENTED / TARGET RUNTIME PENDING**
+
+Evidence:
+
+- `prototypes/nexcent-static/headless-adapter.mjs` resolves Structures and normalizes all landing-page content groups.
+- Mock mode remains available and Headless mode is selected through explicit query parameters.
+- Node tests cover the normalized Classic Headless Delivery contract.
+- Missing portal/site configuration produces an actionable retry state.
 
 Acceptance criteria:
 
@@ -120,7 +134,7 @@ The ADR must explicitly address maintenance mode, feature flags, page mapping, h
 
 ### NXC-AUD-09 — Add clean-environment verification automation
 
-Status: **NOT STARTED**
+Status: **PARTIAL — source, CI, and browser checks implemented; clean Liferay deployment pending**
 
 Acceptance criteria:
 
@@ -166,4 +180,4 @@ The project must not claim any of the following without runtime evidence:
 - Custom Elements are automatically placed and configured on the final page.
 - A single deployment command is atomic.
 - The static Vercel prototype proves a live Liferay integration.
-- PR #11 has already exported the real Figma assets.
+- The first Figma reference thumbnail represents the complete production component asset set.

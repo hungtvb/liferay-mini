@@ -5,7 +5,6 @@ import {
     resolveContentStructure,
 } from '../../api/structuredContent';
 import {getSiteId} from '../../liferay/global';
-import {RichText} from '../RichText/RichText';
 import {
     ServiceContent,
     ServicesIntroContent,
@@ -53,8 +52,7 @@ export function Services({
 
                 const intro = introItems
                     .map(mapServicesIntroContent)
-                    .filter((item) => item.active)
-                    .sort((left, right) => left.sortOrder - right.sortOrder)[0];
+                    [0];
                 const services = serviceItems
                     .map(mapServiceContent)
                     .filter((item) => item.active)
@@ -129,7 +127,7 @@ export function Services({
             <div className="nxc-services__container">
                 {intro && (
                     <header className="nxc-services__header">
-                        <h2 id={headingId}>{intro.title}</h2>
+                        <h2 id={headingId}>{intro.heading}</h2>
                         {intro.description && <p>{intro.description}</p>}
                     </header>
                 )}
@@ -147,18 +145,21 @@ export function Services({
                                 />
                             )}
 
-                            <h3>
-                                {service.targetUrl ? (
-                                    <a href={service.targetUrl}>{service.title}</a>
-                                ) : (
-                                    service.title
-                                )}
-                            </h3>
+                            <h3>{service.title}</h3>
 
-                            <RichText
-                                className="nxc-service-card__description"
-                                html={service.descriptionHtml}
-                            />
+                            <p className="nxc-service-card__description">
+                                {service.description}
+                            </p>
+
+                            {service.linkLabel && service.linkUrl ? (
+                                <a
+                                    className="nxc-service-card__link"
+                                    href={service.linkUrl}
+                                >
+                                    {service.linkLabel}
+                                    <span aria-hidden="true">→</span>
+                                </a>
+                            ) : null}
                         </article>
                     ))}
                 </div>

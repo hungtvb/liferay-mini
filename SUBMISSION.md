@@ -1,6 +1,20 @@
 # Nexcent Figma-to-Liferay Project Submission
 
-> Replace every placeholder before final submission.
+> Runtime evidence worksheet. Keep placeholders until the corresponding check is captured in a clean Liferay environment; do not convert source or preview checks into runtime claims.
+
+## 0. Current Verified Delivery (2026-07-18)
+
+| Area | Status | Evidence |
+|---|---|---|
+| Full implementation delivery | In review | [PR #12](https://github.com/hungtvb/liferay-mini/pull/12) |
+| Figma reference sync | Merged | [workflow run #29633012081](https://github.com/hungtvb/liferay-mini/actions/runs/29633012081), [PR #13](https://github.com/hungtvb/liferay-mini/pull/13), generated manifest and SHA-256 |
+| Landing Elements and Excel importer | Pass | Unit tests, typecheck, production build, workbook generation, **Landing Elements Check** |
+| External Remote App | Pass | Typecheck, production build, **Remote App Check**, and `https://nexcent-liferay-static.vercel.app/remote-app/` |
+| Static landing preview | Pass | `https://nexcent-liferay-static.vercel.app/`; browser QA at 375/768/1440 px |
+| Design system and project contract | Pass | **Design System Check** and **Project Contract Check** |
+| Clean Liferay integration | Pending | Requires Java 21 plus a running `dxp-2026.q1.1-lts` bundle; capture the runtime-only rows in this worksheet |
+
+The production static preview defaults to deterministic mock data and offers an opt-in Classic Headless adapter. It verifies frontend composition and responsive behavior, not live Liferay registration, permissions, content reads, or migration results.
 
 ## 1. Team and Scope
 
@@ -35,9 +49,10 @@ Scope deviations:
 
 - Repository: `https://github.com/hungtvb/liferay-mini`
 - Submission commit: `<full SHA>`
-- Reference branch: `final`
-- Rebuild PR: `<link>`
-- CI runs: `<links>`
+- Reference branch: `main`
+- Delivery PR: `https://github.com/hungtvb/liferay-mini/pull/12`
+- Figma sync PR: `https://github.com/hungtvb/liferay-mini/pull/13`
+- Figma workflow: `https://github.com/hungtvb/liferay-mini/actions/runs/29633012081`
 
 ## 4. Figma Audit and Design System
 
@@ -215,13 +230,14 @@ client-extensions/nexcent-content-batch/batch/*.batch-engine-data.json
 node scripts/verify-course.mjs
 
 cd client-extensions/nexcent-landing-elements
-npm install
+npm ci
+npm test
 npm run typecheck
 npm run build
 npm run generate:workbook
 
 cd ../../remote-apps/nexcent-community-app
-npm install
+npm ci
 npm run typecheck
 npm run build
 ```
@@ -232,7 +248,6 @@ CI status:
 Landing Elements Check: <pass/fail>
 Remote App Check: <pass/fail>
 Design System Check: <pass/fail>
-Batch Migration Check: <pass/fail>
 Project Contract Check: <pass/fail>
 ```
 

@@ -7,6 +7,8 @@ The Figma landing page and its detailed Style Guide are the source of truth. Eve
 - **FE:** rendering, responsive behavior, accessibility, component states, and Liferay frontend technology.
 - **BE:** content ownership, content fields, assets, API contract, validation, migration, and editor workflow.
 
+Public integration preview: `https://nexcent-liferay-static.vercel.app`. The same deployment exposes the Community Remote App assets under `/remote-app/`. Add `?source=headless&liferayBaseURL=<portal>&siteId=<site>` to run the static composition against live Structured Content.
+
 The previous course is preserved at [`archive/course-v1`](https://github.com/hungtvb/liferay-mini/tree/archive/course-v1).
 
 ## 2026.Q1 architecture audit status
@@ -28,9 +30,10 @@ Liferay CMS Content Structures + Spaces
 
 Current evidence boundary:
 
-- The static Vercel deployment is a **visual and data-contract prototype** driven by mock JSON.
-- It does not prove a live Liferay Headless integration.
-- Its current logo, icons, and illustrations remain placeholders until a generated Figma asset PR passes visual review.
+- The static Vercel deployment defaults to mock JSON and also includes a tested, opt-in Classic Headless Delivery adapter. This proves the frontend adapter contract, not a live target-portal integration.
+- The Community Remote App is built and published independently under `/remote-app/`; its registration and content calls still require clean Liferay runtime evidence.
+- The first controlled Figma export was reviewed and merged through [PR #13](https://github.com/hungtvb/liferay-mini/pull/13) as a full-page reference thumbnail. Current component logos, icons, and illustrations remain placeholders until component-level exports pass visual review.
+- The 12-group Excel importer, deterministic npm installs, URL safety checks, Remote App build, static adapter tests, and combined Vercel output are implemented and covered by CI in [PR #12](https://github.com/hungtvb/liferay-mini/pull/12).
 - Source code existing in the repository is not treated as runtime verified until it passes a clean Liferay 2026.Q1.1 deployment test.
 - “Deploy once” means one command with observable, rerunnable steps; it is not an atomic transaction.
 
@@ -181,10 +184,10 @@ PR #11 introduces a dependency-free Figma REST synchronization workflow that:
 - discovers explicitly approved nodes through naming, export settings, or node mappings;
 - exports SVG, PNG, JPG, or PDF files;
 - generates a deterministic asset manifest;
-- opens a reviewable GitHub pull request;
+- pushes a generated branch and opens a reviewable GitHub pull request when repository settings allow it, otherwise prints the manual PR URL;
 - relies on Vercel Preview for visual comparison.
 
-It does not automatically decide which layers are production assets and it does not bypass Figma plan or rate limits. A Personal Access Token requires rotation within its configured lifetime, up to 90 days. See [`docs/figma-asset-sync.md`](docs/figma-asset-sync.md).
+Workflow run #1 exported a full-page reference thumbnail that was reviewed and merged through PR #13. It does not automatically decide which layers are production assets and it does not bypass Figma plan or rate limits. A Personal Access Token requires rotation within its configured lifetime, up to 90 days. See [`docs/figma-asset-sync.md`](docs/figma-asset-sync.md).
 
 ## Rebuilt learning path
 
@@ -235,6 +238,8 @@ Required tools:
 - Blade CLI
 - Node.js 22+
 - npm or Yarn
+
+The repository includes the Gradle 8.5 Wrapper, so a machine-wide Gradle installation is not required.
 
 Bootstrap and initialize the bundle:
 

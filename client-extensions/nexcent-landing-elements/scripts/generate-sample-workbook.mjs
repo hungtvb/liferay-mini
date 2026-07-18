@@ -19,8 +19,8 @@ const source = JSON.parse(await readFile(inputPath, 'utf8'));
 const workbook = new ExcelJS.Workbook();
 
 workbook.creator = 'Liferay Mini Project Lab';
-workbook.created = new Date('2026-07-17T00:00:00Z');
-workbook.modified = new Date('2026-07-17T00:00:00Z');
+workbook.created = new Date('2026-07-18T00:00:00Z');
+workbook.modified = new Date('2026-07-18T00:00:00Z');
 
 function addSheet(name, columns, rows) {
     const worksheet = workbook.addWorksheet(name, {
@@ -44,7 +44,10 @@ function addSheet(name, columns, rows) {
         let width = column.width ?? 14;
 
         column.eachCell?.({includeEmpty: false}, (cell) => {
-            width = Math.min(60, Math.max(width, String(cell.value ?? '').length + 2));
+            width = Math.min(
+                60,
+                Math.max(width, String(cell.value ?? '').length + 2)
+            );
         });
         column.width = width;
     }
@@ -58,19 +61,28 @@ instructions.columns = [
 instructions.addRows([
     {
         item: 'Required sheets',
-        guidance: 'Heroes, ServicesIntro, Services, Features. Do not rename the headers.',
+        guidance:
+            'Heroes, ClientsIntro, Clients, ServicesIntro, Services, Features, StatisticsIntro, Statistics, Testimonials, CommunityIntro, CommunityCards, CTA. Do not rename headers.',
     },
     {
         item: 'Assets',
-        guidance: 'Select every referenced file when using Nexcent Content Importer. Paths may include assets/, but matching uses the filename.',
+        guidance:
+            'Select every referenced file in Nexcent Content Importer. Paths may include assets/, but matching uses the filename.',
     },
     {
         item: 'External reference codes',
-        guidance: 'Values must be unique across every sheet. Reusing the same workbook updates existing Web Content instead of creating duplicates.',
+        guidance:
+            'Values must be unique across every sheet. Reusing the same workbook updates existing Web Content instead of creating duplicates.',
     },
     {
         item: 'HTML',
-        guidance: 'Use simple editorial HTML only. Scripts, event handlers, and javascript: URLs are rejected.',
+        guidance:
+            'Only Features.descriptionHTML accepts editorial HTML. Scripts, event handlers, and javascript: URLs are rejected.',
+    },
+    {
+        item: 'Links',
+        guidance:
+            'Optional label and URL fields must be provided together. Targets are empty, _self, or _blank.',
     },
     {
         item: 'Boolean values',
@@ -88,6 +100,7 @@ addSheet(
         'description',
         'ctaLabel',
         'ctaUrl',
+        'ctaTarget',
         'imageFile',
         'imageAlt',
         'sortOrder',
@@ -97,8 +110,28 @@ addSheet(
 );
 
 addSheet(
+    'ClientsIntro',
+    ['externalReferenceCode', 'heading', 'description'],
+    source.clientsIntro
+);
+
+addSheet(
+    'Clients',
+    [
+        'externalReferenceCode',
+        'name',
+        'logoFile',
+        'logoAlt',
+        'websiteUrl',
+        'sortOrder',
+        'active',
+    ],
+    source.clients
+);
+
+addSheet(
     'ServicesIntro',
-    ['externalReferenceCode', 'title', 'description', 'sortOrder', 'active'],
+    ['externalReferenceCode', 'heading', 'description'],
     source.servicesIntro
 );
 
@@ -107,10 +140,11 @@ addSheet(
     [
         'externalReferenceCode',
         'title',
-        'descriptionHtml',
+        'description',
         'iconFile',
         'iconAlt',
-        'targetUrl',
+        'linkLabel',
+        'linkUrl',
         'sortOrder',
         'active',
     ],
@@ -122,7 +156,7 @@ addSheet(
     [
         'externalReferenceCode',
         'title',
-        'descriptionHtml',
+        'descriptionHTML',
         'imageFile',
         'imageAlt',
         'ctaLabel',
@@ -133,6 +167,81 @@ addSheet(
         'active',
     ],
     source.features
+);
+
+addSheet(
+    'StatisticsIntro',
+    ['externalReferenceCode', 'heading', 'highlightedText', 'description'],
+    source.statisticsIntro
+);
+
+addSheet(
+    'Statistics',
+    [
+        'externalReferenceCode',
+        'label',
+        'value',
+        'valueSuffix',
+        'iconFile',
+        'iconAlt',
+        'sortOrder',
+        'active',
+    ],
+    source.statistics
+);
+
+addSheet(
+    'Testimonials',
+    [
+        'externalReferenceCode',
+        'quote',
+        'customerName',
+        'customerRole',
+        'customerCompany',
+        'customerImageFile',
+        'customerImageAlt',
+        'ctaLabel',
+        'ctaUrl',
+        'sortOrder',
+        'active',
+    ],
+    source.testimonials
+);
+
+addSheet(
+    'CommunityIntro',
+    ['externalReferenceCode', 'heading', 'description'],
+    source.communityIntro
+);
+
+addSheet(
+    'CommunityCards',
+    [
+        'externalReferenceCode',
+        'title',
+        'summary',
+        'thumbnailFile',
+        'thumbnailAlt',
+        'targetUrl',
+        'publishedDate',
+        'sortOrder',
+        'active',
+    ],
+    source.communityCards
+);
+
+addSheet(
+    'CTA',
+    [
+        'externalReferenceCode',
+        'heading',
+        'ctaLabel',
+        'ctaUrl',
+        'ctaTarget',
+        'backgroundVariant',
+        'active',
+    ],
+    source.cta
 );
 
 await workbook.xlsx.writeFile(outputPath);

@@ -1,8 +1,10 @@
 # Figma asset sync
 
-Status: **IMPLEMENTED / FIRST REAL EXPORT PENDING**
+Status: **IMPLEMENTED / FIRST REFERENCE EXPORT ACCEPTED / COMPONENT ASSETS PENDING**
 
-PR #11 adds the synchronization mechanism. No production Figma logo, icon, illustration, or photo has been accepted merely because this workflow exists. The first generated asset pull request must still be reviewed against the source frame.
+PR #11 added the synchronization mechanism. Workflow [run #1](https://github.com/hungtvb/liferay-mini/actions/runs/29633012081) successfully exported the full-page `Thumbnail` node and a deterministic manifest. GitHub repository settings blocked Actions from opening the PR, so the pushed branch was reviewed through [PR #13](https://github.com/hungtvb/liferay-mini/pull/13) and accepted as visual reference evidence.
+
+No production Figma logo, icon, illustration, testimonial image, or community photo has been accepted yet. Those assets still require component-level prefixes, export settings, or explicit mappings and a separate visual review.
 
 This workflow exports approved assets from the Nexcent Figma frame into the static prototype and opens a pull request for review.
 
@@ -76,8 +78,9 @@ The workflow:
 2. Discovers prefixed nodes, export-enabled nodes, and explicit mappings.
 3. Exports SVG/PNG/JPG/PDF assets through the Figma REST API.
 4. Writes files and `manifest.json` with node IDs, hashes, byte sizes, and Figma version metadata.
-5. Creates a branch and pull request when files changed.
-6. Lets Vercel create a Preview Deployment for visual review.
+5. Creates and pushes a review branch when files changed.
+6. Attempts to create a pull request. If repository settings prohibit Actions-created PRs, it prints a warning and the manual PR URL without discarding the generated branch.
+7. Lets Vercel create a Preview Deployment for visual review.
 
 The workflow never promotes generated files directly to production. Review and merge remain required.
 
@@ -135,14 +138,16 @@ Therefore:
 
 ## First-run acceptance checklist
 
-- PR #11 is merged and the workflow is visible under GitHub Actions.
-- `FIGMA_TOKEN` exists as a repository secret.
+- [x] PR #11 is merged and the workflow is visible under GitHub Actions.
+- [x] `FIGMA_TOKEN` authenticated workflow run #1 without being exposed.
 - Token expiry and rotation ownership are recorded outside source control.
 - The token owner can view the Nexcent Figma file.
-- Approved layers use the naming convention, have export settings, or have explicit node mappings.
-- Run the workflow once with root node `1:2`.
-- Confirm the workflow creates a generated asset PR rather than modifying `main`.
-- Review the asset manifest and every exported file.
-- Compare desktop and mobile Vercel Preview output against Figma.
+- [x] Run the workflow once with root node `1:2`.
+- [x] Confirm the workflow pushes a generated branch rather than modifying `main`.
+- [x] Review the first manifest and exported full-page thumbnail.
+- [x] Merge the reviewed reference output through PR #13.
+- Approved component layers use the naming convention, have export settings, or have explicit node mappings.
+- Export and review the production logo, icons, illustrations, testimonial image, and community images.
+- Compare desktop and mobile Vercel Preview output against Figma after component assets are wired.
 - Record request usage and any rate-limit headers.
 - Merge generated assets only after visual acceptance.

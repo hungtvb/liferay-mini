@@ -151,6 +151,11 @@ button, input { font: inherit; }
 .header-actions { display: flex; align-items: center; gap: 18px; }
 .text-link { color: var(--brand-600) !important; }
 .nav-toggle { display: none; }
+.nav-toggle:focus-visible,
+.newsletter-form button:focus-visible {
+  outline: 3px solid rgb(76 175 79 / 45%);
+  outline-offset: 3px;
+}
 
 .button {
   display: inline-flex;
@@ -219,6 +224,9 @@ button, input { font: inherit; }
   opacity: .75;
 }
 .client-logo svg { width: 42px; margin-bottom: 4px; }
+.client-logo img { width: min(100%, 150px); max-height: 48px; object-fit: contain; }
+.client-logo-link { border-radius: var(--radius-sm); color: inherit; text-decoration: none; }
+.client-logo-link:focus-visible { outline: 3px solid rgb(76 175 79 / 35%); outline-offset: 4px; }
 
 .service-grid {
   display: grid;
@@ -252,7 +260,7 @@ button, input { font: inherit; }
 
 .feature-list { background: #fff; }
 .feature-section { padding: 72px 0; }
-.feature-section:nth-child(even) { background: var(--surface-soft); }
+.feature-section[data-variant="muted"] { background: var(--surface-soft); }
 .feature-grid {
   display: grid;
   grid-template-columns: minmax(320px, .92fr) minmax(0, 1.08fr);
@@ -308,6 +316,7 @@ button, input { font: inherit; }
   font-size: 3rem;
   font-weight: 800;
 }
+.testimonial-portrait img { width: 100%; height: 100%; object-fit: cover; }
 .testimonial-copy blockquote { margin: 0; color: var(--ink-600); font-size: 1.03rem; font-weight: 600; }
 .testimonial-name { margin: 18px 0 2px; color: var(--brand-500); font-size: 1.18rem; font-weight: 800; }
 .testimonial-role { margin: 0; color: var(--ink-500); }
@@ -321,11 +330,13 @@ button, input { font: inherit; }
 }
 .community-card { position: relative; min-height: 350px; }
 .community-art {
+  position: relative;
   height: 265px;
   overflow: hidden;
   border-radius: var(--radius-md);
   background: linear-gradient(135deg, var(--art-a), var(--art-b));
 }
+.community-art img { position: relative; z-index: 2; width: 100%; height: 100%; display: block; object-fit: cover; }
 .community-art::before,
 .community-art::after {
   content: "";
@@ -358,6 +369,8 @@ button, input { font: inherit; }
   text-align: center;
 }
 .community-card h3 { margin: 0; color: var(--ink-600); font-size: 1.18rem; }
+.community-card-content p { margin: 12px 0 0; color: var(--ink-500); font-size: .94rem; }
+.community-card-content time { display: block; margin-top: 12px; color: var(--ink-500); font-size: .82rem; }
 .read-more { display: inline-flex; margin-top: 16px; color: var(--brand-500); font-weight: 800; text-decoration: none; }
 
 .cta { text-align: center; }
@@ -392,8 +405,13 @@ button, input { font: inherit; }
 }
 .newsletter-form input::placeholder { color: #cfd8dc; }
 .newsletter-form button { width: 46px; border: 0; border-radius: var(--radius-sm); background: var(--brand-500); color: #fff; cursor: pointer; }
+.newsletter-form button svg { width: 22px; height: 22px; }
 .form-message { min-height: 24px; margin: 10px 0 0; color: #c8e6c9; font-size: .9rem; }
 .footer-bottom { margin-top: 46px; border-top: 1px solid rgb(255 255 255 / 10%); padding-top: 22px; color: #b0bec5; font-size: .88rem; text-align: center; }
+
+.error-state { min-height: 60vh; display: grid; place-items: center; text-align: center; }
+.error-state p:not(.eyebrow) { max-width: 46rem; margin-inline: auto; color: var(--ink-500); }
+.error-state .button { margin-top: 1.25rem; }
 
 .skeleton { display: grid; gap: 14px; padding-block: 80px; }
 .skeleton span { height: 20px; border-radius: 10px; background: linear-gradient(90deg, #edf1f3, #f8fafb, #edf1f3); background-size: 200% 100%; animation: shimmer 1.2s infinite; }
@@ -454,12 +472,17 @@ button, input { font: inherit; }
   .community-grid,
   .footer-grid { grid-template-columns: 1fr; }
   .logo-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .client-logo-link:last-child,
   .client-logo:last-child { grid-column: 1 / -1; }
   .stat-list { gap: 24px 16px; }
   .stat-value { font-size: 1.4rem; }
   .testimonial-grid { gap: 36px; }
   .testimonial-portrait { max-width: 330px; margin-inline: auto; }
   .newsletter-form { grid-template-columns: 1fr 48px; }
+}
+
+@media (max-width: 420px) {
+  .stat-list { grid-template-columns: 1fr; }
 }
 
 @media (prefers-reduced-motion: reduce) {

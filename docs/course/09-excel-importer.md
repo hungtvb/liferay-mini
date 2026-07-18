@@ -1,5 +1,12 @@
 # 09 — Build the Excel Content Importer
 
+## Current delivery status (2026-07-18)
+
+- **Implemented:** all 12 content sheets below are parsed into the corresponding `NXC-*` payloads; `Instructions` is intentionally not an import payload.
+- **Safety contract implemented:** validation completes before mutation, ERC-based upsert is used for repeatability, assets are resolved before Structured Content, and failures include sheet/row/field detail plus a downloadable report.
+- **Automated evidence:** importer unit tests cover workbook parsing, invalid values, duplicate ERCs, unsafe HTML, partial CTA pairs, missing assets, and upsert/report behavior. `npm test`, `npm run typecheck`, `npm run build`, workbook generation, and **Landing Elements Check** pass for [PR #12](https://github.com/hungtvb/liferay-mini/pull/12).
+- **Runtime acceptance still required:** execute first and second imports against a clean Liferay site and attach Web Content/Documents and Media screenshots plus the two generated reports. Source tests prove the mutation plan; they do not replace a live API import.
+
 ## Goal
 
 Import all backend-managed landing-page content and assets through a browser Custom Element.
@@ -91,8 +98,8 @@ no duplicate Web Content
 
 ## Checkpoint
 
-- [ ] All Figma-managed content types are represented in the workbook.
-- [ ] Validation blocks bad rows before mutation.
-- [ ] Assets are uploaded or resolved before Structured Content.
+- [x] All Figma-managed content types are represented in the workbook.
+- [x] Validation blocks bad rows before mutation.
+- [x] Assets are uploaded or resolved before Structured Content in the import plan.
 - [ ] Imported articles appear in Site Content → Web Content.
 - [ ] Second import is idempotent by ERC.

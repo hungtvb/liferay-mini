@@ -102,10 +102,32 @@ function numberValue(fields: Map<string, ContentField>, name: string): number {
     return Number.isFinite(parsed) ? parsed : 0;
 }
 
-function mediaUrl(fields: Map<string, ContentField>, name: string): string {
-    const value = fields.get(name)?.contentFieldValue;
+function safeLinkUrl(value: string): string {
+    const url = value.trim();
 
-    return value?.image?.contentUrl ?? value?.document?.contentUrl ?? '';
+    if (url.startsWith('/') || url.startsWith('#')) {
+        return url;
+    }
+
+    try {
+        const parsed = new URL(url);
+
+        return ['http:', 'https:'].includes(parsed.protocol) ? url : '';
+    }
+    catch {
+        return '';
+    }
+}
+
+function mediaUrl(
+    fields: Map<string, ContentField>,
+    name: string,
+    portalURL: string
+): string {
+    const value = fields.get(name)?.contentFieldValue;
+    const contentUrl = value?.image?.contentUrl ?? value?.document?.contentUrl ?? '';
+
+    return contentUrl ? new URL(contentUrl, `${portalURL}/`).toString() : '';
 }
 
 async function getJson<T>(url: string): Promise<T> {
@@ -121,26 +143,28 @@ async function getJson<T>(url: string): Promise<T> {
     return (await response.json()) as T;
 }
 
-async function resolveStructureId(
+async function resolveStructureIds(
     portalURL: string,
     siteId: string,
-    identifier: string
-): Promise<number> {
+    identifiers: string[]
+): Promise<number[]> {
     const response = await getJson<CollectionResponse<ContentStructure>>(
         `${portalURL}/o/headless-delivery/v1.0/sites/${encodeURIComponent(siteId)}/content-structures?pageSize=200`
     );
-    const normalized = identifier.trim().toLowerCase();
-    const structure = (response.items ?? []).find((item) =>
-        [item.name, item.externalReferenceCode]
-            .filter(Boolean)
-            .some((value) => String(value).trim().toLowerCase() === normalized)
-    );
+    return identifiers.map((identifier) => {
+        const normalized = identifier.trim().toLowerCase();
+        const structure = (response.items ?? []).find((item) =>
+            [item.name, item.externalReferenceCode]
+                .filter(Boolean)
+                .some((value) => String(value).trim().toLowerCase() === normalized)
+        );
 
-    if (!structure?.id) {
-        throw new Error(`Content Structure not found: ${identifier}`);
-    }
+        if (!structure?.id) {
+            throw new Error(`Content Structure not found: ${identifier}`);
+        }
 
-    return structure.id;
+        return structure.id;
+    });
 }
 
 async function getStructuredContents(
@@ -177,10 +201,11 @@ async function loadCommunityData(element: HTMLElement): Promise<CommunityData | 
         );
     }
 
-    const [introStructureId, itemStructureId] = await Promise.all([
-        resolveStructureId(portalURL, siteId, introIdentifier),
-        resolveStructureId(portalURL, siteId, itemIdentifier),
-    ]);
+    const [introStructureId, itemStructureId] = await resolveStructureIds(
+        portalURL,
+        siteId,
+        [introIdentifier, itemIdentifier]
+    );
     const [introContents, itemContents] = await Promise.all([
         getStructuredContents(portalURL, introStructureId),
         getStructuredContents(portalURL, itemStructureId),
@@ -196,8 +221,8 @@ async function loadCommunityData(element: HTMLElement): Promise<CommunityData | 
         .map((content): CommunityCard | null => {
             const fields = fieldMap(content);
             const title = text(fields, 'title') || content.title?.trim() || '';
-            const targetUrl = text(fields, 'targetUrl');
-            const thumbnailUrl = mediaUrl(fields, 'thumbnail');
+            const targetUrl = safeLinkUrl(text(fields, 'targetUrl'));
+            const thumbnailUrl = mediaUrl(fields, 'thumbnail', portalURL);
 
             if (!bool(fields, 'active') || !title || !targetUrl || !thumbnailUrl) {
                 return null;
@@ -231,6 +256,43 @@ async function loadCommunityData(element: HTMLElement): Promise<CommunityData | 
         },
         items,
     };
+}
+
+function CommunityThumbnail({item}: {item: CommunityCard}) {
+    const [failed, setFailed] = useState(false);
+
+    if (failed) {
+        return (
+            <div
+                aria-label={item.thumbnail.alt || `Image unavailable for ${item.title}`}
+                className="nxc-community-card__image-fallback"
+                role="img"
+            >
+                <svg aria-hidden="true" viewBox="0 0 48 48">
+                    <path d="M7 9h34v30H7V9Zm4 4v17l8-8 6 6 4-4 8 8V13H11Zm8 5a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z" fill="currentColor" />
+                </svg>
+                <span>Image unavailable</span>
+            </div>
+        );
+    }
+
+    return (
+        <img
+            alt={item.thumbnail.alt}
+            className="nxc-community-card__image"
+            loading="lazy"
+            onError={() => setFailed(true)}
+            src={item.thumbnail.url}
+        />
+    );
+}
+
+function formatPublishedDate(value: string): string {
+    const date = new Date(value);
+
+    return Number.isNaN(date.getTime())
+        ? value
+        : new Intl.DateTimeFormat(undefined, {dateStyle: 'medium'}).format(date);
 }
 
 function CommunityApp({host}: {host: HTMLElement}) {
@@ -271,6 +333,9 @@ function CommunityApp({host}: {host: HTMLElement}) {
         return (
             <section aria-busy="true" className="nxc-community nxc-community--state">
                 <p>Loading community updates…</p>
+                <div className="nxc-community__loading-grid" aria-hidden="true">
+                    <span /><span /><span />
+                </div>
             </section>
         );
     }
@@ -306,15 +371,12 @@ function CommunityApp({host}: {host: HTMLElement}) {
                 <div className="nxc-community__grid">
                     {state.data.items.map((item) => (
                         <article className="nxc-community-card" key={item.externalReferenceCode}>
-                            <img
-                                alt={item.thumbnail.alt}
-                                className="nxc-community-card__image"
-                                loading="lazy"
-                                src={item.thumbnail.url}
-                            />
+                            <CommunityThumbnail item={item} />
                             <div className="nxc-community-card__body">
                                 {item.publishedDate ? (
-                                    <time dateTime={item.publishedDate}>{item.publishedDate}</time>
+                                    <time dateTime={item.publishedDate}>
+                                        {formatPublishedDate(item.publishedDate)}
+                                    </time>
                                 ) : null}
                                 <h3>{item.title}</h3>
                                 {item.summary ? <p>{item.summary}</p> : null}

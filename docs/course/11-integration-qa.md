@@ -1,5 +1,19 @@
 # 11 — Run FE–BE Integration, Responsive QA, and Final Demo
 
+## Current evidence snapshot (2026-07-18)
+
+| Scope | Result | Evidence boundary |
+|---|---|---|
+| Source contracts and generated workbook | Pass | `node scripts/verify-course.mjs` and the committed workbook fixture |
+| Landing Elements | Pass | Unit tests, typecheck, production build, and **Landing Elements Check** on [PR #12](https://github.com/hungtvb/liferay-mini/pull/12) |
+| External Remote App | Pass | Typecheck, production build, Vercel `/remote-app/` assembly, and **Remote App Check** |
+| Static responsive preview | Pass | Browser checks at 375, 768, and 1440 px with no console, HTTP, image, or horizontal-overflow failures |
+| Design-system and repository contract | Pass | **Design System Check** and **Project Contract Check** |
+| Figma reference sync | Pass, reference-only | [workflow run #29633012081](https://github.com/hungtvb/liferay-mini/actions/runs/29633012081) and merged [PR #13](https://github.com/hungtvb/liferay-mini/pull/13); component-ready exports are still pending |
+| Clean Liferay runtime | Pending | Registration, real Headless reads, first/second Excel import, batch deployment, and backend-edit proof must be captured in `dxp-2026.q1.1-lts` with Java 21 |
+
+The static preview uses mock data by default and has an opt-in Classic Headless adapter. Its browser result is valid frontend/responsive evidence, but it is not a substitute for the pending Liferay runtime acceptance.
+
 ## Goal
 
 Verify the complete landing page, content lifecycle, migration flows, and team handoff.
@@ -74,9 +88,9 @@ For each component:
 
 ## Final acceptance
 
-- [ ] Original FE/BE assignment is fully represented.
-- [ ] Unrelated Liferay technologies are not required by the core project.
-- [ ] All visible business content is backend-managed.
-- [ ] Remote App is genuinely externally hosted.
-- [ ] Migration is idempotent.
-- [ ] `SUBMISSION.md` contains evidence links and results.
+- [x] Original FE/BE assignment is represented in source, contracts, and runbooks.
+- [x] Unrelated Liferay technologies are not required by the core project.
+- [ ] All visible business content is verified as backend-managed in a running Liferay site.
+- [x] Remote App assets are genuinely externally hosted.
+- [ ] Excel and Batch migration idempotency is verified against a running Liferay site.
+- [x] `SUBMISSION.md` separates captured evidence from runtime evidence still required.

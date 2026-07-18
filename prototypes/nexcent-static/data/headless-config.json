@@ -12,6 +12,7 @@
     },
     "clients": {
       "delivery": "Collection Display in Liferay; JSON mock in static prototype",
+      "introStructureIdentifier": "NXC Clients Intro",
       "structureIdentifier": "NXC Client Logo",
       "request": "/content-structures/{structureId}/structured-contents?flatten=true&pageSize=100&sort=sortOrder:asc"
     },

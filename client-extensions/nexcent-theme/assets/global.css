@@ -2,6 +2,7 @@
     --nxc-color-primary: var(--nxc-style-primary, #4caf4f);
     --nxc-color-primary-hover: var(--nxc-style-primary-hover, #388e3b);
     --nxc-color-primary-active: var(--nxc-style-primary-active, #237d31);
+    --nxc-color-primary-dark: var(--nxc-color-primary-active);
     --nxc-color-secondary: var(--nxc-style-secondary, #263238);
     --nxc-color-text: var(--nxc-style-text, #4d4d4d);
     --nxc-color-heading: var(--nxc-style-heading, #263238);

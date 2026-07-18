@@ -8,7 +8,7 @@ From the repository root:
 
 ```bash
 cd client-extensions/nexcent-landing-elements
-npm install
+npm ci
 npm run generate:workbook
 ```
 
@@ -24,11 +24,19 @@ sample-data/excel/nexcent-content.xlsx
 |---|---|
 | `Instructions` | Import guidance and validation rules |
 | `Heroes` | `NXC Landing Hero` articles |
+| `ClientsIntro` | `NXC Clients Intro` singleton |
+| `Clients` | `NXC Client Logo` articles |
 | `ServicesIntro` | `NXC Services Intro` articles |
 | `Services` | `NXC Service Item` articles |
 | `Features` | `NXC Feature Item` articles |
+| `StatisticsIntro` | `NXC Statistics Intro` singleton |
+| `Statistics` | `NXC Statistic Item` articles |
+| `Testimonials` | `NXC Testimonial` articles |
+| `CommunityIntro` | `NXC Community Intro` singleton |
+| `CommunityCards` | `NXC Community Card` articles |
+| `CTA` | `NXC CTA` singleton |
 
-Do not rename sheets or column headers. The importer maps each header to the Web Content field reference documented in Labs 05 and 06.
+Do not rename sheets or column headers. The importer maps each header to the field references in `docs/contracts/component-contracts.md` and validates all sheets before the first API mutation.
 
 ## Asset paths
 

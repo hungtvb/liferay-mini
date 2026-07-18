@@ -1,0 +1,1368 @@
+{
+  "generatedAt": "2026-07-18T07:08:10.020Z",
+  "fileKey": "hsyBymVFhXLwnCBlIfoam3",
+  "rootNode": "1:2",
+  "total": 80,
+  "candidates": [
+    {
+      "nodeId": "2:588",
+      "name": "24/Arrows & Directions/Down square",
+      "output": "auto/style-guide/icons/24-arrows-directions-down-square",
+      "format": "svg",
+      "category": "icons",
+      "reason": "direct-child-of-asset-category",
+      "type": "COMPONENT",
+      "dimensions": {
+        "width": 24.000000286197064,
+        "height": 24.000000286197178
+      },
+      "ancestry": [
+        "Style Guide",
+        "Icons"
+      ]
+    },
+    {
+      "nodeId": "2:591",
+      "name": "24/Arrows & Directions/Up square",
+      "output": "auto/style-guide/icons/24-arrows-directions-up-square",
+      "format": "svg",
+      "category": "icons",
+      "reason": "direct-child-of-asset-category",
+      "type": "COMPONENT",
+      "dimensions": {
+        "width": 24,
+        "height": 24
+      },
+      "ancestry": [
+        "Style Guide",
+        "Icons"
+      ]
+    },
+    {
+      "nodeId": "2:594",
+      "name": "24/Arrows & Directions/Right square",
+      "output": "auto/style-guide/icons/24-arrows-directions-right-square",
+      "format": "svg",
+      "category": "icons",
+      "reason": "direct-child-of-asset-category",
+      "type": "COMPONENT",
+      "dimensions": {
+        "width": 24,
+        "height": 24
+      },
+      "ancestry": [
+        "Style Guide",
+        "Icons"
+      ]
+    },
+    {
+      "nodeId": "2:597",
+      "name": "24/Arrows & Directions/Left square",
+      "output": "auto/style-guide/icons/24-arrows-directions-left-square",
+      "format": "svg",
+      "category": "icons",
+      "reason": "direct-child-of-asset-category",
+      "type": "COMPONENT",
+      "dimensions": {
+        "width": 24,
+        "height": 24
+      },
+      "ancestry": [
+        "Style Guide",
+        "Icons"
+      ]
+    },
+    {
+      "nodeId": "2:600",
+      "name": "24/Arrows & Directions/Down square 2",
+      "output": "auto/style-guide/icons/24-arrows-directions-down-square-2",
+      "format": "svg",
+      "category": "icons",
+      "reason": "direct-child-of-asset-category",
+      "type": "COMPONENT",
+      "dimensions": {
+        "width": 24.000000286197064,
+        "height": 24.000000286197178
+      },
+      "ancestry": [
+        "Style Guide",
+        "Icons"
+      ]
+    },
+    {
+      "nodeId": "2:603",
+      "name": "24/Arrows & Directions/Up square 2",
+      "output": "auto/style-guide/icons/24-arrows-directions-up-square-2",
+      "format": "svg",
+      "category": "icons",
+      "reason": "direct-child-of-asset-category",
+      "type": "COMPONENT",
+      "dimensions": {
+        "width": 24,
+        "height": 24
+      },
+      "ancestry": [
+        "Style Guide",
+        "Icons"
+      ]
+    },
+    {
+      "nodeId": "2:606",
+      "name": "24/Arrows & Directions/Right square 2",
+      "output": "auto/style-guide/icons/24-arrows-directions-right-square-2",
+      "format": "svg",
+      "category": "icons",
+      "reason": "direct-child-of-asset-category",
+      "type": "COMPONENT",
+      "dimensions": {
+        "width": 24,
+        "height": 24
+      },
+      "ancestry": [
+        "Style Guide",
+        "Icons"
+      ]
+    },
+    {
+      "nodeId": "2:609",
+      "name": "24/Arrows & Directions/Left square 2",
+      "output": "auto/style-guide/icons/24-arrows-directions-left-square-2",
+      "format": "svg",
+      "category": "icons",
+      "reason": "direct-child-of-asset-category",
+      "type": "COMPONENT",
+      "dimensions": {
+        "width": 24,
+        "height": 24
+      },
+      "ancestry": [
+        "Style Guide",
+        "Icons"
+      ]
+    },
+    {
+      "nodeId": "2:612",
+      "name": "24/Arrows & Directions/Down circle",
+      "output": "auto/style-guide/icons/24-arrows-directions-down-circle",
+      "format": "svg",
+      "category": "icons",
+      "reason": "direct-child-of-asset-category",
+      "type": "COMPONENT",
+      "dimensions": {
+        "width": 24.000000286197064,
+        "height": 24.000000286197178
+      },
+      "ancestry": [
+        "Style Guide",
+        "Icons"
+      ]
+    },
+    {
+      "nodeId": "2:615",
+      "name": "24/Arrows & Directions/Up circle",
+      "output": "auto/style-guide/icons/24-arrows-directions-up-circle",
+      "format": "svg",
+      "category": "icons",
+      "reason": "direct-child-of-asset-category",
+      "type": "COMPONENT",
+      "dimensions": {
+        "width": 24.000000286197064,
+        "height": 24.000000286197178
+      },
+      "ancestry": [
+        "Style Guide",
+        "Icons"
+      ]
+    },
+    {
+      "nodeId": "2:618",
+      "name": "24/Arrows & Directions/Right circle",
+      "output": "auto/style-guide/icons/24-arrows-directions-right-circle",
+      "format": "svg",
+      "category": "icons",
+      "reason": "direct-child-of-asset-category",
+      "type": "COMPONENT",
+      "dimensions": {
+        "width": 24.00000209814698,
+        "height": 24.000002098146638
+      },
+      "ancestry": [
+        "Style Guide",
+        "Icons"
+      ]
+    },
+    {
+      "nodeId": "2:621",
+      "name": "24/Arrows & Directions/Left circle",
+      "output": "auto/style-guide/icons/24-arrows-directions-left-circle",
+      "format": "svg",
+      "category": "icons",
+      "reason": "direct-child-of-asset-category",
+      "type": "COMPONENT",
+      "dimensions": {
+        "width": 24,
+        "height": 24
+      },
+      "ancestry": [
+        "Style Guide",
+        "Icons"
+      ]
+    },
+    {
+      "nodeId": "2:624",
+      "name": "24/Arrows & Directions/Down circle",
+      "output": "auto/style-guide/icons/24-arrows-directions-down-circle-2-624",
+      "format": "svg",
+      "category": "icons",
+      "reason": "direct-child-of-asset-category",
+      "type": "COMPONENT",
+      "dimensions": {
+        "width": 24.000000286197974,
+        "height": 24.000000286197178
+      },
+      "ancestry": [
+        "Style Guide",
+        "Icons"
+      ]
+    },
+    {
+      "nodeId": "2:627",
+      "name": "24/Arrows & Directions/Up circle",
+      "output": "auto/style-guide/icons/24-arrows-directions-up-circle-2-627",
+      "format": "svg",
+      "category": "icons",
+      "reason": "direct-child-of-asset-category",
+      "type": "COMPONENT",
+      "dimensions": {
+        "width": 24.000000286197974,
+        "height": 24.000000286197178
+      },
+      "ancestry": [
+        "Style Guide",
+        "Icons"
+      ]
+    },
+    {
+      "nodeId": "2:630",
+      "name": "24/Arrows & Directions/Up right circle",
+      "output": "auto/style-guide/icons/24-arrows-directions-up-right-circle",
+      "format": "svg",
+      "category": "icons",
+      "reason": "direct-child-of-asset-category",
+      "type": "COMPONENT",
+      "dimensions": {
+        "width": 24.000000286197974,
+        "height": 24.000000286197178
+      },
+      "ancestry": [
+        "Style Guide",
+        "Icons"
+      ]
+    },
+    {
+      "nodeId": "2:633",
+      "name": "24/Arrows & Directions/Up left circle",
+      "output": "auto/style-guide/icons/24-arrows-directions-up-left-circle",
+      "format": "svg",
+      "category": "icons",
+      "reason": "direct-child-of-asset-category",
+      "type": "COMPONENT",
+      "dimensions": {
+        "width": 24.000000286197974,
+        "height": 24.000000286197178
+      },
+      "ancestry": [
+        "Style Guide",
+        "Icons"
+      ]
+    },
+    {
+      "nodeId": "2:636",
+      "name": "24/Arrows & Directions/Down right circle",
+      "output": "auto/style-guide/icons/24-arrows-directions-down-right-circle",
+      "format": "svg",
+      "category": "icons",
+      "reason": "direct-child-of-asset-category",
+      "type": "COMPONENT",
+      "dimensions": {
+        "width": 24.000000286197064,
+        "height": 24.000000286197178
+      },
+      "ancestry": [
+        "Style Guide",
+        "Icons"
+      ]
+    },
+    {
+      "nodeId": "2:639",
+      "name": "24/Arrows & Directions/Down left circle",
+      "output": "auto/style-guide/icons/24-arrows-directions-down-left-circle",
+      "format": "svg",
+      "category": "icons",
+      "reason": "direct-child-of-asset-category",
+      "type": "COMPONENT",
+      "dimensions": {
+        "width": 24.000000286197064,
+        "height": 24.000000286197178
+      },
+      "ancestry": [
+        "Style Guide",
+        "Icons"
+      ]
+    },
+    {
+      "nodeId": "2:642",
+      "name": "24/Arrows & Directions/Down",
+      "output": "auto/style-guide/icons/24-arrows-directions-down",
+      "format": "svg",
+      "category": "icons",
+      "reason": "direct-child-of-asset-category",
+      "type": "COMPONENT",
+      "dimensions": {
+        "width": 24.000000286197064,
+        "height": 24.000000286197178
+      },
+      "ancestry": [
+        "Style Guide",
+        "Icons"
+      ]
+    },
+    {
+      "nodeId": "2:645",
+      "name": "16/Arrows & Directions/Down",
+      "output": "auto/style-guide/icons/16-arrows-directions-down",
+      "format": "svg",
+      "category": "icons",
+      "reason": "direct-child-of-asset-category",
+      "type": "COMPONENT",
+      "dimensions": {
+        "width": 16.000000190798346,
+        "height": 16.00000019079812
+      },
+      "ancestry": [
+        "Style Guide",
+        "Icons"
+      ]
+    },
+    {
+      "nodeId": "2:648",
+      "name": "16/Arrows & Directions/Up",
+      "output": "auto/style-guide/icons/16-arrows-directions-up",
+      "format": "svg",
+      "category": "icons",
+      "reason": "direct-child-of-asset-category",
+      "type": "COMPONENT",
+      "dimensions": {
+        "width": 16.000000699382326,
+        "height": 16.000000699382213
+      },
+      "ancestry": [
+        "Style Guide",
+        "Icons"
+      ]
+    },
+    {
+      "nodeId": "2:651",
+      "name": "16/Arrows & Directions/Right",
+      "output": "auto/style-guide/icons/16-arrows-directions-right",
+      "format": "svg",
+      "category": "icons",
+      "reason": "direct-child-of-asset-category",
+      "type": "COMPONENT",
+      "dimensions": {
+        "width": 16.000001398764653,
+        "height": 16.000001398764425
+      },
+      "ancestry": [
+        "Style Guide",
+        "Icons"
+      ]
+    },
+    {
+      "nodeId": "2:654",
+      "name": "16/Arrows & Directions/Left",
+      "output": "auto/style-guide/icons/16-arrows-directions-left",
+      "format": "svg",
+      "category": "icons",
+      "reason": "direct-child-of-asset-category",
+      "type": "COMPONENT",
+      "dimensions": {
+        "width": 16,
+        "height": 16
+      },
+      "ancestry": [
+        "Style Guide",
+        "Icons"
+      ]
+    },
+    {
+      "nodeId": "2:657",
+      "name": "16/Arrows & Directions/Up Left",
+      "output": "auto/style-guide/icons/16-arrows-directions-up-left",
+      "format": "svg",
+      "category": "icons",
+      "reason": "direct-child-of-asset-category",
+      "type": "COMPONENT",
+      "dimensions": {
+        "width": 16,
+        "height": 16
+      },
+      "ancestry": [
+        "Style Guide",
+        "Icons"
+      ]
+    },
+    {
+      "nodeId": "2:660",
+      "name": "16/Arrows & Directions/Up Right",
+      "output": "auto/style-guide/icons/16-arrows-directions-up-right",
+      "format": "svg",
+      "category": "icons",
+      "reason": "direct-child-of-asset-category",
+      "type": "COMPONENT",
+      "dimensions": {
+        "width": 16,
+        "height": 16
+      },
+      "ancestry": [
+        "Style Guide",
+        "Icons"
+      ]
+    },
+    {
+      "nodeId": "2:663",
+      "name": "16/Arrows & Directions/Down Left",
+      "output": "auto/style-guide/icons/16-arrows-directions-down-left",
+      "format": "svg",
+      "category": "icons",
+      "reason": "direct-child-of-asset-category",
+      "type": "COMPONENT",
+      "dimensions": {
+        "width": 16,
+        "height": 16
+      },
+      "ancestry": [
+        "Style Guide",
+        "Icons"
+      ]
+    },
+    {
+      "nodeId": "2:666",
+      "name": "16/Arrows & Directions/Down Right",
+      "output": "auto/style-guide/icons/16-arrows-directions-down-right",
+      "format": "svg",
+      "category": "icons",
+      "reason": "direct-child-of-asset-category",
+      "type": "COMPONENT",
+      "dimensions": {
+        "width": 16,
+        "height": 16
+      },
+      "ancestry": [
+        "Style Guide",
+        "Icons"
+      ]
+    },
+    {
+      "nodeId": "2:669",
+      "name": "24/Arrows & Directions/Up",
+      "output": "auto/style-guide/icons/24-arrows-directions-up",
+      "format": "svg",
+      "category": "icons",
+      "reason": "direct-child-of-asset-category",
+      "type": "COMPONENT",
+      "dimensions": {
+        "width": 24.000000286197064,
+        "height": 24.000000286197178
+      },
+      "ancestry": [
+        "Style Guide",
+        "Icons"
+      ]
+    },
+    {
+      "nodeId": "2:672",
+      "name": "24/Arrows & Directions/Right",
+      "output": "auto/style-guide/icons/24-arrows-directions-right",
+      "format": "svg",
+      "category": "icons",
+      "reason": "direct-child-of-asset-category",
+      "type": "COMPONENT",
+      "dimensions": {
+        "width": 24.00000209814698,
+        "height": 24.000002098146638
+      },
+      "ancestry": [
+        "Style Guide",
+        "Icons"
+      ]
+    },
+    {
+      "nodeId": "2:675",
+      "name": "24/Arrows & Directions/Left",
+      "output": "auto/style-guide/icons/24-arrows-directions-left",
+      "format": "svg",
+      "category": "icons",
+      "reason": "direct-child-of-asset-category",
+      "type": "COMPONENT",
+      "dimensions": {
+        "width": 24,
+        "height": 24
+      },
+      "ancestry": [
+        "Style Guide",
+        "Icons"
+      ]
+    },
+    {
+      "nodeId": "2:678",
+      "name": "24/Arrows & Directions/Up Left",
+      "output": "auto/style-guide/icons/24-arrows-directions-up-left",
+      "format": "svg",
+      "category": "icons",
+      "reason": "direct-child-of-asset-category",
+      "type": "COMPONENT",
+      "dimensions": {
+        "width": 24,
+        "height": 24
+      },
+      "ancestry": [
+        "Style Guide",
+        "Icons"
+      ]
+    },
+    {
+      "nodeId": "2:681",
+      "name": "24/Arrows & Directions/Down Left",
+      "output": "auto/style-guide/icons/24-arrows-directions-down-left",
+      "format": "svg",
+      "category": "icons",
+      "reason": "direct-child-of-asset-category",
+      "type": "COMPONENT",
+      "dimensions": {
+        "width": 24,
+        "height": 24
+      },
+      "ancestry": [
+        "Style Guide",
+        "Icons"
+      ]
+    },
+    {
+      "nodeId": "2:684",
+      "name": "24/Arrows & Directions/Up Right",
+      "output": "auto/style-guide/icons/24-arrows-directions-up-right",
+      "format": "svg",
+      "category": "icons",
+      "reason": "direct-child-of-asset-category",
+      "type": "COMPONENT",
+      "dimensions": {
+        "width": 24,
+        "height": 24
+      },
+      "ancestry": [
+        "Style Guide",
+        "Icons"
+      ]
+    },
+    {
+      "nodeId": "2:687",
+      "name": "24/Arrows & Directions/Down Right",
+      "output": "auto/style-guide/icons/24-arrows-directions-down-right",
+      "format": "svg",
+      "category": "icons",
+      "reason": "direct-child-of-asset-category",
+      "type": "COMPONENT",
+      "dimensions": {
+        "width": 24,
+        "height": 24
+      },
+      "ancestry": [
+        "Style Guide",
+        "Icons"
+      ]
+    },
+    {
+      "nodeId": "2:690",
+      "name": "24/Arrows & Directions/Up 2",
+      "output": "auto/style-guide/icons/24-arrows-directions-up-2",
+      "format": "svg",
+      "category": "icons",
+      "reason": "direct-child-of-asset-category",
+      "type": "COMPONENT",
+      "dimensions": {
+        "width": 24.000000286197064,
+        "height": 24.000000286197178
+      },
+      "ancestry": [
+        "Style Guide",
+        "Icons"
+      ]
+    },
+    {
+      "nodeId": "2:693",
+      "name": "16/Arrows & Directions/Up",
+      "output": "auto/style-guide/icons/16-arrows-directions-up-2-693",
+      "format": "svg",
+      "category": "icons",
+      "reason": "direct-child-of-asset-category",
+      "type": "COMPONENT",
+      "dimensions": {
+        "width": 16.000000190798346,
+        "height": 16.00000019079812
+      },
+      "ancestry": [
+        "Style Guide",
+        "Icons"
+      ]
+    },
+    {
+      "nodeId": "2:696",
+      "name": "16/Arrows & Directions/Right",
+      "output": "auto/style-guide/icons/16-arrows-directions-right-2-696",
+      "format": "svg",
+      "category": "icons",
+      "reason": "direct-child-of-asset-category",
+      "type": "COMPONENT",
+      "dimensions": {
+        "width": 16.000001398764653,
+        "height": 16.000001398764425
+      },
+      "ancestry": [
+        "Style Guide",
+        "Icons"
+      ]
+    },
+    {
+      "nodeId": "2:699",
+      "name": "16/Arrows & Directions/Left",
+      "output": "auto/style-guide/icons/16-arrows-directions-left-2-699",
+      "format": "svg",
+      "category": "icons",
+      "reason": "direct-child-of-asset-category",
+      "type": "COMPONENT",
+      "dimensions": {
+        "width": 16,
+        "height": 16
+      },
+      "ancestry": [
+        "Style Guide",
+        "Icons"
+      ]
+    },
+    {
+      "nodeId": "2:702",
+      "name": "24/Arrows & Directions/Down 2",
+      "output": "auto/style-guide/icons/24-arrows-directions-down-2",
+      "format": "svg",
+      "category": "icons",
+      "reason": "direct-child-of-asset-category",
+      "type": "COMPONENT",
+      "dimensions": {
+        "width": 24.000000286197064,
+        "height": 24.000000286197178
+      },
+      "ancestry": [
+        "Style Guide",
+        "Icons"
+      ]
+    },
+    {
+      "nodeId": "2:705",
+      "name": "24/Arrows & Directions/Right 2",
+      "output": "auto/style-guide/icons/24-arrows-directions-right-2",
+      "format": "svg",
+      "category": "icons",
+      "reason": "direct-child-of-asset-category",
+      "type": "COMPONENT",
+      "dimensions": {
+        "width": 24.00000209814698,
+        "height": 24.000002098146638
+      },
+      "ancestry": [
+        "Style Guide",
+        "Icons"
+      ]
+    },
+    {
+      "nodeId": "2:708",
+      "name": "24/Arrows & Directions/Left 2",
+      "output": "auto/style-guide/icons/24-arrows-directions-left-2",
+      "format": "svg",
+      "category": "icons",
+      "reason": "direct-child-of-asset-category",
+      "type": "COMPONENT",
+      "dimensions": {
+        "width": 24,
+        "height": 24
+      },
+      "ancestry": [
+        "Style Guide",
+        "Icons"
+      ]
+    },
+    {
+      "nodeId": "2:711",
+      "name": "24/Arrows & Directions/Swap",
+      "output": "auto/style-guide/icons/24-arrows-directions-swap",
+      "format": "svg",
+      "category": "icons",
+      "reason": "direct-child-of-asset-category",
+      "type": "COMPONENT",
+      "dimensions": {
+        "width": 24.00000209814607,
+        "height": 24.000002098146638
+      },
+      "ancestry": [
+        "Style Guide",
+        "Icons"
+      ]
+    },
+    {
+      "nodeId": "2:714",
+      "name": "16/Arrows & Directions/Swap",
+      "output": "auto/style-guide/icons/16-arrows-directions-swap",
+      "format": "svg",
+      "category": "icons",
+      "reason": "direct-child-of-asset-category",
+      "type": "COMPONENT",
+      "dimensions": {
+        "width": 16.000001398764653,
+        "height": 16.000001398764425
+      },
+      "ancestry": [
+        "Style Guide",
+        "Icons"
+      ]
+    },
+    {
+      "nodeId": "2:717",
+      "name": "16/Arrows & Directions/Swap",
+      "output": "auto/style-guide/icons/16-arrows-directions-swap-2-717",
+      "format": "svg",
+      "category": "icons",
+      "reason": "direct-child-of-asset-category",
+      "type": "COMPONENT",
+      "dimensions": {
+        "width": 16.000000699382326,
+        "height": 16.000000699382326
+      },
+      "ancestry": [
+        "Style Guide",
+        "Icons"
+      ]
+    },
+    {
+      "nodeId": "2:720",
+      "name": "24/Arrows & Directions/Swap 2",
+      "output": "auto/style-guide/icons/24-arrows-directions-swap-2",
+      "format": "svg",
+      "category": "icons",
+      "reason": "direct-child-of-asset-category",
+      "type": "COMPONENT",
+      "dimensions": {
+        "width": 24.000001049073035,
+        "height": 24.000001049073376
+      },
+      "ancestry": [
+        "Style Guide",
+        "Icons"
+      ]
+    },
+    {
+      "nodeId": "2:723",
+      "name": "24/Arrows & Directions/Swap 3",
+      "output": "auto/style-guide/icons/24-arrows-directions-swap-3",
+      "format": "svg",
+      "category": "icons",
+      "reason": "direct-child-of-asset-category",
+      "type": "COMPONENT",
+      "dimensions": {
+        "width": 24.00000209814607,
+        "height": 24.000002098146638
+      },
+      "ancestry": [
+        "Style Guide",
+        "Icons"
+      ]
+    },
+    {
+      "nodeId": "2:726",
+      "name": "16/Arrows & Directions/Swap",
+      "output": "auto/style-guide/icons/16-arrows-directions-swap-2-726",
+      "format": "svg",
+      "category": "icons",
+      "reason": "direct-child-of-asset-category",
+      "type": "COMPONENT",
+      "dimensions": {
+        "width": 16.000001398764653,
+        "height": 16.000001398764425
+      },
+      "ancestry": [
+        "Style Guide",
+        "Icons"
+      ]
+    },
+    {
+      "nodeId": "2:729",
+      "name": "24/Arrows & Directions/Expand",
+      "output": "auto/style-guide/icons/24-arrows-directions-expand",
+      "format": "svg",
+      "category": "icons",
+      "reason": "direct-child-of-asset-category",
+      "type": "COMPONENT",
+      "dimensions": {
+        "width": 24,
+        "height": 24
+      },
+      "ancestry": [
+        "Style Guide",
+        "Icons"
+      ]
+    },
+    {
+      "nodeId": "2:732",
+      "name": "16/Arrows & Directions/Expand",
+      "output": "auto/style-guide/icons/16-arrows-directions-expand",
+      "format": "svg",
+      "category": "icons",
+      "reason": "direct-child-of-asset-category",
+      "type": "COMPONENT",
+      "dimensions": {
+        "width": 16,
+        "height": 16
+      },
+      "ancestry": [
+        "Style Guide",
+        "Icons"
+      ]
+    },
+    {
+      "nodeId": "2:735",
+      "name": "16/Arrows & Directions/Expand",
+      "output": "auto/style-guide/icons/16-arrows-directions-expand-2-735",
+      "format": "svg",
+      "category": "icons",
+      "reason": "direct-child-of-asset-category",
+      "type": "COMPONENT",
+      "dimensions": {
+        "width": 16,
+        "height": 16
+      },
+      "ancestry": [
+        "Style Guide",
+        "Icons"
+      ]
+    },
+    {
+      "nodeId": "2:738",
+      "name": "24/Arrows & Directions/Collapse",
+      "output": "auto/style-guide/icons/24-arrows-directions-collapse",
+      "format": "svg",
+      "category": "icons",
+      "reason": "direct-child-of-asset-category",
+      "type": "COMPONENT",
+      "dimensions": {
+        "width": 24,
+        "height": 24
+      },
+      "ancestry": [
+        "Style Guide",
+        "Icons"
+      ]
+    },
+    {
+      "nodeId": "2:746",
+      "name": "24/Arrows & Directions/Right circle",
+      "output": "auto/style-guide/icons/24-arrows-directions-right-circle-2-746",
+      "format": "svg",
+      "category": "icons",
+      "reason": "direct-child-of-asset-category",
+      "type": "COMPONENT",
+      "dimensions": {
+        "width": 24.00000209814698,
+        "height": 24.000002098146638
+      },
+      "ancestry": [
+        "Style Guide",
+        "Icons"
+      ]
+    },
+    {
+      "nodeId": "2:749",
+      "name": "24/Arrows & Directions/Left circle",
+      "output": "auto/style-guide/icons/24-arrows-directions-left-circle-2-749",
+      "format": "svg",
+      "category": "icons",
+      "reason": "direct-child-of-asset-category",
+      "type": "COMPONENT",
+      "dimensions": {
+        "width": 24,
+        "height": 24
+      },
+      "ancestry": [
+        "Style Guide",
+        "Icons"
+      ]
+    },
+    {
+      "nodeId": "2:759",
+      "name": "24/User Interface/Search",
+      "output": "auto/style-guide/icons/24-user-interface-search",
+      "format": "svg",
+      "category": "icons",
+      "reason": "direct-child-of-asset-category",
+      "type": "COMPONENT",
+      "dimensions": {
+        "width": 24,
+        "height": 24
+      },
+      "ancestry": [
+        "Style Guide",
+        "Icons"
+      ]
+    },
+    {
+      "nodeId": "2:763",
+      "name": "16/User Interface/Search",
+      "output": "auto/style-guide/icons/16-user-interface-search",
+      "format": "svg",
+      "category": "icons",
+      "reason": "direct-child-of-asset-category",
+      "type": "COMPONENT",
+      "dimensions": {
+        "width": 16,
+        "height": 16
+      },
+      "ancestry": [
+        "Style Guide",
+        "Icons"
+      ]
+    },
+    {
+      "nodeId": "2:767",
+      "name": "24/User Interface/Document",
+      "output": "auto/style-guide/icons/24-user-interface-document",
+      "format": "svg",
+      "category": "icons",
+      "reason": "direct-child-of-asset-category",
+      "type": "COMPONENT",
+      "dimensions": {
+        "width": 24,
+        "height": 24
+      },
+      "ancestry": [
+        "Style Guide",
+        "Icons"
+      ]
+    },
+    {
+      "nodeId": "2:773",
+      "name": "24/User Interface/Document 2",
+      "output": "auto/style-guide/icons/24-user-interface-document-2",
+      "format": "svg",
+      "category": "icons",
+      "reason": "direct-child-of-asset-category",
+      "type": "COMPONENT",
+      "dimensions": {
+        "width": 24,
+        "height": 24
+      },
+      "ancestry": [
+        "Style Guide",
+        "Icons"
+      ]
+    },
+    {
+      "nodeId": "2:779",
+      "name": "24/User Interface/Document add",
+      "output": "auto/style-guide/icons/24-user-interface-document-add",
+      "format": "svg",
+      "category": "icons",
+      "reason": "direct-child-of-asset-category",
+      "type": "COMPONENT",
+      "dimensions": {
+        "width": 24,
+        "height": 24
+      },
+      "ancestry": [
+        "Style Guide",
+        "Icons"
+      ]
+    },
+    {
+      "nodeId": "2:785",
+      "name": "24/User Interface/Document delite",
+      "output": "auto/style-guide/icons/24-user-interface-document-delite",
+      "format": "svg",
+      "category": "icons",
+      "reason": "direct-child-of-asset-category",
+      "type": "COMPONENT",
+      "dimensions": {
+        "width": 24,
+        "height": 24
+      },
+      "ancestry": [
+        "Style Guide",
+        "Icons"
+      ]
+    },
+    {
+      "nodeId": "2:790",
+      "name": "24/User Interface/Copy",
+      "output": "auto/style-guide/icons/24-user-interface-copy",
+      "format": "svg",
+      "category": "icons",
+      "reason": "direct-child-of-asset-category",
+      "type": "COMPONENT",
+      "dimensions": {
+        "width": 24,
+        "height": 24
+      },
+      "ancestry": [
+        "Style Guide",
+        "Icons"
+      ]
+    },
+    {
+      "nodeId": "2:794",
+      "name": "24/User Interface/Layers",
+      "output": "auto/style-guide/icons/24-user-interface-layers",
+      "format": "svg",
+      "category": "icons",
+      "reason": "direct-child-of-asset-category",
+      "type": "COMPONENT",
+      "dimensions": {
+        "width": 24,
+        "height": 24
+      },
+      "ancestry": [
+        "Style Guide",
+        "Icons"
+      ]
+    },
+    {
+      "nodeId": "2:796",
+      "name": "24/User Interface/Paperclip",
+      "output": "auto/style-guide/icons/24-user-interface-paperclip",
+      "format": "svg",
+      "category": "icons",
+      "reason": "direct-child-of-asset-category",
+      "type": "COMPONENT",
+      "dimensions": {
+        "width": 24,
+        "height": 24
+      },
+      "ancestry": [
+        "Style Guide",
+        "Icons"
+      ]
+    },
+    {
+      "nodeId": "2:799",
+      "name": "24/User Interface/Calendar",
+      "output": "auto/style-guide/icons/24-user-interface-calendar",
+      "format": "svg",
+      "category": "icons",
+      "reason": "direct-child-of-asset-category",
+      "type": "COMPONENT",
+      "dimensions": {
+        "width": 24,
+        "height": 24
+      },
+      "ancestry": [
+        "Style Guide",
+        "Icons"
+      ]
+    },
+    {
+      "nodeId": "2:814",
+      "name": "24/User Interface/Lock",
+      "output": "auto/style-guide/icons/24-user-interface-lock",
+      "format": "svg",
+      "category": "icons",
+      "reason": "direct-child-of-asset-category",
+      "type": "COMPONENT",
+      "dimensions": {
+        "width": 24,
+        "height": 24
+      },
+      "ancestry": [
+        "Style Guide",
+        "Icons"
+      ]
+    },
+    {
+      "nodeId": "2:819",
+      "name": "24/User Interface/Lock open",
+      "output": "auto/style-guide/icons/24-user-interface-lock-open",
+      "format": "svg",
+      "category": "icons",
+      "reason": "direct-child-of-asset-category",
+      "type": "COMPONENT",
+      "dimensions": {
+        "width": 24,
+        "height": 24
+      },
+      "ancestry": [
+        "Style Guide",
+        "Icons"
+      ]
+    },
+    {
+      "nodeId": "2:824",
+      "name": "24/User Interface/Lock check",
+      "output": "auto/style-guide/icons/24-user-interface-lock-check",
+      "format": "svg",
+      "category": "icons",
+      "reason": "direct-child-of-asset-category",
+      "type": "COMPONENT",
+      "dimensions": {
+        "width": 24,
+        "height": 24
+      },
+      "ancestry": [
+        "Style Guide",
+        "Icons"
+      ]
+    },
+    {
+      "nodeId": "2:829",
+      "name": "24/User Interface/Lock x",
+      "output": "auto/style-guide/icons/24-user-interface-lock-x",
+      "format": "svg",
+      "category": "icons",
+      "reason": "direct-child-of-asset-category",
+      "type": "COMPONENT",
+      "dimensions": {
+        "width": 24,
+        "height": 24
+      },
+      "ancestry": [
+        "Style Guide",
+        "Icons"
+      ]
+    },
+    {
+      "nodeId": "2:835",
+      "name": "24/User Interface/Filter",
+      "output": "auto/style-guide/icons/24-user-interface-filter",
+      "format": "svg",
+      "category": "icons",
+      "reason": "direct-child-of-asset-category",
+      "type": "COMPONENT",
+      "dimensions": {
+        "width": 24,
+        "height": 24
+      },
+      "ancestry": [
+        "Style Guide",
+        "Icons"
+      ]
+    },
+    {
+      "nodeId": "2:838",
+      "name": "24/User Interface/Camera",
+      "output": "auto/style-guide/icons/24-user-interface-camera",
+      "format": "svg",
+      "category": "icons",
+      "reason": "direct-child-of-asset-category",
+      "type": "COMPONENT",
+      "dimensions": {
+        "width": 24,
+        "height": 24
+      },
+      "ancestry": [
+        "Style Guide",
+        "Icons"
+      ]
+    },
+    {
+      "nodeId": "2:842",
+      "name": "24/User Interface/Info square",
+      "output": "auto/style-guide/icons/24-user-interface-info-square",
+      "format": "svg",
+      "category": "icons",
+      "reason": "direct-child-of-asset-category",
+      "type": "COMPONENT",
+      "dimensions": {
+        "width": 24,
+        "height": 24
+      },
+      "ancestry": [
+        "Style Guide",
+        "Icons"
+      ]
+    },
+    {
+      "nodeId": "2:849",
+      "name": "24/User Interface/X",
+      "output": "auto/style-guide/icons/24-user-interface-x",
+      "format": "svg",
+      "category": "icons",
+      "reason": "direct-child-of-asset-category",
+      "type": "COMPONENT",
+      "dimensions": {
+        "width": 24,
+        "height": 24
+      },
+      "ancestry": [
+        "Style Guide",
+        "Icons"
+      ]
+    },
+    {
+      "nodeId": "2:855",
+      "name": "24/User Interface/Check square",
+      "output": "auto/style-guide/icons/24-user-interface-check-square",
+      "format": "svg",
+      "category": "icons",
+      "reason": "direct-child-of-asset-category",
+      "type": "COMPONENT",
+      "dimensions": {
+        "width": 24,
+        "height": 24
+      },
+      "ancestry": [
+        "Style Guide",
+        "Icons"
+      ]
+    },
+    {
+      "nodeId": "2:859",
+      "name": "24/User Interface/More square",
+      "output": "auto/style-guide/icons/24-user-interface-more-square",
+      "format": "svg",
+      "category": "icons",
+      "reason": "direct-child-of-asset-category",
+      "type": "COMPONENT",
+      "dimensions": {
+        "width": 24,
+        "height": 24
+      },
+      "ancestry": [
+        "Style Guide",
+        "Icons"
+      ]
+    },
+    {
+      "nodeId": "2:866",
+      "name": "24/User Interface/More circle",
+      "output": "auto/style-guide/icons/24-user-interface-more-circle",
+      "format": "svg",
+      "category": "icons",
+      "reason": "direct-child-of-asset-category",
+      "type": "COMPONENT",
+      "dimensions": {
+        "width": 24,
+        "height": 24
+      },
+      "ancestry": [
+        "Style Guide",
+        "Icons"
+      ]
+    },
+    {
+      "nodeId": "2:873",
+      "name": "24/User Interface/Category",
+      "output": "auto/style-guide/icons/24-user-interface-category",
+      "format": "svg",
+      "category": "icons",
+      "reason": "direct-child-of-asset-category",
+      "type": "COMPONENT",
+      "dimensions": {
+        "width": 24,
+        "height": 24
+      },
+      "ancestry": [
+        "Style Guide",
+        "Icons"
+      ]
+    },
+    {
+      "nodeId": "2:879",
+      "name": "24/User Interface/Mail",
+      "output": "auto/style-guide/icons/24-user-interface-mail",
+      "format": "svg",
+      "category": "icons",
+      "reason": "direct-child-of-asset-category",
+      "type": "COMPONENT",
+      "dimensions": {
+        "width": 24,
+        "height": 24
+      },
+      "ancestry": [
+        "Style Guide",
+        "Icons"
+      ]
+    },
+    {
+      "nodeId": "2:883",
+      "name": "24/User Interface/Home",
+      "output": "auto/style-guide/icons/24-user-interface-home",
+      "format": "svg",
+      "category": "icons",
+      "reason": "direct-child-of-asset-category",
+      "type": "COMPONENT",
+      "dimensions": {
+        "width": 24,
+        "height": 24
+      },
+      "ancestry": [
+        "Style Guide",
+        "Icons"
+      ]
+    },
+    {
+      "nodeId": "2:886",
+      "name": "24/User Interface/Bell",
+      "output": "auto/style-guide/icons/24-user-interface-bell",
+      "format": "svg",
+      "category": "icons",
+      "reason": "direct-child-of-asset-category",
+      "type": "COMPONENT",
+      "dimensions": {
+        "width": 24,
+        "height": 24
+      },
+      "ancestry": [
+        "Style Guide",
+        "Icons"
+      ]
+    },
+    {
+      "nodeId": "2:892",
+      "name": "24/User Interface/Send",
+      "output": "auto/style-guide/icons/24-user-interface-send",
+      "format": "svg",
+      "category": "icons",
+      "reason": "direct-child-of-asset-category",
+      "type": "COMPONENT",
+      "dimensions": {
+        "width": 24,
+        "height": 24
+      },
+      "ancestry": [
+        "Style Guide",
+        "Icons"
+      ]
+    },
+    {
+      "nodeId": "2:896",
+      "name": "24/User Interface/Scanner",
+      "output": "auto/style-guide/icons/24-user-interface-scanner",
+      "format": "svg",
+      "category": "icons",
+      "reason": "direct-child-of-asset-category",
+      "type": "COMPONENT",
+      "dimensions": {
+        "width": 24,
+        "height": 24
+      },
+      "ancestry": [
+        "Style Guide",
+        "Icons"
+      ]
+    }
+  ]
+}

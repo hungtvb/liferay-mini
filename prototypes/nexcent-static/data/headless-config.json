@@ -1,0 +1,54 @@
+{
+  "basePath": "/o/headless-delivery/v1.0",
+  "siteIdSource": "Liferay.ThemeDisplay.getScopeGroupId()",
+  "defaultLocale": "en-US",
+  "adapterOutput": "The adapter must normalize Liferay responses into the same shape as mock-content.json.",
+  "sections": {
+    "hero": {
+      "delivery": "Custom Element",
+      "structureIdentifier": "NXC Landing Hero",
+      "request": "/content-structures/{structureId}/structured-contents?flatten=true&pageSize=10&sort=sortOrder:asc",
+      "cardinality": "single active entry"
+    },
+    "clients": {
+      "delivery": "Collection Display in Liferay; JSON mock in static prototype",
+      "structureIdentifier": "NXC Client Logo",
+      "request": "/content-structures/{structureId}/structured-contents?flatten=true&pageSize=100&sort=sortOrder:asc"
+    },
+    "services": {
+      "delivery": "Custom Element",
+      "introStructureIdentifier": "NXC Services Intro",
+      "itemStructureIdentifier": "NXC Service Item",
+      "introRequest": "/content-structures/{introStructureId}/structured-contents?flatten=true&pageSize=10&sort=sortOrder:asc",
+      "itemsRequest": "/content-structures/{itemStructureId}/structured-contents?flatten=true&pageSize=100&sort=sortOrder:asc"
+    },
+    "features": {
+      "delivery": "Custom Element",
+      "structureIdentifier": "NXC Feature Item",
+      "request": "/content-structures/{structureId}/structured-contents?flatten=true&pageSize=100&sort=sortOrder:asc"
+    },
+    "statistics": {
+      "delivery": "Collection Display in Liferay; JSON mock in static prototype",
+      "introStructureIdentifier": "NXC Statistics Intro",
+      "itemStructureIdentifier": "NXC Statistic Item"
+    },
+    "testimonial": {
+      "delivery": "Collection or mapped fragment in Liferay",
+      "structureIdentifier": "NXC Testimonial"
+    },
+    "community": {
+      "delivery": "Externally hosted Remote App",
+      "introStructureIdentifier": "NXC Community Intro",
+      "itemStructureIdentifier": "NXC Community Card"
+    },
+    "cta": {
+      "delivery": "Mapped fragment in Liferay",
+      "structureIdentifier": "NXC CTA"
+    },
+    "footerNewsletter": {
+      "delivery": "OOTB Object Form Container in Liferay",
+      "objectExternalReferenceCode": "NXC_NEWSLETTER_SUBSCRIBER",
+      "staticBehavior": "Prevent submit and show mock success message"
+    }
+  }
+}

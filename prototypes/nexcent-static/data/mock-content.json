@@ -1,0 +1,124 @@
+{
+  "site": {
+    "brand": "Nexcent",
+    "navigation": [
+      {"label": "Home", "url": "#home"},
+      {"label": "Services", "url": "#services"},
+      {"label": "Features", "url": "#features"},
+      {"label": "Customers", "url": "#testimonial"},
+      {"label": "Community", "url": "#community"}
+    ]
+  },
+  "hero": {
+    "externalReferenceCode": "NXC-HERO-001",
+    "eyebrow": "Community platform",
+    "title": "Lessons and insights",
+    "highlightedText": "from 8 years",
+    "description": "Where to grow your business as a photographer: site or social media? Nexcent gives communities one place to connect, manage and grow.",
+    "cta": {"label": "Register", "url": "#register"},
+    "image": {"url": "assets/hero-illustration.svg", "alt": "A person working with digital content and analytics"}
+  },
+  "clients": {
+    "title": "Our Clients",
+    "description": "We have been working with some Fortune 500+ clients",
+    "items": [
+      {"externalReferenceCode": "NXC-CLIENT-001", "name": "Atlas Cooperative", "shortName": "Atlas"},
+      {"externalReferenceCode": "NXC-CLIENT-002", "name": "Northstar Union", "shortName": "North"},
+      {"externalReferenceCode": "NXC-CLIENT-003", "name": "Vertex Network", "shortName": "Vertex"},
+      {"externalReferenceCode": "NXC-CLIENT-004", "name": "Cirrus Foundation", "shortName": "Cirrus"},
+      {"externalReferenceCode": "NXC-CLIENT-005", "name": "Beacon Society", "shortName": "Beacon"},
+      {"externalReferenceCode": "NXC-CLIENT-006", "name": "Pioneer Group", "shortName": "Pioneer"},
+      {"externalReferenceCode": "NXC-CLIENT-007", "name": "Unity Council", "shortName": "Unity"}
+    ]
+  },
+  "services": {
+    "externalReferenceCode": "NXC-SERVICES-INTRO-001",
+    "title": "Manage your entire community in a single system",
+    "description": "Who is Nexcent suitable for?",
+    "items": [
+      {"externalReferenceCode": "NXC-SERVICE-001", "title": "Membership Organisations", "descriptionHtml": "<p>Full automation of membership renewals, communications and payments.</p>", "icon": "members"},
+      {"externalReferenceCode": "NXC-SERVICE-002", "title": "National Associations", "descriptionHtml": "<p>Manage associations, regional groups and member data from one connected platform.</p>", "icon": "association"},
+      {"externalReferenceCode": "NXC-SERVICE-003", "title": "Clubs And Groups", "descriptionHtml": "<p>Give clubs and groups the tools they need to communicate, organise and grow.</p>", "icon": "clubs"}
+    ]
+  },
+  "features": [
+    {
+      "externalReferenceCode": "NXC-FEATURE-001",
+      "eyebrow": "Content experience",
+      "title": "The unseen of spending three years at Pixelgrade",
+      "descriptionHtml": "<p>Build a consistent content experience and give editors control without rebuilding the frontend. Reuse structured content across pages while keeping presentation predictable.</p>",
+      "image": {"url": "assets/feature-content.svg", "alt": "People managing reusable content blocks on a mobile screen"},
+      "imagePosition": "left",
+      "cta": {"label": "Learn More", "url": "#community"}
+    },
+    {
+      "externalReferenceCode": "NXC-FEATURE-002",
+      "eyebrow": "Reusable experiences",
+      "title": "How to design your site footer like we did",
+      "descriptionHtml": "<p>Reuse content, links and assets across pages while keeping the design system consistent. A shared page shell reduces drift and gives editors safer controls.</p>",
+      "image": {"url": "assets/feature-security.svg", "alt": "A secure mobile registration experience"},
+      "imagePosition": "right",
+      "cta": {"label": "Learn More", "url": "#community"}
+    }
+  ],
+  "statistics": {
+    "externalReferenceCode": "NXC-STATISTICS-INTRO-001",
+    "eyebrow": "Measured impact",
+    "title": "Helping a local business",
+    "highlightedText": "reinvent itself",
+    "description": "We reached here with our hard work and dedication.",
+    "items": [
+      {"externalReferenceCode": "NXC-STAT-001", "value": "2,245,341", "label": "Members", "icon": "users"},
+      {"externalReferenceCode": "NXC-STAT-002", "value": "46,328", "label": "Clubs", "icon": "association"},
+      {"externalReferenceCode": "NXC-STAT-003", "value": "828,867", "label": "Event Bookings", "icon": "calendar"},
+      {"externalReferenceCode": "NXC-STAT-004", "value": "1,926,436", "label": "Payments", "icon": "payment"}
+    ]
+  },
+  "testimonial": {
+    "externalReferenceCode": "NXC-TESTIMONIAL-001",
+    "quote": "Nexcent helped us consolidate fragmented member journeys into one consistent experience. Our teams can now publish quickly, reuse content safely and spend more time helping the community.",
+    "person": {"name": "Tim Smith", "role": "British Dragon Boat Racing Association", "initials": "TS"},
+    "clientShortNames": ["Atlas", "North", "Vertex", "Cirrus", "Beacon", "Pioneer"],
+    "link": {"label": "Meet all customers", "url": "#clients"}
+  },
+  "community": {
+    "externalReferenceCode": "NXC-COMMUNITY-INTRO-001",
+    "title": "Caring is the new marketing",
+    "description": "The Nexcent blog is the best place to read about the latest membership insights, trends and community growth stories.",
+    "items": [
+      {"externalReferenceCode": "NXC-COMMUNITY-001", "title": "Creating streamlined safeguarding processes with OneRen", "url": "#community", "artLabel": "01", "colors": ["#7CB982", "#2F6F4E"]},
+      {"externalReferenceCode": "NXC-COMMUNITY-002", "title": "What are your safeguarding responsibilities and how can you manage them?", "url": "#community", "artLabel": "02", "colors": ["#9BB7C9", "#40596B"]},
+      {"externalReferenceCode": "NXC-COMMUNITY-003", "title": "Revamping the membership model with Triathlon Australia", "url": "#community", "artLabel": "03", "colors": ["#E4B979", "#9A6130"]}
+    ]
+  },
+  "cta": {
+    "externalReferenceCode": "NXC-CTA-001",
+    "title": "Pellentesque suscipit fringilla libero eu.",
+    "cta": {"label": "Get a Demo", "url": "#register"}
+  },
+  "footer": {
+    "copyright": "Copyright © 2026 Nexcent ltd.",
+    "rights": "All rights reserved",
+    "socials": [
+      {"label": "Instagram", "shortLabel": "ig", "url": "#"},
+      {"label": "Dribbble", "shortLabel": "dr", "url": "#"},
+      {"label": "X", "shortLabel": "x", "url": "#"},
+      {"label": "YouTube", "shortLabel": "yt", "url": "#"}
+    ],
+    "companyLinks": [
+      {"label": "About us", "url": "#"},
+      {"label": "Blog", "url": "#community"},
+      {"label": "Contact us", "url": "#"},
+      {"label": "Pricing", "url": "#"},
+      {"label": "Testimonials", "url": "#testimonial"}
+    ],
+    "supportLinks": [
+      {"label": "Help center", "url": "#"},
+      {"label": "Terms of service", "url": "#"},
+      {"label": "Legal", "url": "#"},
+      {"label": "Privacy policy", "url": "#"},
+      {"label": "Status", "url": "#"}
+    ],
+    "newsletter": {"title": "Stay up to date", "placeholder": "Your email address"}
+  }
+}

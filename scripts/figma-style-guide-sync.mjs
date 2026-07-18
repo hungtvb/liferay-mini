@@ -26,6 +26,7 @@ const CATEGORY_PATTERNS = [
   ['social', /\b(social|facebook|instagram|linkedin|twitter|youtube|dribbble|behance)\b/i],
 ];
 const ASSET_NAME_PATTERN = /\b(logo|logotype|wordmark|icon|pictogram|glyph|illustration|client|customer|partner|social|facebook|instagram|linkedin|twitter|youtube|membership|association|club|event|payment|people|user|stat|hero|feature)\b/i;
+const CATEGORY_CONTAINER_PATTERN = /^\s*(brand( assets?)?|logos?|client logos?|clients?|customer logos?|partners?|icons?|service icons?|stat(istic)? icons?|illustrations?|social( icons?)?)\s*$/i;
 const EXCLUDE_PATTERN = /\b(thumbnail|style guide|styleguide|background|container|wrapper|section|grid|spacing|typography|font|palette|color|shadow|radius|button|input|header|footer|navbar|navigation|desktop|mobile|tablet)\b/i;
 
 function normalizeNodeId(value) {
@@ -103,12 +104,14 @@ function discoverCandidates(root, maxAssets) {
     const namedAsset = ASSET_NAME_PATTERN.test(name);
     const insideStyleGuide = names.some((value) => /style\s*guide/i.test(value));
     const hasExistingExport = (node.exportSettings?.length ?? 0) > 0;
+    const genericCategoryContainer = CATEGORY_CONTAINER_PATTERN.test(name) && (node.children?.length ?? 0) > 1;
 
     if (!insideStyleGuide) continue;
     if (!RENDERABLE_TYPES.has(node.type)) continue;
     if (node.visible === false) continue;
     if (!isReasonableAssetSize(node)) continue;
     if (hasExistingExport) continue;
+    if (genericCategoryContainer) continue;
     if (!(directChildOfCategory || namedAsset)) continue;
     if (EXCLUDE_PATTERN.test(name) && !namedAsset) continue;
     if (category === 'misc' && !namedAsset) continue;
@@ -165,6 +168,10 @@ async function main() {
   const fileKey = process.env.FIGMA_FILE_KEY ?? source.fileKey;
   const rootNode = normalizeNodeId(process.env.FIGMA_ROOT_NODE ?? source.rootNode ?? '1:2');
   const maxAssets = Number(process.env.FIGMA_STYLE_GUIDE_MAX_ASSETS ?? 80);
+  if (!Number.isInteger(maxAssets) || maxAssets < 1 || maxAssets > 200) {
+    throw new Error('FIGMA_STYLE_GUIDE_MAX_ASSETS must be an integer from 1 to 200.');
+  }
+
   const query = new URLSearchParams({ids: rootNode});
   const response = await fetch(`${API_BASE}/files/${fileKey}/nodes?${query}`, {
     headers: {'X-Figma-Token': token},

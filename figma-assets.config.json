@@ -1,0 +1,20 @@
+{
+  "$schema": "./docs/figma-assets.schema.json",
+  "fileKey": "hsyBymVFhXLwnCBlIfoam3",
+  "rootNode": "1:2",
+  "outputDir": "prototypes/nexcent-static/assets/figma",
+  "manifestPath": "prototypes/nexcent-static/assets/figma/manifest.json",
+  "discovery": {
+    "prefix": "asset/",
+    "includeExportSettings": true
+  },
+  "defaults": {
+    "rasterScale": 2,
+    "svgOutlineText": true,
+    "svgIncludeId": false,
+    "svgSimplifyStroke": true
+  },
+  "prune": true,
+  "failOnEmpty": true,
+  "assets": []
+}

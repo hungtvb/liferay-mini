@@ -1,16 +1,33 @@
 # Figma asset sync
 
+Status: **IMPLEMENTED / FIRST REAL EXPORT PENDING**
+
+PR #11 adds the synchronization mechanism. No production Figma logo, icon, illustration, or photo has been accepted merely because this workflow exists. The first generated asset pull request must still be reviewed against the source frame.
+
 This workflow exports approved assets from the Nexcent Figma frame into the static prototype and opens a pull request for review.
+
+See also:
+
+- [`docs/architecture/liferay-2026-q1-audit.md`](architecture/liferay-2026-q1-audit.md)
+- [`docs/tasks/2026-q1-audit-backlog.md`](tasks/2026-q1-audit-backlog.md)
 
 ## One-time setup
 
-1. In Figma, create a Personal Access Token with `file_content:read` access to the Nexcent file.
-2. In GitHub, open **Settings → Secrets and variables → Actions**.
-3. Create a repository secret named `FIGMA_TOKEN`.
+1. Merge the workflow into the repository default branch so GitHub can expose it under **Actions**.
+2. In Figma, create a Personal Access Token with `file_content:read` access to the Nexcent file.
+3. Record its expiry date and rotation owner outside source control. Figma Personal Access Tokens have a maximum lifetime of 90 days.
+4. In GitHub, open **Settings → Secrets and variables → Actions**.
+5. Create a repository secret named `FIGMA_TOKEN`.
 
-Never commit the token to this repository.
+Never send the token in chat, commit it, place it in documentation, or print it in workflow logs. The token can only access files that its Figma owner can already access.
 
-## Mark assets in Figma
+## Asset approval is explicit
+
+The script cannot infer that every vector or image inside the frame is a production asset. An asset is eligible only when at least one of these conditions is true:
+
+1. Its layer name follows the project prefix convention.
+2. It has an export setting in Figma.
+3. Its node ID is explicitly mapped in `figma-assets.config.json`.
 
 Preferred convention:
 
@@ -62,6 +79,8 @@ The workflow:
 5. Creates a branch and pull request when files changed.
 6. Lets Vercel create a Preview Deployment for visual review.
 
+The workflow never promotes generated files directly to production. Review and merge remain required.
+
 ## Local run
 
 ```bash
@@ -91,15 +110,39 @@ FIGMA_FAIL_ON_EMPTY
 - Duplicate output paths fail the run instead of overwriting an unrelated asset.
 - Raster export scale is validated against Figma's supported range of `0.01` to `4`.
 - Pruning is limited to `prototypes/nexcent-static/assets/figma/`.
+- Placeholder assets are not removed until the generated replacements pass visual review.
 
-## Rate limits
+## Rate-limit and plan constraints
 
-Figma applies REST API rate limits according to plan, seat, endpoint tier, and file ownership. Avoid repeatedly running the workflow while testing layer names. A normal sync uses one node-tree request plus batched render requests grouped by format and scale.
+`GET file nodes` and `GET image` are Tier 1 Figma REST requests. The allowance depends on the seat using the token, the plan containing the target file, and the endpoint tier. Low-access seats can have a very small monthly allowance; the actual limit may be lower than the published maximum.
 
-## First-run checklist
+A normal discovery sync consumes at least:
 
-- Add the `FIGMA_TOKEN` GitHub secret.
-- Rename approved layers with the `asset/<format>/<path>` convention or configure export settings.
-- Run the workflow with root node `1:2`.
-- Review generated assets, manifest, and Vercel Preview.
-- Merge only after visual comparison with the Figma frame.
+```text
+1 Tier 1 request to read the node tree
++ 1 or more Tier 1 image-render requests grouped by format and scale
+```
+
+Therefore:
+
+- Treat the first run as a controlled acceptance test.
+- Finalize layer names and mappings before running it.
+- Do not repeatedly run discovery to explore the Figma tree.
+- Batch node IDs by format and scale.
+- Respect `Retry-After` when Figma returns HTTP 429.
+- Record rate-limit response headers such as `X-Figma-Plan-Tier`, `X-Figma-Rate-Limit-Type`, and `X-Figma-Upgrade-Link` when available.
+- Use a designer-exported ZIP as the fallback when API quota or plan restrictions make automated export impractical.
+
+## First-run acceptance checklist
+
+- PR #11 is merged and the workflow is visible under GitHub Actions.
+- `FIGMA_TOKEN` exists as a repository secret.
+- Token expiry and rotation ownership are recorded outside source control.
+- The token owner can view the Nexcent Figma file.
+- Approved layers use the naming convention, have export settings, or have explicit node mappings.
+- Run the workflow once with root node `1:2`.
+- Confirm the workflow creates a generated asset PR rather than modifying `main`.
+- Review the asset manifest and every exported file.
+- Compare desktop and mobile Vercel Preview output against Figma.
+- Record request usage and any rate-limit headers.
+- Merge generated assets only after visual acceptance.

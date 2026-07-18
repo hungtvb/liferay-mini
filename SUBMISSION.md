@@ -6,7 +6,7 @@
 
 | Area | Status | Evidence |
 |---|---|---|
-| Full implementation delivery | In review | [PR #12](https://github.com/hungtvb/liferay-mini/pull/12) |
+| Full implementation delivery | Merged | [PR #12](https://github.com/hungtvb/liferay-mini/pull/12) → [`4efecf5`](https://github.com/hungtvb/liferay-mini/commit/4efecf5fdb9972e592ee84f6f1a4cdf30ba872f6) |
 | Figma reference sync | Merged | [workflow run #29633012081](https://github.com/hungtvb/liferay-mini/actions/runs/29633012081), [PR #13](https://github.com/hungtvb/liferay-mini/pull/13), generated manifest and SHA-256 |
 | Landing Elements and Excel importer | Pass | Unit tests, typecheck, production build, workbook generation, **Landing Elements Check** |
 | External Remote App | Pass | Typecheck, production build, **Remote App Check**, and `https://nexcent-liferay-static.vercel.app/remote-app/` |
@@ -48,7 +48,7 @@ Scope deviations:
 ## 3. Repository Evidence
 
 - Repository: `https://github.com/hungtvb/liferay-mini`
-- Submission commit: `<full SHA>`
+- Submission commit: `4efecf5fdb9972e592ee84f6f1a4cdf30ba872f6`
 - Reference branch: `main`
 - Delivery PR: `https://github.com/hungtvb/liferay-mini/pull/12`
 - Figma sync PR: `https://github.com/hungtvb/liferay-mini/pull/13`

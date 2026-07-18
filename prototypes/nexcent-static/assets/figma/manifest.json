@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-07-18T05:52:44.902Z",
+  "generatedAt": "2026-07-18T07:08:09.859Z",
   "source": {
     "provider": "figma",
     "fileKey": "hsyBymVFhXLwnCBlIfoam3",
@@ -10,6 +10,726 @@
     "lastModified": "2026-07-17T06:16:39Z"
   },
   "assets": [
+    {
+      "nodeId": "2:663",
+      "sourceName": "16/Arrows & Directions/Down Left",
+      "format": "svg",
+      "relativePath": "auto/style-guide/icons/16-arrows-directions-down-left.svg",
+      "discovery": "config",
+      "bytes": 295,
+      "sha256": "668763241c02a88a88f7f74a822a345056d1bcc2841fa6430c638774a12eb8d1"
+    },
+    {
+      "nodeId": "2:666",
+      "sourceName": "16/Arrows & Directions/Down Right",
+      "format": "svg",
+      "relativePath": "auto/style-guide/icons/16-arrows-directions-down-right.svg",
+      "discovery": "config",
+      "bytes": 293,
+      "sha256": "0afb3378732be405b451920818b574e9059a514bf6e387693a20abc6eda78a58"
+    },
+    {
+      "nodeId": "2:645",
+      "sourceName": "16/Arrows & Directions/Down",
+      "format": "svg",
+      "relativePath": "auto/style-guide/icons/16-arrows-directions-down.svg",
+      "discovery": "config",
+      "bytes": 285,
+      "sha256": "a8e73825283206ac3b0da27e1e6ab24d143aff34a07a9111ca0b102cd1390564"
+    },
+    {
+      "nodeId": "2:735",
+      "sourceName": "16/Arrows & Directions/Expand",
+      "format": "svg",
+      "relativePath": "auto/style-guide/icons/16-arrows-directions-expand-2-735.svg",
+      "discovery": "config",
+      "bytes": 372,
+      "sha256": "7c4363bdb7bd151ea7f0b80c0155eabd96baa3ea2f04ca01068222dd90eeb501"
+    },
+    {
+      "nodeId": "2:732",
+      "sourceName": "16/Arrows & Directions/Expand",
+      "format": "svg",
+      "relativePath": "auto/style-guide/icons/16-arrows-directions-expand.svg",
+      "discovery": "config",
+      "bytes": 351,
+      "sha256": "b68be809b94ac1756264227a2065796b5fd5e66d7811d02a404131625311d2e7"
+    },
+    {
+      "nodeId": "2:699",
+      "sourceName": "16/Arrows & Directions/Left",
+      "format": "svg",
+      "relativePath": "auto/style-guide/icons/16-arrows-directions-left-2-699.svg",
+      "discovery": "config",
+      "bytes": 260,
+      "sha256": "621975c25ea4a5ed3d289da575e840555415ecd20800cff8d3b5fac326e25387"
+    },
+    {
+      "nodeId": "2:654",
+      "sourceName": "16/Arrows & Directions/Left",
+      "format": "svg",
+      "relativePath": "auto/style-guide/icons/16-arrows-directions-left.svg",
+      "discovery": "config",
+      "bytes": 295,
+      "sha256": "6401cae9405d972501ed78b5a75e6cb03b7ab70eef0eda5b1564398084d22b46"
+    },
+    {
+      "nodeId": "2:696",
+      "sourceName": "16/Arrows & Directions/Right",
+      "format": "svg",
+      "relativePath": "auto/style-guide/icons/16-arrows-directions-right-2-696.svg",
+      "discovery": "config",
+      "bytes": 262,
+      "sha256": "3d8a45bad08bf701012ca0103473ddef3c9b5580eb0a62ef4840e9d6bb662fd1"
+    },
+    {
+      "nodeId": "2:651",
+      "sourceName": "16/Arrows & Directions/Right",
+      "format": "svg",
+      "relativePath": "auto/style-guide/icons/16-arrows-directions-right.svg",
+      "discovery": "config",
+      "bytes": 299,
+      "sha256": "673e2a9b4d5b6559cabaaf3bf6770be9e7dd61fa5e650803a94f69e416f1d086"
+    },
+    {
+      "nodeId": "2:717",
+      "sourceName": "16/Arrows & Directions/Swap",
+      "format": "svg",
+      "relativePath": "auto/style-guide/icons/16-arrows-directions-swap-2-717.svg",
+      "discovery": "config",
+      "bytes": 405,
+      "sha256": "cbda76bfd677e75d196d54afe06aced7f91ea9d480f03e1b2bc37c26e43652b8"
+    },
+    {
+      "nodeId": "2:726",
+      "sourceName": "16/Arrows & Directions/Swap",
+      "format": "svg",
+      "relativePath": "auto/style-guide/icons/16-arrows-directions-swap-2-726.svg",
+      "discovery": "config",
+      "bytes": 757,
+      "sha256": "5926b4ab40454622c889473fce3edf3955602dfe46fb873b90d93120cf0838dc"
+    },
+    {
+      "nodeId": "2:714",
+      "sourceName": "16/Arrows & Directions/Swap",
+      "format": "svg",
+      "relativePath": "auto/style-guide/icons/16-arrows-directions-swap.svg",
+      "discovery": "config",
+      "bytes": 396,
+      "sha256": "1dc57377550e9a7456ec5b50e8f7b7eb6a741fc566798488877d14e28e6092e1"
+    },
+    {
+      "nodeId": "2:693",
+      "sourceName": "16/Arrows & Directions/Up",
+      "format": "svg",
+      "relativePath": "auto/style-guide/icons/16-arrows-directions-up-2-693.svg",
+      "discovery": "config",
+      "bytes": 254,
+      "sha256": "3257455209f426b592c187ba490dc26e32d75686c185047e7d62a4067d748985"
+    },
+    {
+      "nodeId": "2:657",
+      "sourceName": "16/Arrows & Directions/Up Left",
+      "format": "svg",
+      "relativePath": "auto/style-guide/icons/16-arrows-directions-up-left.svg",
+      "discovery": "config",
+      "bytes": 289,
+      "sha256": "bbfdf452ff4173f4601f818f72f7dd960b62f100ae0948b922941aaea997c726"
+    },
+    {
+      "nodeId": "2:660",
+      "sourceName": "16/Arrows & Directions/Up Right",
+      "format": "svg",
+      "relativePath": "auto/style-guide/icons/16-arrows-directions-up-right.svg",
+      "discovery": "config",
+      "bytes": 294,
+      "sha256": "7e11344068af4366f58b122b154d4ae5554e1f73c83f478e8444680aed0c1be8"
+    },
+    {
+      "nodeId": "2:648",
+      "sourceName": "16/Arrows & Directions/Up",
+      "format": "svg",
+      "relativePath": "auto/style-guide/icons/16-arrows-directions-up.svg",
+      "discovery": "config",
+      "bytes": 295,
+      "sha256": "48a4db3c07a8198a68907f9fdcc5b3363412bf354069e1eb0456f712ccb9dc93"
+    },
+    {
+      "nodeId": "2:763",
+      "sourceName": "16/User Interface/Search",
+      "format": "svg",
+      "relativePath": "auto/style-guide/icons/16-user-interface-search.svg",
+      "discovery": "config",
+      "bytes": 377,
+      "sha256": "c71652bfccfd6e1134ebaa31292c880b54cf527dfda7f3049528f8f8a56ac6d7"
+    },
+    {
+      "nodeId": "2:738",
+      "sourceName": "24/Arrows & Directions/Collapse",
+      "format": "svg",
+      "relativePath": "auto/style-guide/icons/24-arrows-directions-collapse.svg",
+      "discovery": "config",
+      "bytes": 646,
+      "sha256": "b0415200427e0a951a50179d7671713eeb7d4803e50519ed96467c37dd12e841"
+    },
+    {
+      "nodeId": "2:702",
+      "sourceName": "24/Arrows & Directions/Down 2",
+      "format": "svg",
+      "relativePath": "auto/style-guide/icons/24-arrows-directions-down-2.svg",
+      "discovery": "config",
+      "bytes": 248,
+      "sha256": "1258a34b0910d05ac516d64e9d1184425fbb2fa4d4c54da9f562c97113a04157"
+    },
+    {
+      "nodeId": "2:624",
+      "sourceName": "24/Arrows & Directions/Down circle",
+      "format": "svg",
+      "relativePath": "auto/style-guide/icons/24-arrows-directions-down-circle-2-624.svg",
+      "discovery": "config",
+      "bytes": 370,
+      "sha256": "10264bf1f06022543d82d6e0be502b8e770682e02250226ffa0d12eab3bc6030"
+    },
+    {
+      "nodeId": "2:612",
+      "sourceName": "24/Arrows & Directions/Down circle",
+      "format": "svg",
+      "relativePath": "auto/style-guide/icons/24-arrows-directions-down-circle.svg",
+      "discovery": "config",
+      "bytes": 370,
+      "sha256": "62f6f84b1297d1cf5448759e2bbc9f4f0507e88c013cf92136a9ac2338643358"
+    },
+    {
+      "nodeId": "2:639",
+      "sourceName": "24/Arrows & Directions/Down left circle",
+      "format": "svg",
+      "relativePath": "auto/style-guide/icons/24-arrows-directions-down-left-circle.svg",
+      "discovery": "config",
+      "bytes": 400,
+      "sha256": "1e430eff02708fbfa0a4306490c8804defe6fff3eee15f111d2c14ac3aa96eec"
+    },
+    {
+      "nodeId": "2:681",
+      "sourceName": "24/Arrows & Directions/Down Left",
+      "format": "svg",
+      "relativePath": "auto/style-guide/icons/24-arrows-directions-down-left.svg",
+      "discovery": "config",
+      "bytes": 294,
+      "sha256": "6627e3054c94be767dc413512c3c0a2ae7a532e6939c42810d622b67e9812967"
+    },
+    {
+      "nodeId": "2:636",
+      "sourceName": "24/Arrows & Directions/Down right circle",
+      "format": "svg",
+      "relativePath": "auto/style-guide/icons/24-arrows-directions-down-right-circle.svg",
+      "discovery": "config",
+      "bytes": 399,
+      "sha256": "4dfdc1b28909e3b2d73c155dfdb3f472b02e4ec27dcd6fa9403eb5f947c6fab7"
+    },
+    {
+      "nodeId": "2:687",
+      "sourceName": "24/Arrows & Directions/Down Right",
+      "format": "svg",
+      "relativePath": "auto/style-guide/icons/24-arrows-directions-down-right.svg",
+      "discovery": "config",
+      "bytes": 286,
+      "sha256": "d4d3ef6b52ebc03f3a4cb2abcd2a19f99dd7799f1986c50f36f8ca146f128832"
+    },
+    {
+      "nodeId": "2:600",
+      "sourceName": "24/Arrows & Directions/Down square 2",
+      "format": "svg",
+      "relativePath": "auto/style-guide/icons/24-arrows-directions-down-square-2.svg",
+      "discovery": "config",
+      "bytes": 382,
+      "sha256": "b40be0066ba79bcb9fff4e180c9fc452f16fe3ad1e3399959b4375a56aad6daf"
+    },
+    {
+      "nodeId": "2:588",
+      "sourceName": "24/Arrows & Directions/Down square",
+      "format": "svg",
+      "relativePath": "auto/style-guide/icons/24-arrows-directions-down-square.svg",
+      "discovery": "config",
+      "bytes": 374,
+      "sha256": "21077d97f7d9a745cf32ae4f81dc2f3715c315fdc429876d35cafa14b8a331f8"
+    },
+    {
+      "nodeId": "2:642",
+      "sourceName": "24/Arrows & Directions/Down",
+      "format": "svg",
+      "relativePath": "auto/style-guide/icons/24-arrows-directions-down.svg",
+      "discovery": "config",
+      "bytes": 282,
+      "sha256": "dee9d0d5797cd0207cce8f58adb0221ac2d31d9b23d01688e40954c67e57d159"
+    },
+    {
+      "nodeId": "2:729",
+      "sourceName": "24/Arrows & Directions/Expand",
+      "format": "svg",
+      "relativePath": "auto/style-guide/icons/24-arrows-directions-expand.svg",
+      "discovery": "config",
+      "bytes": 406,
+      "sha256": "193f153f5678d57e1cd2109dfed06276d2768f425d9a016b7f3595b3caab8b3b"
+    },
+    {
+      "nodeId": "2:708",
+      "sourceName": "24/Arrows & Directions/Left 2",
+      "format": "svg",
+      "relativePath": "auto/style-guide/icons/24-arrows-directions-left-2.svg",
+      "discovery": "config",
+      "bytes": 248,
+      "sha256": "71ff64b4e7a7ab995250efe2e94d2195b1ea77d266d056239cab75459a99c2fa"
+    },
+    {
+      "nodeId": "2:749",
+      "sourceName": "24/Arrows & Directions/Left circle",
+      "format": "svg",
+      "relativePath": "auto/style-guide/icons/24-arrows-directions-left-circle-2-749.svg",
+      "discovery": "config",
+      "bytes": 370,
+      "sha256": "267357410f06d5ffcd23d049d4e81d5fcc0414a0ae2f72e8bcde7d0d43d2b908"
+    },
+    {
+      "nodeId": "2:621",
+      "sourceName": "24/Arrows & Directions/Left circle",
+      "format": "svg",
+      "relativePath": "auto/style-guide/icons/24-arrows-directions-left-circle.svg",
+      "discovery": "config",
+      "bytes": 370,
+      "sha256": "8f5e53b79345bb09dd10fa22847bbd175b1436e22b91405bac6b0d4abdf95733"
+    },
+    {
+      "nodeId": "2:609",
+      "sourceName": "24/Arrows & Directions/Left square 2",
+      "format": "svg",
+      "relativePath": "auto/style-guide/icons/24-arrows-directions-left-square-2.svg",
+      "discovery": "config",
+      "bytes": 378,
+      "sha256": "f41f7179239488d55d524e1d3b6b717fb1266eff4c2434b3eb45719fe07ce4f5"
+    },
+    {
+      "nodeId": "2:597",
+      "sourceName": "24/Arrows & Directions/Left square",
+      "format": "svg",
+      "relativePath": "auto/style-guide/icons/24-arrows-directions-left-square.svg",
+      "discovery": "config",
+      "bytes": 370,
+      "sha256": "1b36476f0024f3600f6023910d6ac8e8d950cb95d5f14a969f724432e741d358"
+    },
+    {
+      "nodeId": "2:675",
+      "sourceName": "24/Arrows & Directions/Left",
+      "format": "svg",
+      "relativePath": "auto/style-guide/icons/24-arrows-directions-left.svg",
+      "discovery": "config",
+      "bytes": 282,
+      "sha256": "c25d82fc7733ec1f8a13bd6be591b536ef3332594067c1bbb59ee98988b2f769"
+    },
+    {
+      "nodeId": "2:705",
+      "sourceName": "24/Arrows & Directions/Right 2",
+      "format": "svg",
+      "relativePath": "auto/style-guide/icons/24-arrows-directions-right-2.svg",
+      "discovery": "config",
+      "bytes": 248,
+      "sha256": "47ea0d5e406fdff0bf77a8c5418bd9981fed6b50bd2614b491cc9d4f57cd61ce"
+    },
+    {
+      "nodeId": "2:746",
+      "sourceName": "24/Arrows & Directions/Right circle",
+      "format": "svg",
+      "relativePath": "auto/style-guide/icons/24-arrows-directions-right-circle-2-746.svg",
+      "discovery": "config",
+      "bytes": 371,
+      "sha256": "ba3153b0e76f15921f2b951494906a998bd40dc69d3cd1bf956151f19d264610"
+    },
+    {
+      "nodeId": "2:618",
+      "sourceName": "24/Arrows & Directions/Right circle",
+      "format": "svg",
+      "relativePath": "auto/style-guide/icons/24-arrows-directions-right-circle.svg",
+      "discovery": "config",
+      "bytes": 442,
+      "sha256": "f5e070aae2cf315461282e9898d77bdff9f8a093027ef6fa6f601098c6566a03"
+    },
+    {
+      "nodeId": "2:606",
+      "sourceName": "24/Arrows & Directions/Right square 2",
+      "format": "svg",
+      "relativePath": "auto/style-guide/icons/24-arrows-directions-right-square-2.svg",
+      "discovery": "config",
+      "bytes": 382,
+      "sha256": "6cd310c866f8812834f678bc698ca657992c88160b2d8e5f914a7dfe2a48a554"
+    },
+    {
+      "nodeId": "2:594",
+      "sourceName": "24/Arrows & Directions/Right square",
+      "format": "svg",
+      "relativePath": "auto/style-guide/icons/24-arrows-directions-right-square.svg",
+      "discovery": "config",
+      "bytes": 371,
+      "sha256": "c3c14b69b736767da268accfb2aa2945a1750d205019f10af7d7b1c9451becb7"
+    },
+    {
+      "nodeId": "2:672",
+      "sourceName": "24/Arrows & Directions/Right",
+      "format": "svg",
+      "relativePath": "auto/style-guide/icons/24-arrows-directions-right.svg",
+      "discovery": "config",
+      "bytes": 261,
+      "sha256": "70f4e1c6e466c85c9b059ccdc3c6e44ddaa4d8801dead9fab995c33b80d6d457"
+    },
+    {
+      "nodeId": "2:720",
+      "sourceName": "24/Arrows & Directions/Swap 2",
+      "format": "svg",
+      "relativePath": "auto/style-guide/icons/24-arrows-directions-swap-2.svg",
+      "discovery": "config",
+      "bytes": 388,
+      "sha256": "74f89f980d4ce134cb25279a5d8cbf9971e7513b86f4618fcfe49ee484f20ecd"
+    },
+    {
+      "nodeId": "2:723",
+      "sourceName": "24/Arrows & Directions/Swap 3",
+      "format": "svg",
+      "relativePath": "auto/style-guide/icons/24-arrows-directions-swap-3.svg",
+      "discovery": "config",
+      "bytes": 769,
+      "sha256": "433c3ed87092dcead71cea4d1828aad27a2b0338c6111d6ebe7a295467860f5a"
+    },
+    {
+      "nodeId": "2:711",
+      "sourceName": "24/Arrows & Directions/Swap",
+      "format": "svg",
+      "relativePath": "auto/style-guide/icons/24-arrows-directions-swap.svg",
+      "discovery": "config",
+      "bytes": 365,
+      "sha256": "1263fbe49702ba1ceb3217a3e4393c4f1edc8644e0dcb4d883e3101e61de23cf"
+    },
+    {
+      "nodeId": "2:690",
+      "sourceName": "24/Arrows & Directions/Up 2",
+      "format": "svg",
+      "relativePath": "auto/style-guide/icons/24-arrows-directions-up-2.svg",
+      "discovery": "config",
+      "bytes": 248,
+      "sha256": "7c30781db4a37f9a7142538a525a30a972b6915033f090dbbe1fa2a12484905a"
+    },
+    {
+      "nodeId": "2:627",
+      "sourceName": "24/Arrows & Directions/Up circle",
+      "format": "svg",
+      "relativePath": "auto/style-guide/icons/24-arrows-directions-up-circle-2-627.svg",
+      "discovery": "config",
+      "bytes": 370,
+      "sha256": "810844ccc7acd41b5eccd318b4e6342b1eda1a7ecb1c2f5c2fb71fc610b8aaf3"
+    },
+    {
+      "nodeId": "2:615",
+      "sourceName": "24/Arrows & Directions/Up circle",
+      "format": "svg",
+      "relativePath": "auto/style-guide/icons/24-arrows-directions-up-circle.svg",
+      "discovery": "config",
+      "bytes": 370,
+      "sha256": "f22c8cc5f93666271ac4d3a1873a1db201813ea77b165f2f737695c076896278"
+    },
+    {
+      "nodeId": "2:633",
+      "sourceName": "24/Arrows & Directions/Up left circle",
+      "format": "svg",
+      "relativePath": "auto/style-guide/icons/24-arrows-directions-up-left-circle.svg",
+      "discovery": "config",
+      "bytes": 400,
+      "sha256": "10446b165fd9574f36935c28fb1d39bbf4b2b4d3597745e81dfe9b675aba1e68"
+    },
+    {
+      "nodeId": "2:678",
+      "sourceName": "24/Arrows & Directions/Up Left",
+      "format": "svg",
+      "relativePath": "auto/style-guide/icons/24-arrows-directions-up-left.svg",
+      "discovery": "config",
+      "bytes": 303,
+      "sha256": "054d73710bf997b99bb1fcebaf300d8d366ad5b40332e626253772f2b7eec0af"
+    },
+    {
+      "nodeId": "2:630",
+      "sourceName": "24/Arrows & Directions/Up right circle",
+      "format": "svg",
+      "relativePath": "auto/style-guide/icons/24-arrows-directions-up-right-circle.svg",
+      "discovery": "config",
+      "bytes": 399,
+      "sha256": "933533ea944015c8fbc7f5e7f2e7ee8e0d0c21ce056690bf72756f0c7ad3fad3"
+    },
+    {
+      "nodeId": "2:684",
+      "sourceName": "24/Arrows & Directions/Up Right",
+      "format": "svg",
+      "relativePath": "auto/style-guide/icons/24-arrows-directions-up-right.svg",
+      "discovery": "config",
+      "bytes": 295,
+      "sha256": "6ee07bc54c7ccce1fe808fbbccd8afab7a2b55cad551bde743ce570b48815963"
+    },
+    {
+      "nodeId": "2:603",
+      "sourceName": "24/Arrows & Directions/Up square 2",
+      "format": "svg",
+      "relativePath": "auto/style-guide/icons/24-arrows-directions-up-square-2.svg",
+      "discovery": "config",
+      "bytes": 382,
+      "sha256": "7b8499d307640c2db6e0f1d7c5af682d925843e7b82a7bc49b91210d0a23d51a"
+    },
+    {
+      "nodeId": "2:591",
+      "sourceName": "24/Arrows & Directions/Up square",
+      "format": "svg",
+      "relativePath": "auto/style-guide/icons/24-arrows-directions-up-square.svg",
+      "discovery": "config",
+      "bytes": 374,
+      "sha256": "8ccc6ca7a11d461795a8faa44951cf90e8b3bd3a43994649e209986600d4d5ce"
+    },
+    {
+      "nodeId": "2:669",
+      "sourceName": "24/Arrows & Directions/Up",
+      "format": "svg",
+      "relativePath": "auto/style-guide/icons/24-arrows-directions-up.svg",
+      "discovery": "config",
+      "bytes": 277,
+      "sha256": "a2fbdb5683f66879049d834bfe34e909afb35ade5baa66b28769c92c1c570ab9"
+    },
+    {
+      "nodeId": "2:886",
+      "sourceName": "24/User Interface/Bell",
+      "format": "svg",
+      "relativePath": "auto/style-guide/icons/24-user-interface-bell.svg",
+      "discovery": "config",
+      "bytes": 2061,
+      "sha256": "5af34ce08c88f42d68b4c8ceafcd471ba08f512288e019a007e65c9b9ec31d58"
+    },
+    {
+      "nodeId": "2:799",
+      "sourceName": "24/User Interface/Calendar",
+      "format": "svg",
+      "relativePath": "auto/style-guide/icons/24-user-interface-calendar.svg",
+      "discovery": "config",
+      "bytes": 1153,
+      "sha256": "4f1cf5f4ca4473b1c40c1d289ad8cfb0d86c3aa5295a06980053d1a9e6801e44"
+    },
+    {
+      "nodeId": "2:838",
+      "sourceName": "24/User Interface/Camera",
+      "format": "svg",
+      "relativePath": "auto/style-guide/icons/24-user-interface-camera.svg",
+      "discovery": "config",
+      "bytes": 614,
+      "sha256": "7fd865c7eaf0513f2b4b1cede0e8ca26fd45252f8639b6c77ab3ec2f86fc3c6c"
+    },
+    {
+      "nodeId": "2:873",
+      "sourceName": "24/User Interface/Category",
+      "format": "svg",
+      "relativePath": "auto/style-guide/icons/24-user-interface-category.svg",
+      "discovery": "config",
+      "bytes": 459,
+      "sha256": "6e8d280d62155769dce884bdb3a4cf065c068863d3e654bd8b0363c3f918d705"
+    },
+    {
+      "nodeId": "2:855",
+      "sourceName": "24/User Interface/Check square",
+      "format": "svg",
+      "relativePath": "auto/style-guide/icons/24-user-interface-check-square.svg",
+      "discovery": "config",
+      "bytes": 313,
+      "sha256": "f8093d3cda149dbc04fd56bd8b72764102837c4d00b57101cc123f1a0c4bc636"
+    },
+    {
+      "nodeId": "2:790",
+      "sourceName": "24/User Interface/Copy",
+      "format": "svg",
+      "relativePath": "auto/style-guide/icons/24-user-interface-copy.svg",
+      "discovery": "config",
+      "bytes": 380,
+      "sha256": "8afb5b852939662227013662604fd48f21aa0775cf473bfdc4bb58b34bd73bbd"
+    },
+    {
+      "nodeId": "2:773",
+      "sourceName": "24/User Interface/Document 2",
+      "format": "svg",
+      "relativePath": "auto/style-guide/icons/24-user-interface-document-2.svg",
+      "discovery": "config",
+      "bytes": 622,
+      "sha256": "f88dad795f9817d61513dc9298472f508d12fcfda40bf3df89904ab6d8e2e430"
+    },
+    {
+      "nodeId": "2:779",
+      "sourceName": "24/User Interface/Document add",
+      "format": "svg",
+      "relativePath": "auto/style-guide/icons/24-user-interface-document-add.svg",
+      "discovery": "config",
+      "bytes": 668,
+      "sha256": "b1868fe76ad3af3e7e52bf72d9d4ca003c37807a5f1a41deafafe11380eec625"
+    },
+    {
+      "nodeId": "2:785",
+      "sourceName": "24/User Interface/Document delite",
+      "format": "svg",
+      "relativePath": "auto/style-guide/icons/24-user-interface-document-delite.svg",
+      "discovery": "config",
+      "bytes": 560,
+      "sha256": "956fcb338120ecc4d8882d2d0268a01588b6abe5b3345840b2402fb727a73bf0"
+    },
+    {
+      "nodeId": "2:767",
+      "sourceName": "24/User Interface/Document",
+      "format": "svg",
+      "relativePath": "auto/style-guide/icons/24-user-interface-document.svg",
+      "discovery": "config",
+      "bytes": 428,
+      "sha256": "d8cb874838923afb025056914f2440c45ce526ee42843234a7f765bcec2b47b3"
+    },
+    {
+      "nodeId": "2:835",
+      "sourceName": "24/User Interface/Filter",
+      "format": "svg",
+      "relativePath": "auto/style-guide/icons/24-user-interface-filter.svg",
+      "discovery": "config",
+      "bytes": 516,
+      "sha256": "df0737989e31fc123ee19c912d68abbd6a9d6ee32f255e6e7b368ee8360172f1"
+    },
+    {
+      "nodeId": "2:883",
+      "sourceName": "24/User Interface/Home",
+      "format": "svg",
+      "relativePath": "auto/style-guide/icons/24-user-interface-home.svg",
+      "discovery": "config",
+      "bytes": 562,
+      "sha256": "358d5fb6b6eb983d57ca685c5df725537cd3ebfcf8a1531f0cbb4b5ed47a91af"
+    },
+    {
+      "nodeId": "2:842",
+      "sourceName": "24/User Interface/Info square",
+      "format": "svg",
+      "relativePath": "auto/style-guide/icons/24-user-interface-info-square.svg",
+      "discovery": "config",
+      "bytes": 523,
+      "sha256": "c347850cffbc56e0f41950ab0590c48b122fc11ac1be7e6dd3ff077f9216fd3d"
+    },
+    {
+      "nodeId": "2:794",
+      "sourceName": "24/User Interface/Layers",
+      "format": "svg",
+      "relativePath": "auto/style-guide/icons/24-user-interface-layers.svg",
+      "discovery": "config",
+      "bytes": 894,
+      "sha256": "14ce6221ee083fae97482de868272d19fe8300408e9f1fe5927cf62c39eae701"
+    },
+    {
+      "nodeId": "2:824",
+      "sourceName": "24/User Interface/Lock check",
+      "format": "svg",
+      "relativePath": "auto/style-guide/icons/24-user-interface-lock-check.svg",
+      "discovery": "config",
+      "bytes": 421,
+      "sha256": "c6b3b6a994502f987c21de8aab1b0200862b32a9d8baeb1f7f8b9bb9ad5f239d"
+    },
+    {
+      "nodeId": "2:819",
+      "sourceName": "24/User Interface/Lock open",
+      "format": "svg",
+      "relativePath": "auto/style-guide/icons/24-user-interface-lock-open.svg",
+      "discovery": "config",
+      "bytes": 1120,
+      "sha256": "d82750d42913d9044cc0c4f5c625a3b4c492215f129e72728ca5f7c13bffb642"
+    },
+    {
+      "nodeId": "2:829",
+      "sourceName": "24/User Interface/Lock x",
+      "format": "svg",
+      "relativePath": "auto/style-guide/icons/24-user-interface-lock-x.svg",
+      "discovery": "config",
+      "bytes": 535,
+      "sha256": "8f7fb2d2f9f45a4452dc6f36b224c5a694ca107f128b9b00807cb3fe41118584"
+    },
+    {
+      "nodeId": "2:814",
+      "sourceName": "24/User Interface/Lock",
+      "format": "svg",
+      "relativePath": "auto/style-guide/icons/24-user-interface-lock.svg",
+      "discovery": "config",
+      "bytes": 407,
+      "sha256": "bc5e1d8c8944d88bf64770739c9df285c2705e5b1ec1b748bc142d7a8766475d"
+    },
+    {
+      "nodeId": "2:879",
+      "sourceName": "24/User Interface/Mail",
+      "format": "svg",
+      "relativePath": "auto/style-guide/icons/24-user-interface-mail.svg",
+      "discovery": "config",
+      "bytes": 346,
+      "sha256": "8acaaa4f02411994028bf5584dc173023a602b84f53ee16b4fad1b09bdd11ea3"
+    },
+    {
+      "nodeId": "2:866",
+      "sourceName": "24/User Interface/More circle",
+      "format": "svg",
+      "relativePath": "auto/style-guide/icons/24-user-interface-more-circle.svg",
+      "discovery": "config",
+      "bytes": 369,
+      "sha256": "1b00ef888f55364c6ee708b9b47d67ee4e610d41f522bc060f9fe6540376469b"
+    },
+    {
+      "nodeId": "2:859",
+      "sourceName": "24/User Interface/More square",
+      "format": "svg",
+      "relativePath": "auto/style-guide/icons/24-user-interface-more-square.svg",
+      "discovery": "config",
+      "bytes": 368,
+      "sha256": "b1069830b72d5971702b5a4719776395e001212ef72d8e4059f1315f4dab91d9"
+    },
+    {
+      "nodeId": "2:796",
+      "sourceName": "24/User Interface/Paperclip",
+      "format": "svg",
+      "relativePath": "auto/style-guide/icons/24-user-interface-paperclip.svg",
+      "discovery": "config",
+      "bytes": 539,
+      "sha256": "47f6b26c221e9e24f9851b9b981be3403ed740b337ed32e991ff19a9c971136b"
+    },
+    {
+      "nodeId": "2:896",
+      "sourceName": "24/User Interface/Scanner",
+      "format": "svg",
+      "relativePath": "auto/style-guide/icons/24-user-interface-scanner.svg",
+      "discovery": "config",
+      "bytes": 450,
+      "sha256": "0de527ee5a6507d49697c241fc8c375076a2e2b57200c70cf0601873df099a88"
+    },
+    {
+      "nodeId": "2:759",
+      "sourceName": "24/User Interface/Search",
+      "format": "svg",
+      "relativePath": "auto/style-guide/icons/24-user-interface-search.svg",
+      "discovery": "config",
+      "bytes": 338,
+      "sha256": "d8a8daeb8cc4d4a662187d2493f821b45c89bc38d1733237686d9fd77e5da8f9"
+    },
+    {
+      "nodeId": "2:892",
+      "sourceName": "24/User Interface/Send",
+      "format": "svg",
+      "relativePath": "auto/style-guide/icons/24-user-interface-send.svg",
+      "discovery": "config",
+      "bytes": 550,
+      "sha256": "9a5aaa08f0cb977c3eb5ccdde8b959fb7d4263b54da940a94e6baf85c64b72a9"
+    },
+    {
+      "nodeId": "2:849",
+      "sourceName": "24/User Interface/X",
+      "format": "svg",
+      "relativePath": "auto/style-guide/icons/24-user-interface-x.svg",
+      "discovery": "config",
+      "bytes": 445,
+      "sha256": "b928b6357665e909a5f226fa6ba64ed61ce538f7fc021e6082b148357c03cdc3"
+    },
     {
       "nodeId": "204:686",
       "sourceName": "Thumbnail",

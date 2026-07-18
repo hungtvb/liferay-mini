@@ -25,6 +25,14 @@ const CATEGORY_PATTERNS = [
   ['illustrations', /\b(illustration|illustrations|hero|feature|graphic|artwork)\b/i],
   ['social', /\b(social|facebook|instagram|linkedin|twitter|youtube|dribbble|behance)\b/i],
 ];
+const CATEGORY_ORDER = ['brand', 'illustrations', 'clients', 'social', 'icons', 'misc'];
+const CATEGORY_WEIGHTS = new Map([
+  ['brand', 0.15],
+  ['illustrations', 0.25],
+  ['clients', 0.20],
+  ['social', 0.10],
+  ['icons', 0.30],
+]);
 const ASSET_NAME_PATTERN = /\b(logo|logotype|wordmark|icon|pictogram|glyph|illustration|client|customer|partner|social|facebook|instagram|linkedin|twitter|youtube|membership|association|club|event|payment|people|user|stat|hero|feature)\b/i;
 const CATEGORY_CONTAINER_PATTERN = /^\s*(brand( assets?)?|logos?|client logos?|clients?|customer logos?|partners?|icons?|service icons?|stat(istic)? icons?|illustrations?|social( icons?)?)\s*$/i;
 const EXCLUDE_PATTERN = /\b(thumbnail|style guide|styleguide|background|container|wrapper|section|grid|spacing|typography|font|palette|color|shadow|radius|button|input|header|footer|navbar|navigation|desktop|mobile|tablet)\b/i;
@@ -59,6 +67,21 @@ function classify(names) {
   return 'misc';
 }
 
+function categoryRank(category) {
+  const index = CATEGORY_ORDER.indexOf(category);
+  return index === -1 ? CATEGORY_ORDER.length : index;
+}
+
+function compareCandidates(left, right) {
+  const categoryDifference = categoryRank(left.category) - categoryRank(right.category);
+  if (categoryDifference !== 0) return categoryDifference;
+
+  const depthDifference = left.ancestors.length - right.ancestors.length;
+  if (depthDifference !== 0) return depthDifference;
+
+  return String(left.node.name ?? '').localeCompare(String(right.node.name ?? ''));
+}
+
 function hasRasterImage(node) {
   const queue = [node];
   while (queue.length) {
@@ -80,6 +103,57 @@ function isReasonableAssetSize(node) {
   if (!box) return true;
   if (box.width <= 0 || box.height <= 0) return false;
   return box.width <= 1600 && box.height <= 1600;
+}
+
+function buildCategoryQuotas(maxAssets) {
+  const quotas = new Map();
+  for (const [category, weight] of CATEGORY_WEIGHTS) {
+    quotas.set(category, Math.max(1, Math.floor(maxAssets * weight)));
+  }
+  return quotas;
+}
+
+function selectCandidates(raw, maxAssets) {
+  const ordered = [...raw].sort(compareCandidates);
+  const selected = [];
+  const selectedIds = new Set();
+
+  function trySelect(candidate) {
+    if (selected.length >= maxAssets) return false;
+
+    const nodeId = normalizeNodeId(candidate.node.id);
+    if (selectedIds.has(nodeId)) return false;
+
+    const ancestorSelected = candidate.ancestors.some((ancestor) =>
+      selectedIds.has(normalizeNodeId(ancestor.id)),
+    );
+    if (ancestorSelected) return false;
+
+    selected.push(candidate);
+    selectedIds.add(nodeId);
+    return true;
+  }
+
+  const quotas = buildCategoryQuotas(maxAssets);
+  for (const category of CATEGORY_ORDER) {
+    const quota = quotas.get(category) ?? 0;
+    if (quota <= 0) continue;
+
+    let categoryCount = 0;
+    for (const candidate of ordered) {
+      if (candidate.category !== category) continue;
+      if (trySelect(candidate)) categoryCount += 1;
+      if (categoryCount >= quota || selected.length >= maxAssets) break;
+    }
+  }
+
+  // Fill unused quota from the remaining candidates while preserving category priority.
+  for (const candidate of ordered) {
+    if (selected.length >= maxAssets) break;
+    trySelect(candidate);
+  }
+
+  return selected;
 }
 
 function discoverCandidates(root, maxAssets) {
@@ -124,18 +198,9 @@ function discoverCandidates(root, maxAssets) {
     });
   }
 
-  raw.sort((left, right) => left.ancestors.length - right.ancestors.length);
-  const selected = [];
-  const selectedIds = new Set();
-  for (const candidate of raw) {
-    const ancestorSelected = candidate.ancestors.some((ancestor) => selectedIds.has(normalizeNodeId(ancestor.id)));
-    if (ancestorSelected) continue;
-    selected.push(candidate);
-    selectedIds.add(normalizeNodeId(candidate.node.id));
-    if (selected.length >= maxAssets) break;
-  }
-
+  const selected = selectCandidates(raw, maxAssets);
   const usedPaths = new Set();
+
   return selected.map(({node, ancestors, category, reason}) => {
     const format = hasRasterImage(node) ? 'png' : 'svg';
     const base = slug(node.name);
@@ -208,15 +273,23 @@ async function main() {
 
   const outputDir = process.env.FIGMA_OUTPUT_DIR ?? source.outputDir ?? 'prototypes/nexcent-static/assets/figma';
   const inventoryPath = path.join(outputDir, 'candidate-inventory.json');
+  const byCategory = Object.fromEntries(
+    CATEGORY_ORDER
+      .map((category) => [category, candidates.filter((candidate) => candidate.category === category).length])
+      .filter(([, count]) => count > 0),
+  );
+
   await writeFile(inventoryPath, `${JSON.stringify({
     generatedAt: new Date().toISOString(),
     fileKey,
     rootNode,
     total: candidates.length,
+    byCategory,
     candidates,
   }, null, 2)}\n`);
 
   console.log(`✓ discovered and exported ${candidates.length} Style Guide candidates`);
+  console.log(`✓ category allocation ${JSON.stringify(byCategory)}`);
   console.log(`✓ inventory written to ${inventoryPath}`);
 }
 

@@ -13,6 +13,20 @@ python3 -m http.server 4173
 
 Open `http://localhost:4173`.
 
+## Vercel deployment
+
+The Vercel project is connected to `hungtvb/liferay-mini` with:
+
+```text
+Production branch: main
+Root directory: prototypes/nexcent-static
+Framework preset: Other
+```
+
+Production URL: `https://nexcent-liferay-static.vercel.app`
+
+Pull requests should create Preview Deployments; changes merged to `main` should create Production Deployments.
+
 ## Data boundary
 
 - `data/mock-content.json` is normalized mock page data.

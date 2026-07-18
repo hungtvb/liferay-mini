@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-07-18T05:52:44.902Z",
+  "source": {
+    "provider": "figma",
+    "fileKey": "hsyBymVFhXLwnCBlIfoam3",
+    "rootNode": "1:2",
+    "fileName": "Minimal Landing Page Design | Website Home Page Design | Agency Website UI Design (Community) (Copy)",
+    "version": "2377076446811781526",
+    "lastModified": "2026-07-17T06:16:39Z"
+  },
+  "assets": [
+    {
+      "nodeId": "204:686",
+      "sourceName": "Thumbnail",
+      "format": "png",
+      "scale": 1,
+      "relativePath": "auto/style-guide/thumbnail.png",
+      "discovery": "export-setting",
+      "bytes": 413654,
+      "sha256": "b41db3c3737d916f2562c66c2e60f383e7c2b6c368471f5cd0898e0538e4b290"
+    }
+  ]
+}

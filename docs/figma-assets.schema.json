@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/hungtvb/liferay-mini/blob/main/docs/figma-assets.schema.json",
+  "title": "Nexcent Figma asset sync configuration",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["fileKey", "rootNode", "outputDir"],
+  "properties": {
+    "$schema": {"type": "string"},
+    "fileKey": {"type": "string", "minLength": 1},
+    "rootNode": {"type": "string", "pattern": "^\\d+[:-]\\d+$"},
+    "outputDir": {"type": "string", "minLength": 1},
+    "manifestPath": {"type": "string", "minLength": 1},
+    "discovery": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "prefix": {"type": "string"},
+        "includeExportSettings": {"type": "boolean"}
+      }
+    },
+    "defaults": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "rasterScale": {"type": "number", "minimum": 0.01, "maximum": 4},
+        "svgOutlineText": {"type": "boolean"},
+        "svgIncludeId": {"type": "boolean"},
+        "svgSimplifyStroke": {"type": "boolean"}
+      }
+    },
+    "prune": {"type": "boolean"},
+    "failOnEmpty": {"type": "boolean"},
+    "assets": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["nodeId", "output", "format"],
+        "properties": {
+          "nodeId": {"type": "string", "pattern": "^\\d+[:-]\\d+$"},
+          "name": {"type": "string"},
+          "output": {"type": "string", "minLength": 1},
+          "format": {"enum": ["svg", "png", "jpg", "pdf"]},
+          "scale": {"type": "number", "minimum": 0.01, "maximum": 4}
+        }
+      }
+    }
+  }
+}

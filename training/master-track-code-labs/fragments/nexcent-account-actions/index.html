@@ -1,0 +1,26 @@
+<div class="nxc-header-actions nxc-account-actions">
+    [#if themeDisplay.isSignedIn()]
+        <a
+            class="nxc-button nxc-signup-action nxc-account-action"
+            href="${htmlUtil.escape(themeDisplay.getURLMyAccount())}"
+        >
+            ${htmlUtil.escape(configuration.accountLabel)}
+        </a>
+    [#else]
+        <a
+            class="nxc-button nxc-login-action"
+            href="${htmlUtil.escape(themeDisplay.getURLSignIn())}"
+        >
+            ${htmlUtil.escape(configuration.loginLabel)}
+        </a>
+
+        [#if configuration.showSignUp && configuration.signUpUrl?has_content]
+            <a
+                class="nxc-button nxc-signup-action"
+                href="${htmlUtil.escape(configuration.signUpUrl)}"
+            >
+                ${htmlUtil.escape(configuration.signUpLabel)}
+            </a>
+        [/#if]
+    [/#if]
+</div>

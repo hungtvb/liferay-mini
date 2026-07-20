@@ -4,7 +4,7 @@ html {
 
 body {
     background: var(--nxc-style-white, #ffffff);
-    color: var(--nxc-style-text, #4d4d4d);
+    color: var(--nxc-style-text, #717171);
     font-family: var(
         --nxc-style-font-family,
         Inter,
@@ -14,7 +14,8 @@ body {
         "Segoe UI",
         sans-serif
     );
-    font-size: var(--nxc-style-body-size, 1rem);
+    font-size: var(--nxc-style-body-size, 0.875rem);
+    line-height: 1.42;
 }
 
 h1,
@@ -23,29 +24,41 @@ h3,
 h4,
 h5,
 h6 {
-    color: var(--nxc-style-heading, #263238);
+    color: var(--nxc-style-heading, #4d4d4d);
     font-weight: var(--nxc-style-heading-weight, 600);
 }
 
 a {
-    color: var(--nxc-style-primary, #4caf4f);
+    color: inherit;
 }
 
 a:hover {
-    color: var(--nxc-style-primary-hover, #388e3b);
+    color: var(--nxc-style-primary, #4caf4f);
 }
 
 .btn-primary {
     --btn-bg: var(--nxc-style-primary, #4caf4f);
     --btn-border-color: var(--nxc-style-primary, #4caf4f);
-    --btn-hover-bg: var(--nxc-style-primary-hover, #388e3b);
-    --btn-hover-border-color: var(--nxc-style-primary-hover, #388e3b);
+    --btn-color: var(--nxc-style-white, #ffffff);
+    --btn-hover-bg: var(--nxc-style-white, #ffffff);
+    --btn-hover-border-color: var(--nxc-style-primary, #4caf4f);
+    --btn-hover-color: var(--nxc-style-primary, #4caf4f);
     --btn-active-bg: var(--nxc-style-primary-active, #237d31);
     --btn-active-border-color: var(--nxc-style-primary-active, #237d31);
+    --btn-active-color: var(--nxc-style-white, #ffffff);
+}
+
+.btn-secondary {
+    --btn-bg: var(--nxc-style-surface, #f5f7fa);
+    --btn-border-color: transparent;
+    --btn-color: var(--nxc-style-primary, #4caf4f);
+    --btn-hover-bg: var(--nxc-style-primary, #4caf4f);
+    --btn-hover-border-color: var(--nxc-style-primary, #4caf4f);
+    --btn-hover-color: var(--nxc-style-white, #ffffff);
 }
 
 .nxc-style-book-container {
     margin-inline: auto;
-    max-width: var(--nxc-style-container-width, 72rem);
-    padding-inline: var(--nxc-style-page-gutter, 1.5rem);
+    max-width: var(--nxc-style-container-width, 73.875rem);
+    padding-inline: var(--nxc-style-page-gutter, 0.9375rem);
 }

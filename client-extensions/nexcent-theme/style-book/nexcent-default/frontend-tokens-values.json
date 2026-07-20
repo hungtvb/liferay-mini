@@ -17,15 +17,19 @@
   },
   "nexcentHeadingColor": {
     "cssVariableMapping": "nxc-style-heading",
-    "value": "#263238"
+    "value": "#4d4d4d"
   },
   "nexcentTextColor": {
     "cssVariableMapping": "nxc-style-text",
-    "value": "#4d4d4d"
+    "value": "#717171"
   },
   "nexcentMutedColor": {
     "cssVariableMapping": "nxc-style-muted",
-    "value": "#717171"
+    "value": "#89939e"
+  },
+  "nexcentNavigationColor": {
+    "cssVariableMapping": "nxc-style-navigation",
+    "value": "#18191f"
   },
   "nexcentBorderColor": {
     "cssVariableMapping": "nxc-style-border",
@@ -34,6 +38,18 @@
   "nexcentSurfaceColor": {
     "cssVariableMapping": "nxc-style-surface",
     "value": "#f5f7fa"
+  },
+  "nexcentAccentSurfaceColor": {
+    "cssVariableMapping": "nxc-style-accent-surface",
+    "value": "#e8f5e9"
+  },
+  "nexcentFooterInputColor": {
+    "cssVariableMapping": "nxc-style-footer-input",
+    "value": "#4d4d4d"
+  },
+  "nexcentFooterPlaceholderColor": {
+    "cssVariableMapping": "nxc-style-footer-placeholder",
+    "value": "#d9dbe1"
   },
   "nexcentWhiteColor": {
     "cssVariableMapping": "nxc-style-white",
@@ -51,8 +67,20 @@
     "cssVariableMapping": "nxc-style-heading-size",
     "value": "2.25rem"
   },
+  "nexcentCardHeadingSize": {
+    "cssVariableMapping": "nxc-style-card-heading-size",
+    "value": "1.75rem"
+  },
+  "nexcentActionSize": {
+    "cssVariableMapping": "nxc-style-action-size",
+    "value": "1.25rem"
+  },
   "nexcentBodySize": {
     "cssVariableMapping": "nxc-style-body-size",
+    "value": "0.875rem"
+  },
+  "nexcentNavigationSize": {
+    "cssVariableMapping": "nxc-style-navigation-size",
     "value": "1rem"
   },
   "nexcentHeadingWeight": {
@@ -61,19 +89,23 @@
   },
   "nexcentContainerWidth": {
     "cssVariableMapping": "nxc-style-container-width",
-    "value": "72rem"
+    "value": "73.875rem"
+  },
+  "nexcentWideContainerWidth": {
+    "cssVariableMapping": "nxc-style-wide-container-width",
+    "value": "83.125rem"
   },
   "nexcentSectionSpacing": {
     "cssVariableMapping": "nxc-style-section-space",
-    "value": "4rem"
+    "value": "3rem"
   },
   "nexcentPageGutter": {
     "cssVariableMapping": "nxc-style-page-gutter",
-    "value": "1.5rem"
+    "value": "0.9375rem"
   },
   "nexcentHeaderHeight": {
     "cssVariableMapping": "nxc-style-header-height",
-    "value": "4.5rem"
+    "value": "4.1875rem"
   },
   "nexcentSmallRadius": {
     "cssVariableMapping": "nxc-style-radius-sm",
@@ -81,10 +113,14 @@
   },
   "nexcentCardRadius": {
     "cssVariableMapping": "nxc-style-radius-md",
-    "value": "0.75rem"
+    "value": "0.5rem"
   },
   "nexcentCardShadow": {
     "cssVariableMapping": "nxc-style-shadow-card",
-    "value": "0 0.5rem 1.5rem rgb(38 50 56 / 10%)"
+    "value": "0 0.125rem 0.25rem rgb(171 190 209 / 20%)"
+  },
+  "nexcentRaisedShadow": {
+    "cssVariableMapping": "nxc-style-shadow-raised",
+    "value": "0 0.5rem 1rem rgb(171 190 209 / 40%)"
   }
 }

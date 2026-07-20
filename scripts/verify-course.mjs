@@ -167,9 +167,14 @@ await requireText(`${themeRoot}/package.json`, ['"baseTheme": "styled"']);
 
 await requireText(`${themeRoot}/assets/global.css`, [
     'var(--nxc-style-primary, #4caf4f)',
-    'var(--nxc-style-container-width, 72rem)',
-    'var(--nxc-style-radius-md, 0.75rem)',
+    'var(--nxc-style-container-width, 73.875rem)',
+    'var(--nxc-style-wide-container-width,',
+    'var(--nxc-style-radius-md, 0.5rem)',
+    'var(--nxc-style-body-size, 0.875rem)',
     '.nxc-site-header',
+    '.nxc-header-actions',
+    '.nxc-login-action',
+    '.nxc-signup-action',
     '.nxc-site-footer',
     '.nxc-newsletter',
 ]);
@@ -261,14 +266,18 @@ if (await exists(tokenDefinitionPath)) {
             )
         );
         const tokenNames = tokens.map((token) => token.name);
-        const mappings = tokens.flatMap((token) =>
-            (token.mappings ?? [])
-                .filter((mapping) => mapping.type === 'cssVariable')
-                .map((mapping) => mapping.value)
+        const mappings = tokens.map((token) =>
+            (token.mappings ?? []).find(
+                (mapping) => mapping.type === 'cssVariable'
+            )?.value
         );
 
         if (new Set(tokenNames).size !== tokenNames.length) {
             failures.push('Style Book token definition contains duplicate token names.');
+        }
+
+        if (mappings.some((mapping) => !mapping)) {
+            failures.push('Every Style Book token must define a CSS variable mapping.');
         }
 
         if (new Set(mappings).size !== mappings.length) {
@@ -278,9 +287,14 @@ if (await exists(tokenDefinitionPath)) {
         for (const required of [
             'nxc-style-primary',
             'nxc-style-font-family',
+            'nxc-style-body-size',
+            'nxc-style-navigation',
+            'nxc-style-navigation-size',
             'nxc-style-container-width',
+            'nxc-style-wide-container-width',
             'nxc-style-section-space',
             'nxc-style-radius-md',
+            'nxc-style-shadow-raised',
             'nxc-style-header-height',
         ]) {
             if (!mappings.includes(required)) {
@@ -306,6 +320,12 @@ if (await exists(tokenDefinitionPath)) {
                     failures.push(
                         `Style Book mapping mismatch for ${token.name}: ${configured.cssVariableMapping}`
                     );
+                }
+            }
+
+            for (const configuredName of Object.keys(values)) {
+                if (!tokenNames.includes(configuredName)) {
+                    failures.push(`Style Book values contain unknown token: ${configuredName}`);
                 }
             }
         }
@@ -397,6 +417,7 @@ console.log('- Original FE–BE Figma scope');
 console.log('- Twelve rebuilt course chapters');
 console.log('- Component-by-component FE–BE contracts');
 console.log('- Unified Theme CSS, Style Book, Global CSS/JS, and favicon package');
+console.log('- Theme tokens synchronized with the active Nexcent reference FE');
 console.log('- Hero, Services, Features, and Importer Custom Elements');
 console.log('- Externally hosted and deployable Community Remote App');
 console.log('- Complete 12-sheet Excel importer contract');

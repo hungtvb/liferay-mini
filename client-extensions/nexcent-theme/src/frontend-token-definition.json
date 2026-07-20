@@ -6,7 +6,6 @@
           "frontendTokens": [
             {
               "defaultValue": "#4caf4f",
-              "editorType": "ColorPicker",
               "label": "Primary Color",
               "mappings": [
                 {
@@ -15,11 +14,11 @@
                 }
               ],
               "name": "nexcentPrimaryColor",
-              "type": "String"
+              "type": "String",
+              "editorType": "ColorPicker"
             },
             {
               "defaultValue": "#388e3b",
-              "editorType": "ColorPicker",
               "label": "Primary Hover Color",
               "mappings": [
                 {
@@ -28,11 +27,11 @@
                 }
               ],
               "name": "nexcentPrimaryHoverColor",
-              "type": "String"
+              "type": "String",
+              "editorType": "ColorPicker"
             },
             {
               "defaultValue": "#237d31",
-              "editorType": "ColorPicker",
               "label": "Primary Active Color",
               "mappings": [
                 {
@@ -41,12 +40,12 @@
                 }
               ],
               "name": "nexcentPrimaryActiveColor",
-              "type": "String"
+              "type": "String",
+              "editorType": "ColorPicker"
             },
             {
               "defaultValue": "#263238",
-              "editorType": "ColorPicker",
-              "label": "Secondary Color",
+              "label": "Footer / Secondary Color",
               "mappings": [
                 {
                   "type": "cssVariable",
@@ -54,11 +53,11 @@
                 }
               ],
               "name": "nexcentSecondaryColor",
-              "type": "String"
+              "type": "String",
+              "editorType": "ColorPicker"
             },
             {
-              "defaultValue": "#263238",
-              "editorType": "ColorPicker",
+              "defaultValue": "#4d4d4d",
               "label": "Heading Color",
               "mappings": [
                 {
@@ -67,11 +66,11 @@
                 }
               ],
               "name": "nexcentHeadingColor",
-              "type": "String"
+              "type": "String",
+              "editorType": "ColorPicker"
             },
             {
-              "defaultValue": "#4d4d4d",
-              "editorType": "ColorPicker",
+              "defaultValue": "#717171",
               "label": "Body Text Color",
               "mappings": [
                 {
@@ -80,12 +79,12 @@
                 }
               ],
               "name": "nexcentTextColor",
-              "type": "String"
+              "type": "String",
+              "editorType": "ColorPicker"
             },
             {
-              "defaultValue": "#717171",
-              "editorType": "ColorPicker",
-              "label": "Muted Text Color",
+              "defaultValue": "#89939e",
+              "label": "Subtle Text Color",
               "mappings": [
                 {
                   "type": "cssVariable",
@@ -93,11 +92,24 @@
                 }
               ],
               "name": "nexcentMutedColor",
-              "type": "String"
+              "type": "String",
+              "editorType": "ColorPicker"
+            },
+            {
+              "defaultValue": "#18191f",
+              "label": "Navigation Text Color",
+              "mappings": [
+                {
+                  "type": "cssVariable",
+                  "value": "nxc-style-navigation"
+                }
+              ],
+              "name": "nexcentNavigationColor",
+              "type": "String",
+              "editorType": "ColorPicker"
             },
             {
               "defaultValue": "#abbed1",
-              "editorType": "ColorPicker",
               "label": "Border Color",
               "mappings": [
                 {
@@ -106,11 +118,11 @@
                 }
               ],
               "name": "nexcentBorderColor",
-              "type": "String"
+              "type": "String",
+              "editorType": "ColorPicker"
             },
             {
               "defaultValue": "#f5f7fa",
-              "editorType": "ColorPicker",
               "label": "Surface Color",
               "mappings": [
                 {
@@ -119,12 +131,51 @@
                 }
               ],
               "name": "nexcentSurfaceColor",
-              "type": "String"
+              "type": "String",
+              "editorType": "ColorPicker"
+            },
+            {
+              "defaultValue": "#e8f5e9",
+              "label": "Accent Surface Color",
+              "mappings": [
+                {
+                  "type": "cssVariable",
+                  "value": "nxc-style-accent-surface"
+                }
+              ],
+              "name": "nexcentAccentSurfaceColor",
+              "type": "String",
+              "editorType": "ColorPicker"
+            },
+            {
+              "defaultValue": "#4d4d4d",
+              "label": "Footer Input Color",
+              "mappings": [
+                {
+                  "type": "cssVariable",
+                  "value": "nxc-style-footer-input"
+                }
+              ],
+              "name": "nexcentFooterInputColor",
+              "type": "String",
+              "editorType": "ColorPicker"
+            },
+            {
+              "defaultValue": "#d9dbe1",
+              "label": "Footer Placeholder Color",
+              "mappings": [
+                {
+                  "type": "cssVariable",
+                  "value": "nxc-style-footer-placeholder"
+                }
+              ],
+              "name": "nexcentFooterPlaceholderColor",
+              "type": "String",
+              "editorType": "ColorPicker"
             },
             {
               "defaultValue": "#ffffff",
-              "editorType": "ColorPicker",
-              "label": "On Dark Color",
+              "label": "White Color",
               "mappings": [
                 {
                   "type": "cssVariable",
@@ -132,7 +183,8 @@
                 }
               ],
               "name": "nexcentWhiteColor",
-              "type": "String"
+              "type": "String",
+              "editorType": "ColorPicker"
             }
           ],
           "label": "Colors",
@@ -219,7 +271,59 @@
               ]
             },
             {
-              "defaultValue": "1rem",
+              "defaultValue": "1.75rem",
+              "label": "Card Heading Size",
+              "mappings": [
+                {
+                  "type": "cssVariable",
+                  "value": "nxc-style-card-heading-size"
+                }
+              ],
+              "name": "nexcentCardHeadingSize",
+              "type": "String",
+              "validValues": [
+                {
+                  "label": "Small",
+                  "value": "1.5rem"
+                },
+                {
+                  "label": "Default",
+                  "value": "1.75rem"
+                },
+                {
+                  "label": "Large",
+                  "value": "2rem"
+                }
+              ]
+            },
+            {
+              "defaultValue": "1.25rem",
+              "label": "Prominent Action Size",
+              "mappings": [
+                {
+                  "type": "cssVariable",
+                  "value": "nxc-style-action-size"
+                }
+              ],
+              "name": "nexcentActionSize",
+              "type": "String",
+              "validValues": [
+                {
+                  "label": "Small",
+                  "value": "1rem"
+                },
+                {
+                  "label": "Default",
+                  "value": "1.25rem"
+                },
+                {
+                  "label": "Large",
+                  "value": "1.5rem"
+                }
+              ]
+            },
+            {
+              "defaultValue": "0.875rem",
               "label": "Body Text Size",
               "mappings": [
                 {
@@ -228,6 +332,32 @@
                 }
               ],
               "name": "nexcentBodySize",
+              "type": "String",
+              "validValues": [
+                {
+                  "label": "Small",
+                  "value": "0.8125rem"
+                },
+                {
+                  "label": "Default",
+                  "value": "0.875rem"
+                },
+                {
+                  "label": "Large",
+                  "value": "1rem"
+                }
+              ]
+            },
+            {
+              "defaultValue": "1rem",
+              "label": "Navigation Text Size",
+              "mappings": [
+                {
+                  "type": "cssVariable",
+                  "value": "nxc-style-navigation-size"
+                }
+              ],
+              "name": "nexcentNavigationSize",
               "type": "String",
               "validValues": [
                 {
@@ -283,7 +413,7 @@
         {
           "frontendTokens": [
             {
-              "defaultValue": "72rem",
+              "defaultValue": "73.875rem",
               "label": "Content Container Width",
               "mappings": [
                 {
@@ -299,8 +429,8 @@
                   "value": "64rem"
                 },
                 {
-                  "label": "Default",
-                  "value": "72rem"
+                  "label": "Reference",
+                  "value": "73.875rem"
                 },
                 {
                   "label": "Wide",
@@ -309,7 +439,33 @@
               ]
             },
             {
-              "defaultValue": "4rem",
+              "defaultValue": "83.125rem",
+              "label": "Header Container Width",
+              "mappings": [
+                {
+                  "type": "cssVariable",
+                  "value": "nxc-style-wide-container-width"
+                }
+              ],
+              "name": "nexcentWideContainerWidth",
+              "type": "String",
+              "validValues": [
+                {
+                  "label": "Compact",
+                  "value": "73.875rem"
+                },
+                {
+                  "label": "Reference",
+                  "value": "83.125rem"
+                },
+                {
+                  "label": "Wide",
+                  "value": "90rem"
+                }
+              ]
+            },
+            {
+              "defaultValue": "3rem",
               "label": "Section Vertical Spacing",
               "mappings": [
                 {
@@ -322,20 +478,20 @@
               "validValues": [
                 {
                   "label": "Compact",
+                  "value": "2rem"
+                },
+                {
+                  "label": "Reference",
                   "value": "3rem"
                 },
                 {
-                  "label": "Default",
-                  "value": "4rem"
-                },
-                {
                   "label": "Spacious",
-                  "value": "6rem"
+                  "value": "4rem"
                 }
               ]
             },
             {
-              "defaultValue": "1.5rem",
+              "defaultValue": "0.9375rem",
               "label": "Page Horizontal Gutter",
               "mappings": [
                 {
@@ -348,21 +504,21 @@
               "validValues": [
                 {
                   "label": "Compact",
-                  "value": "1rem"
+                  "value": "0.75rem"
                 },
                 {
-                  "label": "Default",
-                  "value": "1.5rem"
+                  "label": "Reference",
+                  "value": "0.9375rem"
                 },
                 {
                   "label": "Wide",
-                  "value": "2rem"
+                  "value": "1.5rem"
                 }
               ]
             },
             {
-              "defaultValue": "4.5rem",
-              "label": "Header Height",
+              "defaultValue": "4.1875rem",
+              "label": "Mobile Header Height",
               "mappings": [
                 {
                   "type": "cssVariable",
@@ -374,15 +530,15 @@
               "validValues": [
                 {
                   "label": "Compact",
-                  "value": "4rem"
+                  "value": "3.75rem"
                 },
                 {
-                  "label": "Default",
-                  "value": "4.5rem"
+                  "label": "Reference",
+                  "value": "4.1875rem"
                 },
                 {
                   "label": "Comfortable",
-                  "value": "5rem"
+                  "value": "4.5rem"
                 }
               ]
             },
@@ -403,7 +559,7 @@
                   "value": "0"
                 },
                 {
-                  "label": "Default",
+                  "label": "Reference",
                   "value": "0.25rem"
                 },
                 {
@@ -413,7 +569,7 @@
               ]
             },
             {
-              "defaultValue": "0.75rem",
+              "defaultValue": "0.5rem",
               "label": "Card Radius",
               "mappings": [
                 {
@@ -426,20 +582,20 @@
               "validValues": [
                 {
                   "label": "Small",
+                  "value": "0.25rem"
+                },
+                {
+                  "label": "Reference",
                   "value": "0.5rem"
                 },
                 {
-                  "label": "Default",
-                  "value": "0.75rem"
-                },
-                {
                   "label": "Large",
-                  "value": "1rem"
+                  "value": "0.75rem"
                 }
               ]
             },
             {
-              "defaultValue": "0 0.5rem 1.5rem rgb(38 50 56 / 10%)",
+              "defaultValue": "0 0.125rem 0.25rem rgb(171 190 209 / 20%)",
               "label": "Card Shadow",
               "mappings": [
                 {
@@ -455,12 +611,38 @@
                   "value": "none"
                 },
                 {
-                  "label": "Default",
-                  "value": "0 0.5rem 1.5rem rgb(38 50 56 / 10%)"
+                  "label": "Reference",
+                  "value": "0 0.125rem 0.25rem rgb(171 190 209 / 20%)"
                 },
                 {
                   "label": "Raised",
-                  "value": "0 0.75rem 2rem rgb(38 50 56 / 16%)"
+                  "value": "0 0.5rem 1rem rgb(171 190 209 / 40%)"
+                }
+              ]
+            },
+            {
+              "defaultValue": "0 0.5rem 1rem rgb(171 190 209 / 40%)",
+              "label": "Raised Card Shadow",
+              "mappings": [
+                {
+                  "type": "cssVariable",
+                  "value": "nxc-style-shadow-raised"
+                }
+              ],
+              "name": "nexcentRaisedShadow",
+              "type": "String",
+              "validValues": [
+                {
+                  "label": "None",
+                  "value": "none"
+                },
+                {
+                  "label": "Reference",
+                  "value": "0 0.5rem 1rem rgb(171 190 209 / 40%)"
+                },
+                {
+                  "label": "Strong",
+                  "value": "0 0.75rem 1.5rem rgb(171 190 209 / 48%)"
                 }
               ]
             }

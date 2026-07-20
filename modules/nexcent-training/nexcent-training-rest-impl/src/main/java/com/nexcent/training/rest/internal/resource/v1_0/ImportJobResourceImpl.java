@@ -1,10 +1,9 @@
 package com.nexcent.training.rest.internal.resource.v1_0;
 
 import com.liferay.portal.kernel.service.ServiceContext;
-import com.nexcent.training.service.ImportJobLocalService;
 import com.nexcent.training.rest.dto.v1_0.ImportJob;
 import com.nexcent.training.rest.resource.v1_0.ImportJobResource;
-import com.nexcent.training.rest.internal.resource.v1_0.BaseImportJobResourceImpl;
+import com.nexcent.training.service.ImportJobLocalService;
 
 import jakarta.ws.rs.NotFoundException;
 
@@ -60,7 +59,7 @@ public class ImportJobResourceImpl extends BaseImportJobResourceImpl {
         ImportJob dto = new ImportJob();
 
         dto.setErrorMessage(model.getErrorMessage());
-        dto.setExternalReferenceCode(model.getExternalReferenceCode());
+        dto.setExternalReferenceCode(model.getJobKey());
         dto.setFailedRows(model.getFailedRows());
         dto.setFileName(model.getFileName());
         dto.setId(model.getImportJobId());

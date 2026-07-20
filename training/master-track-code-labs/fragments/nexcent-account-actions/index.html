@@ -1,26 +1,28 @@
-<div class="nxc-header-actions nxc-account-actions">
-    [#if themeDisplay.isSignedIn()]
+[#if themeDisplay.isSignedIn()]
+    <div class="nxc-header-actions nxc-account-actions">
         <a
             class="nxc-button nxc-signup-action nxc-account-action"
-            href="${htmlUtil.escape(themeDisplay.getURLMyAccount())}"
+            href="${themeDisplay.getURLMyAccount()}"
         >
-            ${htmlUtil.escape(configuration.accountLabel!'Account')}
+            ${configuration.accountLabel}
         </a>
-    [#else]
+    </div>
+[#else]
+    <div class="nxc-header-actions nxc-account-actions">
         <a
             class="nxc-button nxc-login-action"
-            href="${htmlUtil.escape(themeDisplay.getURLSignIn())}"
+            href="${themeDisplay.getURLSignIn()}"
         >
-            ${htmlUtil.escape(configuration.loginLabel!'Login')}
+            ${configuration.loginLabel}
         </a>
 
-        [#if (configuration.showSignUp!true) && (configuration.signUpUrl!'')?has_content]
+        [#if configuration.showSignUp && configuration.signUpUrl?has_content]
             <a
                 class="nxc-button nxc-signup-action"
-                href="${htmlUtil.escape(configuration.signUpUrl!'')}"
+                href="${configuration.signUpUrl}"
             >
-                ${htmlUtil.escape(configuration.signUpLabel!'Sign up')}
+                ${configuration.signUpLabel}
             </a>
         [/#if]
-    [/#if]
-</div>
+    </div>
+[/#if]

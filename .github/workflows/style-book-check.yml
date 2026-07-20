@@ -60,88 +60,99 @@ jobs:
           const fs = require('node:fs');
           const root = 'client-extensions/nexcent-theme';
           const definition = JSON.parse(
-              fs.readFileSync(`${root}/src/frontend-token-definition.json`, 'utf8')
+            fs.readFileSync(`${root}/src/frontend-token-definition.json`, 'utf8')
           );
           const values = JSON.parse(
-              fs.readFileSync(
-                  `${root}/style-book/nexcent-default/frontend-tokens-values.json`,
-                  'utf8'
-              )
+            fs.readFileSync(
+              `${root}/style-book/nexcent-default/frontend-tokens-values.json`,
+              'utf8'
+            )
           );
           const styleBook = JSON.parse(
-              fs.readFileSync(
-                  `${root}/style-book/nexcent-default/style-book.json`,
-                  'utf8'
-              )
+            fs.readFileSync(
+              `${root}/style-book/nexcent-default/style-book.json`,
+              'utf8'
+            )
           );
           const categories = definition.frontendTokenCategories;
 
           if (!Array.isArray(categories) || categories.length < 2) {
-              throw new Error('Expected at least two frontend token categories.');
+            throw new Error('Expected at least two frontend token categories.');
           }
 
           const tokens = categories.flatMap((category) =>
-              (category.frontendTokenSets || []).flatMap(
-                  (tokenSet) => tokenSet.frontendTokens || []
-              )
+            (category.frontendTokenSets || []).flatMap(
+              (tokenSet) => tokenSet.frontendTokens || []
+            )
           );
           const names = tokens.map((token) => token.name);
           const mappings = tokens.map((token) =>
-              (token.mappings || []).find(
-                  (mapping) => mapping.type === 'cssVariable'
-              )?.value
+            (token.mappings || []).find(
+              (mapping) => mapping.type === 'cssVariable'
+            )?.value
           );
 
           if (new Set(names).size !== names.length) {
-              throw new Error('Duplicate frontend token names.');
+            throw new Error('Duplicate frontend token names.');
           }
 
           if (mappings.some((mapping) => !mapping)) {
-              throw new Error('Every token must define one CSS variable mapping.');
+            throw new Error('Every token must define one CSS variable mapping.');
           }
 
           if (new Set(mappings).size !== mappings.length) {
-              throw new Error('Duplicate CSS variable mappings.');
+            throw new Error('Duplicate CSS variable mappings.');
           }
 
           for (const required of [
-              'nxc-style-primary',
-              'nxc-style-font-family',
-              'nxc-style-container-width',
-              'nxc-style-section-space',
-              'nxc-style-radius-md',
-              'nxc-style-header-height',
+            'nxc-style-primary',
+            'nxc-style-font-family',
+            'nxc-style-body-size',
+            'nxc-style-navigation',
+            'nxc-style-navigation-size',
+            'nxc-style-container-width',
+            'nxc-style-wide-container-width',
+            'nxc-style-section-space',
+            'nxc-style-radius-md',
+            'nxc-style-shadow-raised',
+            'nxc-style-header-height',
           ]) {
-              if (!mappings.includes(required)) {
-                  throw new Error(`Missing mapping: ${required}`);
-              }
+            if (!mappings.includes(required)) {
+              throw new Error(`Missing mapping: ${required}`);
+            }
           }
 
           for (const token of tokens) {
-              const value = values[token.name];
-              const mapping = token.mappings.find(
-                  (item) => item.type === 'cssVariable'
-              ).value;
+            const value = values[token.name];
+            const mapping = token.mappings.find(
+              (item) => item.type === 'cssVariable'
+            ).value;
 
-              if (!value) {
-                  throw new Error(`Style Book is missing token: ${token.name}`);
-              }
+            if (!value) {
+              throw new Error(`Style Book is missing token: ${token.name}`);
+            }
 
-              if (value.cssVariableMapping !== mapping) {
-                  throw new Error(`Style Book mapping mismatch: ${token.name}`);
-              }
+            if (value.cssVariableMapping !== mapping) {
+              throw new Error(`Style Book mapping mismatch: ${token.name}`);
+            }
+          }
+
+          for (const configuredName of Object.keys(values)) {
+            if (!names.includes(configuredName)) {
+              throw new Error(`Style Book contains unknown token: ${configuredName}`);
+            }
           }
 
           if (styleBook.name !== 'Nexcent Default') {
-              throw new Error('Unexpected Style Book name.');
+            throw new Error('Unexpected Style Book name.');
           }
 
           if (styleBook.themeId !== 'nexcent-theme-css') {
-              throw new Error('Style Book must target nexcent-theme-css.');
+            throw new Error('Style Book must target nexcent-theme-css.');
           }
 
           if (styleBook.frontendTokensValuesPath !== 'frontend-tokens-values.json') {
-              throw new Error('Unexpected Style Book values path.');
+            throw new Error('Unexpected Style Book values path.');
           }
 
           console.log(`Validated ${tokens.length} Nexcent Style Book tokens.`);
@@ -153,9 +164,14 @@ jobs:
           JS=client-extensions/nexcent-theme/assets/global.js
           FAVICON=client-extensions/nexcent-theme/assets/favicon.svg
           grep -q "var(--nxc-style-primary, #4caf4f)" "$CSS"
-          grep -q "var(--nxc-style-container-width, 72rem)" "$CSS"
-          grep -q "var(--nxc-style-radius-md, 0.75rem)" "$CSS"
+          grep -q "var(--nxc-style-container-width, 73.875rem)" "$CSS"
+          grep -q "var(--nxc-style-wide-container-width," "$CSS"
+          grep -q "var(--nxc-style-radius-md, 0.5rem)" "$CSS"
+          grep -q "var(--nxc-style-body-size, 0.875rem)" "$CSS"
           grep -q ".nxc-site-header" "$CSS"
+          grep -q ".nxc-header-actions" "$CSS"
+          grep -q ".nxc-login-action" "$CSS"
+          grep -q ".nxc-signup-action" "$CSS"
           grep -q ".nxc-site-footer" "$CSS"
           grep -q ".nxc-newsletter" "$CSS"
           grep -q "window.Nexcent" "$JS"

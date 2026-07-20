@@ -7,12 +7,13 @@
   <title>Nexcent — Community Management</title>
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
   <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="figma-fidelity.css" />
   <script type="module" src="app.js"></script>
 </head>
 <body>
   <a class="skip-link" href="#main-content">Skip to main content</a>
 
-  <header class="site-header" data-header>
+  <header class="site-header" id="login" data-header>
     <div class="container header-inner">
       <a class="brand" href="#home" aria-label="Nexcent home">
         <svg class="brand-mark" viewBox="0 0 36 28" aria-hidden="true">
@@ -29,7 +30,7 @@
       <nav class="primary-nav" id="primary-navigation" aria-label="Primary navigation" data-nav>
         <ul data-navigation></ul>
         <div class="header-actions">
-          <a class="text-link" href="#login">Login</a>
+          <a class="button button--small button--login" href="#login" aria-label="Login to Nexcent">Login</a>
           <a class="button button--small" href="#register">Sign up</a>
         </div>
       </nav>
@@ -44,10 +45,10 @@
     <section class="statistics section section--soft" id="statistics" data-section="statistics" aria-busy="true"></section>
     <section class="testimonial section section--soft" id="testimonial" data-section="testimonial" aria-busy="true"></section>
     <section class="community section" id="community" data-section="community" aria-busy="true"></section>
-    <section class="cta section section--soft" data-section="cta" aria-busy="true"></section>
+    <section class="cta section section--soft" id="register" data-section="cta" aria-busy="true"></section>
   </main>
 
-  <footer class="site-footer" data-section="footer" aria-busy="true"></footer>
+  <footer class="site-footer" id="faq" data-section="footer" aria-busy="true"></footer>
 
   <template id="loading-template">
     <div class="container skeleton" aria-hidden="true">

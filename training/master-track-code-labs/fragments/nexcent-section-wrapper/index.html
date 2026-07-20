@@ -1,8 +1,8 @@
 <section
-    class="nxc-section nxc-fragment-section nxc-fragment-section--${configuration.background}"
-    id="${configuration.sectionId}"
+    class="nxc-section nxc-fragment-section nxc-fragment-section--${configuration.background!'default'}"
+    id="${configuration.sectionId!'nexcent-section'}"
 >
-    <div class="nxc-container<#if configuration.wideContainer> nxc-container--wide</#if>">
-        <lfr-drop-zone></lfr-drop-zone>
+    <div class="nxc-container[#if configuration.wideContainer!true] nxc-container--wide[/#if]">
+        <lfr-drop-zone id="content"></lfr-drop-zone>
     </div>
 </section>

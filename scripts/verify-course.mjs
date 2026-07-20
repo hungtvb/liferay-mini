@@ -223,7 +223,7 @@ await requireText(
 );
 await requireText(
     'modules/nexcent-training/nexcent-training-service/service.xml',
-    ['name="ImportJob"', 'name="externalReferenceCode"', 'name="ERC_G"']
+    ['name="ImportJob"', 'external-reference-code="group"', 'name="G"']
 );
 await requireText(
     'modules/nexcent-training/nexcent-training-rest-impl/rest-openapi.yaml',

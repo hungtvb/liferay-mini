@@ -1,0 +1,60 @@
+name: Master Track Lab Kit Check
+
+on:
+    pull_request:
+        paths:
+            - '.github/workflows/master-track-lab-kit-check.yml'
+            - 'client-extensions/nexcent-training-batch-lab/**'
+            - 'docs/master-track/**'
+            - 'modules/nexcent-training/**'
+            - 'training/master-track-code-labs/**'
+    workflow_dispatch:
+
+permissions:
+    contents: read
+
+jobs:
+    validate-lab-kit:
+        runs-on: ubuntu-latest
+        timeout-minutes: 25
+
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
+
+            - name: Set up Java 21
+              uses: actions/setup-java@v4
+              with:
+                  distribution: temurin
+                  java-version: '21'
+
+            - name: Set up Node.js 22
+              uses: actions/setup-node@v4
+              with:
+                  node-version: '22'
+
+            - name: Set up Gradle
+              uses: gradle/actions/setup-gradle@v4
+
+            - name: Validate lab files and sample data
+              run: node training/master-track-code-labs/scripts/validate-lab-kit.mjs
+
+            - name: Build OSGi component lab
+              run: ./gradlew :modules:nexcent-training:nexcent-training-osgi:build
+
+            - name: Generate Service Builder source
+              run: ./gradlew :modules:nexcent-training:nexcent-training-service:buildService
+
+            - name: Generate REST Builder source
+              run: ./gradlew :modules:nexcent-training:nexcent-training-rest-impl:buildREST
+
+            - name: Build application modules
+              run: |
+                  ./gradlew \
+                    :modules:nexcent-training:nexcent-training-api:build \
+                    :modules:nexcent-training:nexcent-training-service:build \
+                    :modules:nexcent-training:nexcent-training-rest-api:build \
+                    :modules:nexcent-training:nexcent-training-rest-impl:build
+
+            - name: Build Batch Client Extension lab
+              run: ./gradlew :client-extensions:nexcent-training-batch-lab:build

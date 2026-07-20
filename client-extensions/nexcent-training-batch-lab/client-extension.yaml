@@ -1,0 +1,17 @@
+assemble:
+    - from: batch
+      into: batch
+
+nexcent-training-batch:
+    name: Nexcent Training Batch
+    oAuthApplicationHeadlessServer: nexcent-training-batch-oauth
+    type: batch
+
+nexcent-training-batch-oauth:
+    .serviceAddress: localhost:8080
+    .serviceScheme: http
+    name: Nexcent Training Batch OAuth
+    scopes:
+        - Liferay.Headless.Batch.Engine.everything
+        - Liferay.Headless.Delivery.everything
+    type: oAuthApplicationHeadlessServer

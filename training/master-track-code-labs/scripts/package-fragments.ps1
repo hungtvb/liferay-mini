@@ -5,25 +5,26 @@ param(
 $ErrorActionPreference = "Stop"
 
 $scriptDirectory = Split-Path -Parent $MyInvocation.MyCommand.Path
-$fragmentSetDirectory = Resolve-Path (Join-Path $scriptDirectory "..\fragments")
+$fragmentSourceDirectory = Resolve-Path (Join-Path $scriptDirectory "..\fragments")
+$collectionKey = "nexcent-components"
 
 if ([string]::IsNullOrWhiteSpace($OutputPath)) {
-    $OutputPath = Join-Path $fragmentSetDirectory "nexcent-components.zip"
+    $OutputPath = Join-Path $fragmentSourceDirectory "collections-nexcent-components.zip"
 }
 elseif (-not [System.IO.Path]::IsPathRooted($OutputPath)) {
     $OutputPath = Join-Path (Get-Location) $OutputPath
 }
 
-$collectionFile = Join-Path $fragmentSetDirectory "collection.json"
+$collectionFile = Join-Path $fragmentSourceDirectory "collection.json"
 
 if (-not (Test-Path $collectionFile)) {
     throw "Missing Fragment Set descriptor: $collectionFile"
 }
 
-$fragmentDirectories = Get-ChildItem $fragmentSetDirectory -Directory
+$fragmentDirectories = Get-ChildItem $fragmentSourceDirectory -Directory
 
 if ($fragmentDirectories.Count -eq 0) {
-    throw "No fragment directories found in: $fragmentSetDirectory"
+    throw "No fragment directories found in: $fragmentSourceDirectory"
 }
 
 $fragmentDirectories | ForEach-Object {
@@ -51,14 +52,15 @@ $fragmentDirectories | ForEach-Object {
 }
 
 $stagingDirectory = Join-Path ([System.IO.Path]::GetTempPath()) ("nexcent-components-" + [guid]::NewGuid().ToString("N"))
+$collectionDirectory = Join-Path $stagingDirectory $collectionKey
+$fragmentsDirectory = Join-Path $collectionDirectory "fragments"
 
 try {
-    New-Item -ItemType Directory -Path $stagingDirectory | Out-Null
-
-    Copy-Item $collectionFile $stagingDirectory
+    New-Item -ItemType Directory -Path $fragmentsDirectory -Force | Out-Null
+    Copy-Item $collectionFile $collectionDirectory
 
     $fragmentDirectories | ForEach-Object {
-        Copy-Item $_.FullName $stagingDirectory -Recurse
+        Copy-Item $_.FullName $fragmentsDirectory -Recurse
     }
 
     $outputDirectory = Split-Path -Parent $OutputPath
@@ -68,10 +70,10 @@ try {
     }
 
     Remove-Item $OutputPath -Force -ErrorAction SilentlyContinue
-    Compress-Archive -Path (Join-Path $stagingDirectory "*") -DestinationPath $OutputPath -CompressionLevel Optimal
+    Compress-Archive -Path $collectionDirectory -DestinationPath $OutputPath -CompressionLevel Optimal
 
     Write-Host "Created Fragment Set package: $OutputPath"
-    Write-Host "ZIP root contains collection.json and $($fragmentDirectories.Count) validated fragment folders."
+    Write-Host "ZIP structure: $collectionKey/collection.json and $collectionKey/fragments/<fragment>/..."
 }
 finally {
     Remove-Item $stagingDirectory -Recurse -Force -ErrorAction SilentlyContinue

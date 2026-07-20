@@ -9,13 +9,22 @@
     white-space: nowrap;
 }
 
-.nxc-account-actions .nxc-account-action {
-    background: var(--nxc-color-primary, #4caf4f);
-    color: var(--nxc-color-white, #ffffff);
+.nxc-user-profile-menu {
+    min-height: 2.5rem;
 }
 
-.nxc-account-actions .nxc-account-action:hover {
-    background: var(--nxc-color-white, #ffffff);
-    border-color: var(--nxc-color-primary, #4caf4f);
-    color: var(--nxc-color-primary, #4caf4f);
+.nxc-user-profile-menu .personal-menu-dropdown,
+.nxc-user-profile-menu .user-personal-bar {
+    align-items: center;
+    display: flex;
+}
+
+.nxc-user-profile-menu .dropdown-toggle {
+    border-radius: 999px;
+}
+
+.nxc-user-profile-menu .dropdown-toggle:focus-visible {
+    box-shadow: var(--nxc-focus-ring, 0 0 0 0.1875rem rgb(76 175 79 / 30%));
+    outline: 0.125rem solid var(--nxc-color-primary, #4caf4f);
+    outline-offset: 0.125rem;
 }

@@ -68,6 +68,39 @@ jobs:
                   find modules/nexcent-training/nexcent-training-service/src -type f -print > diagnostics/generated-service-files.txt 2>/dev/null || true
                   cp -R modules/nexcent-training/nexcent-training-service/src/. diagnostics/generated-service/ 2>/dev/null || true
 
+                  mkdir -p diagnostics/service-builder-runtime/lib diagnostics/service-builder-runtime/work
+                  cp modules/nexcent-training/nexcent-training-service/service.xml diagnostics/service-builder-runtime/work/
+                  cp modules/nexcent-training/nexcent-training-service/build.gradle diagnostics/service-builder-runtime/work/
+
+                  python <<'PY'
+                  from pathlib import Path
+                  import re
+                  import shutil
+
+                  log = Path('diagnostics/build-service.log').read_text(errors='replace')
+                  match = re.search(
+                      r' Command: .*? -cp (.*?) com\.liferay\.portal\.tools\.service\.builder\.ServiceBuilder (.*)',
+                      log,
+                  )
+
+                  if match:
+                      classpath, arguments = match.groups()
+                      target = Path('diagnostics/service-builder-runtime/lib')
+
+                      for item in classpath.split(':'):
+                          source = Path(item)
+
+                          if source.is_file():
+                              shutil.copy2(source, target / source.name)
+
+                      Path('diagnostics/service-builder-runtime/arguments.txt').write_text(
+                          arguments + '\n'
+                      )
+                      Path('diagnostics/service-builder-runtime/classpath.txt').write_text(
+                          classpath + '\n'
+                      )
+                  PY
+
                   if [ "$code" -eq 0 ]; then
                     cp \
                       training/master-track-code-labs/application/service-builder/ImportJobLocalServiceImpl.java \

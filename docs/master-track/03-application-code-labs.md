@@ -1,6 +1,10 @@
 # Application Developer Code Labs
 
-These labs run on the self-hosted local Liferay DXP bundle. Generate code before compiling Service Builder and REST Builder modules.
+> **Source status:** CI VERIFIED / RUNTIME PENDING
+>
+> The repository contains the complete generated Service Builder source. Learners copy the full modules, regenerate to verify the contract, and deploy. They do not start from an empty hand-made Service Builder module.
+
+These labs run on the self-hosted Liferay DXP 2026.Q1.1 bundle.
 
 ---
 
@@ -27,7 +31,7 @@ The component demonstrates:
 
 - immediate Declarative Services activation;
 - `@Reference` injection of `UserLocalService`;
-- typed OSGi configuration;
+- typed OSGi configuration with `Meta.OCD` and `ConfigurableUtil`;
 - `@Activate` and `@Modified`;
 - a Gogo command named `nexcent:status`.
 
@@ -52,13 +56,13 @@ blade sh 'ds:unsatisfied <BUNDLE_ID>'
 blade sh 'nexcent:status'
 ```
 
-Expected command output resembles:
+Expected output resembles:
 
 ```text
 Nexcent Training Site is active. Portal user count: 2
 ```
 
-The actual count depends on the runtime.
+The actual user count depends on the runtime.
 
 ## Update configuration
 
@@ -85,36 +89,55 @@ Change `Site Label`, save, and run `nexcent:status` again. This verifies the `@M
 
 # Lab APP-02 — Service Builder Persistence
 
-## Files to create
+## Copy the complete modules
 
-Copy:
+Copy both directories, including their generated source:
 
 ```text
 modules/nexcent-training/nexcent-training-api/
 modules/nexcent-training/nexcent-training-service/
 ```
 
-The source entity is defined in:
+The entity contract is:
 
 ```text
 modules/nexcent-training/nexcent-training-service/service.xml
 ```
 
-The custom business methods are in:
+The custom implementation is:
 
 ```text
-modules/nexcent-training/nexcent-training-service/src/main/java/com/nexcent/training/service/impl/ImportJobLocalServiceImpl.java
+modules/nexcent-training/nexcent-training-service/
+└── src/main/java/com/nexcent/training/service/impl/
+    └── ImportJobLocalServiceImpl.java
 ```
 
-`ImportJob` stores operational migration status. It does not replace editorial Web Content.
+`ImportJob` stores operational migration status. Editorial landing content remains in Web Content.
 
-## Generate Service Builder code
+## Persistence contract
+
+The public REST/import contract calls the stable value `externalReferenceCode`. The operational table stores that value in `jobKey` and enforces uniqueness with the `JK_G` finder:
+
+```text
+jobKey + groupId → one ImportJob
+```
+
+This keeps repeat imports idempotent without using an environment-specific numeric identifier.
+
+## Regenerate and verify
 
 ```bash
 ./gradlew :modules:nexcent-training:nexcent-training-service:buildService
 ```
 
-Inspect generated source under both API and service modules. Do not manually edit generated base classes.
+The task regenerates model, persistence, local-service, table, SQL, and exception source from `service.xml` while preserving custom code in:
+
+```text
+ImportJobImpl.java
+ImportJobLocalServiceImpl.java
+```
+
+Do not edit generated base, persistence, util, wrapper, table, or model-interface files manually.
 
 ## Compile
 
@@ -139,23 +162,32 @@ blade sh 'lb | grep "Nexcent Training"'
 blade sh 'ds:unsatisfied'
 ```
 
-Check server logs for schema creation or upgrade errors. The generated table uses the `NXC` namespace.
+Check the server log for schema creation or upgrade errors. The generated table is:
+
+```text
+NXC_ImportJob
+```
+
+## Important first-generation rule
+
+For this course, copy the complete modules from GitHub. Do not delete all generated source and reconstruct the project as an empty folder before running `buildService`.
+
+When creating a different Service Builder project from scratch, generate the official project scaffold with Blade/Liferay Workspace first, then edit `service.xml`. The complete scaffold gives the generator the custom model and local-service extension points it expects.
 
 ## Checkpoint
 
-- `buildService` generates model, persistence, service, and exception classes.
-- API and service bundles are Active.
+- `buildService` completes without modifying custom implementation logic.
+- API and service modules compile.
+- API and service bundles are Active after deployment.
 - No unsatisfied reference remains.
-- The `NXC_ImportJob` table is created in the configured database.
-- Re-running `buildService` is deterministic and does not overwrite custom code in `ImportJobLocalServiceImpl`.
+- `NXC_ImportJob` is created in the configured database.
+- Repeating the same `jobKey` within a site updates one operational job instead of creating a duplicate.
 
 ---
 
 # Lab APP-03 — REST Builder API Calling Service Builder
 
-## Files to create
-
-Copy:
+## Copy the complete modules
 
 ```text
 modules/nexcent-training/nexcent-training-rest-api/
@@ -165,19 +197,21 @@ modules/nexcent-training/nexcent-training-rest-impl/
 Contracts:
 
 ```text
-nexcent-training-rest-impl/rest-config.yaml
-nexcent-training-rest-impl/rest-openapi.yaml
+modules/nexcent-training/nexcent-training-rest-impl/rest-config.yaml
+modules/nexcent-training/nexcent-training-rest-impl/rest-openapi.yaml
 ```
 
-Implementation:
+Custom resource implementation:
 
 ```text
-nexcent-training-rest-impl/src/main/java/com/nexcent/training/rest/internal/resource/v1_0/ImportJobResourceImpl.java
+modules/nexcent-training/nexcent-training-rest-impl/
+└── src/main/java/com/nexcent/training/rest/internal/resource/v1_0/
+    └── ImportJobResourceImpl.java
 ```
 
-## Generate REST Builder source
+## Generate source
 
-Run Service Builder first, then REST Builder:
+Run Service Builder first because the REST implementation depends on its API, then run REST Builder:
 
 ```bash
 ./gradlew :modules:nexcent-training:nexcent-training-service:buildService
@@ -250,29 +284,30 @@ curl \
 
 ## Idempotency exercise
 
-POST the same ERC a second time. The Local Service resets the existing record rather than creating a duplicate.
+POST the same external reference code a second time. The REST resource passes it to `ImportJobLocalService`, which maps it to the internal `jobKey` and resets the existing record rather than inserting a duplicate.
 
 ## Checkpoint
 
-- `buildREST` generates DTOs, resources, schemas, and application scaffolding.
-- API appears in API Explorer.
+- `buildREST` completes.
+- API, service, REST API, and REST implementation modules compile.
+- API appears in API Explorer after deployment.
 - POST persists through Service Builder.
-- GET reads the same record.
-- Repeating the same ERC does not create duplicate records.
-- Invalid or unknown ERC returns an explicit error instead of an empty success response.
+- GET reads the same operational record.
+- Repeating the same external reference code does not create a duplicate.
+- Unknown keys return an explicit not-found response.
 
 ## Troubleshooting
 
 ### Generated packages are missing
 
-Run both generation tasks again:
+Confirm that the complete API and implementation modules were copied from GitHub, then run:
 
 ```bash
 ./gradlew :modules:nexcent-training:nexcent-training-service:buildService
 ./gradlew :modules:nexcent-training:nexcent-training-rest-impl:buildREST
 ```
 
-### REST implementation bundle is unresolved
+### A bundle is unresolved
 
 ```bash
 blade sh 'lb | grep "Nexcent Training"'
@@ -280,4 +315,11 @@ blade sh 'diag <BUNDLE_ID>'
 blade sh 'ds:unsatisfied <BUNDLE_ID>'
 ```
 
-Confirm the API, Service Builder API, and Service Builder service bundles are Active before the REST implementation.
+Confirm this activation order:
+
+```text
+Nexcent Training API
+→ Nexcent Training Service
+→ Nexcent Training REST API
+→ Nexcent Training REST Impl
+```

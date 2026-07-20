@@ -1,0 +1,6 @@
+Bundle-Name: Nexcent Training REST API
+Bundle-SymbolicName: com.nexcent.training.rest.api
+Bundle-Version: 1.0.0
+Export-Package: \
+    com.nexcent.training.rest.dto.v1_0,\
+    com.nexcent.training.rest.resource.v1_0

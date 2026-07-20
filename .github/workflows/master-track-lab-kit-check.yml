@@ -64,6 +64,10 @@ jobs:
                   ./gradlew :modules:nexcent-training:nexcent-training-service:buildService --stacktrace > diagnostics/build-service.log 2>&1
                   code=$?
 
+                  mkdir -p diagnostics/generated-service
+                  find modules/nexcent-training/nexcent-training-service/src -type f -print > diagnostics/generated-service-files.txt 2>/dev/null || true
+                  cp -R modules/nexcent-training/nexcent-training-service/src/. diagnostics/generated-service/ 2>/dev/null || true
+
                   if [ "$code" -eq 0 ]; then
                     cp \
                       training/master-track-code-labs/application/service-builder/ImportJobLocalServiceImpl.java \

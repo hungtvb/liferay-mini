@@ -1,0 +1,8 @@
+apiDir: "../nexcent-training-rest-api/src/main/java"
+apiPackagePath: "com.nexcent.training.rest"
+application:
+    baseURI: "/nexcent-training"
+    className: "NexcentTrainingApplication"
+    name: "Liferay.Nexcent.Training"
+author: "Nexcent Training"
+javaEEPackage: "jakarta"

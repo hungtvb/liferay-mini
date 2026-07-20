@@ -19,6 +19,7 @@ The modules in this kit are **SOURCE READY / RUNTIME PENDING**.
 | Frontend | Configurable section Fragment | `training/master-track-code-labs/fragments/nexcent-section-wrapper` | ZIP the fragment files and import in Site Menu → Design → Fragments |
 | Frontend | Community Remote App | `remote-apps/nexcent-community-app` and `client-extensions/nexcent-remote-app-registration` | Build app, host assets, deploy registration CE |
 | Content | Hero and Service preview templates | `training/master-track-code-labs/web-content-templates` | Create Liferay Web Content Templates and paste FreeMarker code |
+| Practitioner | Vocabulary, Categories, Tags, and asset classification | `training/master-track-code-labs/sample-data/nexcent-taxonomy.json` | Configure in Site Menu → Categorization and capture runtime evidence |
 | Application | OSGi and Gogo Shell | `modules/nexcent-training/nexcent-training-osgi` | `./gradlew :modules:nexcent-training:nexcent-training-osgi:deploy` |
 | Application | Service Builder | `modules/nexcent-training/nexcent-training-api` and `nexcent-training-service` | Run `buildService`, then deploy API and service modules |
 | Application | REST Builder | `modules/nexcent-training/nexcent-training-rest-api` and `nexcent-training-rest-impl` | Run `buildREST`, then deploy all dependent modules |
@@ -31,6 +32,7 @@ The modules in this kit are **SOURCE READY / RUNTIME PENDING**.
 2. [Content model and FreeMarker labs](02-content-code-labs.md)
 3. [OSGi, Service Builder, and REST Builder labs](03-application-code-labs.md)
 4. [Batch and migration labs](04-migration-code-labs.md)
+5. [Vocabulary, Categories, Tags, and asset classification](05-taxonomy-and-asset-classification.md)
 
 ## Golden path
 

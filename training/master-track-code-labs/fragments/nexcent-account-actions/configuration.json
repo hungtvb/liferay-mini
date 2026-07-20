@@ -17,13 +17,6 @@
                     "type": "text"
                 },
                 {
-                    "dataType": "string",
-                    "defaultValue": "Account",
-                    "label": "Account Label",
-                    "name": "accountLabel",
-                    "type": "text"
-                },
-                {
                     "defaultValue": true,
                     "label": "Show Sign Up",
                     "name": "showSignUp",
@@ -37,7 +30,7 @@
                     "type": "url"
                 }
             ],
-            "label": "Account Actions"
+            "label": "Guest Actions"
         }
     ]
 }

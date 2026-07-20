@@ -1,0 +1,8 @@
+{
+    "configurationPath": "configuration.json",
+    "cssPath": "index.css",
+    "htmlPath": "index.html",
+    "icon": "user",
+    "name": "Nexcent Account Actions",
+    "type": "component"
+}

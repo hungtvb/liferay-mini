@@ -11,6 +11,7 @@ const requiredFiles = [
     'training/master-track-code-labs/web-content-templates/nxc-landing-hero.ftl',
     'training/master-track-code-labs/web-content-templates/nxc-service-item.ftl',
     'training/master-track-code-labs/sample-data/nexcent-landing.mock.json',
+    'training/master-track-code-labs/sample-data/nexcent-taxonomy.json',
     'training/master-track-code-labs/sample-data/community-articles.csv',
     'client-extensions/nexcent-training-batch-lab/client-extension.yaml',
 ];
@@ -65,6 +66,53 @@ for (const list of [
     }
 }
 
+const taxonomy = JSON.parse(
+    await readFile(
+        'training/master-track-code-labs/sample-data/nexcent-taxonomy.json',
+        'utf8'
+    )
+);
+
+if (taxonomy.vocabulary?.name !== 'Nexcent Topics') {
+    throw new Error('Taxonomy sample must define the Nexcent Topics vocabulary.');
+}
+
+if (taxonomy.vocabulary?.visibility !== 'public') {
+    throw new Error('Nexcent Topics must be public for the visitor-facing lab.');
+}
+
+const categoryNames = taxonomy.categories.flatMap((category) => [
+    category.name,
+    ...(category.children ?? []).map((child) => child.name),
+]);
+
+if (new Set(categoryNames).size !== categoryNames.length) {
+    throw new Error('Taxonomy sample contains duplicate category names.');
+}
+
+for (const requiredCategory of [
+    'Membership',
+    'Community',
+    'Events',
+    'Webinars',
+    'Meetups',
+    'Marketing',
+]) {
+    if (!categoryNames.includes(requiredCategory)) {
+        throw new Error(`Taxonomy sample is missing category ${requiredCategory}.`);
+    }
+}
+
+if (new Set(taxonomy.tags).size !== taxonomy.tags.length) {
+    throw new Error('Taxonomy sample contains duplicate tags.');
+}
+
+for (const requiredTag of ['featured', 'homepage', 'beginner']) {
+    if (!taxonomy.tags.includes(requiredTag)) {
+        throw new Error(`Taxonomy sample is missing tag ${requiredTag}.`);
+    }
+}
+
 const csv = await readFile(
     'training/master-track-code-labs/sample-data/community-articles.csv',
     'utf8'
@@ -116,4 +164,6 @@ for (const expected of [
     }
 }
 
-console.log(`Validated ${requiredFiles.length} required files and ${ercs.length} mock content ERCs.`);
+console.log(
+    `Validated ${requiredFiles.length} required files, ${ercs.length} mock content ERCs, ${categoryNames.length} taxonomy categories, and ${taxonomy.tags.length} tags.`
+);

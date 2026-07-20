@@ -18,6 +18,9 @@ Public frontend preview: `https://nexcent-liferay-static.vercel.app`
 - OSGi, Service Builder, and REST Builder labs: [`docs/master-track/03-application-code-labs.md`](docs/master-track/03-application-code-labs.md)
 - Migration labs: [`docs/master-track/04-migration-code-labs.md`](docs/master-track/04-migration-code-labs.md)
 - FE–BE field contracts: [`docs/contracts/component-contracts.md`](docs/contracts/component-contracts.md)
+- Theme source: [`client-extensions/nexcent-theme`](client-extensions/nexcent-theme)
+- Application lab source: [`modules/nexcent-training`](modules/nexcent-training)
+- Copyable training assets: [`training/master-track-code-labs`](training/master-track-code-labs)
 - 2026.Q1 architecture audit: [`docs/architecture/liferay-2026-q1-audit.md`](docs/architecture/liferay-2026-q1-audit.md)
 - Previous delivery-oriented course: [`archive/course-v1`](https://github.com/hungtvb/liferay-mini/tree/archive/course-v1)
 

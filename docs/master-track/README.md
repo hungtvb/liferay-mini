@@ -27,6 +27,17 @@ Required labs currently cover:
 
 Optional future upgrades include Collections, Search Blueprints, Publications, advanced workflow, Objects dashboards, personalization, Commerce, Analytics Cloud, performance labs, and a full Liferay CMS + Spaces migration.
 
+## Local training identity
+
+The local course instance uses email-address authentication with the `nexcent.com` web ID.
+
+```text
+Administrator: admin@nexcent.com
+Password:      learn
+```
+
+Role-specific users are created during the Practitioner exercise and also use the `@nexcent.com` domain. See [Local Runtime Login](00-local-runtime-login.md).
+
 ## Status labels
 
 - **SOURCE READY:** files and commands are present in GitHub.
@@ -40,6 +51,7 @@ The modules in this kit are **SOURCE READY / RUNTIME PENDING**.
 
 | Track | Lab | Copy source | Build or deploy |
 |---|---|---|---|
+| Runtime | Nexcent local instance and `@nexcent.com` login | `configs/local/portal-ext.properties` | Run `./gradlew initBundle`, start the server, and sign in as `admin@nexcent.com` |
 | Frontend | Theme CSS, Style Book, Global CSS/JS | `client-extensions/nexcent-theme` | `../../gradlew clean build` |
 | Frontend | Hero, Services, Features Custom Elements | `client-extensions/nexcent-landing-elements` | `npm ci && npm run build && ../../gradlew clean build` |
 | Frontend | Configurable section Fragment | `training/master-track-code-labs/fragments/nexcent-section-wrapper` | ZIP the fragment files and import in Site Menu → Design → Fragments |
@@ -54,11 +66,12 @@ The modules in this kit are **SOURCE READY / RUNTIME PENDING**.
 
 ## Documents
 
-1. [Frontend code labs](01-frontend-code-labs.md)
-2. [Content model and FreeMarker labs](02-content-code-labs.md)
-3. [OSGi, Service Builder, and REST Builder labs](03-application-code-labs.md)
-4. [Batch and migration labs](04-migration-code-labs.md)
-5. [Vocabulary, Categories, Tags, and asset classification](05-taxonomy-and-asset-classification.md)
+1. [Local runtime login and lab identities](00-local-runtime-login.md)
+2. [Frontend code labs](01-frontend-code-labs.md)
+3. [Content model and FreeMarker labs](02-content-code-labs.md)
+4. [OSGi, Service Builder, and REST Builder labs](03-application-code-labs.md)
+5. [Batch and migration labs](04-migration-code-labs.md)
+6. [Vocabulary, Categories, Tags, and asset classification](05-taxonomy-and-asset-classification.md)
 
 ## Golden path
 

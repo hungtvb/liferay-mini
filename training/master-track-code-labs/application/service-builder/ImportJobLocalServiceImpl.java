@@ -20,7 +20,7 @@ public class ImportJobLocalServiceImpl extends ImportJobLocalServiceBaseImpl {
         User user = userLocalService.getUser(userId);
         Date now = new Date();
 
-        ImportJob importJob = importJobPersistence.fetchByERC_G(
+        ImportJob importJob = importJobPersistence.fetchByJK_G(
             externalReferenceCode, groupId);
 
         if (importJob == null) {
@@ -36,7 +36,7 @@ public class ImportJobLocalServiceImpl extends ImportJobLocalServiceBaseImpl {
         importJob.setUserId(userId);
         importJob.setUserName(user.getFullName());
         importJob.setModifiedDate(now);
-        importJob.setExternalReferenceCode(externalReferenceCode);
+        importJob.setJobKey(externalReferenceCode);
         importJob.setFileName(fileName);
         importJob.setStatus("PENDING");
         importJob.setTotalRows(totalRows);
@@ -67,7 +67,7 @@ public class ImportJobLocalServiceImpl extends ImportJobLocalServiceBaseImpl {
     public ImportJob fetchImportJob(
         long groupId, String externalReferenceCode) {
 
-        return importJobPersistence.fetchByERC_G(
+        return importJobPersistence.fetchByJK_G(
             externalReferenceCode, groupId);
     }
 

@@ -17,6 +17,10 @@ import org.osgi.service.metatype.annotations.Designate;
 @Component(
     configurationPid = "com.nexcent.training.osgi.configuration.NexcentTrainingConfiguration",
     immediate = true,
+    property = {
+        "osgi.command.function=status",
+        "osgi.command.scope=nexcent"
+    },
     service = NexcentTrainingStatusComponent.class
 )
 @Designate(ocd = NexcentTrainingConfiguration.class)
@@ -26,6 +30,10 @@ public class NexcentTrainingStatusComponent {
         return String.format(
             "%s is active. Portal user count: %d",
             _siteLabel, _userLocalService.getUsersCount());
+    }
+
+    public String status() {
+        return getSummary();
     }
 
     @Activate

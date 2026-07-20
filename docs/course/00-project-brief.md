@@ -6,22 +6,36 @@ Deliver the Nexcent Figma landing page as a coordinated frontend/backend project
 
 The visible page must follow the supplied Figma frame and Style Guide, while content ownership, APIs, migration, and editor workflow are modeled explicitly.
 
-## 2026.Q1 content architecture position
+## Course alignment policy
 
-The source currently implements a **Classic CMS compatibility baseline** using Classic Web Content Structures, FreeMarker preview Templates, and site-scoped Documents and Media. These capabilities remain supported, but they are in maintenance mode from 2026.Q1.
-
-The project therefore includes a required modernization gate:
+The Nexcent course uses official Liferay learning paths and the Clarity labs as implementation references only where they overlap with the mini-project.
 
 ```text
-Classic CMS baseline
-→ prove the current implementation on a clean 2026.Q1.1 runtime
+Matching Nexcent requirement
+→ follow official Liferay terminology, workflow, and best practice
 
+Non-matching Clarity topic
+→ do not add it to the required course only for coverage
+→ keep it as an optional future enhancement when useful
+```
+
+The current submission does not claim to reproduce every Clarity exercise or every official learning-path topic.
+
+## 2026.Q1 content architecture position
+
+The current required implementation uses a **Classic CMS compatibility baseline** with Classic Web Content Structures, FreeMarker preview Templates, and site-scoped Documents and Media.
+
+This baseline must be proven on a clean DXP 2026.Q1.1 runtime. A later Liferay CMS + Spaces comparison remains valuable, but it is an upgrade backlog item and does not block the current course submission.
+
+```text
+Current required baseline
+Classic Web Content + Documents and Media + Headless Delivery
+→ complete and verify the Nexcent project
+
+Future optional upgrade
 Liferay CMS + Spaces PoC
-→ enable the required release feature flags
-→ model equivalent Hero and Service Item content
-→ prove page mapping and headless delivery
-→ compare migration, permissions, and editor workflow
-→ record an ADR before changing the final architecture
+→ compare content modeling, permissions, page mapping, and migration
+→ record an ADR before changing the accepted architecture
 ```
 
 See:
@@ -35,31 +49,32 @@ See:
 - Build one unified Nexcent Theme client-extension project containing Theme CSS, frontend tokens, Global CSS, Global JavaScript, and favicon configuration.
 - Build Hero, Services, and Features as dynamic Custom Element Client Extensions.
 - Build Community Updates as an externally hosted Remote App and register it in Liferay.
-- Use Liferay OOTB page-building capabilities for Header, Footer, Navigation, and Newsletter where they meet the requirement.
+- Use Liferay OOTB page-building capabilities for Header, Footer, Navigation, Forms, and shared page composition where they meet the requirement.
 - Implement responsive, loading, empty, error, keyboard, and accessibility states.
 - Keep rendering independent from the selected content adapter.
 - Do not hard-code business content in TypeScript, JSX, JavaScript, or CSS.
 
-## Backend scope
+## Backend and application scope
 
-### Compatibility baseline
+### Editorial content baseline
 
 - Model the page with Classic Web Content Structures and FreeMarker preview Templates.
 - Use stable field references and external reference codes.
-- Store editorial images in site-scoped Documents and Media.
+- Store editorial images in Documents and Media.
+- Organize shared assets through the Asset Library exercise.
+- Classify applicable content and assets with Vocabulary, Categories, and Tags.
 - Provide normalized Headless Delivery contracts.
 - Define an Excel migration workbook and validation rules.
 - Create or update content by ERC without duplicates.
 - Generate Batch Client Extension payloads from the target runtime rather than inventing configuration.
 
-### Modernization PoC
+### Application Developer labs
 
-- Activate Liferay CMS release feature flags on the 2026.Q1 test runtime.
-- Create a Nexcent Space.
-- Create equivalent CMS Content Structures and sample content for Hero and Service Item.
-- Prove one fragment/page mapping flow and one headless API flow.
-- Identify incompatible legacy selectors or components.
-- Produce an ADR: adopt, hybrid transition, or defer.
+- Implement an OSGi component and verify it through Gogo Shell.
+- Use Service Builder for operational persistence through the `ImportJob` entity.
+- Keep editorial content in the CMS instead of replacing it with Service Builder tables.
+- Use REST Builder as the BFF/API layer for the Import Job Console where existing Liferay Headless APIs do not cover the business workflow.
+- Demonstrate the complete Custom Element → REST Builder → Service Builder → database flow.
 
 ## Asset scope
 
@@ -69,7 +84,7 @@ See:
 - Approved assets must be named, export-enabled, or mapped explicitly by node ID.
 - A generated asset PR must pass visual review before replacing placeholders.
 - Immutable application-shell assets belong with Client Extensions or their static host.
-- A new Asset Library is not a mandatory MVP dependency.
+- Documents and Media and Asset Library are required learning exercises for the current course.
 
 ## Provisioning scope
 
@@ -79,31 +94,39 @@ Runtime proof is required for:
 
 - each Client Extension archive;
 - Style Book import and Theme CSS binding;
-- Site Initializer-supported assets;
-- Master Page creation/publication/application;
+- Master Page creation, publication, and application;
 - Navigation Menu provisioning;
 - placement and configuration of Custom Elements;
-- Newsletter Object/Form behavior;
-- clean-instance content and asset import.
+- Web Content Structures, Templates, records, and permissions;
+- Documents and Media, Asset Library, and taxonomy exercises;
+- Contact Form behavior required by the Practitioner track;
+- Service Builder schema and REST Builder endpoint availability;
+- clean-instance content and asset import;
+- Excel and Batch idempotency.
 
 No capability is considered delivered only because a source folder or JSON file exists.
 
-## Explicit non-goals
+## Scope boundaries and future upgrades
 
-The core delivery does not require:
+The following topics are not required for the current Nexcent submission unless a later decision explicitly promotes them into scope:
 
-- OSGi business modules;
-- Gogo Shell exercises;
-- Service Builder;
-- REST Builder BFF;
-- legacy Liferay Forms;
-- a new shared Asset Library without a demonstrated multi-site requirement.
+- Manual and Dynamic Collections beyond the current page requirements.
+- Search Blueprints and advanced search experiences.
+- Publications and advanced editorial workflow.
+- Liferay Objects dashboards and advanced object automation.
+- Personalization and Page Experiences.
+- Commerce, Analytics Cloud, and AI integrations.
+- Dedicated JMeter and performance-diagnostics labs.
+- Full Liferay CMS + Spaces migration.
+
+These items should remain visible in the backlog, but they do not block the current `final` branch.
 
 ## Evidence labels
 
 - **VERIFIED:** official capability plus clean-runtime evidence where applicable.
 - **IMPLEMENTED / RUNTIME PENDING:** source exists, runtime proof missing.
 - **POC REQUIRED:** integration path not accepted yet.
+- **OPTIONAL BACKLOG:** useful future enhancement outside the current submission gate.
 - **OUT OF SCOPE:** intentionally excluded.
 
 ## Definition of done
@@ -111,12 +134,14 @@ The core delivery does not require:
 - The landing page matches Figma using accepted assets at desktop, tablet, and mobile sizes.
 - The static prototype is clearly identified as mock-backed until a Liferay adapter is proven.
 - Theme CSS, Global CSS, Global JavaScript, favicon, Custom Elements, Remote App registration, and Batch CE deploy on a clean 2026.Q1.1 instance.
-- Header, Footer, Navigation, and Newsletter use the accepted Liferay OOTB composition.
+- Header, Footer, Navigation, and Contact Form use the accepted Liferay OOTB composition.
 - Master Page and Navigation Menu provisioning have runtime evidence.
-- The accepted content model is editable through Liferay and consumable through stable APIs.
+- Documents and Media, Asset Library, Vocabulary, Categories, and Tags have runtime evidence.
+- The accepted editorial content model is editable through Liferay and consumable through stable APIs.
+- OSGi, Service Builder, and REST Builder labs run successfully for the Import Job workflow.
 - Excel import is repeatable by ERC.
 - Batch migration uses target-runtime-generated `jsont`.
 - Partial deployment failure is visible and rerunnable.
 - Figma token expiry, rotation, API quota constraints, and generated-asset review are documented.
-- The Classic CMS versus Liferay CMS/Spaces decision is recorded in an ADR.
+- Future upgrade topics remain optional and do not falsely block submission readiness.
 - Final evidence is recorded in `SUBMISSION.md`.

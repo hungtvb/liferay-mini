@@ -1,10 +1,12 @@
 # Nexcent Liferay Training Master Track
 
-Build the Nexcent landing page on **Liferay DXP 2026.Q1.1 LTS** while following the official Liferay learning paths:
+Build the Nexcent landing page on **Liferay DXP 2026.Q1.1 LTS** using the official Liferay learning paths and Clarity course labs as best-practice references where they match the project scope:
 
 1. [Practitioner](https://learn.liferay.com/learning-path/practitioner)
 2. [Frontend Developer](https://learn.liferay.com/learning-path/frontend-developer)
 3. [Liferay Application Developer](https://learn.liferay.com/learning-path/liferay-application-developer)
+
+This is not a full reproduction of the Clarity course. The project adopts the official workflow, terminology, and recommended Liferay implementation for overlapping topics, while keeping the curriculum focused on the Nexcent mini-project requirements.
 
 The project combines site administration, modern frontend development, content modeling, OSGi, Service Builder, REST Builder, API integration, Excel import, and Batch Client Extensions.
 
@@ -23,6 +25,30 @@ Public frontend preview: `https://nexcent-liferay-static.vercel.app`
 - Copyable training assets: [`training/master-track-code-labs`](training/master-track-code-labs)
 - 2026.Q1 architecture audit: [`docs/architecture/liferay-2026-q1-audit.md`](docs/architecture/liferay-2026-q1-audit.md)
 - Previous delivery-oriented course: [`archive/course-v1`](https://github.com/hungtvb/liferay-mini/tree/archive/course-v1)
+
+## Scope alignment
+
+Use the following decision rule when adapting official Liferay or Clarity labs:
+
+```text
+Topic matches a Nexcent requirement
+→ follow the official Liferay flow and best practice
+
+Topic does not match the current project
+→ keep it out of the required curriculum
+→ record it as an optional future enhancement when useful
+```
+
+Current required scope includes:
+
+- Workspace, `initBundle`, clean runtime, and API Explorer.
+- Sites, pages, navigation, Master Pages, Fragments, assets, Asset Library, taxonomy, Forms, roles, and permissions required by the Nexcent flow.
+- Theme CSS, Style Books, Global CSS/JS, favicon, Custom Elements, and Remote App.
+- Web Content Structures, Templates, ERCs, Documents and Media, and Headless Delivery.
+- OSGi, Gogo Shell, Service Builder, and REST Builder BFF for the `ImportJob` business flow.
+- Excel import, Batch Client Extension, integration QA, and final runtime evidence.
+
+Collections, Search Blueprints, Publications, advanced workflow, Objects dashboards, personalization, Commerce, Analytics Cloud, and performance labs are optional future upgrades. They do not block the current course or the `final` submission.
 
 ## Learning principles
 
@@ -155,7 +181,7 @@ node training/master-track-code-labs/scripts/validate-lab-kit.mjs
 ## Execution order
 
 1. Runtime foundation.
-2. Practitioner site, pages, navigation, assets, Asset Library, Forms, roles, and permissions.
+2. Practitioner site, pages, navigation, assets, Asset Library, Forms, roles, and permissions required by Nexcent.
 3. Theme CSS, Style Book, Master Page, and OOTB header/footer.
 4. Fragments and configurable wrappers.
 5. Hero, Services, and Features Custom Elements with mock data.
@@ -174,17 +200,21 @@ node training/master-track-code-labs/scripts/validate-lab-kit.mjs
 - **POC REQUIRED:** architecture is plausible but needs controlled runtime evidence.
 - **OUT OF SCOPE:** intentionally excluded by an explicit decision.
 
-Source code alone is not runtime verification. `final` remains reserved for a clean Liferay DXP 2026.Q1.1 reference implementation.
+Source code alone is not runtime verification.
 
 ## Branches
 
-- `main`: reviewed source.
-- `final`: clean-runtime verified reference only.
+- `main`: reviewed project source and course development history.
+- `final`: the course submission branch; it may be updated throughout the course but is not submission-ready until `submission/READY` exists.
 - `archive/course-v1`: preserved course before the Master Track realignment.
+- `archive/final-pre-master-track-20260720`: preserved pre-Master-Track `final` state.
+
+See [`FINAL-SUBMISSION.md`](FINAL-SUBMISSION.md) for the submission lifecycle and runtime fixture requirements.
 
 ## Rules
 
 - Do not commit `bundles/`, credentials, tokens, generated secrets, or environment-specific numeric IDs.
 - Do not hard-code business content in TypeScript, JSX, CSS, or Java.
 - Keep Header, Footer, Navigation, mobile collapse, and Forms on supported Liferay OOTB paths unless an accepted business requirement proves otherwise.
-- Build and review through a feature branch and pull request. Do not merge automatically without explicit approval.
+- Follow official Liferay best practices for topics that overlap with the current Nexcent scope.
+- Build and review changes through a feature branch and pull request.

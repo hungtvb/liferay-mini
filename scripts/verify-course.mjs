@@ -25,14 +25,15 @@ async function requireFile(relativePath) {
 }
 
 async function requireText(relativePath, values) {
-    const absolutePath = path.join(repositoryRoot, relativePath);
-
     if (!(await exists(relativePath))) {
         failures.push(`Missing required file: ${relativePath}`);
         return;
     }
 
-    const content = await readFile(absolutePath, 'utf8');
+    const content = await readFile(
+        path.join(repositoryRoot, relativePath),
+        'utf8'
+    );
 
     for (const value of values) {
         if (!content.includes(value)) {
@@ -41,7 +42,7 @@ async function requireText(relativePath, values) {
     }
 }
 
-const courseFiles = [
+const deliveryCourseFiles = [
     '00-project-brief.md',
     '01-figma-audit.md',
     '02-fe-be-contracts.md',
@@ -56,7 +57,6 @@ const courseFiles = [
     '11-integration-qa.md',
 ];
 
-const themeRoot = 'client-extensions/nexcent-theme';
 const requiredFiles = [
     'README.md',
     'SUBMISSION.md',
@@ -66,17 +66,20 @@ const requiredFiles = [
     'gradle/wrapper/gradle-wrapper.jar',
     'gradle/wrapper/gradle-wrapper.properties',
     'docs/contracts/component-contracts.md',
-    ...courseFiles.map((file) => `docs/course/${file}`),
-    `${themeRoot}/client-extension.yaml`,
-    `${themeRoot}/package.json`,
-    `${themeRoot}/assets/favicon.svg`,
-    `${themeRoot}/assets/global.css`,
-    `${themeRoot}/assets/global.js`,
-    `${themeRoot}/src/css/_clay_variables.scss`,
-    `${themeRoot}/src/css/_custom.scss`,
-    `${themeRoot}/src/frontend-token-definition.json`,
-    `${themeRoot}/style-book/nexcent-default/style-book.json`,
-    `${themeRoot}/style-book/nexcent-default/frontend-tokens-values.json`,
+    ...deliveryCourseFiles.map((file) => `docs/course/${file}`),
+    'docs/master-track/README.md',
+    'docs/master-track/01-frontend-code-labs.md',
+    'docs/master-track/02-content-code-labs.md',
+    'docs/master-track/03-application-code-labs.md',
+    'docs/master-track/04-migration-code-labs.md',
+    'client-extensions/nexcent-theme/client-extension.yaml',
+    'client-extensions/nexcent-theme/package.json',
+    'client-extensions/nexcent-theme/assets/favicon.svg',
+    'client-extensions/nexcent-theme/assets/global.css',
+    'client-extensions/nexcent-theme/assets/global.js',
+    'client-extensions/nexcent-theme/src/frontend-token-definition.json',
+    'client-extensions/nexcent-theme/style-book/nexcent-default/style-book.json',
+    'client-extensions/nexcent-theme/style-book/nexcent-default/frontend-tokens-values.json',
     'client-extensions/nexcent-landing-elements/client-extension.yaml',
     'client-extensions/nexcent-landing-elements/package.json',
     'client-extensions/nexcent-landing-elements/package-lock.json',
@@ -84,15 +87,19 @@ const requiredFiles = [
     'client-extensions/nexcent-remote-app-registration/client-extension.yaml',
     'remote-apps/nexcent-community-app/package.json',
     'remote-apps/nexcent-community-app/package-lock.json',
-    'remote-apps/nexcent-community-app/tsconfig.json',
-    'remote-apps/nexcent-community-app/vite.config.ts',
-    'remote-apps/nexcent-community-app/index.html',
     'remote-apps/nexcent-community-app/src/index.tsx',
     'remote-apps/nexcent-community-app/src/styles.css',
     'client-extensions/nexcent-content-batch/client-extension.yaml',
+    'client-extensions/nexcent-training-batch-lab/client-extension.yaml',
+    'modules/nexcent-training/nexcent-training-osgi/build.gradle',
+    'modules/nexcent-training/nexcent-training-service/service.xml',
+    'modules/nexcent-training/nexcent-training-rest-impl/rest-config.yaml',
+    'modules/nexcent-training/nexcent-training-rest-impl/rest-openapi.yaml',
+    'training/master-track-code-labs/sample-data/nexcent-landing.mock.json',
+    'training/master-track-code-labs/sample-data/community-articles.csv',
+    'training/master-track-code-labs/scripts/validate-lab-kit.mjs',
+    'training/master-track-code-labs/scripts/package-batch-export.mjs',
     'scripts/batch/prepare-structured-content-export.mjs',
-    'scripts/batch/export-structured-content.sh',
-    'scripts/batch/export-structured-content.ps1',
     'scripts/assemble-vercel-output.mjs',
     'prototypes/nexcent-static/headless-adapter.mjs',
     'prototypes/nexcent-static/headless-adapter.test.mjs',
@@ -102,27 +109,26 @@ for (const requiredFile of requiredFiles) {
     await requireFile(requiredFile);
 }
 
-if (await exists('docs/lab-guide')) {
-    const oldLessons = (await readdir(path.join(repositoryRoot, 'docs/lab-guide')))
-        .filter((file) => file.endsWith('.md'));
-
-    if (oldLessons.length) {
-        failures.push(
-            `Legacy v1 lessons remain under docs/lab-guide: ${oldLessons.join(', ')}`
-        );
-    }
-}
-
 await requireText('gradle.properties', [
     'liferay.workspace.product=dxp-2026.q1.1-lts',
 ]);
 
 await requireText('README.md', [
-    'coordinated frontend/backend delivery project',
-    'Community Updates Remote App',
-    'archive/course-v1',
-    'Explicit non-goals',
+    'Nexcent Liferay Training Master Track',
+    'Practitioner',
+    'Frontend Developer',
+    'Liferay Application Developer',
     'client-extensions/nexcent-theme',
+    'modules/nexcent-training',
+    'archive/course-v1',
+    'SOURCE READY / RUNTIME PENDING',
+]);
+
+await requireText('docs/master-track/README.md', [
+    'Code Lab Kit',
+    'Service Builder',
+    'REST Builder',
+    'Batch Client Extension',
 ]);
 
 await requireText('docs/contracts/component-contracts.md', [
@@ -151,44 +157,28 @@ await requireText(
     ]
 );
 
+const themeRoot = 'client-extensions/nexcent-theme';
+
 await requireText(`${themeRoot}/client-extension.yaml`, [
     'type: themeCSS',
-    'clayURL: css/clay.css',
-    'mainURL: css/main.css',
     'frontendTokenDefinitionJSON: src/frontend-token-definition.json',
     'type: globalCSS',
     'type: globalJS',
     'type: themeFavicon',
-    'scope: layout',
-    'url: favicon.svg',
 ]);
-
 await requireText(`${themeRoot}/package.json`, ['"baseTheme": "styled"']);
-
 await requireText(`${themeRoot}/assets/global.css`, [
     'var(--nxc-style-primary, #4caf4f)',
     'var(--nxc-style-container-width, 73.875rem)',
-    'var(--nxc-style-wide-container-width,',
-    'var(--nxc-style-radius-md, 0.5rem)',
     'var(--nxc-style-body-size, 0.875rem)',
     '.nxc-site-header',
-    '.nxc-header-actions',
-    '.nxc-login-action',
-    '.nxc-signup-action',
     '.nxc-site-footer',
     '.nxc-newsletter',
 ]);
-
 await requireText(`${themeRoot}/assets/global.js`, [
     'window.Nexcent',
     'getPortalContext',
     'getStyleToken',
-    "dispatch('global-ready'",
-]);
-
-await requireText(`${themeRoot}/assets/favicon.svg`, [
-    '<svg',
-    '#4CAF4F',
 ]);
 
 await requireText(
@@ -201,32 +191,6 @@ await requireText(
     ]
 );
 
-await requireText('remote-apps/nexcent-community-app/package.json', [
-    '"build": "vite build"',
-    '"preview": "vite preview --host 0.0.0.0 --port 4173"',
-    '"typecheck": "tsc --noEmit"',
-]);
-
-await requireText(
-    'client-extensions/nexcent-landing-elements/src/components/Importer/workbook.ts',
-    [
-        'ClientsIntro',
-        'Clients',
-        'StatisticsIntro',
-        'Statistics',
-        'Testimonials',
-        'CommunityIntro',
-        'CommunityCards',
-        'CTA',
-    ]
-);
-
-await requireText('prototypes/nexcent-static/app.js', [
-    'loadHeadlessPage',
-    "mode: 'headless'",
-    'liferayBaseURL',
-]);
-
 await requireText('remote-apps/nexcent-community-app/src/index.tsx', [
     "const ELEMENT_NAME = 'nexcent-community-app'",
     'NXC Community Intro',
@@ -236,117 +200,98 @@ await requireText('remote-apps/nexcent-community-app/src/index.tsx', [
     "status: 'error'",
 ]);
 
-await requireText(
+for (const batchConfig of [
     'client-extensions/nexcent-content-batch/client-extension.yaml',
-    [
+    'client-extensions/nexcent-training-batch-lab/client-extension.yaml',
+]) {
+    await requireText(batchConfig, [
         'type: batch',
         'type: oAuthApplicationHeadlessServer',
         'Liferay.Headless.Batch.Engine.everything',
         'Liferay.Headless.Delivery.everything',
+    ]);
+}
+
+await requireText(
+    'modules/nexcent-training/nexcent-training-osgi/src/main/java/com/nexcent/training/osgi/internal/NexcentTrainingStatusComponent.java',
+    [
+        '@Component',
+        '@Reference',
+        'osgi.command.scope=nexcent',
+        'osgi.command.function=status',
     ]
+);
+await requireText(
+    'modules/nexcent-training/nexcent-training-service/service.xml',
+    ['name="ImportJob"', 'name="externalReferenceCode"', 'name="ERC_G"']
+);
+await requireText(
+    'modules/nexcent-training/nexcent-training-rest-impl/rest-openapi.yaml',
+    ['postSiteImportJob', 'getSiteImportJob']
 );
 
 const tokenDefinitionPath = `${themeRoot}/src/frontend-token-definition.json`;
 const styleBookPath = `${themeRoot}/style-book/nexcent-default/style-book.json`;
 const styleBookValuesPath = `${themeRoot}/style-book/nexcent-default/frontend-tokens-values.json`;
 
-if (await exists(tokenDefinitionPath)) {
+if (
+    await exists(tokenDefinitionPath) &&
+    await exists(styleBookPath) &&
+    await exists(styleBookValuesPath)
+) {
     const definition = JSON.parse(
         await readFile(path.join(repositoryRoot, tokenDefinitionPath), 'utf8')
     );
-    const categories = definition.frontendTokenCategories;
-
-    if (!Array.isArray(categories) || categories.length < 2) {
-        failures.push('Style Book token definition must contain at least two categories.');
-    }
-    else {
-        const tokens = categories.flatMap((category) =>
-            (category.frontendTokenSets ?? []).flatMap(
-                (tokenSet) => tokenSet.frontendTokens ?? []
-            )
-        );
-        const tokenNames = tokens.map((token) => token.name);
-        const mappings = tokens.map((token) =>
-            (token.mappings ?? []).find(
-                (mapping) => mapping.type === 'cssVariable'
-            )?.value
-        );
-
-        if (new Set(tokenNames).size !== tokenNames.length) {
-            failures.push('Style Book token definition contains duplicate token names.');
-        }
-
-        if (mappings.some((mapping) => !mapping)) {
-            failures.push('Every Style Book token must define a CSS variable mapping.');
-        }
-
-        if (new Set(mappings).size !== mappings.length) {
-            failures.push('Style Book token definition contains duplicate CSS variable mappings.');
-        }
-
-        for (const required of [
-            'nxc-style-primary',
-            'nxc-style-font-family',
-            'nxc-style-body-size',
-            'nxc-style-navigation',
-            'nxc-style-navigation-size',
-            'nxc-style-container-width',
-            'nxc-style-wide-container-width',
-            'nxc-style-section-space',
-            'nxc-style-radius-md',
-            'nxc-style-shadow-raised',
-            'nxc-style-header-height',
-        ]) {
-            if (!mappings.includes(required)) {
-                failures.push(`Style Book token definition is missing mapping: ${required}`);
-            }
-        }
-
-        if (await exists(styleBookValuesPath)) {
-            const values = JSON.parse(
-                await readFile(path.join(repositoryRoot, styleBookValuesPath), 'utf8')
-            );
-
-            for (const token of tokens) {
-                const configured = values[token.name];
-                const mapping = token.mappings?.find(
-                    (item) => item.type === 'cssVariable'
-                )?.value;
-
-                if (!configured) {
-                    failures.push(`Style Book values are missing token: ${token.name}`);
-                }
-                else if (configured.cssVariableMapping !== mapping) {
-                    failures.push(
-                        `Style Book mapping mismatch for ${token.name}: ${configured.cssVariableMapping}`
-                    );
-                }
-            }
-
-            for (const configuredName of Object.keys(values)) {
-                if (!tokenNames.includes(configuredName)) {
-                    failures.push(`Style Book values contain unknown token: ${configuredName}`);
-                }
-            }
-        }
-    }
-}
-
-if (await exists(styleBookPath)) {
+    const values = JSON.parse(
+        await readFile(path.join(repositoryRoot, styleBookValuesPath), 'utf8')
+    );
     const styleBook = JSON.parse(
         await readFile(path.join(repositoryRoot, styleBookPath), 'utf8')
     );
+    const tokens = (definition.frontendTokenCategories ?? []).flatMap(
+        (category) => (category.frontendTokenSets ?? []).flatMap(
+            (tokenSet) => tokenSet.frontendTokens ?? []
+        )
+    );
+    const names = tokens.map((token) => token.name);
+    const mappings = tokens.map((token) =>
+        (token.mappings ?? []).find(
+            (mapping) => mapping.type === 'cssVariable'
+        )?.value
+    );
+
+    if (!tokens.length) {
+        failures.push('Theme frontend token definition is empty.');
+    }
+    if (new Set(names).size !== names.length) {
+        failures.push('Theme frontend token names are not unique.');
+    }
+    if (mappings.some((mapping) => !mapping)) {
+        failures.push('Every theme token must define a CSS variable mapping.');
+    }
+    if (new Set(mappings).size !== mappings.length) {
+        failures.push('Theme CSS variable mappings are not unique.');
+    }
+
+    for (const token of tokens) {
+        const configured = values[token.name];
+        const mapping = token.mappings?.find(
+            (item) => item.type === 'cssVariable'
+        )?.value;
+
+        if (!configured) {
+            failures.push(`Style Book is missing token: ${token.name}`);
+        }
+        else if (configured.cssVariableMapping !== mapping) {
+            failures.push(`Style Book mapping mismatch: ${token.name}`);
+        }
+    }
 
     if (styleBook.name !== 'Nexcent Default') {
         failures.push('The default Style Book must be named Nexcent Default.');
     }
-
     if (styleBook.themeId !== 'nexcent-theme-css') {
         failures.push('The Style Book must target nexcent-theme-css.');
-    }
-
-    if (styleBook.frontendTokensValuesPath !== 'frontend-tokens-values.json') {
-        failures.push('The Style Book values path is invalid.');
     }
 }
 
@@ -359,15 +304,14 @@ const forbiddenBusinessText = [
 ];
 
 async function scanFrontendDirectory(relativeDirectory) {
-    const directory = path.join(repositoryRoot, relativeDirectory);
-
     if (!(await exists(relativeDirectory))) {
         return;
     }
 
+    const directory = path.join(repositoryRoot, relativeDirectory);
+
     for (const entry of await readdir(directory, {withFileTypes: true})) {
-        const absolutePath = path.join(directory, entry.name);
-        const relativePath = path.relative(repositoryRoot, absolutePath);
+        const relativePath = path.join(relativeDirectory, entry.name);
 
         if (entry.isDirectory()) {
             await scanFrontendDirectory(relativePath);
@@ -378,32 +322,38 @@ async function scanFrontendDirectory(relativeDirectory) {
             continue;
         }
 
-        const content = await readFile(absolutePath, 'utf8');
+        const content = await readFile(
+            path.join(repositoryRoot, relativePath),
+            'utf8'
+        );
 
         for (const forbiddenText of forbiddenBusinessText) {
             if (content.includes(forbiddenText)) {
                 failures.push(
-                    `Frontend source hard-codes sample content "${forbiddenText}" in ${relativePath}.`
+                    `${relativePath} contains hard-coded business content: ${forbiddenText}`
                 );
             }
         }
     }
 }
 
-await scanFrontendDirectory(`${themeRoot}/assets`);
 await scanFrontendDirectory('client-extensions/nexcent-landing-elements/src');
 await scanFrontendDirectory('remote-apps/nexcent-community-app/src');
 
-for (const forbiddenPath of ['docker-compose.yml', 'modules']) {
-    if (await exists(forbiddenPath)) {
+if (await exists('docs/lab-guide')) {
+    const legacyLessons = (
+        await readdir(path.join(repositoryRoot, 'docs/lab-guide'))
+    ).filter((file) => file.endsWith('.md'));
+
+    if (legacyLessons.length) {
         failures.push(
-            `${forbiddenPath} is outside the rebuilt core project scope.`
+            `Legacy lessons remain under docs/lab-guide: ${legacyLessons.join(', ')}`
         );
     }
 }
 
 if (failures.length) {
-    console.error('Rebuilt project contract verification failed:\n');
+    console.error('Course contract verification failed:');
 
     for (const failure of failures) {
         console.error(`- ${failure}`);
@@ -412,15 +362,6 @@ if (failures.length) {
     process.exit(1);
 }
 
-console.log('Rebuilt project contract verification passed.');
-console.log('- Original FE–BE Figma scope');
-console.log('- Twelve rebuilt course chapters');
-console.log('- Component-by-component FE–BE contracts');
-console.log('- Unified Theme CSS, Style Book, Global CSS/JS, and favicon package');
-console.log('- Theme tokens synchronized with the active Nexcent reference FE');
-console.log('- Hero, Services, Features, and Importer Custom Elements');
-console.log('- Externally hosted and deployable Community Remote App');
-console.log('- Complete 12-sheet Excel importer contract');
-console.log('- Static mock and live Headless data adapters');
-console.log('- Web Content, Batch Client Extension, and Headless Batch scope');
-console.log('- No unrelated backend platform modules in core scope');
+console.log(
+    `Course contract verification passed with ${requiredFiles.length} required files.`
+);

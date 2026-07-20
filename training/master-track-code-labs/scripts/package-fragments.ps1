@@ -8,7 +8,7 @@ $scriptDirectory = Split-Path -Parent $MyInvocation.MyCommand.Path
 $fragmentSetDirectory = Resolve-Path (Join-Path $scriptDirectory "..\fragments")
 
 if ([string]::IsNullOrWhiteSpace($OutputPath)) {
-    $OutputPath = Join-Path $fragmentSetDirectory "nexcent-training-fragments.zip"
+    $OutputPath = Join-Path $fragmentSetDirectory "nexcent-components.zip"
 }
 elseif (-not [System.IO.Path]::IsPathRooted($OutputPath)) {
     $OutputPath = Join-Path (Get-Location) $OutputPath
@@ -20,7 +20,13 @@ if (-not (Test-Path $collectionFile)) {
     throw "Missing Fragment Set descriptor: $collectionFile"
 }
 
-Get-ChildItem $fragmentSetDirectory -Directory | ForEach-Object {
+$fragmentDirectories = Get-ChildItem $fragmentSetDirectory -Directory
+
+if ($fragmentDirectories.Count -eq 0) {
+    throw "No fragment directories found in: $fragmentSetDirectory"
+}
+
+$fragmentDirectories | ForEach-Object {
     $fragmentDirectory = $_.FullName
     $fragmentJsonPath = Join-Path $fragmentDirectory "fragment.json"
 
@@ -44,14 +50,14 @@ Get-ChildItem $fragmentSetDirectory -Directory | ForEach-Object {
     }
 }
 
-$stagingDirectory = Join-Path ([System.IO.Path]::GetTempPath()) ("nexcent-fragments-" + [guid]::NewGuid().ToString("N"))
+$stagingDirectory = Join-Path ([System.IO.Path]::GetTempPath()) ("nexcent-components-" + [guid]::NewGuid().ToString("N"))
 
 try {
     New-Item -ItemType Directory -Path $stagingDirectory | Out-Null
 
     Copy-Item $collectionFile $stagingDirectory
 
-    Get-ChildItem $fragmentSetDirectory -Directory | ForEach-Object {
+    $fragmentDirectories | ForEach-Object {
         Copy-Item $_.FullName $stagingDirectory -Recurse
     }
 
@@ -65,7 +71,7 @@ try {
     Compress-Archive -Path (Join-Path $stagingDirectory "*") -DestinationPath $OutputPath -CompressionLevel Optimal
 
     Write-Host "Created Fragment Set package: $OutputPath"
-    Write-Host "ZIP root contains collection.json and validated fragment folders."
+    Write-Host "ZIP root contains collection.json and $($fragmentDirectories.Count) validated fragment folders."
 }
 finally {
     Remove-Item $stagingDirectory -Recurse -Force -ErrorAction SilentlyContinue

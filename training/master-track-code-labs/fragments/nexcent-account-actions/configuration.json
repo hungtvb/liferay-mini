@@ -1,0 +1,43 @@
+{
+    "fieldSets": [
+        {
+            "fields": [
+                {
+                    "dataType": "string",
+                    "defaultValue": "Login",
+                    "label": "Login Label",
+                    "name": "loginLabel",
+                    "type": "text"
+                },
+                {
+                    "dataType": "string",
+                    "defaultValue": "Sign up",
+                    "label": "Sign Up Label",
+                    "name": "signUpLabel",
+                    "type": "text"
+                },
+                {
+                    "dataType": "string",
+                    "defaultValue": "Account",
+                    "label": "Account Label",
+                    "name": "accountLabel",
+                    "type": "text"
+                },
+                {
+                    "defaultValue": true,
+                    "label": "Show Sign Up",
+                    "name": "showSignUp",
+                    "type": "checkbox"
+                },
+                {
+                    "dataType": "string",
+                    "defaultValue": "",
+                    "label": "Sign Up URL",
+                    "name": "signUpUrl",
+                    "type": "url"
+                }
+            ],
+            "label": "Account Actions"
+        }
+    ]
+}

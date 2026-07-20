@@ -37,7 +37,7 @@ nexcent-hero:
     name: Nexcent Hero
     portletCategoryName: category.client-extensions
     properties:
-        - "structure-identifier=NXC Landing Hero"
+        structure-identifier: NXC Landing Hero
     type: customElement
     urls:
         - index.js
@@ -52,8 +52,8 @@ nexcent-services:
     name: Nexcent Services
     portletCategoryName: category.client-extensions
     properties:
-        - "intro-structure-identifier=NXC Services Intro"
-        - "item-structure-identifier=NXC Service Item"
+        intro-structure-identifier: NXC Services Intro
+        item-structure-identifier: NXC Service Item
     type: customElement
     urls:
         - index.js
@@ -68,7 +68,7 @@ nexcent-features:
     name: Nexcent Features
     portletCategoryName: category.client-extensions
     properties:
-        - "structure-identifier=NXC Feature Item"
+        structure-identifier: NXC Feature Item
     type: customElement
     urls:
         - index.js

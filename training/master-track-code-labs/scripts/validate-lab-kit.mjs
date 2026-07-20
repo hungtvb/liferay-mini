@@ -83,7 +83,8 @@ const serviceXml = await readFile(
 
 for (const expected of [
     'name="ImportJob"',
-    'external-reference-code="group"',
+    'name="jobKey"',
+    'name="JK_G"',
     'name="G"',
 ]) {
     if (!serviceXml.includes(expected)) {
@@ -91,9 +92,12 @@ for (const expected of [
     }
 }
 
-if (serviceXml.includes('name="externalReferenceCode"')) {
+if (
+    serviceXml.includes('name="externalReferenceCode"') ||
+    serviceXml.includes('external-reference-code=')
+) {
     throw new Error(
-        'Do not declare the reserved externalReferenceCode column manually when the entity uses external-reference-code="group".'
+        'The operational entity must map external ERC input to jobKey instead of using Service Builder reserved ERC generation.'
     );
 }
 

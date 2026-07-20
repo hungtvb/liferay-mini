@@ -98,7 +98,10 @@ jobs:
             - name: Build Batch Client Extension lab
               run: |
                   set +e
-                  ./gradlew :client-extensions:nexcent-training:nexcent-training-batch-lab:build --stacktrace > diagnostics/batch-build.log 2>&1
+                  (
+                    cd client-extensions/nexcent-training-batch-lab
+                    ../../gradlew build --stacktrace
+                  ) > diagnostics/batch-build.log 2>&1
                   echo $? > diagnostics/batch-build.exit
                   exit 0
 

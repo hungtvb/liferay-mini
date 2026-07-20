@@ -10,20 +10,22 @@
     <namespace>NXC</namespace>
 
     <entity
-        external-reference-code="group"
         local-service="true"
         name="ImportJob"
         remote-service="false"
+        uuid="true"
     >
         <column name="importJobId" primary="true" type="long" />
 
-        <column name="companyId" type="long" />
         <column name="groupId" type="long" />
+
+        <column name="companyId" type="long" />
         <column name="userId" type="long" />
         <column name="userName" type="String" />
         <column name="createDate" type="Date" />
         <column name="modifiedDate" type="Date" />
 
+        <column name="jobKey" type="String" />
         <column name="fileName" type="String" />
         <column name="status" type="String" />
         <column name="totalRows" type="int" />
@@ -36,6 +38,10 @@
         </order>
 
         <finder name="G" return-type="Collection">
+            <finder-column name="groupId" />
+        </finder>
+        <finder name="JK_G" return-type="ImportJob" unique="true">
+            <finder-column name="jobKey" />
             <finder-column name="groupId" />
         </finder>
     </entity>

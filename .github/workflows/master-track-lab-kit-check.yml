@@ -61,7 +61,7 @@ jobs:
               run: |
                   set +e
 
-                  ./gradlew :modules:nexcent-training:nexcent-training-service:buildService --stacktrace > diagnostics/build-service.log 2>&1
+                  ./gradlew :modules:nexcent-training:nexcent-training-service:buildService --info --stacktrace > diagnostics/build-service.log 2>&1
                   code=$?
 
                   mkdir -p diagnostics/generated-service
@@ -73,7 +73,7 @@ jobs:
                       training/master-track-code-labs/application/service-builder/ImportJobLocalServiceImpl.java \
                       modules/nexcent-training/nexcent-training-service/src/main/java/com/nexcent/training/service/impl/ImportJobLocalServiceImpl.java
 
-                    ./gradlew :modules:nexcent-training:nexcent-training-service:buildService --stacktrace >> diagnostics/build-service.log 2>&1
+                    ./gradlew :modules:nexcent-training:nexcent-training-service:buildService --info --stacktrace >> diagnostics/build-service.log 2>&1
                     code=$?
                   fi
 

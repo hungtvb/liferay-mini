@@ -132,10 +132,11 @@ Required:
 - Node.js 22+
 - Blade CLI for local Gogo commands and server management
 
+The workspace is generated from the official Liferay Blade skeleton and already includes the supported Gradle Wrapper. Do not generate or copy Gradle files manually.
+
 Initialize and start the bundle:
 
 ```bash
-./scripts/bootstrap-workspace.sh
 ./gradlew initBundle
 blade server run
 ```

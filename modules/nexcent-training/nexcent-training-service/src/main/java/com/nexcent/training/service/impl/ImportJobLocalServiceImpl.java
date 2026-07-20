@@ -3,7 +3,7 @@ package com.nexcent.training.service.impl;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.service.ServiceContext;
-import com.liferay.portal.kernel.util.PortalUUIDUtil;
+import com.liferay.portal.kernel.uuid.PortalUUIDUtil;
 import com.nexcent.training.model.ImportJob;
 import com.nexcent.training.service.base.ImportJobLocalServiceBaseImpl;
 

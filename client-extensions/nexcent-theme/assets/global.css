@@ -34,10 +34,7 @@
     --nxc-navigation-size: var(--nxc-style-navigation-size, 1rem);
     --nxc-heading-weight: var(--nxc-style-heading-weight, 600);
     --nxc-container-width: var(--nxc-style-container-width, 73.875rem);
-    --nxc-wide-container-width: var(
-        --nxc-style-wide-container-width,
-        83.125rem
-    );
+    --nxc-wide-container-width: var(--nxc-style-wide-container-width, 83.125rem);
     --nxc-section-space: var(--nxc-style-section-space, 3rem);
     --nxc-page-gutter: var(--nxc-style-page-gutter, 0.9375rem);
     --nxc-header-height: var(--nxc-style-header-height, 4.1875rem);

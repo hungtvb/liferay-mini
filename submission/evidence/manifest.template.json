@@ -1,0 +1,91 @@
+{
+  "submissionStatus": "PENDING",
+  "liferayProduct": "dxp-2026.q1.1-lts",
+  "javaVersion": "21",
+  "verifiedAt": "",
+  "verifiedCommit": "",
+  "runtime": {
+    "database": "HSQLDB local course fixture",
+    "siteName": "Nexcent Training Site",
+    "siteFriendlyURL": "",
+    "publicPageURL": "",
+    "remoteAppURL": "https://nexcent-liferay-static.vercel.app/remote-app/"
+  },
+  "checks": [
+    {
+      "id": "clean-init-bundle",
+      "status": "PENDING",
+      "evidence": ""
+    },
+    {
+      "id": "site-pages-navigation",
+      "status": "PENDING",
+      "evidence": ""
+    },
+    {
+      "id": "theme-style-book-master-page",
+      "status": "PENDING",
+      "evidence": ""
+    },
+    {
+      "id": "web-content-live-headless",
+      "status": "PENDING",
+      "evidence": ""
+    },
+    {
+      "id": "documents-asset-library",
+      "status": "PENDING",
+      "evidence": ""
+    },
+    {
+      "id": "vocabulary-category-tag",
+      "status": "PENDING",
+      "evidence": ""
+    },
+    {
+      "id": "custom-elements",
+      "status": "PENDING",
+      "evidence": ""
+    },
+    {
+      "id": "remote-app",
+      "status": "PENDING",
+      "evidence": ""
+    },
+    {
+      "id": "osgi-gogo",
+      "status": "PENDING",
+      "evidence": ""
+    },
+    {
+      "id": "service-builder-rest-builder-bff",
+      "status": "PENDING",
+      "evidence": ""
+    },
+    {
+      "id": "excel-import-idempotency",
+      "status": "PENDING",
+      "evidence": ""
+    },
+    {
+      "id": "batch-client-extension",
+      "status": "PENDING",
+      "evidence": ""
+    },
+    {
+      "id": "guest-permissions",
+      "status": "PENDING",
+      "evidence": ""
+    },
+    {
+      "id": "responsive-accessibility",
+      "status": "PENDING",
+      "evidence": ""
+    },
+    {
+      "id": "github-actions",
+      "status": "PENDING",
+      "evidence": ""
+    }
+  ]
+}

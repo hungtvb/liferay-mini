@@ -1,0 +1,65 @@
+{
+  "vocabulary": {
+    "allowMultipleCategories": true,
+    "description": "Public topics used to classify Nexcent community content and assets.",
+    "name": "Nexcent Topics",
+    "visibility": "public"
+  },
+  "categories": [
+    {
+      "description": "Membership onboarding, renewal, engagement, and administration.",
+      "name": "Membership"
+    },
+    {
+      "description": "Community stories, collaboration, and member communication.",
+      "name": "Community"
+    },
+    {
+      "children": [
+        {
+          "description": "Online learning and community sessions.",
+          "name": "Webinars"
+        },
+        {
+          "description": "In-person and local community gatherings.",
+          "name": "Meetups"
+        }
+      ],
+      "description": "Events and event-related content.",
+      "name": "Events"
+    },
+    {
+      "description": "Campaigns, communication, and growth content.",
+      "name": "Marketing"
+    }
+  ],
+  "tags": [
+    "featured",
+    "homepage",
+    "beginner"
+  ],
+  "assignments": [
+    {
+      "assetExternalReferenceCode": "NXC-COMMUNITY-001",
+      "assetType": "Web Content",
+      "categories": [
+        "Community",
+        "Membership"
+      ],
+      "tags": [
+        "featured",
+        "homepage"
+      ]
+    },
+    {
+      "assetFileName": "community-01.jpg",
+      "assetType": "Document",
+      "categories": [
+        "Community"
+      ],
+      "tags": [
+        "featured"
+      ]
+    }
+  ]
+}

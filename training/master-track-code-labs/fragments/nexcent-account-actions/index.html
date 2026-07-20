@@ -4,22 +4,22 @@
             class="nxc-button nxc-signup-action nxc-account-action"
             href="${htmlUtil.escape(themeDisplay.getURLMyAccount())}"
         >
-            ${htmlUtil.escape(configuration.accountLabel)}
+            ${htmlUtil.escape(configuration.accountLabel!'Account')}
         </a>
     [#else]
         <a
             class="nxc-button nxc-login-action"
             href="${htmlUtil.escape(themeDisplay.getURLSignIn())}"
         >
-            ${htmlUtil.escape(configuration.loginLabel)}
+            ${htmlUtil.escape(configuration.loginLabel!'Login')}
         </a>
 
-        [#if configuration.showSignUp && configuration.signUpUrl?has_content]
+        [#if (configuration.showSignUp!true) && (configuration.signUpUrl!'')?has_content]
             <a
                 class="nxc-button nxc-signup-action"
-                href="${htmlUtil.escape(configuration.signUpUrl)}"
+                href="${htmlUtil.escape(configuration.signUpUrl!'')}"
             >
-                ${htmlUtil.escape(configuration.signUpLabel)}
+                ${htmlUtil.escape(configuration.signUpLabel!'Sign up')}
             </a>
         [/#if]
     [/#if]

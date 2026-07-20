@@ -8,8 +8,8 @@ nexcent-community-remote-app:
     name: Nexcent Community Remote App
     portletCategoryName: category.client-extensions
     properties:
-        - "intro-structure-identifier=NXC Community Intro"
-        - "item-structure-identifier=NXC Community Card"
+        intro-structure-identifier: NXC Community Intro
+        item-structure-identifier: NXC Community Card
     type: customElement
     urls:
         - /index.js

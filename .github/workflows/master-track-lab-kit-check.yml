@@ -1,0 +1,107 @@
+name: Master Track Lab Kit Check
+
+on:
+    pull_request:
+        paths:
+            - '.github/workflows/master-track-lab-kit-check.yml'
+            - 'README.md'
+            - 'scripts/verify-course.mjs'
+            - 'client-extensions/nexcent-training-batch-lab/**'
+            - 'docs/master-track/**'
+            - 'modules/nexcent-training/**'
+            - 'training/master-track-code-labs/**'
+    workflow_dispatch:
+
+permissions:
+    contents: read
+
+jobs:
+    validate-lab-kit:
+        runs-on: ubuntu-latest
+        timeout-minutes: 30
+
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
+
+            - name: Set up Java 21
+              uses: actions/setup-java@v4
+              with:
+                  distribution: temurin
+                  java-version: '21'
+
+            - name: Set up Node.js 22
+              uses: actions/setup-node@v4
+              with:
+                  node-version: '22'
+
+            - name: Set up Gradle
+              uses: gradle/actions/setup-gradle@v4
+
+            - name: Create diagnostics directory
+              run: mkdir -p diagnostics
+
+            - name: Validate repository and lab contracts
+              run: |
+                  node scripts/verify-course.mjs
+                  node training/master-track-code-labs/scripts/validate-lab-kit.mjs
+
+            - name: Build OSGi component lab
+              run: ./gradlew :modules:nexcent-training:nexcent-training-osgi:build
+
+            - name: Verify Service Builder regeneration
+              run: ./gradlew :modules:nexcent-training:nexcent-training-service:buildService
+
+            - name: Generate REST Builder source
+              run: ./gradlew :modules:nexcent-training:nexcent-training-rest-impl:buildREST
+
+            - name: Build application modules
+              run: |
+                  set +e
+                  ./gradlew \
+                    :modules:nexcent-training:nexcent-training-api:build \
+                    :modules:nexcent-training:nexcent-training-service:build \
+                    :modules:nexcent-training:nexcent-training-rest-api:build \
+                    :modules:nexcent-training:nexcent-training-rest-impl:build \
+                    --stacktrace > diagnostics/application-build.log 2>&1
+                  code=$?
+                  cat diagnostics/application-build.log
+                  echo "$code" > diagnostics/application-build.exit
+                  exit 0
+
+            - name: Build Batch Client Extension lab
+              run: |
+                  set +e
+                  (
+                    cd client-extensions/nexcent-training-batch-lab
+                    ../../gradlew build --stacktrace
+                  ) > diagnostics/batch-build.log 2>&1
+                  code=$?
+                  cat diagnostics/batch-build.log
+                  echo "$code" > diagnostics/batch-build.exit
+                  exit 0
+
+            - name: Upload application diagnostics
+              if: always()
+              uses: actions/upload-artifact@v4
+              with:
+                  name: master-track-application-diagnostics
+                  path: diagnostics
+                  if-no-files-found: error
+
+            - name: Report build summary
+              if: always()
+              run: |
+                  failed=0
+
+                  for status in diagnostics/*.exit; do
+                    name=$(basename "$status" .exit)
+                    code=$(cat "$status")
+                    echo "$name: exit $code"
+
+                    if [ "$code" -ne 0 ]; then
+                      failed=1
+                    fi
+                  done
+
+                  exit "$failed"

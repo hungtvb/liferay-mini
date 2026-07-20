@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+
+<model-hints>
+	<model name="com.nexcent.training.model.ImportJob">
+		<field name="uuid" type="String" />
+		<field name="importJobId" type="long" />
+		<field name="groupId" type="long" />
+		<field name="companyId" type="long" />
+		<field name="userId" type="long" />
+		<field name="userName" type="String" />
+		<field name="createDate" type="Date" />
+		<field name="modifiedDate" type="Date" />
+		<field name="jobKey" type="String" />
+		<field name="fileName" type="String" />
+		<field name="status" type="String" />
+		<field name="totalRows" type="int" />
+		<field name="successRows" type="int" />
+		<field name="failedRows" type="int" />
+		<field name="errorMessage" type="String" />
+	</model>
+</model-hints>

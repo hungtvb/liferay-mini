@@ -1,0 +1,8 @@
+Bundle-Name: Nexcent Training API
+Bundle-SymbolicName: com.nexcent.training.api
+Bundle-Version: 1.0.0
+Export-Package: \
+    com.nexcent.training.exception,\
+    com.nexcent.training.model,\
+    com.nexcent.training.service,\
+    com.nexcent.training.service.persistence

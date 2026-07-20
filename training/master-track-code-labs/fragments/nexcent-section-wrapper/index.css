@@ -1,0 +1,15 @@
+.nxc-fragment-section {
+    scroll-margin-top: calc(var(--nxc-header-height, 4.1875rem) + 1rem);
+}
+
+.nxc-fragment-section--surface {
+    background: var(--nxc-color-surface, #f5f7fa);
+}
+
+.nxc-fragment-section--accent {
+    background: var(--nxc-color-accent-surface, #e8f5e9);
+}
+
+.nxc-fragment-section > .nxc-container {
+    min-height: 1px;
+}

@@ -1,0 +1,11 @@
+dependencies {
+    api project(":modules:nexcent-training:nexcent-training-api")
+
+    compileOnly group: "com.liferay.portal", name: "release.dxp.api"
+}
+
+buildService {
+    apiDir = "../nexcent-training-api/src/main/java"
+}
+
+group = "com.nexcent.training"

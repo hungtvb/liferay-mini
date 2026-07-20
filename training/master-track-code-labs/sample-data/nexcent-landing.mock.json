@@ -1,0 +1,80 @@
+{
+  "hero": {
+    "externalReferenceCode": "NXC-HERO-001",
+    "title": "Lessons and insights",
+    "highlightedText": "from 8 years",
+    "description": "Where to grow your business as a photographer: site or social media?",
+    "ctaLabel": "Register",
+    "ctaUrl": "/contact",
+    "ctaTarget": "_self",
+    "illustration": {
+      "url": "/documents/d/nexcent/hero-illustration",
+      "alt": "People collaborating around a dashboard",
+      "externalReferenceCode": "NXC-ASSET-HERO-001"
+    },
+    "sortOrder": 10,
+    "active": true
+  },
+  "clientsIntro": {
+    "externalReferenceCode": "NXC-CLIENTS-INTRO-001",
+    "heading": "Our Clients",
+    "description": "We have been working with some Fortune 500+ clients"
+  },
+  "clients": [
+    {"externalReferenceCode":"NXC-CLIENT-001","name":"Client One","logo":{"url":"/documents/d/nexcent/client-01","alt":"Client One logo"},"websiteUrl":"https://example.com","sortOrder":10,"active":true},
+    {"externalReferenceCode":"NXC-CLIENT-002","name":"Client Two","logo":{"url":"/documents/d/nexcent/client-02","alt":"Client Two logo"},"websiteUrl":"https://example.com","sortOrder":20,"active":true},
+    {"externalReferenceCode":"NXC-CLIENT-003","name":"Client Three","logo":{"url":"/documents/d/nexcent/client-03","alt":"Client Three logo"},"websiteUrl":"https://example.com","sortOrder":30,"active":true}
+  ],
+  "servicesIntro": {
+    "externalReferenceCode": "NXC-SERVICES-INTRO-001",
+    "heading": "Manage your entire community in a single system",
+    "description": "Who is Nexcent suitable for?"
+  },
+  "services": [
+    {"externalReferenceCode":"NXC-SERVICE-001","title":"Membership Organisations","description":"Our membership management software provides full automation of membership renewals and payments.","icon":{"url":"/documents/d/nexcent/service-membership","alt":""},"linkLabel":"Learn More","linkUrl":"/community","sortOrder":10,"active":true},
+    {"externalReferenceCode":"NXC-SERVICE-002","title":"National Associations","description":"Manage national and regional communities from one editorial and operational platform.","icon":{"url":"/documents/d/nexcent/service-association","alt":""},"linkLabel":"Learn More","linkUrl":"/community","sortOrder":20,"active":true},
+    {"externalReferenceCode":"NXC-SERVICE-003","title":"Clubs And Groups","description":"Support member onboarding, communication, events and content for clubs and local groups.","icon":{"url":"/documents/d/nexcent/service-club","alt":""},"linkLabel":"Learn More","linkUrl":"/community","sortOrder":30,"active":true}
+  ],
+  "features": [
+    {"externalReferenceCode":"NXC-FEATURE-001","title":"The unseen of spending three years at Pixelgrade","descriptionHTML":"<p>Learn how a structured content platform helps teams reuse content and improve delivery.</p>","image":{"url":"/documents/d/nexcent/feature-pixelgrade","alt":"People collaborating"},"ctaLabel":"Learn More","ctaUrl":"/community","imagePosition":"left","backgroundVariant":"default","sortOrder":10,"active":true},
+    {"externalReferenceCode":"NXC-FEATURE-002","title":"How to design your site footer like we did","descriptionHTML":"<p>Compose repeatable experiences with Master Pages, Fragments and governed design tokens.</p>","image":{"url":"/documents/d/nexcent/feature-footer","alt":"Mobile login interface"},"ctaLabel":"Learn More","ctaUrl":"/community","imagePosition":"right","backgroundVariant":"muted","sortOrder":20,"active":true}
+  ],
+  "statisticsIntro": {
+    "externalReferenceCode": "NXC-STATS-INTRO-001",
+    "heading": "Helping a local business reinvent itself",
+    "description": "We reached here with our hard work and dedication"
+  },
+  "statistics": [
+    {"externalReferenceCode":"NXC-STAT-001","label":"Members","value":2245341,"icon":{"url":"/documents/d/nexcent/stat-members","alt":""},"sortOrder":10,"active":true},
+    {"externalReferenceCode":"NXC-STAT-002","label":"Clubs","value":46328,"icon":{"url":"/documents/d/nexcent/stat-clubs","alt":""},"sortOrder":20,"active":true},
+    {"externalReferenceCode":"NXC-STAT-003","label":"Event Bookings","value":828867,"icon":{"url":"/documents/d/nexcent/stat-events","alt":""},"sortOrder":30,"active":true},
+    {"externalReferenceCode":"NXC-STAT-004","label":"Payments","value":1926436,"icon":{"url":"/documents/d/nexcent/stat-payments","alt":""},"sortOrder":40,"active":true}
+  ],
+  "testimonial": {
+    "externalReferenceCode": "NXC-TESTIMONIAL-001",
+    "quoteHTML": "<p>Working with Nexcent gave our community team a repeatable content and member-management foundation.</p>",
+    "personName": "Tim Smith",
+    "personRole": "British Dragon Boat Racing Association",
+    "portrait": {"url":"/documents/d/nexcent/testimonial-tim","alt":"Portrait of Tim Smith"},
+    "sortOrder": 10,
+    "active": true
+  },
+  "communityIntro": {
+    "externalReferenceCode": "NXC-COMMUNITY-INTRO-001",
+    "heading": "Caring is the new marketing",
+    "description": "The Nexcent blog is the best place to read about the latest membership insights, trends and more."
+  },
+  "community": [
+    {"externalReferenceCode":"NXC-COMMUNITY-001","title":"Creating Streamlined Safeguarding Processes with OneRen","summary":"A practical look at repeatable member and content workflows.","image":{"url":"/documents/d/nexcent/community-01","alt":"Team meeting"},"linkLabel":"Read More","linkUrl":"/community/streamlined-processes","publicationDate":"2026-07-01","sortOrder":10,"active":true},
+    {"externalReferenceCode":"NXC-COMMUNITY-002","title":"What are your safeguarding responsibilities?","summary":"Turn policy into manageable content and operational steps.","image":{"url":"/documents/d/nexcent/community-02","alt":"Person using a laptop"},"linkLabel":"Read More","linkUrl":"/community/responsibilities","publicationDate":"2026-07-05","sortOrder":20,"active":true},
+    {"externalReferenceCode":"NXC-COMMUNITY-003","title":"Revamping the Membership Model with Triathlon Australia","summary":"How structured data supports a modern membership experience.","image":{"url":"/documents/d/nexcent/community-03","alt":"People working together"},"linkLabel":"Read More","linkUrl":"/community/membership-model","publicationDate":"2026-07-10","sortOrder":30,"active":true}
+  ],
+  "cta": {
+    "externalReferenceCode": "NXC-CTA-001",
+    "heading": "Pellentesque suscipit fringilla libero eu.",
+    "buttonLabel": "Get a Demo",
+    "buttonUrl": "/contact",
+    "buttonTarget": "_self",
+    "active": true
+  }
+}

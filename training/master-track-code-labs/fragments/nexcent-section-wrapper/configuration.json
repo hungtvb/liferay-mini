@@ -1,0 +1,35 @@
+{
+    "fieldSets": [
+        {
+            "fields": [
+                {
+                    "defaultValue": "nexcent-section",
+                    "label": "Section ID",
+                    "name": "sectionId",
+                    "type": "text"
+                },
+                {
+                    "dataType": "string",
+                    "defaultValue": "default",
+                    "label": "Background",
+                    "name": "background",
+                    "type": "select",
+                    "typeOptions": {
+                        "validValues": [
+                            {"label": "Default", "value": "default"},
+                            {"label": "Surface", "value": "surface"},
+                            {"label": "Accent", "value": "accent"}
+                        ]
+                    }
+                },
+                {
+                    "defaultValue": true,
+                    "label": "Use Wide Container",
+                    "name": "wideContainer",
+                    "type": "checkbox"
+                }
+            ],
+            "label": "Section Settings"
+        }
+    ]
+}

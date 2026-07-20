@@ -83,12 +83,18 @@ const serviceXml = await readFile(
 
 for (const expected of [
     'name="ImportJob"',
-    'name="externalReferenceCode"',
-    'name="ERC_G"',
+    'external-reference-code="group"',
+    'name="G"',
 ]) {
     if (!serviceXml.includes(expected)) {
         throw new Error(`Service Builder contract is missing ${expected}.`);
     }
+}
+
+if (serviceXml.includes('name="externalReferenceCode"')) {
+    throw new Error(
+        'Do not declare the reserved externalReferenceCode column manually when the entity uses external-reference-code="group".'
+    );
 }
 
 const restOpenApi = await readFile(

@@ -57,11 +57,23 @@ jobs:
                   echo $? > diagnostics/osgi-build.exit
                   exit 0
 
-            - name: Generate Service Builder source
+            - name: Generate and extend Service Builder source
               run: |
                   set +e
+
                   ./gradlew :modules:nexcent-training:nexcent-training-service:buildService --stacktrace > diagnostics/build-service.log 2>&1
-                  echo $? > diagnostics/build-service.exit
+                  code=$?
+
+                  if [ "$code" -eq 0 ]; then
+                    cp \
+                      training/master-track-code-labs/application/service-builder/ImportJobLocalServiceImpl.java \
+                      modules/nexcent-training/nexcent-training-service/src/main/java/com/nexcent/training/service/impl/ImportJobLocalServiceImpl.java
+
+                    ./gradlew :modules:nexcent-training:nexcent-training-service:buildService --stacktrace >> diagnostics/build-service.log 2>&1
+                    code=$?
+                  fi
+
+                  echo "$code" > diagnostics/build-service.exit
                   exit 0
 
             - name: Generate REST Builder source
@@ -86,7 +98,7 @@ jobs:
             - name: Build Batch Client Extension lab
               run: |
                   set +e
-                  ./gradlew :client-extensions:nexcent-training-batch-lab:build --stacktrace > diagnostics/batch-build.log 2>&1
+                  ./gradlew :client-extensions:nexcent-training:nexcent-training-batch-lab:build --stacktrace > diagnostics/batch-build.log 2>&1
                   echo $? > diagnostics/batch-build.exit
                   exit 0
 

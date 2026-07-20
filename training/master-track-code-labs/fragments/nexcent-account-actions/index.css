@@ -1,0 +1,21 @@
+.nxc-account-actions {
+    align-items: center;
+    display: flex;
+    flex: 0 0 auto;
+    gap: 0.875rem;
+}
+
+.nxc-account-actions .nxc-button {
+    white-space: nowrap;
+}
+
+.nxc-account-actions .nxc-account-action {
+    background: var(--nxc-color-primary, #4caf4f);
+    color: var(--nxc-color-white, #ffffff);
+}
+
+.nxc-account-actions .nxc-account-action:hover {
+    background: var(--nxc-color-white, #ffffff);
+    border-color: var(--nxc-color-primary, #4caf4f);
+    color: var(--nxc-color-primary, #4caf4f);
+}

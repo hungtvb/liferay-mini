@@ -1,11 +1,6 @@
 [#if themeDisplay.isSignedIn()]
-    <div class="nxc-header-actions nxc-account-actions">
-        <a
-            class="nxc-button nxc-signup-action nxc-account-action"
-            href="${themeDisplay.getURLMyAccount()}"
-        >
-            ${configuration.accountLabel}
-        </a>
+    <div class="nxc-header-actions nxc-account-actions nxc-user-profile-menu">
+        [@liferay.user_personal_bar /]
     </div>
 [#else]
     <div class="nxc-header-actions nxc-account-actions">

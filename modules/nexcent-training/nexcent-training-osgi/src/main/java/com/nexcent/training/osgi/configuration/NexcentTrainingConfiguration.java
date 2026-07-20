@@ -1,24 +1,24 @@
 package com.nexcent.training.osgi.configuration;
 
-import com.liferay.portal.configuration.metatype.annotations.ExtendedObjectClassDefinition;
+import aQute.bnd.annotation.metatype.Meta;
 
-import org.osgi.service.metatype.annotations.AttributeDefinition;
-import org.osgi.service.metatype.annotations.ObjectClassDefinition;
+import com.liferay.portal.configuration.metatype.annotations.ExtendedObjectClassDefinition;
 
 @ExtendedObjectClassDefinition(
     category = "nexcent-training",
     scope = ExtendedObjectClassDefinition.Scope.SYSTEM
 )
-@ObjectClassDefinition(
+@Meta.OCD(
     id = "com.nexcent.training.osgi.configuration.NexcentTrainingConfiguration",
     name = "Nexcent Training Configuration"
 )
-public @interface NexcentTrainingConfiguration {
+public interface NexcentTrainingConfiguration {
 
-    @AttributeDefinition(
+    @Meta.AD(
+        deflt = "Nexcent Training Site",
         description = "Label returned by the training status component.",
         name = "Site Label",
         required = false
     )
-    public String siteLabel() default "Nexcent Training Site";
+    public String siteLabel();
 }

@@ -1,0 +1,23 @@
+{
+    "fieldSets": [
+        {
+            "fields": [
+                {
+                    "dataType": "string",
+                    "defaultValue": "Open navigation",
+                    "label": "Open Navigation Label",
+                    "name": "openLabel",
+                    "type": "text"
+                },
+                {
+                    "dataType": "string",
+                    "defaultValue": "Close navigation",
+                    "label": "Close Navigation Label",
+                    "name": "closeLabel",
+                    "type": "text"
+                }
+            ],
+            "label": "Accessibility"
+        }
+    ]
+}

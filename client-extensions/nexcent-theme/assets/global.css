@@ -249,7 +249,15 @@ body {
     flex-direction: column;
     min-width: 0;
 }
-.nxc-footer-branding { gap: 1rem; }
+.nxc-footer-branding { gap: 0; }
+.nxc-footer-branding .nxc-footer-logo,
+.nxc-footer-branding .nxc-footer-copy,
+.nxc-footer-branding .nxc-social {
+    margin-block: 0;
+}
+.nxc-footer-branding .nxc-footer-logo { margin-bottom: 2.5rem; }
+.nxc-footer-branding .nxc-footer-copy + .nxc-footer-copy { margin-top: 0.5rem; }
+.nxc-footer-branding .nxc-social { margin-top: 2.5rem; }
 .nxc-footer-logo img {
     display: block;
     height: auto;

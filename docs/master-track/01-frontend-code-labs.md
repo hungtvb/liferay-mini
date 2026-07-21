@@ -46,7 +46,7 @@ Then apply:
 2. Import and publish `Nexcent Default` Style Book.
 3. Add `Nexcent Global CSS` and `Nexcent Global JavaScript` to the Master Page design configuration.
 4. Select `Nexcent Theme Favicon`.
-5. Publish the Master Page and pages.
+5. Keep the Master Page in Draft until Header and Footer runtime gates pass.
 
 ## Checkpoint
 
@@ -76,46 +76,89 @@ navigation: #18191f
 
 ---
 
-# Lab FE-02 — Configurable Fragment Wrapper
+# Lab FE-02 — Nexcent Component Fragments
 
-## Create these files
+## Source
 
-Copy all files from:
-
-```text
-training/master-track-code-labs/fragments/nexcent-section-wrapper/
-```
-
-The folder must contain:
+Use the Fragment Set source from:
 
 ```text
-nexcent-section-wrapper/
-├── fragment.json
-├── configuration.json
-├── index.html
-├── index.css
-└── index.js
+training/master-track-code-labs/fragments/
 ```
 
-## Package
+The set contains:
 
-From inside `training/master-track-code-labs/fragments`:
+```text
+fragments/
+├── collection.json
+├── nexcent-account-actions/
+├── nexcent-mobile-navigation/
+└── nexcent-section-wrapper/
+```
+
+Every fragment folder must contain a valid `fragment.json` and all files referenced by `htmlPath`, `cssPath`, `jsPath`, and `configurationPath`.
+
+## Validate
+
+From the repository root:
 
 ```bash
-zip -r nexcent-section-wrapper.zip nexcent-section-wrapper
+node training/master-track-code-labs/scripts/validate-lab-kit.mjs
 ```
 
-## Import
+## Package the Fragment Set
+
+On Windows PowerShell:
+
+```powershell
+./training/master-track-code-labs/scripts/package-fragments.ps1
+```
+
+Expected output:
+
+```text
+training/master-track-code-labs/fragments/collections-nexcent-components.zip
+```
+
+The ZIP must use the Liferay Fragment Set import structure:
+
+```text
+collections-nexcent-components.zip
+└── nexcent-components/
+    ├── collection.json
+    └── fragments/
+        ├── nexcent-account-actions/
+        ├── nexcent-mobile-navigation/
+        └── nexcent-section-wrapper/
+```
+
+Do not ZIP one fragment folder directly for this course flow.
+
+## Import or update
 
 ```text
 Site Menu
 → Design
 → Fragments
-→ New Collection: Nexcent Training
+→ Fragment Sets options
 → Import
 ```
 
-Import the ZIP, add `Nexcent Section Wrapper` to a Content Page, and configure:
+Import `collections-nexcent-components.zip`.
+
+For an existing `Nexcent Components` set, enable overwrite/update for matching items. Keep the same fragment and collection keys so Liferay updates the source instead of creating duplicates.
+
+Confirm the set contains:
+
+```text
+Nexcent Account Actions
+Nexcent Mobile Navigation
+Nexcent Section Wrapper
+```
+
+## Use `Nexcent Section Wrapper`
+
+Add it to a Content Page and configure:
 
 ```text
 Section ID: services
@@ -125,9 +168,7 @@ Use Wide Container: enabled
 
 Drag a Custom Element or another Fragment into its drop zone.
 
-## Checkpoint
-
-Inspect the rendered section:
+Checkpoint:
 
 ```javascript
 const section = document.querySelector('#services');
@@ -139,6 +180,48 @@ console.log({
 ```
 
 Expected `ready` value: `true`.
+
+## Use `Nexcent Mobile Navigation`
+
+Author the Header in the `Nexcent Master Page`:
+
+```text
+Page Header
+└── Header Inner
+    ├── Nexcent Logo
+    └── Nexcent Mobile Navigation
+        └── Navigation Drop Zone
+            └── Header Menu
+                ├── OOTB Menu Display → Nexcent Header
+                └── Nexcent Account Actions
+```
+
+Required Page Builder classes:
+
+```text
+Page Header:          nxc-site-header
+Header Inner:         nxc-header-inner
+Logo:                 navbar-brand
+Header Menu:          nxc-header-menu
+Menu Display:         nxc-header-navigation
+```
+
+The mobile navigation fragment owns only the responsive shell, hamburger button, ARIA state, and drop zone. It does not embed Menu Display as a runtime widget.
+
+Runtime checkpoint at `375px`:
+
+```text
+[ ] Hamburger is visible
+[ ] Panel is closed by default in View mode
+[ ] Click toggles the panel
+[ ] aria-expanded updates
+[ ] Escape closes and returns focus
+[ ] Selecting a menu link closes the panel
+[ ] Guest and authenticated states both work
+[ ] No horizontal scrollbar
+```
+
+In Edit mode the panel remains open so the author can access its drop zone.
 
 ---
 

@@ -1,0 +1,125 @@
+name: Patch Footer Mobile Grid
+
+on:
+  push:
+    branches:
+      - final
+    paths:
+      - .github/workflows/patch-footer-mobile.yml
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: final
+
+      - name: Patch canonical global CSS
+        shell: bash
+        run: |
+          python <<'PY'
+          from pathlib import Path
+
+          css_path = Path('client-extensions/nexcent-theme/assets/global.css')
+          workflow_path = Path('.github/workflows/patch-footer-mobile.yml')
+          css = css_path.read_text(encoding='utf-8')
+          marker = '/* Liferay Grid mobile utility override. */'
+          anchor = '@media (prefers-reduced-motion: no-preference)'
+
+          patch = r'''
+/* Liferay Grid mobile utility override. */
+@media (max-width: 767.98px) {
+    .nxc-site-footer {
+        overflow-x: clip;
+    }
+
+    .nxc-site-footer .nxc-footer-grid .row {
+        align-items: center !important;
+        display: flex !important;
+        flex-direction: column !important;
+        flex-wrap: nowrap !important;
+        gap: 1.875rem;
+        margin-inline: 0 !important;
+        width: 100% !important;
+    }
+
+    .nxc-site-footer .nxc-footer-grid .row > * {
+        flex: 0 0 100% !important;
+        max-width: 100% !important;
+        min-width: 0;
+        padding-inline: 0 !important;
+        width: 100% !important;
+    }
+
+    .nxc-site-footer .nxc-footer-company,
+    .nxc-site-footer .nxc-footer-support,
+    .nxc-site-footer .nxc-footer-newsletter,
+    .nxc-site-footer .nxc-footer-branding {
+        align-items: center !important;
+        margin-inline: auto;
+        text-align: center !important;
+    }
+
+    .nxc-site-footer .nxc-footer-title,
+    .nxc-site-footer .nxc-footer-title > *,
+    .nxc-site-footer .nxc-footer-company h1,
+    .nxc-site-footer .nxc-footer-company h2,
+    .nxc-site-footer .nxc-footer-company h3,
+    .nxc-site-footer .nxc-footer-company h4,
+    .nxc-site-footer .nxc-footer-support h1,
+    .nxc-site-footer .nxc-footer-support h2,
+    .nxc-site-footer .nxc-footer-support h3,
+    .nxc-site-footer .nxc-footer-support h4,
+    .nxc-site-footer .nxc-footer-newsletter h1,
+    .nxc-site-footer .nxc-footer-newsletter h2,
+    .nxc-site-footer .nxc-footer-newsletter h3,
+    .nxc-site-footer .nxc-footer-newsletter h4 {
+        text-align: center !important;
+        width: 100%;
+    }
+
+    .nxc-site-footer .nxc-footer-grid .row > *:has(.nxc-footer-company),
+    .nxc-site-footer .nxc-footer-company {
+        order: 1 !important;
+    }
+
+    .nxc-site-footer .nxc-footer-grid .row > *:has(.nxc-footer-support),
+    .nxc-site-footer .nxc-footer-support {
+        order: 2 !important;
+    }
+
+    .nxc-site-footer .nxc-footer-grid .row > *:has(.nxc-footer-newsletter),
+    .nxc-site-footer .nxc-footer-newsletter {
+        order: 3 !important;
+    }
+
+    .nxc-site-footer .nxc-footer-grid .row > *:has(.nxc-footer-branding),
+    .nxc-site-footer .nxc-footer-branding {
+        order: 4 !important;
+    }
+}
+
+'''
+
+          if marker not in css:
+              if anchor not in css:
+                  raise SystemExit(f'Anchor not found: {anchor}')
+              css = css.replace(anchor, patch + anchor, 1)
+              css_path.write_text(css, encoding='utf-8')
+
+          if workflow_path.exists():
+              workflow_path.unlink()
+          PY
+
+      - name: Commit patch and remove workflow
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add client-extensions/nexcent-theme/assets/global.css .github/workflows/patch-footer-mobile.yml
+          git commit -m "fix(theme): force footer grid to one column on mobile [skip ci]"
+          git push origin final

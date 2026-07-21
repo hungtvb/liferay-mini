@@ -31,108 +31,15 @@
             </span>
         </button>
 
-        <nav
-            aria-label="${configuration.navigationLabel!'Primary navigation'}"
-            class="nxc-editable-header__panel"
-            data-nxc-header-panel
-        >
-            <ul class="nxc-editable-header__navigation">
-                [#if configuration.showHome]
-                    <li>
-                        <a
-                            class="nxc-editable-header__navigation-link"
-                            data-lfr-editable-id="nav-home"
-                            data-lfr-editable-type="link"
-                            href="#home"
-                        >Home</a>
-                    </li>
-                [/#if]
+        <div class="nxc-editable-header__panel" data-nxc-header-panel>
+            <div class="nxc-editable-header__menu-slot nxc-header-navigation">
+                <lfr-drop-zone id="menu-display"></lfr-drop-zone>
+            </div>
 
-                [#if configuration.showService]
-                    <li>
-                        <a
-                            class="nxc-editable-header__navigation-link"
-                            data-lfr-editable-id="nav-service"
-                            data-lfr-editable-type="link"
-                            href="#services"
-                        >Service</a>
-                    </li>
-                [/#if]
-
-                [#if configuration.showFeature]
-                    <li>
-                        <a
-                            class="nxc-editable-header__navigation-link"
-                            data-lfr-editable-id="nav-feature"
-                            data-lfr-editable-type="link"
-                            href="#features"
-                        >Feature</a>
-                    </li>
-                [/#if]
-
-                [#if configuration.showProduct]
-                    <li>
-                        <a
-                            class="nxc-editable-header__navigation-link"
-                            data-lfr-editable-id="nav-product"
-                            data-lfr-editable-type="link"
-                            href="#product"
-                        >Product</a>
-                    </li>
-                [/#if]
-
-                [#if configuration.showTestimonial]
-                    <li>
-                        <a
-                            class="nxc-editable-header__navigation-link"
-                            data-lfr-editable-id="nav-testimonial"
-                            data-lfr-editable-type="link"
-                            href="#testimonial"
-                        >Testimonial</a>
-                    </li>
-                [/#if]
-
-                [#if configuration.showFaq]
-                    <li>
-                        <a
-                            class="nxc-editable-header__navigation-link"
-                            data-lfr-editable-id="nav-faq"
-                            data-lfr-editable-type="link"
-                            href="#faq"
-                        >FAQ</a>
-                    </li>
-                [/#if]
-            </ul>
-
-            [#if themeDisplay.isSignedIn()]
-                <div class="nxc-editable-header__actions nxc-editable-header__user-menu">
-                    [@liferay.user_personal_bar /]
-                </div>
-            [#else]
-                <div class="nxc-editable-header__actions">
-                    [#if configuration.showLogin]
-                        <a
-                            class="nxc-editable-header__action nxc-editable-header__action--login"
-                            href="${themeDisplay.getURLSignIn()}"
-                        >
-                            <span
-                                data-lfr-editable-id="login-label"
-                                data-lfr-editable-type="text"
-                            >Login</span>
-                        </a>
-                    [/#if]
-
-                    [#if configuration.showSignUp]
-                        <a
-                            class="nxc-editable-header__action nxc-editable-header__action--signup"
-                            data-lfr-editable-id="signup-action"
-                            data-lfr-editable-type="link"
-                            href="/web/guest/create-account"
-                        >Sign up</a>
-                    [/#if]
-                </div>
-            [/#if]
-        </nav>
+            <div class="nxc-editable-header__actions-slot">
+                <lfr-drop-zone id="account-actions"></lfr-drop-zone>
+            </div>
+        </div>
     </div>
 
     <span data-nxc-header-open-label hidden>

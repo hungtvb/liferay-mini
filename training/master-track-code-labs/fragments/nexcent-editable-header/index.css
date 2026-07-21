@@ -1,5 +1,5 @@
 .nxc-editable-header {
-    background: var(--nxc-color-white, #ffffff);
+    background: var(--nxc-color-surface, #f5f7fa);
     color: var(--nxc-color-navigation, #18191f);
     font-family: var(
         --nxc-font-family,
@@ -10,7 +10,7 @@
         "Segoe UI",
         sans-serif
     );
-    min-height: var(--nxc-header-height, 4.1875rem);
+    min-height: 5.25rem;
     position: relative;
     width: 100%;
     z-index: 20;
@@ -28,8 +28,8 @@
     justify-content: space-between;
     margin-inline: auto;
     max-width: var(--nxc-wide-container-width, 83.125rem);
-    min-height: var(--nxc-header-height, 4.1875rem);
-    padding: 1.375rem var(--nxc-page-gutter, 0.9375rem);
+    min-height: 5.25rem;
+    padding-inline: var(--nxc-page-gutter, 0.9375rem);
     width: 100%;
 }
 
@@ -51,7 +51,7 @@
 }
 
 .nxc-editable-header__brand:hover .nxc-editable-header__logo {
-    transform: translateY(-0.125rem) scale(1.025);
+    transform: translateY(-0.0625rem) scale(1.02);
 }
 
 .nxc-editable-header__brand:focus-visible,
@@ -72,6 +72,7 @@
     align-items: center;
     display: flex;
     flex: 1 1 auto;
+    gap: 0;
     justify-content: flex-end;
     margin-left: auto;
     max-width: 55.9375rem;
@@ -112,6 +113,7 @@
 .nxc-editable-header__menu-slot .portlet-body,
 .nxc-editable-header__menu-slot .navbar,
 .nxc-editable-header__menu-slot .container-fluid {
+    background: transparent;
     margin: 0;
     padding: 0;
 }
@@ -157,8 +159,8 @@
     color: var(--nxc-color-navigation, #18191f);
     display: inline-block;
     font-family: inherit;
-    font-size: var(--nxc-navigation-size, 1rem);
-    font-weight: 400;
+    font-size: 0.875rem;
+    font-weight: 500;
     line-height: 1.5;
     overflow: hidden;
     padding: 0.1875rem 0.3125rem;
@@ -187,7 +189,7 @@
 .nxc-editable-header .nxc-header-navigation a:active,
 .nxc-editable-header .nxc-header-navigation .nav-link:active {
     background-size: 0 100%;
-    color: var(--nxc-color-primary, #4caf4f);
+    color: var(--nxc-color-primary-active, #237d31);
     transform: translateY(0.0625rem);
 }
 
@@ -195,7 +197,7 @@
     align-items: center;
     display: flex;
     flex: 0 0 auto;
-    gap: 0.875rem;
+    gap: 0.5rem;
     justify-content: flex-end;
 }
 
@@ -214,8 +216,8 @@
     font-weight: 500;
     justify-content: center;
     line-height: 1.5;
-    min-height: 2.6875rem;
-    padding: 0.625rem 1.25rem;
+    min-height: 2.5rem;
+    padding: 0.5625rem 1.125rem;
     text-align: center;
     text-decoration: none;
     transition:
@@ -227,28 +229,29 @@
 }
 
 .nxc-editable-header__actions-slot .nxc-login-action {
-    background: var(--nxc-color-surface, #f5f7fa);
+    background: transparent;
     color: var(--nxc-color-primary, #4caf4f);
+    min-width: 4.875rem;
 }
 
 .nxc-editable-header__actions-slot .nxc-login-action:hover {
-    background: var(--nxc-color-primary, #4caf4f);
-    color: var(--nxc-color-white, #ffffff);
+    background: var(--nxc-color-accent-surface, #e8f5e9);
+    color: var(--nxc-color-primary-active, #237d31);
     text-decoration: none;
-    transform: translateY(-0.125rem);
 }
 
 .nxc-editable-header__actions-slot .nxc-signup-action {
     background: var(--nxc-color-primary, #4caf4f);
     color: var(--nxc-color-white, #ffffff);
+    min-width: 5.6875rem;
 }
 
 .nxc-editable-header__actions-slot .nxc-signup-action:hover {
-    background: var(--nxc-color-white, #ffffff);
-    border-color: var(--nxc-color-primary, #4caf4f);
-    color: var(--nxc-color-primary, #4caf4f);
+    background: var(--nxc-color-primary-hover, #388e3b);
+    border-color: var(--nxc-color-primary-hover, #388e3b);
+    color: var(--nxc-color-white, #ffffff);
     text-decoration: none;
-    transform: translateY(-0.125rem);
+    transform: translateY(-0.0625rem);
 }
 
 .nxc-editable-header__actions-slot .nxc-login-action:active,
@@ -261,13 +264,13 @@
     background: transparent;
     border: 0;
     border-radius: var(--nxc-radius-sm, 0.25rem);
-    color: var(--nxc-color-primary, #4caf4f);
+    color: var(--nxc-color-navigation, #18191f);
     cursor: pointer;
     display: none;
     flex: 0 0 2.75rem;
     height: 2.75rem;
     justify-content: center;
-    padding: 0.5rem;
+    padding: 0.625rem;
     width: 2.75rem;
 }
 
@@ -303,51 +306,47 @@
     top: 1rem;
 }
 
-.nxc-editable-header.is-open
-    .nxc-editable-header__toggle-icon
-    > span:nth-child(1) {
+.nxc-editable-header.is-open .nxc-editable-header__toggle-icon > span:nth-child(1) {
     top: 0.5625rem;
     transform: rotate(45deg);
 }
 
-.nxc-editable-header.is-open
-    .nxc-editable-header__toggle-icon
-    > span:nth-child(2) {
+.nxc-editable-header.is-open .nxc-editable-header__toggle-icon > span:nth-child(2) {
     opacity: 0;
 }
 
-.nxc-editable-header.is-open
-    .nxc-editable-header__toggle-icon
-    > span:nth-child(3) {
+.nxc-editable-header.is-open .nxc-editable-header__toggle-icon > span:nth-child(3) {
     top: 0.5625rem;
     transform: rotate(-45deg);
 }
 
-@media (max-width: 991.98px) and (min-width: 768px) {
-    .nxc-editable-header__menu-slot {
-        margin-inline: 0.75rem;
-    }
-
-    .nxc-editable-header__actions-slot .nxc-header-actions {
-        gap: 0.5rem;
-    }
-
-    .nxc-editable-header__actions-slot .nxc-login-action,
-    .nxc-editable-header__actions-slot .nxc-signup-action {
-        padding-inline: 0.875rem;
-    }
+.nxc-editable-header.is-edit-mode .nxc-editable-header__menu-slot,
+.nxc-editable-header.is-edit-mode .nxc-editable-header__actions-slot {
+    min-height: 3.5rem;
 }
 
-@media (max-width: 767.98px) {
+.nxc-visually-hidden {
+    border: 0;
+    clip: rect(0 0 0 0);
+    clip-path: inset(50%);
+    height: 0.0625rem;
+    margin: -0.0625rem;
+    overflow: hidden;
+    padding: 0;
+    position: absolute;
+    white-space: nowrap;
+    width: 0.0625rem;
+}
+
+@media (max-width: 56.25rem) {
     .nxc-editable-header {
-        box-shadow: 0 0.0625rem 0.625rem rgb(76 175 79 / 35%);
+        min-height: 4.5rem;
         position: sticky;
         top: 0;
     }
 
     .nxc-editable-header__inner {
-        min-height: var(--nxc-header-height, 4.1875rem);
-        padding-block: 1rem;
+        min-height: 4.5rem;
     }
 
     .nxc-editable-header__toggle {
@@ -360,15 +359,17 @@
     .nxc-editable-header__panel {
         align-items: stretch;
         background: var(--nxc-color-white, #ffffff);
-        box-shadow: 0 0.5rem 1rem rgb(38 50 56 / 16%);
+        border-bottom: 0.0625rem solid var(--nxc-color-border, #dfe5e8);
+        border-top: 0.0625rem solid var(--nxc-color-border, #dfe5e8);
+        box-shadow: 0 1.375rem 2.8125rem rgb(38 50 56 / 12%);
         display: none;
         flex-direction: column;
         left: 0;
         margin-left: 0;
-        max-height: calc(100vh - var(--nxc-header-height, 4.1875rem));
+        max-height: calc(100vh - 4.5rem);
         max-width: none;
         overflow-y: auto;
-        padding: 1rem var(--nxc-page-gutter, 0.9375rem) 1.5rem;
+        padding: 1.375rem var(--nxc-page-gutter, 0.9375rem);
         position: absolute;
         top: 100%;
         width: 100%;
@@ -389,8 +390,9 @@
     .nxc-editable-header .nxc-header-navigation ul,
     .nxc-editable-header .nxc-header-navigation .navbar-nav {
         align-items: stretch;
+        display: grid !important;
         flex-direction: column !important;
-        gap: 0.75rem;
+        gap: 0.25rem;
         justify-content: flex-start !important;
     }
 
@@ -401,22 +403,26 @@
 
     .nxc-editable-header .nxc-header-navigation a,
     .nxc-editable-header .nxc-header-navigation .nav-link {
-        font-size: 1.25rem;
-        padding: 0.75rem 1rem;
-        text-align: center;
+        display: block;
+        font-size: 0.9375rem;
+        padding: 0.75rem 0.25rem;
+        text-align: left;
         width: 100%;
     }
 
     .nxc-editable-header__actions-slot .nxc-header-actions {
         align-items: stretch;
-        flex-direction: column;
+        border-top: 0.0625rem solid var(--nxc-color-border, #dfe5e8);
+        gap: 0.75rem;
         margin-top: 0.75rem;
+        padding-top: 1.125rem;
         width: 100%;
     }
 
+    .nxc-editable-header__actions-slot .nxc-header-actions > *,
     .nxc-editable-header__actions-slot .nxc-login-action,
     .nxc-editable-header__actions-slot .nxc-signup-action {
-        font-size: 1.125rem;
+        flex: 1 1 0;
         width: 100%;
     }
 
@@ -425,6 +431,7 @@
     }
 
     .nxc-editable-header.is-edit-mode .nxc-editable-header__panel {
+        border: 0;
         box-shadow: none;
         flex: 1 0 100%;
         max-height: none;

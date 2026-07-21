@@ -205,8 +205,8 @@ body {
 }
 
 /*
- * OOTB Master Page header hook.
- * Navigation collapse and hamburger behavior remain owned by Liferay.
+ * Master Page header visual hooks.
+ * Responsive panel and hamburger behavior belong to Nexcent Mobile Navigation.
  */
 .nxc-site-header {
     background: var(--nxc-color-white);
@@ -263,17 +263,6 @@ body {
     background: var(--nxc-color-primary);
     color: var(--nxc-color-white);
     text-decoration: none;
-}
-
-.nxc-site-header .navbar-toggler {
-    border: 0;
-    color: var(--nxc-color-primary);
-    padding: 0.25rem;
-}
-
-.nxc-site-header .navbar-toggler:focus-visible {
-    box-shadow: var(--nxc-focus-ring);
-    outline: 0.125rem solid var(--nxc-color-primary-active);
 }
 
 .nxc-header-actions {
@@ -369,8 +358,7 @@ body {
     color: var(--nxc-color-white);
 }
 
-.nxc-newsletter .btn,
-.nxc-newsletter .btn-primary {
+.nxc-newsletter .btn {
     min-height: 2.5rem;
 }
 
@@ -424,11 +412,6 @@ body {
         top: 0;
     }
 
-    .nxc-site-header .navbar-collapse {
-        background: var(--nxc-color-white);
-        padding-block: 1rem;
-    }
-
     .nxc-site-header .navbar-nav {
         align-items: stretch;
         gap: 0.5rem;
@@ -437,12 +420,6 @@ body {
     .nxc-site-header .nav-link {
         font-size: 1.125rem;
         padding: 0.625rem 0.75rem;
-    }
-
-    .nxc-header-actions {
-        align-items: stretch;
-        flex-direction: column;
-        margin-top: 0.75rem;
     }
 
     .nxc-site-footer .nxc-footer-inner {

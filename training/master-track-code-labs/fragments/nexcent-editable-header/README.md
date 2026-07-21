@@ -1,38 +1,48 @@
 # Nexcent Editable Header
 
-Self-contained Header fragment for the Nexcent Master Page.
+Self-contained Header shell fragment for the Nexcent Master Page.
 
-## Editable content
+## Composition
 
-- Logo image
-- Home, Service, Feature, Product, Testimonial, and FAQ labels and links
-- Login label
-- Sign up label and link
+```text
+Nexcent Editable Header
+├── Editable logo
+├── Mobile toggle and responsive panel
+├── Menu Display Drop Zone
+│   └── OOTB Menu Display → Nexcent Header navigation
+└── Account Actions Drop Zone
+    └── Nexcent Account Actions
+```
 
-## Fragment configuration
+## Content ownership
 
-- Brand URL, brand accessible label, and logo alternative text
-- Show or hide each navigation item
-- Show or hide guest Login and Sign up actions
-- Primary navigation, open navigation, and close navigation labels
+- Logo image is edited inline in the fragment.
+- Brand URL, accessible brand label, and logo alternative text are fragment configuration.
+- Navigation labels, links, hierarchy, and ordering are managed by Liferay Navigation and rendered by OOTB Menu Display.
+- Guest Login and Sign up labels/settings remain owned by `Nexcent Account Actions`.
+- Authenticated users continue to use Liferay's OOTB User Personal Bar through `Nexcent Account Actions`.
 
-Authenticated users continue to use Liferay's OOTB User Personal Bar.
+The Header fragment does not hard-code navigation items.
 
 ## Authoring
 
 1. Package and import the `Nexcent Components` Fragment Set.
 2. Remove the existing Header Inner composition from the Master Page.
 3. Drag `Nexcent Editable Header` directly into the Page Header area.
-4. Edit the logo and links inline.
-5. Use the fragment configuration panel for visibility and accessibility settings.
-6. Verify guest and authenticated states at desktop and 375px widths.
+4. Drag OOTB `Menu Display` into `Menu Display Drop Zone`.
+5. Select the `Nexcent Header` Navigation Menu in Menu Display.
+6. Add class `nxc-header-navigation` to Menu Display when the fragment wrapper does not already supply it.
+7. Drag `Nexcent Account Actions` into `Account Actions Drop Zone`.
+8. Edit the logo inline and configure the brand/accessibility settings.
+9. Verify guest and authenticated states at desktop and 375px widths.
 
 ## Runtime checkpoints
 
 - Desktop layout matches the static Nexcent header.
+- Navigation remains managed by OOTB Menu Display.
 - Mobile navigation is closed by default.
 - Toggle updates `aria-expanded` and its accessible label.
 - Escape closes the panel and restores focus to the toggle.
-- Selecting a link closes the panel.
+- Selecting a menu or account link closes the panel.
 - Clicking outside closes the panel.
-- Edit mode exposes the full mobile panel for authoring.
+- Edit mode exposes both drop zones for authoring.

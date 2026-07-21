@@ -36,7 +36,7 @@ Runtime completion requires testing the authored Master Page on DXP 2026.Q1.1.
 ```text
 Page Header                              [Container: nxc-site-header]
 └── Header Inner                         [Container: nxc-header-inner]
-    ├── Nexcent Logo                     [OOTB Image: navbar-brand]
+    ├── Nexcent Logo                     [OOTB Image: nxc-header-logo]
     └── Nexcent Mobile Navigation        [Custom Fragment]
         └── Navigation Drop Zone
             └── Header Menu              [Container: nxc-header-menu]
@@ -53,7 +53,7 @@ Master Page Drop Zone
 3. Keep `Nexcent Master Page` in Draft.
 4. Build `Page Header` above the Master Page Drop Zone.
 5. Add `Header Inner`.
-6. Add the logo as the first child.
+6. Add the logo as the first child and assign `nxc-header-logo`.
 7. Add `Nexcent Mobile Navigation` as the second child.
 8. Drag `Header Menu` into the fragment drop zone.
 9. Drag OOTB Menu Display and `Nexcent Account Actions` into `Header Menu`.
@@ -66,12 +66,28 @@ Master Page Drop Zone
 ```text
 Page Header:          nxc-site-header
 Header Inner:         nxc-header-inner
-Logo:                 navbar-brand
+Logo:                 nxc-header-logo
 Header Menu:          nxc-header-menu
 Menu Display:         nxc-header-navigation
 ```
 
+Do not use Bootstrap/Liferay `navbar-brand` on the OOTB Image fragment. In DXP 2026.Q1.1 its inherited wrapper sizing can crop the SVG logo. Use the project-owned `nxc-header-logo` hook instead.
+
 Do not enter duplicate background, spacing, breakpoint, or toggle CSS in Page Builder. These rules are owned by the Theme CSS and fragment source.
+
+### Logo configuration
+
+```text
+Image Source: Nexcent Logo from Documents and Media
+Alt Text: Nexcent
+Link: Home
+Open in New Tab: off
+Image Size: Original / Auto
+Object Fit: Contain, when available
+CSS Classes: nxc-header-logo
+```
+
+Keep margin and padding at zero. The parent `Header Inner` must keep `Overflow: Visible`.
 
 ### Mobile behavior
 
@@ -104,6 +120,8 @@ At widths up to `767.98px`:
 [ ] Guest shows Login and Sign up
 [ ] Authenticated user shows the OOTB User Personal Menu
 [ ] Menu source is Nexcent Header
+[ ] Logo is fully visible and not cropped
+[ ] Logo uses nxc-header-logo, not navbar-brand
 [ ] No horizontal scrollbar at 375 px
 [ ] Header does not cover the Control Menu
 [ ] Master Page remains editable in mobile preview

@@ -1,56 +1,85 @@
 # Nexcent Account Actions
 
-Dynamic header actions for the Nexcent Master Page.
+Dynamic account actions for the Nexcent Master Page header.
 
 ## Runtime behavior
 
 ```text
 Guest user       -> Login | Sign up
-Signed-in user   -> Account
+Signed-in user   -> OOTB User Personal Menu
 ```
 
 - `Login` uses `themeDisplay.getURLSignIn()`.
-- `Account` uses `themeDisplay.getURLMyAccount()`.
-- `Sign up` uses the fragment's configurable `Sign Up URL` so the editor can select the site's Create Account utility page without hard-coding an environment URL.
-- Keep this fragment **not cacheable** because its output depends on the current authentication state.
+- `Sign up` uses the configurable `Sign Up URL`; it is rendered only when `Show Sign Up` is enabled and the URL is not empty.
+- Signed-in output uses `[@liferay.user_personal_bar /]`, following the accepted Clarity-style implementation for this header.
+- Do not extend this pattern to embed other runtime widgets in fragments.
+- Keep this fragment not cacheable because its output depends on the current authentication state.
 
-## Package on Windows PowerShell
+## Package the Fragment Set
 
-From the repository root:
+Do not package this fragment as a standalone ZIP for the course flow.
+
+From the repository root on Windows PowerShell:
 
 ```powershell
-$source = ".\training\master-track-code-labs\fragments\nexcent-account-actions"
-$target = ".\training\master-track-code-labs\fragments\nexcent-account-actions.zip"
-
-Remove-Item $target -Force -ErrorAction SilentlyContinue
-Compress-Archive -Path $source -DestinationPath $target
+./training/master-track-code-labs/scripts/package-fragments.ps1
 ```
 
-## Import
+Expected output:
+
+```text
+training/master-track-code-labs/fragments/collections-nexcent-components.zip
+```
+
+The package contains the complete `Nexcent Components` Fragment Set:
+
+```text
+nexcent-components/
+├── collection.json
+└── fragments/
+    ├── nexcent-account-actions/
+    ├── nexcent-mobile-navigation/
+    └── nexcent-section-wrapper/
+```
+
+## Import or update
 
 ```text
 Site Menu
--> Design
--> Fragments
--> select or create the Nexcent Training fragment set
--> Import
--> nexcent-account-actions.zip
+→ Design
+→ Fragments
+→ Fragment Sets options
+→ Import
 ```
+
+Import `collections-nexcent-components.zip`. When `Nexcent Components` already exists, use overwrite/update for matching fragment keys. Do not create a duplicate Fragment Set.
 
 After import, confirm that `Nexcent Account Actions` is not marked cacheable.
 
 ## Add to the Master Page
 
-1. Edit `Nexcent Master Page`.
-2. Drag `Nexcent Account Actions` into the `Header Actions` container.
-3. Select the fragment and configure `Sign Up URL` with the site's Create Account utility page.
-4. Publish the fragment if it was imported as a draft.
-5. Keep the Master Page as draft until the remaining header and footer layout is complete.
+Author the header using this tree:
 
-## Verification
+```text
+Page Header
+└── Header Inner
+    ├── Nexcent Logo
+    └── Nexcent Mobile Navigation
+        └── Navigation Drop Zone
+            └── Header Menu
+                ├── Menu Display → Nexcent Header
+                └── Nexcent Account Actions
+```
 
-1. Open the page in an incognito window: `Login` and `Sign up` must appear.
-2. Sign in: the two guest actions must be replaced by `Account`.
-3. Click `Account`: Liferay My Account must open.
-4. Sign out and click `Login`: the Liferay Sign-In flow must open.
-5. Click `Sign up`: the selected Create Account utility page must open.
+Configure `Sign Up URL` with the site's Create Account utility page. Keep the Master Page in Draft until both Header mobile and Footer runtime gates pass.
+
+## Runtime verification
+
+1. Open Home in a guest/incognito session: `Login` and the configured `Sign up` action must appear.
+2. Sign in as `admin@nexcent.com`: guest actions must be replaced by the OOTB User Personal Menu.
+3. Verify the personal menu opens and its standard account/sign-out actions work.
+4. Sign out and verify the Liferay Sign-In flow opens from `Login`.
+5. Verify `Sign up` opens the selected Create Account utility page.
+6. Repeat the guest and authenticated checks at the `375px` mobile viewport inside the Mobile Navigation panel.
+
+Source verification alone does not complete this checkpoint; it passes only after testing against the running Liferay DXP portal.

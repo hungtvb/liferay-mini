@@ -1,12 +1,9 @@
 name: Patch Footer Mobile Grid
 
-# One-time self-removing patch workflow.
 on:
-  push:
-    branches:
-      - final
-    paths:
-      - .github/workflows/patch-footer-mobile.yml
+  issues:
+    types:
+      - opened
 
 permissions:
   contents: write

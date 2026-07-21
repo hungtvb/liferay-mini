@@ -383,15 +383,29 @@ body {
         padding: 0.625rem 0.75rem;
     }
     .nxc-site-footer .nxc-footer-inner {
-        align-items: center;
-        flex-direction: column-reverse;
-        text-align: center;
+        align-items: stretch;
+        flex-direction: column;
+        text-align: left;
+    }
+    .nxc-site-footer .nxc-footer-grid,
+    .nxc-site-footer .nxc-footer-grid .row {
+        margin-inline: 0;
+        width: 100%;
     }
     .nxc-footer-branding,
     .nxc-footer-company,
     .nxc-footer-support,
     .nxc-footer-newsletter {
         align-items: flex-start;
+        text-align: left;
+        width: 100%;
+    }
+    .nxc-site-footer .nxc-footer-title,
+    .nxc-site-footer .nxc-footer-menu,
+    .nxc-site-footer .nxc-footer-menu ul,
+    .nxc-site-footer .nxc-footer-menu .navbar-nav,
+    .nxc-site-footer .nxc-footer-menu li,
+    .nxc-site-footer .nxc-footer-menu .nav-item {
         text-align: left;
         width: 100%;
     }

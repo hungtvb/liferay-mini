@@ -1,5 +1,6 @@
 name: Patch Footer Mobile Grid
 
+# One-time self-removing patch workflow.
 on:
   push:
     branches:

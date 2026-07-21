@@ -229,15 +229,21 @@ body {
     min-height: 0;
 }
 
-.nxc-site-header .navbar-brand {
-    margin-right: 1.5rem;
-    padding-block: 0;
+.nxc-header-logo {
+    align-items: center;
+    display: inline-flex;
+    flex: 0 0 auto;
+    overflow: visible;
+    text-decoration: none;
 }
 
-.nxc-site-header .navbar-brand img {
+.nxc-header-logo img {
+    display: block;
     height: auto;
-    max-height: 1.5rem;
-    max-width: 9.75rem;
+    max-width: 9.6875rem;
+    object-fit: contain;
+    object-position: left center;
+    width: 100%;
 }
 
 .nxc-site-header .navbar-nav {
@@ -315,6 +321,35 @@ body {
     width: 100%;
 }
 
+.nxc-site-footer .nxc-footer-grid {
+    min-width: 0;
+    width: 100%;
+}
+
+.nxc-footer-branding,
+.nxc-footer-company,
+.nxc-footer-support,
+.nxc-footer-newsletter {
+    align-items: flex-start;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.nxc-footer-logo img {
+    display: block;
+    height: auto;
+    max-width: 11.875rem;
+    object-fit: contain;
+    object-position: left center;
+    width: 100%;
+}
+
+.nxc-footer-copy {
+    line-height: 1.6;
+    margin: 0;
+}
+
 .nxc-site-footer h2,
 .nxc-site-footer h3,
 .nxc-site-footer h4 {
@@ -327,6 +362,11 @@ body {
     line-height: 1.4;
 }
 
+.nxc-footer-title {
+    color: var(--nxc-color-white);
+    margin: 0 0 1.5rem;
+}
+
 .nxc-site-footer a {
     color: var(--nxc-color-surface);
     text-decoration: none;
@@ -335,6 +375,36 @@ body {
 
 .nxc-site-footer a:hover {
     color: var(--nxc-color-primary);
+}
+
+.nxc-site-footer .nxc-footer-menu,
+.nxc-site-footer .nxc-footer-menu ul,
+.nxc-site-footer .nxc-footer-menu .navbar-nav {
+    margin: 0;
+    padding: 0;
+}
+
+.nxc-site-footer .nxc-footer-menu ul,
+.nxc-site-footer .nxc-footer-menu .navbar-nav {
+    align-items: flex-start;
+    display: flex;
+    flex-direction: column;
+    list-style: none;
+    width: 100%;
+}
+
+.nxc-site-footer .nxc-footer-menu li,
+.nxc-site-footer .nxc-footer-menu .nav-item {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+}
+
+.nxc-site-footer .nxc-footer-menu a,
+.nxc-site-footer .nxc-footer-menu .nav-link {
+    display: inline-block;
+    padding: 0.25rem 0;
+    text-align: left;
 }
 
 .nxc-newsletter .form-control {
@@ -426,6 +496,15 @@ body {
         align-items: center;
         flex-direction: column-reverse;
         text-align: center;
+    }
+
+    .nxc-footer-branding,
+    .nxc-footer-company,
+    .nxc-footer-support,
+    .nxc-footer-newsletter {
+        align-items: flex-start;
+        text-align: left;
+        width: 100%;
     }
 }
 

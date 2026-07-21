@@ -1,0 +1,29 @@
+<div class="nxc-mobile-navigation" data-nxc-mobile-navigation>
+    <button
+        aria-expanded="false"
+        class="nxc-mobile-toggle"
+        data-nxc-navigation-toggle
+        type="button"
+    >
+        <span class="nxc-visually-hidden" data-nxc-navigation-label>
+            ${configuration.openLabel!'Open navigation'}
+        </span>
+
+        <span aria-hidden="true" class="nxc-mobile-toggle__icon">
+            <span></span>
+            <span></span>
+            <span></span>
+        </span>
+    </button>
+
+    <div class="nxc-navigation-panel" data-nxc-navigation-panel>
+        <lfr-drop-zone id="navigation"></lfr-drop-zone>
+    </div>
+
+    <span data-nxc-open-label hidden>
+        ${configuration.openLabel!'Open navigation'}
+    </span>
+    <span data-nxc-close-label hidden>
+        ${configuration.closeLabel!'Close navigation'}
+    </span>
+</div>

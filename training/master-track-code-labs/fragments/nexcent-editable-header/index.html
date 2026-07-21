@@ -1,0 +1,144 @@
+<header class="nxc-editable-header" data-nxc-editable-header>
+    <div class="nxc-editable-header__inner">
+        <a
+            aria-label="${configuration.brandLabel!'Nexcent home'}"
+            class="nxc-editable-header__brand"
+            href="${configuration.brandUrl!'/'}"
+        >
+            <img
+                alt="${configuration.logoAlt!'Nexcent'}"
+                class="nxc-editable-header__logo"
+                data-lfr-editable-id="header-logo"
+                data-lfr-editable-type="image"
+                src="[resources:logo.svg]"
+            />
+        </a>
+
+        <button
+            aria-expanded="false"
+            class="nxc-editable-header__toggle"
+            data-nxc-header-toggle
+            type="button"
+        >
+            <span class="nxc-visually-hidden" data-nxc-header-toggle-label>
+                ${configuration.openLabel!'Open navigation'}
+            </span>
+
+            <span aria-hidden="true" class="nxc-editable-header__toggle-icon">
+                <span></span>
+                <span></span>
+                <span></span>
+            </span>
+        </button>
+
+        <nav
+            aria-label="${configuration.navigationLabel!'Primary navigation'}"
+            class="nxc-editable-header__panel"
+            data-nxc-header-panel
+        >
+            <ul class="nxc-editable-header__navigation">
+                [#if configuration.showHome]
+                    <li>
+                        <a
+                            class="nxc-editable-header__navigation-link"
+                            data-lfr-editable-id="nav-home"
+                            data-lfr-editable-type="link"
+                            href="#home"
+                        >Home</a>
+                    </li>
+                [/#if]
+
+                [#if configuration.showService]
+                    <li>
+                        <a
+                            class="nxc-editable-header__navigation-link"
+                            data-lfr-editable-id="nav-service"
+                            data-lfr-editable-type="link"
+                            href="#services"
+                        >Service</a>
+                    </li>
+                [/#if]
+
+                [#if configuration.showFeature]
+                    <li>
+                        <a
+                            class="nxc-editable-header__navigation-link"
+                            data-lfr-editable-id="nav-feature"
+                            data-lfr-editable-type="link"
+                            href="#features"
+                        >Feature</a>
+                    </li>
+                [/#if]
+
+                [#if configuration.showProduct]
+                    <li>
+                        <a
+                            class="nxc-editable-header__navigation-link"
+                            data-lfr-editable-id="nav-product"
+                            data-lfr-editable-type="link"
+                            href="#product"
+                        >Product</a>
+                    </li>
+                [/#if]
+
+                [#if configuration.showTestimonial]
+                    <li>
+                        <a
+                            class="nxc-editable-header__navigation-link"
+                            data-lfr-editable-id="nav-testimonial"
+                            data-lfr-editable-type="link"
+                            href="#testimonial"
+                        >Testimonial</a>
+                    </li>
+                [/#if]
+
+                [#if configuration.showFaq]
+                    <li>
+                        <a
+                            class="nxc-editable-header__navigation-link"
+                            data-lfr-editable-id="nav-faq"
+                            data-lfr-editable-type="link"
+                            href="#faq"
+                        >FAQ</a>
+                    </li>
+                [/#if]
+            </ul>
+
+            [#if themeDisplay.isSignedIn()]
+                <div class="nxc-editable-header__actions nxc-editable-header__user-menu">
+                    [@liferay.user_personal_bar /]
+                </div>
+            [#else]
+                <div class="nxc-editable-header__actions">
+                    [#if configuration.showLogin]
+                        <a
+                            class="nxc-editable-header__action nxc-editable-header__action--login"
+                            href="${themeDisplay.getURLSignIn()}"
+                        >
+                            <span
+                                data-lfr-editable-id="login-label"
+                                data-lfr-editable-type="text"
+                            >Login</span>
+                        </a>
+                    [/#if]
+
+                    [#if configuration.showSignUp]
+                        <a
+                            class="nxc-editable-header__action nxc-editable-header__action--signup"
+                            data-lfr-editable-id="signup-action"
+                            data-lfr-editable-type="link"
+                            href="/web/guest/create-account"
+                        >Sign up</a>
+                    [/#if]
+                </div>
+            [/#if]
+        </nav>
+    </div>
+
+    <span data-nxc-header-open-label hidden>
+        ${configuration.openLabel!'Open navigation'}
+    </span>
+    <span data-nxc-header-close-label hidden>
+        ${configuration.closeLabel!'Close navigation'}
+    </span>
+</header>

@@ -403,6 +403,16 @@ body {
         text-align: center;
         width: 100%;
     }
+    .nxc-site-footer .nxc-footer-logo,
+    .nxc-site-footer .nxc-footer-logo a {
+        text-align: center;
+        width: 100%;
+    }
+    .nxc-site-footer .nxc-footer-logo img,
+    .nxc-site-footer img.nxc-footer-logo {
+        margin-inline: auto;
+        object-position: center;
+    }
     .nxc-site-footer .nxc-footer-menu,
     .nxc-site-footer .nxc-footer-menu ul,
     .nxc-site-footer .nxc-footer-menu .navbar-nav,

@@ -354,7 +354,7 @@ img.nxc-header-logo {
     width: 100%;
 }
 .nxc-site-footer .nxc-footer-grid .row {
-    align-items: center !important;
+    align-items: start !important;
     display: grid !important;
     gap: 1.875rem;
     grid-template-columns: minmax(0, 1fr) minmax(0, 10rem) minmax(0, 10rem) minmax(0, 15.9375rem);
@@ -367,6 +367,10 @@ img.nxc-header-logo {
     min-width: 0;
     padding-inline: 0 !important;
     width: auto !important;
+}
+.nxc-site-footer .nxc-footer-grid .row > *:has(.nxc-footer-branding),
+.nxc-site-footer .nxc-footer-grid .row > .nxc-footer-branding {
+    align-self: center;
 }
 .nxc-footer-branding,
 .nxc-footer-company,

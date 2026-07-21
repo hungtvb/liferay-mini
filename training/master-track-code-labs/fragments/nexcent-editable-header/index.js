@@ -6,6 +6,13 @@ const toggleLabel = fragmentElement.querySelector(
 );
 
 if (header && panel && toggle && toggleLabel) {
+    fragmentElement.__nxcHeaderAbortController?.abort();
+
+    const controller = new AbortController();
+    const {signal} = controller;
+
+    fragmentElement.__nxcHeaderAbortController = controller;
+
     const closeLabel =
         fragmentElement
             .querySelector('[data-nxc-header-close-label]')
@@ -15,73 +22,101 @@ if (header && panel && toggle && toggleLabel) {
             .querySelector('[data-nxc-header-open-label]')
             ?.textContent.trim() || 'Open navigation';
     const panelId = `${fragmentEntryLinkNamespace}-editable-header-panel`;
-    const mobileMedia = window.matchMedia('(max-width: 767.98px)');
+    const mobileMedia = window.matchMedia('(max-width: 56.25rem)');
 
     panel.id = panelId;
     toggle.setAttribute('aria-controls', panelId);
 
     const setOpen = (open, {focusFirst = false} = {}) => {
-        header.classList.toggle('is-open', open);
-        toggle.setAttribute('aria-expanded', String(open));
-        toggle.setAttribute('aria-label', open ? closeLabel : openLabel);
-        toggleLabel.textContent = open ? closeLabel : openLabel;
+        const mobileOpen = mobileMedia.matches && open;
 
-        if (open && focusFirst) {
+        header.classList.toggle('is-open', mobileOpen);
+        toggle.setAttribute('aria-expanded', String(mobileOpen));
+        toggle.setAttribute('aria-label', mobileOpen ? closeLabel : openLabel);
+        toggleLabel.textContent = mobileOpen ? closeLabel : openLabel;
+        panel.setAttribute(
+            'aria-hidden',
+            String(mobileMedia.matches && !mobileOpen)
+        );
+
+        if (mobileOpen && focusFirst) {
             window.requestAnimationFrame(() => {
                 panel
                     .querySelector(
-                        '.nxc-editable-header__navigation-link, .nxc-editable-header__action'
+                        'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])'
                     )
                     ?.focus();
             });
         }
     };
 
-    if (layoutMode === 'edit') {
-        header.classList.add('is-edit-mode');
-        toggle.disabled = true;
-        setOpen(true);
-    }
-    else {
+    const syncViewport = () => {
+        if (layoutMode === 'edit') {
+            header.classList.add('is-edit-mode');
+            toggle.disabled = true;
+            panel.setAttribute('aria-hidden', 'false');
+
+            return;
+        }
+
+        header.classList.remove('is-edit-mode');
+        toggle.disabled = false;
         setOpen(false);
+    };
 
-        toggle.addEventListener('click', () => {
-            const nextOpen = toggle.getAttribute('aria-expanded') !== 'true';
+    syncViewport();
 
-            setOpen(nextOpen, {focusFirst: nextOpen});
-        });
+    if (layoutMode !== 'edit') {
+        toggle.addEventListener(
+            'click',
+            () => {
+                const nextOpen =
+                    toggle.getAttribute('aria-expanded') !== 'true';
 
-        panel.addEventListener('click', (event) => {
-            if (event.target.closest('a')) {
-                setOpen(false);
-            }
-        });
+                setOpen(nextOpen, {focusFirst: nextOpen});
+            },
+            {signal}
+        );
 
-        document.addEventListener('click', (event) => {
-            if (
-                mobileMedia.matches &&
-                header.classList.contains('is-open') &&
-                !fragmentElement.contains(event.target)
-            ) {
-                setOpen(false);
-            }
-        });
+        panel.addEventListener(
+            'click',
+            (event) => {
+                if (event.target.closest('a')) {
+                    setOpen(false);
+                }
+            },
+            {signal}
+        );
 
-        document.addEventListener('keydown', (event) => {
-            if (
-                event.key === 'Escape' &&
-                header.classList.contains('is-open')
-            ) {
-                setOpen(false);
-                toggle.focus();
-            }
-        });
+        document.addEventListener(
+            'click',
+            (event) => {
+                if (
+                    mobileMedia.matches &&
+                    header.classList.contains('is-open') &&
+                    !fragmentElement.contains(event.target)
+                ) {
+                    setOpen(false);
+                }
+            },
+            {signal}
+        );
 
-        mobileMedia.addEventListener('change', (event) => {
-            if (!event.matches) {
-                setOpen(false);
-            }
-        });
+        document.addEventListener(
+            'keydown',
+            (event) => {
+                if (
+                    event.key === 'Escape' &&
+                    header.classList.contains('is-open')
+                ) {
+                    setOpen(false);
+                    toggle.focus();
+                }
+            },
+            {signal}
+        );
+
+        mobileMedia.addEventListener('change', syncViewport, {signal});
     }
 
     header.dataset.nexcentEditableHeaderReady = 'true';

@@ -13,7 +13,7 @@ nexcent-global-css:
     name: Nexcent Global CSS
     scope: layout
     type: globalCSS
-    url: global-latest.css
+    url: global.css
 
 nexcent-global-js:
     name: Nexcent Global JavaScript

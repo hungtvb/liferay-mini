@@ -1,0 +1,96 @@
+@import url("./global.css");
+
+/* Header logo hook owned by Nexcent, not Bootstrap/Liferay navbar-brand. */
+.nxc-header-logo {
+    align-items: center;
+    display: inline-flex;
+    flex: 0 0 auto;
+    overflow: visible;
+    text-decoration: none;
+}
+
+.nxc-header-logo img {
+    display: block;
+    height: auto;
+    max-width: 9.6875rem;
+    object-fit: contain;
+    object-position: left center;
+    width: 100%;
+}
+
+/* Footer layout hooks used by the authored Master Page. */
+.nxc-site-footer .nxc-footer-grid {
+    min-width: 0;
+    width: 100%;
+}
+
+.nxc-footer-branding,
+.nxc-footer-company,
+.nxc-footer-support,
+.nxc-footer-newsletter {
+    align-items: flex-start;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.nxc-footer-logo img {
+    display: block;
+    height: auto;
+    max-width: 11.875rem;
+    object-fit: contain;
+    object-position: left center;
+    width: 100%;
+}
+
+.nxc-footer-copy {
+    line-height: 1.6;
+    margin: 0;
+}
+
+.nxc-footer-title {
+    color: var(--nxc-color-white);
+    margin: 0 0 1.5rem;
+}
+
+/* Reset OOTB Menu Display list indentation for Company and Support columns. */
+.nxc-site-footer .nxc-footer-menu,
+.nxc-site-footer .nxc-footer-menu ul,
+.nxc-site-footer .nxc-footer-menu .navbar-nav {
+    margin: 0;
+    padding: 0;
+}
+
+.nxc-site-footer .nxc-footer-menu ul,
+.nxc-site-footer .nxc-footer-menu .navbar-nav {
+    align-items: flex-start;
+    display: flex;
+    flex-direction: column;
+    list-style: none;
+    width: 100%;
+}
+
+.nxc-site-footer .nxc-footer-menu li,
+.nxc-site-footer .nxc-footer-menu .nav-item {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+}
+
+.nxc-site-footer .nxc-footer-menu a,
+.nxc-site-footer .nxc-footer-menu .nav-link {
+    display: inline-block;
+    padding: 0.25rem 0;
+    text-align: left;
+}
+
+@media (max-width: 767.98px) {
+    .nxc-footer-branding,
+    .nxc-footer-company,
+    .nxc-footer-support,
+    .nxc-footer-newsletter {
+        align-items: flex-start;
+        text-align: left;
+        width: 100%;
+    }
+}

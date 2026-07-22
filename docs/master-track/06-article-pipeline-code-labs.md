@@ -239,7 +239,7 @@ Every case must fail validation before asset or Article mutation.
 
 # Lab ART-06 — Implement the Import Service
 
-Create a dedicated OSGi implementation module, for example:
+Implement Article as the first profile of the shared [Content Import Framework](../architecture/content-import-framework.md). Create a dedicated OSGi implementation module, for example:
 
 ```text
 modules/nexcent-training/nexcent-training-article-importer
@@ -255,7 +255,9 @@ ArticleAssetValidator
 ArticleAssetImporter
 ArticleImportValidator
 ArticleImportExecutor
-ArticleImportManager
+ContentImportHandlerRegistry
+ContentImportJobManager
+ArticleContentImportHandler
 ArticleImportConfiguration
 ```
 
@@ -280,18 +282,20 @@ Write unit tests for normalization and validation and integration tests for crea
 
 # Lab ART-07 — Implement the REST Workflow
 
-Replace the old JSON metadata-only import endpoint with the Article job workflow:
+Replace the transitional Article-specific multipart endpoint with generic profile discovery and content-job orchestration:
 
 ```text
-POST /sites/{siteId}/article-import-jobs
-POST /sites/{siteId}/article-import-jobs/{jobERC}/validate
-POST /sites/{siteId}/article-import-jobs/{jobERC}/execute
-GET  /sites/{siteId}/article-import-jobs
-GET  /sites/{siteId}/article-import-jobs/{jobERC}
-GET  /sites/{siteId}/article-import-jobs/{jobERC}/items
+GET  /sites/{siteId}/content-import-profiles
+POST /sites/{siteId}/content-import-jobs
+POST /sites/{siteId}/content-import-jobs/{jobERC}/validate
+POST /sites/{siteId}/content-import-jobs/{jobERC}/execute
+POST /sites/{siteId}/content-import-jobs/{jobERC}/retry
+GET  /sites/{siteId}/content-import-jobs
+GET  /sites/{siteId}/content-import-jobs/{jobERC}
+GET  /sites/{siteId}/content-import-jobs/{jobERC}/items
 ```
 
-The UI uploads the ZIP through the standard Documents API, then creates the job with JSON containing `packageFileEntryId`. REST Builder returns `202 Accepted`; collection endpoints use Liferay pagination.
+The UI discovers `NXC_ARTICLE_V1`, uploads the ZIP through the standard Documents API, then creates the generic job with `packageFileEntryId` and `importProfileKey`. REST Builder returns `202 Accepted`; collection endpoints use Liferay pagination. Adding a future handler must not require a REST resource change.
 
 Regenerate:
 
@@ -309,6 +313,8 @@ Compile and deploy API → service → importer → REST API → REST implementa
 - A package outside the approved site/folder or owned by another site is rejected.
 - Invalid state transitions return `INVALID_STATE`.
 - Row result pagination is stable.
+- `NXC_ARTICLE_V1` is returned by profile discovery only when its handler/prerequisites are available.
+- Request profile and manifest profile mismatch returns `INVALID_PROFILE`.
 
 ---
 
@@ -320,23 +326,24 @@ Create:
 modules/nexcent-training/nexcent-training-web
 ```
 
-Deliver a React UI inside an MVC Portlet and register it with a `PanelApp` under:
+Deliver one generic React UI inside an MVC Portlet and register it with a `PanelApp` under:
 
 ```text
-Site Menu → Content & Data → Nexcent Article Import
+Site Menu → Content & Data → Nexcent Content Import
 ```
 
 Required views:
 
-- Upload and Validate: template download, ZIP chooser, Draft/Publish option, validation summary.
+- Upload and Validate: server-driven import-profile dropdown, selected-profile template download, ZIP chooser, Draft/Publish option, validation summary.
 - Job History: paged status, progress, creator, timestamps, and counts.
 - Job Detail: package, asset, and Article row results; stable error codes; retry and report download.
 
-The app derives the current site from Liferay context. Do not expose a numeric site-ID input, add the app to Home, or apply the public Master Page. Create the `Nexcent Content Importer` site role and keep Publish as a separate permission.
+The app derives the current site from Liferay context and populates the dropdown from `GET /content-import-profiles`. Do not hard-code Article/profile options, expose a numeric site-ID input, add the app to Home, or apply the public Master Page. Create the `Nexcent Content Importer` site role and keep Publish as a separate permission.
 
 ## Checkpoint
 
 - The app appears only for authorized users in the current site's Content & Data menu.
+- `NXC_ARTICLE_V1` appears through profile discovery; registering a test handler adds another enabled option without UI source changes.
 - Guest and ordinary members cannot open or call it.
 - Package upload uses Documents and Media; orchestration uses REST Builder.
 - Refreshing Job Detail preserves durable state from Service Builder.

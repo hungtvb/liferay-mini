@@ -1,4 +1,5 @@
 {
+    "configurationPath": "configuration.json",
     "htmlPath": "index.html",
     "name": "Nexcent React Testimonial",
     "type": "component"

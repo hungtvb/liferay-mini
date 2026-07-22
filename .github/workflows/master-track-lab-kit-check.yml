@@ -104,8 +104,9 @@ jobs:
             - name: Build Article Custom Element
               working-directory: remote-apps/nexcent-articles
               run: |
-                  npm ci
-                  npm run build
+                  set -o pipefail
+                  npm ci 2>&1 | tee ../../diagnostics/article-custom-element-build.log
+                  npm run build 2>&1 | tee -a ../../diagnostics/article-custom-element-build.log
 
             - name: Build Batch Client Extension lab
               run: |

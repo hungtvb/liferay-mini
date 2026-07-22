@@ -1,103 +1,139 @@
 # Batch and Data Migration Code Labs
 
-# Lab MIG-01 — Prepare Excel Import Data
+> The operational Article import path is a native Site Administration App. It accepts one ZIP containing Excel plus images. The browser-only Content Importer and separate asset picker are retired from the final baseline.
 
-## Sample data
+# Lab MIG-01 — Build the Article Import Package
+
+## Package source
 
 Use:
 
 ```text
-training/master-track-code-labs/sample-data/community-articles.csv
+training/master-track-code-labs/sample-data/nxc-article-import-template.xlsx
+training/master-track-code-labs/sample-data/article-import-package/
 ```
 
-Open the file in Excel and save it as:
+Build:
 
 ```text
-community-articles.xlsx
+nexcent-article-import.zip
+├── manifest.json
+├── articles.xlsx
+└── assets/
+    ├── community-management-cover.webp
+    ├── membership-guide-cover.webp
+    └── safeguarding-guide-cover.webp
 ```
 
-Do not rename the headers. The import contract is:
+The workbook sheets are:
 
 ```text
+Articles
+Assets
+Taxonomy
+Instructions
+```
+
+Article headers:
+
+```text
+operation
 externalReferenceCode
+locale
 title
+friendlyUrlPath
 summary
-imageFileName
-imageAlt
-linkLabel
-linkUrl
+bodyHtml
+coverImageKey
+coverImageAlt
+authorName
 publicationDate
+expirationDate
+categoryERCs
+tags
+featured
 sortOrder
-active
+publish
 ```
 
-Prepare the matching image files in one folder:
+Asset headers:
 
 ```text
-assets/
-├── community-01.jpg
-├── community-02.jpg
-└── community-03.jpg
+imageKey
+filePath
+documentERC
+title
+altText
+folderERC
 ```
 
-For the full 12-content-group workbook, use the implemented generator:
+Rules:
 
-```bash
-cd client-extensions/nexcent-landing-elements
-npm ci
-npm run generate:workbook
-```
+- `coverImageKey` must resolve to exactly one Assets row.
+- `filePath` is relative to `assets/`; absolute and parent paths are forbidden.
+- D&M identity is `documentERC`, not filename or numeric ID.
+- Keep `publish=false` for the first training run.
+- Do not embed Base64 media in Excel.
+- Do not include formulas, macros, external links, encrypted content, symlinks, or duplicate ZIP entries.
 
-## Importer build
+## Runtime flow
 
-```bash
-npm run typecheck
-npm test
-npm run build
-../../gradlew clean build
-cp dist/*.zip ../../bundles/osgi/client-extensions/
-```
-
-## Runtime test
-
-1. Add `Nexcent Content Importer` to an administrator-only page.
-2. Select the workbook and asset files.
-3. Run validation before mutation.
-4. Confirm the asset upload step finishes before Structured Content creation.
-5. Run the import.
-6. Run the same import a second time.
+1. Sign in with the `Nexcent Content Importer` site role.
+2. Open Site Menu → Content & Data → Nexcent Article Import.
+3. Upload the ZIP. The UI stores it in the restricted D&M package folder.
+4. Run Validate before any mutation.
+5. Review package, image, taxonomy, permission, and Article row results.
+6. Execute only from `VALIDATED`.
+7. Confirm image upserts finish before dependent Article upserts.
+8. Execute the identical package again.
 
 ## Checkpoint
 
-- First run creates the three Community records.
-- Second run updates by ERC and creates no duplicates.
-- Images appear in Documents and Media.
-- Content appears in Site Content → Web Content.
-- Row-level errors identify the sheet, row, field, and reason.
+- First run creates Documents and Media assets and Draft Articles.
+- Second run produces `NO_CHANGE` without duplicate media, Articles, or unnecessary versions.
+- Changed media bytes update the existing document by ERC.
+- Images appear in the public Article assets folder.
+- ZIP packages remain in the restricted import folder.
+- Row errors identify package entry/sheet, row, field, stable code, and reason.
 
 ---
 
-# Lab MIG-02 — Create an Import Job through REST Builder
+# Lab MIG-02 — Create and Track the Import Job
 
-Before starting the browser mutation, create an operational job:
+The UI first uploads the ZIP through the standard Documents API and receives `packageFileEntryId`. It then calls REST Builder:
 
 ```text
-POST /o/nexcent-training/v1.0/sites/{siteId}/import-jobs
+POST /o/nexcent-training/v1.0/sites/{siteId}/article-import-jobs
 ```
 
 Request:
 
 ```json
 {
-  "externalReferenceCode": "NXC-IMPORT-20260720-001",
-  "fileName": "community-articles.xlsx",
-  "totalRows": 3
+  "externalReferenceCode": "NXC-ARTICLE-IMPORT-20260722-001",
+  "packageFileEntryId": 38201,
+  "structureExternalReferenceCode": "NXC-STRUCTURE-ARTICLE"
 }
 ```
 
-After the import, use `ImportJobLocalService.completeImportJob(...)` from the orchestration layer to persist success and failure counts.
+Then run:
 
-Editorial content stays in Web Content. Operational status stays in the Service Builder table.
+```text
+POST /sites/{siteId}/article-import-jobs/{jobERC}/validate
+POST /sites/{siteId}/article-import-jobs/{jobERC}/execute
+GET  /sites/{siteId}/article-import-jobs/{jobERC}
+GET  /sites/{siteId}/article-import-jobs/{jobERC}/items
+```
+
+The service must verify that the package belongs to the current site and approved restricted folder. Editorial content stays in Web Content, images stay in Documents and Media, and operational status stays in Service Builder.
+
+## Checkpoint
+
+- Guest and unauthorized members receive `401/403`.
+- A package from another site or folder is rejected.
+- Validate mutates no Article or imported media.
+- Execute persists progress and row results across page refresh.
+- Retry is idempotent after a partial failure.
 
 ---
 
@@ -193,11 +229,12 @@ Deploy the same package twice and inspect Batch Engine tasks after each deployme
 
 Capture:
 
-1. Workbook and asset folder names.
-2. Validation summary before mutation.
-3. First import create counts.
-4. Second import update counts.
-5. Web Content and Documents and Media screenshots.
-6. ImportJob REST response.
-7. Batch task IDs and final statuses.
-8. Failed item details, when present.
+1. ZIP package name, manifest version, workbook, and asset entries.
+2. Site Administration App and restricted package upload evidence.
+3. Validation summary before mutation.
+4. First import media and Article create counts.
+5. Second import `NO_CHANGE` counts.
+6. Web Content and Documents and Media screenshots.
+7. ImportJob REST response and row results.
+8. Batch task IDs and final statuses.
+9. Failed item details, when present.

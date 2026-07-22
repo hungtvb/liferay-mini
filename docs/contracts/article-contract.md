@@ -1,6 +1,6 @@
 # Article FE–BE Contract
 
-This is the stable integration contract for the Nexcent Article list, Article detail, and Excel importer. The rationale and operational design are in [`../architecture/article-content-pipeline.md`](../architecture/article-content-pipeline.md).
+This is the stable integration contract for the Nexcent Article list, Article detail, and the `NXC_ARTICLE_V1` import profile. Shared import behavior is defined in [`../architecture/content-import-framework.md`](../architecture/content-import-framework.md); Article rationale is in [`../architecture/article-content-pipeline.md`](../architecture/article-content-pipeline.md).
 
 ## Stable identifiers
 
@@ -13,7 +13,8 @@ This is the stable integration contract for the Nexcent Article list, Article de
 | Cover image | `NXC-DOC-ARTICLE-*` |
 | Import package folder | `NXC-FOLDER-ARTICLE-IMPORT-PACKAGES` |
 | Imported media folder | `NXC-FOLDER-ARTICLE-ASSETS` |
-| Import job | `NXC-ARTICLE-IMPORT-*` |
+| Import profile | `NXC_ARTICLE_V1` |
+| Import job | `NXC-CONTENT-IMPORT-*` |
 
 Frontend configuration must not contain environment-specific numeric IDs. The runtime may resolve an ID from an ERC and cache it for the current session.
 
@@ -74,7 +75,7 @@ The list component supports `loading`, `ready`, `empty`, and `error`. Missing co
 
 ## Import package contract
 
-The editor uploads one self-contained `nexcent-article-import.zip`:
+The editor selects `NXC_ARTICLE_V1` and uploads one self-contained `nexcent-article-import.zip`. Its manifest contains `"importProfileKey": "NXC_ARTICLE_V1"`:
 
 ```text
 nexcent-article-import.zip
@@ -104,16 +105,30 @@ All timestamps are normalized to UTC. List separators are semicolons. Numeric ID
 
 ## Import REST contract
 
+Article uses the generic Content Import API:
+
 | Method | Path |
 |---|---|
-| `POST` | `/o/nexcent-training/v1.0/sites/{siteId}/article-import-jobs` |
-| `POST` | `/o/nexcent-training/v1.0/sites/{siteId}/article-import-jobs/{jobERC}/validate` |
-| `POST` | `/o/nexcent-training/v1.0/sites/{siteId}/article-import-jobs/{jobERC}/execute` |
-| `GET` | `/o/nexcent-training/v1.0/sites/{siteId}/article-import-jobs` |
-| `GET` | `/o/nexcent-training/v1.0/sites/{siteId}/article-import-jobs/{jobERC}` |
-| `GET` | `/o/nexcent-training/v1.0/sites/{siteId}/article-import-jobs/{jobERC}/items` |
+| `GET` | `/o/nexcent-training/v1.0/sites/{siteId}/content-import-profiles` |
+| `POST` | `/o/nexcent-training/v1.0/sites/{siteId}/content-import-jobs` |
+| `POST` | `/o/nexcent-training/v1.0/sites/{siteId}/content-import-jobs/{jobERC}/validate` |
+| `POST` | `/o/nexcent-training/v1.0/sites/{siteId}/content-import-jobs/{jobERC}/execute` |
+| `POST` | `/o/nexcent-training/v1.0/sites/{siteId}/content-import-jobs/{jobERC}/retry` |
+| `GET` | `/o/nexcent-training/v1.0/sites/{siteId}/content-import-jobs` |
+| `GET` | `/o/nexcent-training/v1.0/sites/{siteId}/content-import-jobs/{jobERC}` |
+| `GET` | `/o/nexcent-training/v1.0/sites/{siteId}/content-import-jobs/{jobERC}/items` |
 
-The UI first uploads the ZIP to the restricted D&M package folder through the standard Documents API. It then creates a job with JSON containing `externalReferenceCode`, `packageFileEntryId`, and `structureExternalReferenceCode`. Execute is valid only after successful validation. All list endpoints are paged.
+The UI discovers `NXC_ARTICLE_V1` from the profile endpoint, uploads the ZIP to the restricted D&M package folder through the standard Documents API, then creates a job:
+
+```json
+{
+  "externalReferenceCode": "NXC-CONTENT-IMPORT-20260722-001",
+  "packageFileEntryId": 38201,
+  "importProfileKey": "NXC_ARTICLE_V1"
+}
+```
+
+The manifest and request profile must match. Execute is valid only after successful validation. All list endpoints are paged.
 
 ## Error codes
 
@@ -141,9 +156,9 @@ Clients branch on the code and show the human-readable message. They do not pars
 
 ## Administration UI contract
 
-The final UI is a React application inside the `nexcent-training-web` MVC Portlet and is registered through `PanelApp` under the current site's **Content & Data** menu.
+The final UI is the generic React `nexcent-training-web` MVC Portlet registered through `PanelApp` under the current site's **Content & Data** menu. It populates the content-type/profile selector from `GET /content-import-profiles`; Article is not hard-coded.
 
-It derives site context from Liferay, uploads packages through Documents and Media, and calls the REST Builder workflow. Required views are upload/validate, paged job history, and job detail with asset and Article row results. A dedicated `Nexcent Content Importer` site role controls access; Publish is granted separately.
+It derives site context from Liferay, downloads the selected profile template, uploads packages through Documents and Media, and calls the generic REST Builder workflow. Required views are upload/validate, paged job history, and job detail with asset and Article row results. A dedicated `Nexcent Content Importer` site role controls access; Publish is granted separately.
 
 A private page Custom Element is PoC-only. A separately hosted application is out of the current baseline.
 
@@ -156,4 +171,5 @@ A private page Custom Element is PoC-only. A separately hosted application is ou
 - Media is upserted by D&M ERC before dependent Article rows.
 - Guest cannot upload or execute imports.
 - The importer UI is a site-scoped application under Site Menu → Content & Data, not a public Content Page or external tool.
+- Adding another registered handler makes its enabled profile appear without modifying the generic admin UI or REST resource.
 - The list and detail pass at `1440px`, `768px`, and `375px` before merge.

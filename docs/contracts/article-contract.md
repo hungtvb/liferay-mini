@@ -10,7 +10,9 @@ This is the stable integration contract for the Nexcent Article list, Article de
 | Structure key | `NXC_ARTICLE` |
 | Vocabulary | `NXC-VOCABULARY-ARTICLE-TOPICS` |
 | Article | `NXC-ARTICLE-*` |
-| Cover image | `NXC-DOC-COMMUNITY-*` |
+| Cover image | `NXC-DOC-ARTICLE-*` |
+| Import package folder | `NXC-FOLDER-ARTICLE-IMPORT-PACKAGES` |
+| Imported media folder | `NXC-FOLDER-ARTICLE-ASSETS` |
 | Import job | `NXC-ARTICLE-IMPORT-*` |
 
 Frontend configuration must not contain environment-specific numeric IDs. The runtime may resolve an ID from an ERC and cache it for the current session.
@@ -70,17 +72,35 @@ export type ArticleDetail = ArticleCard & {
 
 The list component supports `loading`, `ready`, `empty`, and `error`. Missing content never falls back to hard-coded Article data.
 
-## Import contract
+## Import package contract
 
-The workbook header order is:
+The editor uploads one self-contained `nexcent-article-import.zip`:
 
 ```text
-operation,externalReferenceCode,locale,title,friendlyUrlPath,summary,bodyHtml,coverImageERC,coverImageAlt,authorName,publicationDate,expirationDate,categoryERCs,tags,featured,sortOrder,publish
+nexcent-article-import.zip
+├── manifest.json
+├── articles.xlsx
+└── assets/
+    └── <image files>
 ```
 
-Identity is `(siteId, externalReferenceCode)` for an Article and `(externalReferenceCode, locale)` for a workbook row. `UPSERT` creates or versions content; `ARCHIVE` expires it. `publish` defaults to `false`.
+The workbook contains `Articles`, `Assets`, `Taxonomy`, and `Instructions` sheets. `Articles` references media through `coverImageKey`; the `Assets` sheet maps that key to a relative package path and stable Documents and Media ERC.
 
-All timestamps are normalized to UTC. List separators are semicolons. Images and categories are referenced by ERC; numeric IDs and filenames are not stable integration keys.
+Article header order:
+
+```text
+operation,externalReferenceCode,locale,title,friendlyUrlPath,summary,bodyHtml,coverImageKey,coverImageAlt,authorName,publicationDate,expirationDate,categoryERCs,tags,featured,sortOrder,publish
+```
+
+Asset header order:
+
+```text
+imageKey,filePath,documentERC,title,altText,folderERC
+```
+
+Identity is `(siteId, externalReferenceCode)` for an Article, `(externalReferenceCode, locale)` for an Article row, and `documentERC` for a media file. `UPSERT` creates or versions content; `ARCHIVE` expires it. `publish` defaults to `false`.
+
+All timestamps are normalized to UTC. List separators are semicolons. Numeric IDs, absolute workstation paths, Base64 images, and filenames are not stable integration keys. The package must pass ZIP-safety, workbook, image MIME, checksum, permission, and cross-reference validation before any mutation.
 
 ## Import REST contract
 
@@ -93,16 +113,23 @@ All timestamps are normalized to UTC. List separators are semicolons. Images and
 | `GET` | `/o/nexcent-training/v1.0/sites/{siteId}/article-import-jobs/{jobERC}` |
 | `GET` | `/o/nexcent-training/v1.0/sites/{siteId}/article-import-jobs/{jobERC}/items` |
 
-Upload is `multipart/form-data`; execute is valid only after successful validation. All list endpoints are paged.
+The UI first uploads the ZIP to the restricted D&M package folder through the standard Documents API. It then creates a job with JSON containing `externalReferenceCode`, `packageFileEntryId`, and `structureExternalReferenceCode`. Execute is valid only after successful validation. All list endpoints are paged.
 
 ## Error codes
 
 ```text
+INVALID_PACKAGE_LAYOUT
+UNSAFE_ZIP_ENTRY
+PACKAGE_LIMIT_EXCEEDED
+INVALID_MANIFEST
 INVALID_HEADER
 DUPLICATE_ERC_LOCALE
 DUPLICATE_FRIENDLY_URL
 INVALID_LOCALE
-IMAGE_ERC_NOT_FOUND
+IMAGE_KEY_NOT_FOUND
+IMAGE_FILE_NOT_FOUND
+DUPLICATE_DOCUMENT_ERC
+INVALID_IMAGE_TYPE
 CATEGORY_ERC_NOT_FOUND
 UNSAFE_HTML
 INVALID_DATE_RANGE
@@ -112,11 +139,21 @@ PERMISSION_DENIED
 
 Clients branch on the code and show the human-readable message. They do not parse message text.
 
+## Administration UI contract
+
+The final UI is a React application inside the `nexcent-training-web` MVC Portlet and is registered through `PanelApp` under the current site's **Content & Data** menu.
+
+It derives site context from Liferay, uploads packages through Documents and Media, and calls the REST Builder workflow. Required views are upload/validate, paged job history, and job detail with asset and Article row results. A dedicated `Nexcent Content Importer` site role controls access; Publish is granted separately.
+
+A private page Custom Element is PoC-only. A separately hosted application is out of the current baseline.
+
 ## Acceptance
 
 - Re-importing identical data creates no duplicate and no unnecessary Web Content version.
 - Editing a published Article updates the list/detail after the normal cache lifecycle without rebuilding frontend assets.
 - An Article detail works at `/w/{friendlyUrlPath}` without a dedicated site page.
-- Missing image/category references fail validation before execution.
+- Missing image key/file/category references and unsafe ZIP entries fail validation before execution.
+- Media is upserted by D&M ERC before dependent Article rows.
 - Guest cannot upload or execute imports.
+- The importer UI is a site-scoped application under Site Menu → Content & Data, not a public Content Page or external tool.
 - The list and detail pass at `1440px`, `768px`, and `375px` before merge.

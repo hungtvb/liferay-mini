@@ -51,6 +51,9 @@ jobs:
       - name: Install dependencies
         run: npm ci --no-audit --no-fund
 
+      - name: Validate Fragment data source contracts
+        run: npm run validate:data-sources
+
       - name: Test importer validation
         run: npm test
 
@@ -70,6 +73,9 @@ jobs:
           test -s build/fragments/collections-nexcent-components.zip
           jar --list --file build/fragments/collections-nexcent-components.zip | grep -q 'nexcent-components/collection.json'
           jar --list --file build/fragments/collections-nexcent-components.zip | grep -q 'nexcent-components/fragments/nexcent-react-header/configuration.json'
+          jar --list --file build/fragments/collections-nexcent-components.zip | grep -q 'nexcent-components/fragments/nexcent-react-hero/configuration.json'
+          jar --list --file build/fragments/collections-nexcent-components.zip | grep -q 'nexcent-components/fragments/nexcent-react-community/configuration.json'
+          jar --list --file build/fragments/collections-nexcent-components.zip | grep -q 'nexcent-components/fragments/nexcent-react-marketing/configuration.json'
           jar --list --file build/fragments/collections-nexcent-components.zip | grep -q 'nexcent-components/fragments/nexcent-react-footer/configuration.json'
 
       - name: Build Nexcent Theme Client Extension

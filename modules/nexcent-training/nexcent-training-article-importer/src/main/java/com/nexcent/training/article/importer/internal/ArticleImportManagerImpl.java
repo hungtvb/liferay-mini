@@ -116,7 +116,14 @@ public class ArticleImportManagerImpl implements ArticleImportManager {
             ArticleWorkbookData workbookData = _readWorkbookData(importJob);
             List<ArticleImportRow> rows = workbookData.articleRows;
 
-            _importAssets(userId, importJob, workbookData.assetsByKey);
+            ImportAssetResult assetResult = _importAssets(
+                userId, importJob, workbookData.assetsByKey);
+
+            createdRows += assetResult.created;
+            updatedRows += assetResult.updated;
+            skippedRows += assetResult.skipped;
+            failedRows += assetResult.failed;
+
             Map<Integer, ImportJobItem> items = _getItems(importJob);
 
             for (ArticleImportRow row : rows) {
@@ -174,7 +181,8 @@ public class ArticleImportManagerImpl implements ArticleImportManager {
                     ArticleImportStatus.COMPLETED_WITH_ERRORS;
 
             return _importJobLocalService.updateImportJobResult(
-                importJob.getImportJobId(), status, rows.size(), createdRows,
+                importJob.getImportJobId(), status,
+                rows.size() + workbookData.assetsByKey.size(), createdRows,
                 updatedRows, skippedRows, failedRows, StringPool.BLANK, true);
         }
         catch (Exception exception) {
@@ -479,13 +487,15 @@ public class ArticleImportManagerImpl implements ArticleImportManager {
         return contentField;
     }
 
-    private void _importAssets(
+    private ImportAssetResult _importAssets(
             long userId, ImportJob importJob,
             Map<String, ArticleAssetRow> assetsByKey)
         throws Exception {
 
+        ImportAssetResult result = new ImportAssetResult();
+
         if (!"1.0".equals(importJob.getPackageSchemaVersion())) {
-            return;
+            return result;
         }
 
         ArticleImportPackage articleImportPackage = _readPackage(
@@ -502,65 +512,98 @@ public class ArticleImportManagerImpl implements ArticleImportManager {
         }
 
         for (ArticleAssetRow asset : assetsByKey.values()) {
-            byte[] bytes = articleImportPackage.entries.get(asset.filePath);
-            String mimeType = _imageMimeType(asset.filePath, bytes);
-            Folder folder = _dlAppLocalService.fetchFolderByExternalReferenceCode(
-                asset.folderERC, importJob.getGroupId());
+            ImportJobItem item = itemsByERC.get(asset.documentERC);
 
-            if (folder == null) {
+            if (item == null) {
                 throw new ArticleImportException(
-                    "ASSET_FOLDER_NOT_FOUND", asset.folderERC);
+                    "VALIDATION_RESULT_MISSING",
+                    "No validation result exists for asset " +
+                        asset.documentERC);
             }
 
-            String fileName = asset.filePath.substring(
-                asset.filePath.lastIndexOf('/') + 1);
-            FileEntry existing =
-                _dlAppLocalService.fetchFileEntryByExternalReferenceCode(
-                    importJob.getGroupId(), asset.documentERC);
-            ImportJobItem item = itemsByERC.get(asset.documentERC);
-            ServiceContext serviceContext = new ServiceContext();
+            try {
+                byte[] bytes = articleImportPackage.entries.get(
+                    asset.filePath);
+                String mimeType = _imageMimeType(asset.filePath, bytes);
+                Folder folder =
+                    _dlAppLocalService.fetchFolderByExternalReferenceCode(
+                        asset.folderERC, importJob.getGroupId());
 
-            serviceContext.setAddGuestPermissions(false);
-            serviceContext.setAddGroupPermissions(false);
-            serviceContext.setCompanyId(importJob.getCompanyId());
-            serviceContext.setScopeGroupId(importJob.getGroupId());
-            serviceContext.setUserId(userId);
+                if (folder == null) {
+                    throw new ArticleImportException(
+                        "ASSET_FOLDER_NOT_FOUND", asset.folderERC);
+                }
 
-            if (existing == null) {
-                _dlAppLocalService.addFileEntry(
-                    asset.documentERC, userId, importJob.getGroupId(),
-                    folder.getFolderId(), fileName, mimeType, bytes, null,
-                    null, null, serviceContext);
+                String fileName = asset.filePath.substring(
+                    asset.filePath.lastIndexOf('/') + 1);
+                FileEntry existing =
+                    _dlAppLocalService.fetchFileEntryByExternalReferenceCode(
+                        importJob.getGroupId(), asset.documentERC);
+                ServiceContext serviceContext = new ServiceContext();
 
-                if (item != null) {
+                serviceContext.setAddGuestPermissions(false);
+                serviceContext.setAddGroupPermissions(false);
+                serviceContext.setCompanyId(importJob.getCompanyId());
+                serviceContext.setScopeGroupId(importJob.getGroupId());
+                serviceContext.setUserId(userId);
+
+                if (existing == null) {
+                    _dlAppLocalService.addFileEntry(
+                        asset.documentERC, userId, importJob.getGroupId(),
+                        folder.getFolderId(), fileName, mimeType, bytes,
+                        asset.title, asset.altText, null, serviceContext);
+
+                    result.created++;
                     _markItem(
                         item, "CREATE", "INFO", StringPool.BLANK,
                         "Document imported");
                 }
-            }
-            else if (!_sha256(bytes).equals(
-                        _sha256(_readFileEntry(existing)))) {
+                else {
+                    if (existing.getFolderId() != folder.getFolderId()) {
+                        throw new ArticleImportException(
+                            "ASSET_ERC_FOLDER_CONFLICT",
+                            asset.documentERC + " already exists in another " +
+                                "folder");
+                    }
 
-                _dlAppLocalService.updateFileEntry(
-                    userId, existing.getFileEntryId(), fileName, mimeType,
-                    asset.title, asset.altText,
-                    "Imported by " + importJob.getJobKey(),
-                    "Content import asset update",
-                    DLVersionNumberIncrease.MAJOR, bytes, null, null, null,
-                    serviceContext);
+                    boolean binaryChanged = !_sha256(bytes).equals(
+                        _sha256(_readFileEntry(existing)));
+                    boolean metadataChanged =
+                        !asset.title.equals(existing.getTitle()) ||
+                            !asset.altText.equals(existing.getDescription());
 
-                if (item != null) {
-                    _markItem(
-                        item, "UPDATE", "INFO", StringPool.BLANK,
-                        "Document updated");
+                    if (binaryChanged || metadataChanged) {
+                        _dlAppLocalService.updateFileEntry(
+                            userId, existing.getFileEntryId(), fileName,
+                            mimeType, asset.title, asset.altText,
+                            "Imported by " + importJob.getJobKey(),
+                            "Content import asset update",
+                            DLVersionNumberIncrease.MAJOR, bytes, null, null,
+                            null, serviceContext);
+
+                        result.updated++;
+                        _markItem(
+                            item, "UPDATE", "INFO", StringPool.BLANK,
+                            binaryChanged ? "Document updated" :
+                                "Document metadata updated");
+                    }
+                    else {
+                        result.skipped++;
+                        _markItem(
+                            item, "NO_CHANGE", "INFO", StringPool.BLANK,
+                            "Document unchanged");
+                    }
                 }
             }
-            else if (item != null) {
+            catch (Exception exception) {
+                result.failed++;
                 _markItem(
-                    item, "NO_CHANGE", "INFO", StringPool.BLANK,
-                    "Document unchanged");
+                    item, "ERROR", "ERROR", "ASSET_EXECUTION_FAILED",
+                    _safeMessage(exception));
             }
         }
+
+        return result;
     }
 
     private String _imageMimeType(String path, byte[] bytes)
@@ -757,7 +800,6 @@ public class ArticleImportManagerImpl implements ArticleImportManager {
         structuredContent.setTaxonomyCategoryIds(
             _taxonomyCategoryIds(importJob.getGroupId(), row.categoryERCs));
         structuredContent.setTitle(row.title);
-        structuredContent.setViewableBy(StructuredContent.ViewableBy.ANYONE);
 
         StructuredContentResource resource =
             _structuredContentResourceFactory.create(
@@ -778,6 +820,12 @@ public class ArticleImportManagerImpl implements ArticleImportManager {
                 _journalArticleLocalService.
                     fetchLatestArticleByExternalReferenceCode(
                         importJob.getGroupId(), row.externalReferenceCode);
+            if (article == null) {
+                throw new ArticleImportException(
+                    "ARTICLE_NOT_FOUND_AFTER_UPSERT",
+                    row.externalReferenceCode);
+            }
+
             ServiceContext serviceContext = new ServiceContext();
 
             serviceContext.setCompanyId(importJob.getCompanyId());
@@ -1067,6 +1115,14 @@ public class ArticleImportManagerImpl implements ArticleImportManager {
     private final XlsxArticleParser _parser = new XlsxArticleParser();
     private final SafeZipPackageReader _packageReader =
         new SafeZipPackageReader();
+
+    private static class ImportAssetResult {
+
+        private int created;
+        private int failed;
+        private int skipped;
+        private int updated;
+    }
 
     private static class ValidationContext {
 

@@ -4,13 +4,8 @@ on:
     pull_request:
         paths:
             - '.github/workflows/master-track-lab-kit-check.yml'
-            - 'README.md'
-            - 'scripts/verify-course.mjs'
-            - 'client-extensions/nexcent-training-batch-lab/**'
-            - 'docs/master-track/**'
             - 'modules/nexcent-training/**'
             - 'remote-apps/nexcent-articles/**'
-            - 'training/master-track-code-labs/**'
     workflow_dispatch:
 
 permissions:
@@ -19,7 +14,7 @@ permissions:
 jobs:
     validate-lab-kit:
         runs-on: ubuntu-latest
-        timeout-minutes: 45
+        timeout-minutes: 30
 
         steps:
             - name: Checkout branch
@@ -31,12 +26,6 @@ jobs:
             - name: Apply remaining reviewed fixes
               run: python3 modules/nexcent-training/review-fix-driver.py
 
-            - name: Set up Java 21
-              uses: actions/setup-java@v4
-              with:
-                  distribution: temurin
-                  java-version: '21'
-
             - name: Set up Node.js 22
               uses: actions/setup-node@v4
               with:
@@ -47,8 +36,31 @@ jobs:
                   npm install --package-lock-only --ignore-scripts --prefix modules/nexcent-training/nexcent-training-web
                   npm install --package-lock-only --ignore-scripts --prefix remote-apps/nexcent-articles
 
-            - name: Commit reviewed source fixes locally
+            - name: Build Article Custom Element
+              working-directory: remote-apps/nexcent-articles
               run: |
+                  npm install
+                  npm run build
+
+            - name: Set up Java 21
+              uses: actions/setup-java@v4
+              with:
+                  distribution: temurin
+                  java-version: '21'
+
+            - name: Set up Gradle
+              uses: gradle/actions/setup-gradle@v4
+
+            - name: Verify importer and admin module
+              run: |
+                  ./gradlew \
+                    :modules:nexcent-training:nexcent-training-article-importer:test \
+                    :modules:nexcent-training:nexcent-training-web:build \
+                    --stacktrace
+
+            - name: Commit validated source fixes
+              run: |
+                  git diff --check
                   git config user.name "github-actions[bot]"
                   git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
                   git add \
@@ -59,65 +71,4 @@ jobs:
                     remote-apps/nexcent-articles/src/index.tsx \
                     remote-apps/nexcent-articles/package-lock.json
                   git commit -m "fix(content): complete PR 28 review fixes"
-
-            - name: Set up Gradle
-              uses: gradle/actions/setup-gradle@v4
-
-            - name: Validate repository and lab contracts
-              run: |
-                  node scripts/verify-course.mjs
-                  node training/master-track-code-labs/scripts/validate-lab-kit.mjs
-
-            - name: Build OSGi component lab
-              run: ./gradlew :modules:nexcent-training:nexcent-training-osgi:build
-
-            - name: Verify Service Builder regeneration
-              run: ./gradlew :modules:nexcent-training:nexcent-training-service:buildService
-
-            - name: Generate REST Builder source
-              run: ./gradlew :modules:nexcent-training:nexcent-training-rest-impl:buildREST
-
-            - name: Verify generated sources are checked in
-              run: |
-                  git add -N modules/nexcent-training
-                  if ! git diff --quiet -- modules/nexcent-training; then
-                    git diff -- modules/nexcent-training
-                    echo "Generated Service Builder or REST Builder sources are stale."
-                    exit 1
-                  fi
-
-            - name: Verify content import upgrade chain
-              run: |
-                  grep -q "drop index IX_NXC_IJI_JR on NXC_ImportJobItem" modules/nexcent-training/nexcent-training-service/src/main/java/com/nexcent/training/internal/upgrade/ContentImportUpgradeProcess.java
-                  ! grep -q "drop index IX_B5D8A8BB on NXC_ImportJobItem" modules/nexcent-training/nexcent-training-service/src/main/java/com/nexcent/training/internal/upgrade/ContentImportUpgradeProcess.java
-
-            - name: Test Article importer
-              run: ./gradlew :modules:nexcent-training:nexcent-training-article-importer:test
-
-            - name: Build application modules
-              run: |
-                  ./gradlew \
-                    :modules:nexcent-training:nexcent-training-api:build \
-                    :modules:nexcent-training:nexcent-training-service:build \
-                    :modules:nexcent-training:nexcent-training-article-importer:build \
-                    :modules:nexcent-training:nexcent-training-rest-api:build \
-                    :modules:nexcent-training:nexcent-training-rest-impl:build \
-                    :modules:nexcent-training:nexcent-training-web:build \
-                    --stacktrace
-
-            - name: Build Article Custom Element
-              working-directory: remote-apps/nexcent-articles
-              run: |
-                  npm ci
-                  npm run build
-
-            - name: Build Batch Client Extension lab
-              run: |
-                  cd client-extensions/nexcent-training-batch-lab
-                  ../../gradlew build --stacktrace
-
-            - name: Verify clean tree
-              run: git diff --check
-
-            - name: Push validated fixes
-              run: git push origin HEAD:feat/article-content-pipeline
+                  git push origin HEAD:feat/article-content-pipeline

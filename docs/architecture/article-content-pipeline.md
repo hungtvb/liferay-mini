@@ -4,6 +4,8 @@ Status: **DESIGN READY / IMPLEMENTATION AND RUNTIME QA PENDING**
 Target: **Liferay DXP 2026.Q1.1**  
 Decision owner: Nexcent training project
 
+Framework contract: [`content-import-framework.md`](content-import-framework.md). This document defines the `NXC_ARTICLE_V1` profile inside that framework.
+
 > **Implementation delta at this commit:** the branch already contains the Service Builder job/row foundation and a transitional REST endpoint that accepts multipart XLSX directly. It does not yet implement the ZIP package contract, media-first import, standard Documents API handoff, or `nexcent-training-web` Site Administration App defined below. Treat this document as the normative target; runtime verification remains pending.
 
 ## 1. Decision
@@ -13,11 +15,11 @@ Use classic Liferay Web Content (`StructuredContent`) as the Article source of t
 - Web Content owns editorial data, localization, versions, workflow, permissions, taxonomy, friendly URLs, and display pages.
 - Documents and Media owns cover images. Articles reference files by stable external reference code (ERC), never by filename or numeric ID.
 - Editors upload one portable ZIP package containing `manifest.json`, `articles.xlsx`, and an `assets/` directory.
-- A Site Administration App appears under the current site's **Content & Data** menu; it is not placed on the public landing page and is not hosted as a separate external tool.
+- The generic **Nexcent Content Import** Site Administration App appears under the current site's **Content & Data** menu and obtains its profile dropdown from REST. Article is selected through `NXC_ARTICLE_V1`.
 - The admin UI uploads the ZIP to a restricted Documents and Media import folder, then calls the Article import API with the resulting package `fileEntryId`.
 - A server-side importer validates the package, upserts media first, and then upserts Articles by ERC.
 - Service Builder stores only import operations and row results. It does not duplicate Article content.
-- REST Builder exposes create-job, validate, execute, status, row-result, and retry orchestration endpoints. It does not parse Excel or write SQL.
+- REST Builder exposes generic profile discovery plus content-job create, validate, execute, status, row-result, retry, and report endpoints. It does not parse Excel or write SQL.
 - The Article list consumes the standard Headless Delivery API.
 - Article detail is rendered by a Display Page Template at `/w/{friendlyUrlPath}`.
 
@@ -27,17 +29,17 @@ Liferay's newer object-based Headless CMS is an optional evaluation lab, not the
 
 ```mermaid
 flowchart TD
-    A["ZIP: manifest + XLSX + assets"] --> B["Nexcent Site Admin App"]
+    A["ZIP: manifest + XLSX + assets"] --> B["Nexcent Content Import"]
     B --> C["Restricted D&M package upload"]
-    B --> D["Article Import REST API"]
+    B --> D["Generic Content Import API"]
     C --> D
-    D --> E["ArticleImportManager"]
+    D --> E["ContentImportJobManager + Article handler"]
     E --> F["ImportJob and row results"]
     E --> G["D&M assets, then Web Content"]
     G --> H["Headless list and Display Page detail"]
 ```
 
-The REST resource is an adapter. ZIP inspection, Excel parsing, validation, media upsert, and Article orchestration live in a dedicated OSGi service so REST, scheduled jobs, and future clients can reuse the same logic. The React admin UI is delivered inside a Liferay MVC Portlet registered through `PanelApp`; the portlet is a native site-scoped administration shell, not the business layer.
+The REST resource is an adapter. ZIP inspection, Excel parsing, validation, media upsert, and Article orchestration live in a dedicated OSGi service so REST, scheduled jobs, and future clients can reuse the same logic. The React admin UI is delivered inside a Liferay MVC Portlet registered through `PanelApp`; it discovers profiles dynamically and is a native site-scoped administration shell, not the business layer.
 
 ## 3. Content model
 
@@ -102,6 +104,7 @@ The package is self-contained for repeatable import into a fresh environment. Ne
 ```json
 {
   "schemaVersion": "1.0",
+  "importProfileKey": "NXC_ARTICLE_V1",
   "siteExternalReferenceCode": "NEXCENT-PUBLIC-WEBSITE",
   "structureExternalReferenceCode": "NXC-STRUCTURE-ARTICLE",
   "defaultLanguageId": "en_US",
@@ -239,7 +242,9 @@ Service Builder is justified because import jobs require durable queryable opera
 | `fileEntryId` | long | Restricted original workbook |
 | `fileName` | String | Original filename |
 | `sha256` | String | Integrity and duplicate detection |
-| `structureERC` | String | Expected structure contract |
+| `importProfileKey` | String | Versioned handler/profile identity |
+| `packageSchemaVersion` | String | Package contract version |
+| `structureERC` | String | Transitional Article field; target Structure comes from the profile |
 | `status` | String | State machine value |
 | `totalRows` | int | Parsed rows |
 | `createdRows` | int | Created Articles |
@@ -262,8 +267,10 @@ Finders:
 | `importJobItemId` | long PK | Internal identity |
 | `importJobId` | long | Parent job |
 | `rowNumber` | int | Workbook row |
-| `articleERC` | String | Target Article |
-| `locale` | String | Translation |
+| `targetType` | String | Generic target type such as `STRUCTURED_CONTENT` or `DOCUMENT` |
+| `targetERC` | String | Stable target identity |
+| `sheetName` | String | Source workbook sheet |
+| `locale` | String | Optional content translation |
 | `operation` | String | UPSERT/ARCHIVE |
 | `result` | String | CREATE/UPDATE/NO_CHANGE/ARCHIVE/ERROR |
 | `severity` | String | INFO/WARNING/ERROR |
@@ -271,7 +278,7 @@ Finders:
 | `message` | String | Human-readable detail |
 | `payloadHash` | String | Normalized-row idempotency |
 
-Unique finder: `J_R(importJobId, rowNumber)`.
+Unique finder: `J_R(importJobId, rowNumber)`. The current `articleERC` column must be migrated to `targetERC` through a Service Builder upgrade step; this is a deliberate schema change, not a generated-source hand edit.
 
 Generated Service Builder classes are regenerated from `service.xml`; generated base/persistence/model sources are never edited manually. Schema changes require a module upgrade step and a version bump.
 
@@ -279,40 +286,41 @@ Generated Service Builder classes are regenerated from `service.xml`; generated 
 
 Base path: `/o/nexcent-training/v1.0`
 
-The package binary is uploaded first through the standard Documents API. REST Builder receives the resulting `packageFileEntryId`; it does not duplicate Liferay's document-upload API.
+The package binary is uploaded first through the standard Documents API. The generic REST API receives `packageFileEntryId` and `importProfileKey`; it does not duplicate Liferay's document-upload API.
 
 | Method | Path | Result |
 |---|---|---|
-| `POST` | `/sites/{siteId}/article-import-jobs` | JSON job request with `packageFileEntryId`; returns `202` |
-| `POST` | `/sites/{siteId}/article-import-jobs/{jobERC}/validate` | Starts/synchronously performs validation |
-| `POST` | `/sites/{siteId}/article-import-jobs/{jobERC}/execute` | Queues execution; returns `202` |
-| `GET` | `/sites/{siteId}/article-import-jobs` | Paged site job history |
-| `GET` | `/sites/{siteId}/article-import-jobs/{jobERC}` | Job counts and status |
-| `GET` | `/sites/{siteId}/article-import-jobs/{jobERC}/items` | Paged row results |
+| `GET` | `/sites/{siteId}/content-import-profiles` | Enabled/disabled registered profiles |
+| `POST` | `/sites/{siteId}/content-import-jobs` | Generic JSON job request; returns `202` |
+| `POST` | `/sites/{siteId}/content-import-jobs/{jobERC}/validate` | Runs the selected profile validator |
+| `POST` | `/sites/{siteId}/content-import-jobs/{jobERC}/execute` | Queues profile execution; returns `202` |
+| `POST` | `/sites/{siteId}/content-import-jobs/{jobERC}/retry` | Retries eligible failed rows |
+| `GET` | `/sites/{siteId}/content-import-jobs` | Paged site job history |
+| `GET` | `/sites/{siteId}/content-import-jobs/{jobERC}` | Job counts and status |
+| `GET` | `/sites/{siteId}/content-import-jobs/{jobERC}/items` | Paged asset/content row results |
+| `GET` | `/sites/{siteId}/content-import-jobs/{jobERC}/error-report` | Downloadable error report |
 
-Create-job request:
+Create-job request for Article:
 
 ```json
 {
-  "externalReferenceCode": "NXC-ARTICLE-IMPORT-20260722-001",
+  "externalReferenceCode": "NXC-CONTENT-IMPORT-20260722-001",
   "packageFileEntryId": 38201,
-  "structureExternalReferenceCode": "NXC-STRUCTURE-ARTICLE"
+  "importProfileKey": "NXC_ARTICLE_V1"
 }
 ```
 
-The service verifies site scope, approved folder, permissions, checksum, and ZIP signature before accepting the job.
+The registry resolves `NXC_ARTICLE_V1` to `ArticleContentImportHandler`, whose profile owns `NXC-STRUCTURE-ARTICLE`, workbook mapping, taxonomy, and Article validation. The service verifies site scope, approved folder, permissions, manifest/profile agreement, checksum, and ZIP signature before accepting the job.
 
-Use standard Liferay pagination (`Page<T>`), problem responses, permissions, and OpenAPI generation. Return stable error codes such as `INVALID_HEADER`, `DUPLICATE_ERC_LOCALE`, `IMAGE_ERC_NOT_FOUND`, `CATEGORY_ERC_NOT_FOUND`, `UNSAFE_HTML`, and `INVALID_STATE`.
-
-Do not implement parsing inside `ImportJobResourceImpl`. It invokes an `ArticleImportManager` OSGi service and maps models to DTOs.
+Use standard Liferay pagination (`Page<T>`), problem responses, permissions, and OpenAPI generation. Return stable generic/package codes plus Article-specific codes. Do not implement parsing inside REST resources.
 
 ### 7.1 Site Administration App
 
-Deliver `nexcent-training-web` as a React UI inside an MVC Portlet and register it with a `PanelApp` under the current site's **Content & Data** category.
+Deliver `nexcent-training-web` as a React UI inside an MVC Portlet and register it with a `PanelApp` under the current site's **Content & Data** category. The app calls profile discovery and renders only server-registered import options; it never hard-codes Article as its only choice.
 
 Required screens:
 
-- Upload: download template, choose ZIP, select Draft/Publish and Validate/Execute options.
+- Upload: choose an enabled import profile, download its template, choose ZIP, select Draft/Publish and Validate/Execute options.
 - Job history: paged status, progress, creator, timestamps, and counts.
 - Job detail: asset results, Article row results, stable error codes, retry failed rows, and error-report download.
 
@@ -406,9 +414,9 @@ No Article work is merged until the runtime import, list, and detail screenshots
 1. Create/export Structure, taxonomy, D&M folder ERCs, and Display Page Template artifacts in the target runtime.
 2. Define the ZIP manifest, workbook, Assets sheet, and sample image package.
 3. Implement Service Builder job and row entities; regenerate and compile.
-4. Implement `ArticleImportManager` with safe ZIP reader, Excel parser, asset importer, validator, executor, and tests.
-5. Implement REST Builder job orchestration; upload the package through the standard Documents API.
-6. Build the Site Administration App and register it under Site Menu → Content & Data.
+4. Implement the generic handler registry and `NXC_ARTICLE_V1` handler using the shared ZIP reader, Excel parser, asset importer, validator, executor, and tests.
+5. Implement generic REST Builder profile discovery and content-job orchestration; upload the package through the standard Documents API.
+6. Build the generic Site Administration App with a server-driven profile dropdown and register it under Site Menu → Content & Data.
 7. Import the sample ZIP as Draft, review, retry/no-change test, then publish.
 8. Wire the Article list to Headless Delivery and canonical detail URLs.
 9. Run permission, failure-state, and responsive QA; capture screenshots before merge.

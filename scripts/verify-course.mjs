@@ -72,6 +72,9 @@ const requiredFiles = [
     'docs/master-track/02-content-code-labs.md',
     'docs/master-track/03-application-code-labs.md',
     'docs/master-track/04-migration-code-labs.md',
+    'docs/master-track/06-article-pipeline-code-labs.md',
+    'docs/architecture/article-content-pipeline.md',
+    'docs/contracts/article-contract.md',
     'client-extensions/nexcent-theme/client-extension.yaml',
     'client-extensions/nexcent-theme/package.json',
     'client-extensions/nexcent-theme/assets/favicon.svg',
@@ -93,10 +96,13 @@ const requiredFiles = [
     'client-extensions/nexcent-training-batch-lab/client-extension.yaml',
     'modules/nexcent-training/nexcent-training-osgi/build.gradle',
     'modules/nexcent-training/nexcent-training-service/service.xml',
+    'modules/nexcent-training/nexcent-training-article-importer/build.gradle',
     'modules/nexcent-training/nexcent-training-rest-impl/rest-config.yaml',
     'modules/nexcent-training/nexcent-training-rest-impl/rest-openapi.yaml',
     'training/master-track-code-labs/sample-data/nexcent-landing.mock.json',
     'training/master-track-code-labs/sample-data/community-articles.csv',
+    'training/master-track-code-labs/sample-data/article-import-template.csv',
+    'training/master-track-code-labs/sample-data/nxc-article-import-template.xlsx',
     'training/master-track-code-labs/scripts/validate-lab-kit.mjs',
     'training/master-track-code-labs/scripts/package-batch-export.mjs',
     'scripts/batch/prepare-structured-content-export.mjs',
@@ -223,11 +229,24 @@ await requireText(
 );
 await requireText(
     'modules/nexcent-training/nexcent-training-service/service.xml',
-    ['name="ImportJob"', 'name="jobKey"', 'name="JK_G"', 'name="G"']
+    [
+        'name="ImportJob"',
+        'name="ImportJobItem"',
+        'name="ArticleImportState"',
+        'name="jobKey"',
+        'name="JK_G"',
+        'name="G_A_L"',
+    ]
 );
 await requireText(
     'modules/nexcent-training/nexcent-training-rest-impl/rest-openapi.yaml',
-    ['postSiteImportJob', 'getSiteImportJob']
+    [
+        'postSiteArticleImportJob',
+        'postSiteArticleImportJobValidate',
+        'postSiteArticleImportJobExecute',
+        'getSiteArticleImportJobItemsPage',
+        'multipart/form-data',
+    ]
 );
 
 const tokenDefinitionPath = `${themeRoot}/src/frontend-token-definition.json`;

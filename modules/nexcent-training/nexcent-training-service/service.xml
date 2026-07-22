@@ -26,11 +26,18 @@
         <column name="modifiedDate" type="Date" />
 
         <column name="jobKey" type="String" />
+        <column name="fileEntryId" type="long" />
         <column name="fileName" type="String" />
+        <column name="sha256" type="String" />
+        <column name="structureERC" type="String" />
         <column name="status" type="String" />
         <column name="totalRows" type="int" />
-        <column name="successRows" type="int" />
+        <column name="createdRows" type="int" />
+        <column name="updatedRows" type="int" />
+        <column name="skippedRows" type="int" />
         <column name="failedRows" type="int" />
+        <column name="startedDate" type="Date" />
+        <column name="completedDate" type="Date" />
         <column name="errorMessage" type="String" />
 
         <order by="desc">
@@ -40,9 +47,71 @@
         <finder name="G" return-type="Collection">
             <finder-column name="groupId" />
         </finder>
+        <finder name="G_S" return-type="Collection">
+            <finder-column name="groupId" />
+            <finder-column name="status" />
+        </finder>
         <finder name="JK_G" return-type="ImportJob" unique="true">
             <finder-column name="jobKey" />
             <finder-column name="groupId" />
+        </finder>
+    </entity>
+
+    <entity
+        local-service="true"
+        name="ImportJobItem"
+        remote-service="false"
+    >
+        <column name="importJobItemId" primary="true" type="long" />
+        <column name="groupId" type="long" />
+        <column name="companyId" type="long" />
+        <column name="createDate" type="Date" />
+        <column name="modifiedDate" type="Date" />
+
+        <column name="importJobId" type="long" />
+        <column name="rowNumber" type="int" />
+        <column name="articleERC" type="String" />
+        <column name="locale" type="String" />
+        <column name="operation" type="String" />
+        <column name="result" type="String" />
+        <column name="severity" type="String" />
+        <column name="messageCode" type="String" />
+        <column name="message" type="String" />
+        <column name="payloadHash" type="String" />
+
+        <order by="asc">
+            <order-column name="rowNumber" />
+        </order>
+
+        <finder name="J" return-type="Collection">
+            <finder-column name="importJobId" />
+        </finder>
+        <finder name="J_R" return-type="ImportJobItem" unique="true">
+            <finder-column name="importJobId" />
+            <finder-column name="rowNumber" />
+        </finder>
+    </entity>
+
+    <entity
+        local-service="true"
+        name="ArticleImportState"
+        remote-service="false"
+    >
+        <column name="articleImportStateId" primary="true" type="long" />
+        <column name="groupId" type="long" />
+        <column name="companyId" type="long" />
+        <column name="createDate" type="Date" />
+        <column name="modifiedDate" type="Date" />
+
+        <column name="articleERC" type="String" />
+        <column name="locale" type="String" />
+        <column name="payloadHash" type="String" />
+        <column name="lastImportJobId" type="long" />
+
+        <finder name="G_A_L" return-type="ArticleImportState" unique="true">
+            <finder-column name="groupId" />
+            <finder-column name="articleERC" />
+            <finder-column name="locale" />
         </finder>
     </entity>
 </service-builder>

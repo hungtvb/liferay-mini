@@ -55,12 +55,19 @@ jobs:
             - name: Generate REST Builder source
               run: ./gradlew :modules:nexcent-training:nexcent-training-rest-impl:buildREST
 
+            - name: Capture generated source changes
+              run: git diff --binary > diagnostics/generated-sources.patch
+
+            - name: Test Article importer
+              run: ./gradlew :modules:nexcent-training:nexcent-training-article-importer:test
+
             - name: Build application modules
               run: |
                   set +e
                   ./gradlew \
                     :modules:nexcent-training:nexcent-training-api:build \
                     :modules:nexcent-training:nexcent-training-service:build \
+                    :modules:nexcent-training:nexcent-training-article-importer:build \
                     :modules:nexcent-training:nexcent-training-rest-api:build \
                     :modules:nexcent-training:nexcent-training-rest-impl:build \
                     --stacktrace > diagnostics/application-build.log 2>&1

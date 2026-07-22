@@ -1,37 +1,88 @@
 components:
     schemas:
-        ImportJob:
+        ArticleImportJob:
             properties:
+                completedDate:
+                    format: date-time
+                    readOnly: true
+                    type: string
+                createdRows:
+                    format: int32
+                    readOnly: true
+                    type: integer
                 errorMessage:
+                    readOnly: true
                     type: string
                 externalReferenceCode:
                     type: string
                 failedRows:
                     format: int32
+                    readOnly: true
+                    type: integer
+                fileEntryId:
+                    format: int64
+                    readOnly: true
                     type: integer
                 fileName:
+                    readOnly: true
                     type: string
                 id:
                     format: int64
                     readOnly: true
                     type: integer
+                sha256:
+                    readOnly: true
+                    type: string
+                skippedRows:
+                    format: int32
+                    readOnly: true
+                    type: integer
+                startedDate:
+                    format: date-time
+                    readOnly: true
+                    type: string
                 status:
                     readOnly: true
                     type: string
-                successRows:
+                structureExternalReferenceCode:
+                    type: string
+                totalRows:
                     format: int32
                     readOnly: true
                     type: integer
-                totalRows:
+                updatedRows:
+                    format: int32
+                    readOnly: true
+                    type: integer
+            type: object
+        ArticleImportJobItem:
+            properties:
+                articleExternalReferenceCode:
+                    type: string
+                id:
+                    format: int64
+                    readOnly: true
+                    type: integer
+                locale:
+                    type: string
+                message:
+                    type: string
+                messageCode:
+                    type: string
+                operation:
+                    type: string
+                payloadHash:
+                    type: string
+                result:
+                    type: string
+                rowNumber:
                     format: int32
                     type: integer
-            required:
-                - externalReferenceCode
-                - fileName
-                - totalRows
+                severity:
+                    type: string
             type: object
 info:
-    description: "Training API for creating and reading Nexcent import jobs."
+    description: "Validated Excel import workflow for Nexcent Articles."
     license:
         name: "Apache 2.0"
         url: "http://www.apache.org/licenses/LICENSE-2.0.html"
@@ -39,9 +90,35 @@ info:
     version: v1.0
 openapi: 3.0.1
 paths:
-    "/sites/{siteId}/import-jobs":
+    "/sites/{siteId}/article-import-jobs":
+        get:
+            operationId: getSiteArticleImportJobsPage
+            parameters:
+                - in: path
+                  name: siteId
+                  required: true
+                  schema:
+                      format: int64
+                      type: integer
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/ArticleImportJob"
+                                type: array
+                        application/xml:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/ArticleImportJob"
+                                type: array
+                    description: "Paged Article import job history."
+            tags: ["ArticleImportJob"]
+            x-pagination: true
         post:
-            operationId: postSiteImportJob
+            description: "Uploads an XLSX workbook. Multipart fields are file, externalReferenceCode, and optional structureExternalReferenceCode."
+            operationId: postSiteArticleImportJob
             parameters:
                 - in: path
                   name: siteId
@@ -51,27 +128,35 @@ paths:
                       type: integer
             requestBody:
                 content:
-                    application/json:
+                    multipart/form-data:
                         schema:
-                            $ref: "#/components/schemas/ImportJob"
-                    application/xml:
-                        schema:
-                            $ref: "#/components/schemas/ImportJob"
+                            properties:
+                                externalReferenceCode:
+                                    type: string
+                                file:
+                                    format: binary
+                                    type: string
+                                structureExternalReferenceCode:
+                                    type: string
+                            required:
+                                - externalReferenceCode
+                                - file
+                            type: object
                 required: true
             responses:
                 200:
                     content:
                         application/json:
                             schema:
-                                $ref: "#/components/schemas/ImportJob"
+                                $ref: "#/components/schemas/ArticleImportJob"
                         application/xml:
                             schema:
-                                $ref: "#/components/schemas/ImportJob"
-                    description: "Import job created or reset by ERC."
-            tags: ["ImportJob"]
-    "/sites/{siteId}/import-jobs/{externalReferenceCode}":
+                                $ref: "#/components/schemas/ArticleImportJob"
+                    description: "Workbook stored with status UPLOADED."
+            tags: ["ArticleImportJob"]
+    "/sites/{siteId}/article-import-jobs/{externalReferenceCode}":
         get:
-            operationId: getSiteImportJob
+            operationId: getSiteArticleImportJob
             parameters:
                 - in: path
                   name: siteId
@@ -89,9 +174,92 @@ paths:
                     content:
                         application/json:
                             schema:
-                                $ref: "#/components/schemas/ImportJob"
+                                $ref: "#/components/schemas/ArticleImportJob"
                         application/xml:
                             schema:
-                                $ref: "#/components/schemas/ImportJob"
-                    description: "Import job matching the site and ERC."
-            tags: ["ImportJob"]
+                                $ref: "#/components/schemas/ArticleImportJob"
+                    description: "Article import job."
+            tags: ["ArticleImportJob"]
+    "/sites/{siteId}/article-import-jobs/{externalReferenceCode}/execute":
+        post:
+            operationId: postSiteArticleImportJobExecute
+            parameters:
+                - in: path
+                  name: siteId
+                  required: true
+                  schema:
+                      format: int64
+                      type: integer
+                - in: path
+                  name: externalReferenceCode
+                  required: true
+                  schema:
+                      type: string
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/ArticleImportJob"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/ArticleImportJob"
+                    description: "Executed job with final counts."
+            tags: ["ArticleImportJob"]
+    "/sites/{siteId}/article-import-jobs/{externalReferenceCode}/items":
+        get:
+            operationId: getSiteArticleImportJobItemsPage
+            parameters:
+                - in: path
+                  name: siteId
+                  required: true
+                  schema:
+                      format: int64
+                      type: integer
+                - in: path
+                  name: externalReferenceCode
+                  required: true
+                  schema:
+                      type: string
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/ArticleImportJobItem"
+                                type: array
+                        application/xml:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/ArticleImportJobItem"
+                                type: array
+                    description: "Paged row validation and execution results."
+            tags: ["ArticleImportJobItem"]
+            x-pagination: true
+    "/sites/{siteId}/article-import-jobs/{externalReferenceCode}/validate":
+        post:
+            operationId: postSiteArticleImportJobValidate
+            parameters:
+                - in: path
+                  name: siteId
+                  required: true
+                  schema:
+                      format: int64
+                      type: integer
+                - in: path
+                  name: externalReferenceCode
+                  required: true
+                  schema:
+                      type: string
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/ArticleImportJob"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/ArticleImportJob"
+                    description: "Validated job or INVALID job with row errors."
+            tags: ["ArticleImportJob"]

@@ -81,7 +81,11 @@ const sectionSource = await readFile(
     path.join(projectDirectory, 'src/static-site/components/ContentSections.tsx'),
     'utf8'
 );
-const headlessClient = await readFile(
+const sharedHeadlessApi = await readFile(
+    path.join(projectDirectory, 'src/api/structuredContent.ts'),
+    'utf8'
+);
+const headlessAdapter = await readFile(
     path.join(
         projectDirectory,
         'src/static-site/headless/headlessContentClient.ts'
@@ -104,10 +108,22 @@ for (const componentName of ['StaticCommunity', 'StaticMarketing']) {
 
 for (const endpoint of [
     '/content-structures?pageSize=200',
-    '/structured-contents?flatten=true&pageSize=',
+    '/structured-contents?flatten=true&pageSize=100',
 ]) {
-    if (!headlessClient.includes(endpoint)) {
-        throw new Error(`Headless content client is missing ${endpoint}.`);
+    if (!sharedHeadlessApi.includes(endpoint)) {
+        throw new Error(`Shared Structured Content API is missing ${endpoint}.`);
+    }
+}
+
+for (const sharedFunction of [
+    'resolveContentStructure',
+    'listStructuredContents',
+    'clearStructuredContentRequestCache',
+]) {
+    if (!headlessAdapter.includes(sharedFunction)) {
+        throw new Error(
+            `Pixel-perfect Headless adapter must reuse ${sharedFunction}.`
+        );
     }
 }
 

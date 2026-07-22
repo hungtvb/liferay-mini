@@ -21,13 +21,14 @@ components:
             type: object
         NavigationItem:
             properties:
-                children:
-                    items:
-                        $ref: "#/components/schemas/NavigationItem"
-                    type: array
                 externalReferenceCode:
                     type: string
                 label:
+                    type: string
+                order:
+                    format: int32
+                    type: integer
+                parentExternalReferenceCode:
                     type: string
                 selected:
                     type: boolean
@@ -35,6 +36,17 @@ components:
                     type: string
                 url:
                     type: string
+            type: object
+        NavigationMenu:
+            properties:
+                externalReferenceCode:
+                    type: string
+                name:
+                    type: string
+                navigationItems:
+                    items:
+                        $ref: "#/components/schemas/NavigationItem"
+                    type: array
             type: object
         SiteIdentity:
             properties:
@@ -55,19 +67,13 @@ components:
                 account:
                     $ref: "#/components/schemas/AccountContext"
                 companyNavigation:
-                    items:
-                        $ref: "#/components/schemas/NavigationItem"
-                    type: array
+                    $ref: "#/components/schemas/NavigationMenu"
                 headerNavigation:
-                    items:
-                        $ref: "#/components/schemas/NavigationItem"
-                    type: array
+                    $ref: "#/components/schemas/NavigationMenu"
                 site:
                     $ref: "#/components/schemas/SiteIdentity"
                 supportNavigation:
-                    items:
-                        $ref: "#/components/schemas/NavigationItem"
-                    type: array
+                    $ref: "#/components/schemas/NavigationMenu"
                 warnings:
                     items:
                         type: string

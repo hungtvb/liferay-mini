@@ -13,6 +13,7 @@ import {
 afterEach(() => {
     clearHeadlessContentRequestCache();
     vi.restoreAllMocks();
+    vi.unstubAllGlobals();
 });
 
 describe('Headless content client', () => {
@@ -80,6 +81,10 @@ describe('Headless content client', () => {
             };
         });
 
+        vi.stubGlobal('window', {
+            Liferay: undefined,
+            location: {origin: 'http://localhost:8080'},
+        });
         vi.stubGlobal('fetch', fetchMock);
 
         const options = {

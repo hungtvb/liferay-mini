@@ -100,7 +100,7 @@ liferay-mini/
 ├── client-extensions/
 │   ├── nexcent-content-batch/
 │   ├── nexcent-landing-elements/
-│   ├── nexcent-remote-app-registration/
+│   ├── nexcent-articles-client-extension/
 │   ├── nexcent-theme/
 │   └── nexcent-training-batch-lab/
 ├── modules/
@@ -112,7 +112,7 @@ liferay-mini/
 │       ├── nexcent-training-rest-impl/
 │       └── nexcent-training-web/
 ├── remote-apps/
-│   └── nexcent-community-app/
+│   └── nexcent-articles/
 ├── prototypes/
 │   └── nexcent-static/
 ├── training/
@@ -196,7 +196,7 @@ node training/master-track-code-labs/scripts/validate-lab-kit.mjs
 4. Fragments and configurable wrappers.
 5. Hero, Services, and Features Custom Elements with mock data.
 6. Web Content Structures, Templates, assets, permissions, and live Headless integration.
-7. Community Remote App.
+7. Nexcent Articles Custom Element backed by Headless Delivery.
 8. OSGi and Gogo Shell.
 9. Service Builder.
 10. REST Builder BFF.

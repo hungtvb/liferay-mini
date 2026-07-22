@@ -1,0 +1,17 @@
+nexcent-articles:
+    baseURL: https://nexcent-liferay-static.vercel.app/articles
+    cssURLs:
+        - /style.css
+    friendlyURLMapping: nexcent-articles
+    htmlElementName: nexcent-articles
+    instanceable: false
+    name: Nexcent Articles
+    portletCategoryName: category.client-extensions
+    properties:
+        article-structure-identifier: NXC-STRUCTURE-ARTICLE
+        description: The Nexcent blog is the best place to read about the latest membership insights, trends and more. See who's joining the community, read about how our community are increasing their membership income and lot's more.
+        heading: Caring is the new marketing
+    type: customElement
+    urls:
+        - /index.js
+    useESM: true

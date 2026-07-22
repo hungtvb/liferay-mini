@@ -1,0 +1,56 @@
+{
+    "fieldSets": [
+        {
+            "fields": [
+                {
+                    "dataType": "string",
+                    "defaultValue": "Nexcent Article",
+                    "label": "Content Structure identifier",
+                    "name": "structureIdentifier",
+                    "type": "text"
+                },
+                {
+                    "dataType": "int",
+                    "defaultValue": "3",
+                    "label": "Maximum articles",
+                    "name": "maxItems",
+                    "type": "select",
+                    "typeOptions": {
+                        "validValues": [
+                            {"label": "3", "value": "3"},
+                            {"label": "6", "value": "6"},
+                            {"label": "9", "value": "9"}
+                        ]
+                    }
+                }
+            ],
+            "label": "Headless content"
+        },
+        {
+            "fields": [
+                {
+                    "dataType": "string",
+                    "defaultValue": "Caring is the new marketing",
+                    "label": "Title",
+                    "name": "title",
+                    "type": "text"
+                },
+                {
+                    "dataType": "string",
+                    "defaultValue": "The Nexcent blog is the best place to read about the latest membership insights, trends and more. See who's joining the community, read about how our community are increasing their membership income and lot's more.",
+                    "label": "Description",
+                    "name": "description",
+                    "type": "text"
+                },
+                {
+                    "dataType": "string",
+                    "defaultValue": "Readmore",
+                    "label": "Read more label",
+                    "name": "readMoreLabel",
+                    "type": "text"
+                }
+            ],
+            "label": "Section copy"
+        }
+    ]
+}

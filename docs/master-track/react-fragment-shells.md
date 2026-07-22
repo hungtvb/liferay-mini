@@ -11,7 +11,7 @@ client-extensions/nexcent-landing-elements/src/static-site/
 
 The production Master Page can now use React for Header, body sections, and
 Footer. Every Liferay Fragment remains intentionally thin and contains only the
-matching custom-element tag.
+matching custom-element tag plus attributes generated from Fragment Settings.
 
 ## Runtime architecture
 
@@ -20,6 +20,9 @@ Nexcent Master Page
 ├── Nexcent React Header
 ├── Main Content drop zone
 └── Nexcent React Footer
+        │
+        ├── Fragment Settings
+        │   └── static branding, labels, newsletter, and social URLs
         │
         ▼
 Nexcent React Runtime Global JavaScript
@@ -83,6 +86,19 @@ cp dist/*.zip ../../bundles/osgi/client-extensions/
 Add **Nexcent React Runtime** as Global JavaScript to the Master Page. A
 Fragment custom tag does not load the JavaScript bundle by itself.
 
+## Static React preview
+
+The standalone preview uses the bundled mock JSON and does not call Liferay:
+
+```bash
+cd client-extensions/nexcent-landing-elements
+npm ci
+npm run preview:static
+```
+
+Open `http://localhost:4173` while Liferay remains available at
+`http://localhost:8080`.
+
 ## Package and import the Fragments
 
 ```powershell
@@ -105,9 +121,9 @@ Main Content drop zone
 Nexcent React Footer
 ```
 
-The Header and Footer Fragment HTML stays one tag only. It passes the runtime
-site ID from `themeDisplay.getScopeGroupId()` to React. The Footer also passes
-the newsletter Object endpoint.
+The Header and Footer Fragment HTML stays one custom-element tag only. It passes
+the runtime site ID from `themeDisplay.getScopeGroupId()` and safely escaped
+Fragment Settings to React.
 
 Recommended body order:
 
@@ -126,6 +142,64 @@ Nexcent React CTA
 Remove the previous OOTB/editable Header and Footer composition from the new
 Master Page to avoid duplicated navigation, spacing, and mobile overlays.
 
+## Fragment Settings
+
+Select the Header or Footer Fragment on the Master Page and use its **General**
+configuration tab.
+
+Header settings:
+
+```text
+Branding
+├── Logo URL override
+└── Logo alt text
+
+Account actions
+├── Show account actions
+├── Login label
+├── Sign-up label
+├── My Account label
+└── Sign-out label
+```
+
+Footer settings:
+
+```text
+Branding
+├── Footer logo URL override
+├── Logo alt text
+├── Copyright text
+└── Rights text
+
+Navigation columns
+├── Company heading
+└── Support heading
+
+Newsletter
+├── Show newsletter
+├── Title and placeholder
+├── Object endpoint
+├── Submit label
+└── Submitting, success, and error messages
+
+Social links
+├── Show social links
+└── Instagram, Dribbble, Twitter, and YouTube URLs
+```
+
+Runtime value precedence is:
+
+```text
+Fragment Setting override
+    ↓ when empty
+Site Shell site/account value
+    ↓ when unavailable
+Bundled content.json/static asset fallback
+```
+
+Navigation items and authenticated account URLs remain runtime data and are not
+copied into Fragment Settings.
+
 ## Authentication and fallback behavior
 
 - Guest users receive Login and Sign up URLs.
@@ -140,7 +214,7 @@ Master Page to avoid duplicated navigation, spacing, and mobile overlays.
 
 ## Newsletter
 
-The Footer posts to:
+The default Footer setting posts to:
 
 ```text
 /o/c/nxcnewslettersubscriptions
@@ -155,9 +229,8 @@ sourcePage
 consent
 ```
 
-The UI exposes submitting, success, and error states. Change the
-`newsletter-endpoint` attribute in the thin Footer Fragment if the Object ERC
-or endpoint differs.
+The endpoint and every visible newsletter state message can be changed through
+the Footer Fragment Settings.
 
 ## Content and styling
 

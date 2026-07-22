@@ -16,7 +16,7 @@ import {StaticHero} from './components/Hero';
 import {StaticPage} from './StaticPage';
 import {StaticStyleBoundary} from './StaticStyleBoundary';
 
-type StaticRenderer = () => ReactNode;
+type StaticRenderer = (element: HTMLElement) => ReactNode;
 
 export const staticElementNames = [
     'nexcent-react-page',
@@ -52,7 +52,7 @@ function registerShadowReactElement(name: string, renderer: StaticRenderer) {
             this.root = createRoot(shadowRoot);
             this.root.render(
                 <React.StrictMode>
-                    <StaticStyleBoundary>{renderer()}</StaticStyleBoundary>
+                    <StaticStyleBoundary>{renderer(this)}</StaticStyleBoundary>
                 </React.StrictMode>
             );
         }
@@ -68,7 +68,9 @@ function registerShadowReactElement(name: string, renderer: StaticRenderer) {
 
 export function registerStaticElements() {
     registerShadowReactElement('nexcent-react-page', () => <StaticPage />);
-    registerShadowReactElement('nexcent-react-header', () => <StaticHeader />);
+    registerShadowReactElement('nexcent-react-header', (element) => (
+        <StaticHeader host={element} />
+    ));
     registerShadowReactElement('nexcent-react-hero', () => <StaticHero />);
     registerShadowReactElement('nexcent-react-clients', () => <StaticClients />);
     registerShadowReactElement('nexcent-react-community', () => (
@@ -90,5 +92,7 @@ export function registerStaticElements() {
         <StaticMarketing />
     ));
     registerShadowReactElement('nexcent-react-cta', () => <StaticCta />);
-    registerShadowReactElement('nexcent-react-footer', () => <StaticFooter />);
+    registerShadowReactElement('nexcent-react-footer', (element) => (
+        <StaticFooter host={element} />
+    ));
 }

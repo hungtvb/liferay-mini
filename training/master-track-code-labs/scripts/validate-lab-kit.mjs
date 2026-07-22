@@ -22,8 +22,10 @@ const requiredFiles = [
     'training/master-track-code-labs/fragments/nexcent-section-wrapper/fragment.json',
     'training/master-track-code-labs/fragments/nexcent-section-wrapper/configuration.json',
     'training/master-track-code-labs/fragments/nexcent-react-header/fragment.json',
+    'training/master-track-code-labs/fragments/nexcent-react-header/configuration.json',
     'training/master-track-code-labs/fragments/nexcent-react-header/index.html',
     'training/master-track-code-labs/fragments/nexcent-react-footer/fragment.json',
+    'training/master-track-code-labs/fragments/nexcent-react-footer/configuration.json',
     'training/master-track-code-labs/fragments/nexcent-react-footer/index.html',
     'training/master-track-code-labs/web-content-templates/nxc-landing-hero.ftl',
     'training/master-track-code-labs/web-content-templates/nxc-service-item.ftl',
@@ -224,6 +226,17 @@ for (const fragmentPath of [
 
     if (!fragmentHtml.includes('themeDisplay.getScopeGroupId()')) {
         throw new Error(`${fragmentPath} must pass the runtime site ID to React.`);
+    }
+}
+
+for (const fragmentPath of [
+    'training/master-track-code-labs/fragments/nexcent-react-header/fragment.json',
+    'training/master-track-code-labs/fragments/nexcent-react-footer/fragment.json',
+]) {
+    const fragmentDefinition = JSON.parse(await readFile(fragmentPath, 'utf8'));
+
+    if (fragmentDefinition.configurationPath !== 'configuration.json') {
+        throw new Error(`${fragmentPath} must expose configuration.json.`);
     }
 }
 

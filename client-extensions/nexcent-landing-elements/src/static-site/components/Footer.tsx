@@ -5,12 +5,27 @@ import {
 } from 'react';
 
 import content from '../../../../../prototypes/nexcent-static/content.json';
-import {resolveStaticAsset} from '../assets';
+import {resolveStaticAsset, type StaticAssetKey} from '../assets';
 import type {NavigationItem} from '../site-shell/types';
-import {useSiteShell} from '../site-shell/useSiteShell';
 
 type FooterProps = {
     host?: HTMLElement;
+};
+
+type FooterRuntimeContext = {
+    companyNavigation: NavigationItem[];
+    site: {
+        homeURL: string;
+        name: string;
+    };
+    socialNavigation: NavigationItem[];
+    supportNavigation: NavigationItem[];
+};
+
+type RuntimeState = {
+    context: FooterRuntimeContext;
+    error?: Error;
+    status: 'fallback' | 'preview' | 'ready';
 };
 
 type LiferayWindow = Window & {
@@ -19,32 +34,16 @@ type LiferayWindow = Window & {
     };
 };
 
-const socialLinkDefinitions = [
-    {
-        asset: 'instagram',
-        attribute: 'instagram-url',
-        fallbackURL: '#instagram',
-        label: 'Instagram',
-    },
-    {
-        asset: 'ball',
-        attribute: 'dribbble-url',
-        fallbackURL: '#dribbble',
-        label: 'Dribbble',
-    },
-    {
-        asset: 'twitter',
-        attribute: 'twitter-url',
-        fallbackURL: '#twitter',
-        label: 'Twitter',
-    },
-    {
-        asset: 'youtube',
-        attribute: 'youtube-url',
-        fallbackURL: '#youtube',
-        label: 'YouTube',
-    },
-] as const;
+const SOCIAL_ASSETS: Record<string, StaticAssetKey> = {
+    dribbble: 'ball',
+    instagram: 'instagram',
+    twitter: 'twitter',
+    twitterx: 'twitter',
+    x: 'twitter',
+    xcom: 'twitter',
+    youtube: 'youtube',
+    youtubechannel: 'youtube',
+};
 
 function readSetting(
     host: HTMLElement | undefined,
@@ -68,6 +67,168 @@ function readBooleanSetting(
     return value !== 'false';
 }
 
+function normalizeTarget(value: unknown): string {
+    if (typeof value !== 'string') {
+        return '';
+    }
+
+    if (value.includes('_blank')) {
+        return '_blank';
+    }
+
+    if (value.includes('_parent')) {
+        return '_parent';
+    }
+
+    if (value.includes('_top')) {
+        return '_top';
+    }
+
+    return value.includes('_self') ? '_self' : '';
+}
+
+function normalizeNavigation(value: unknown, prefix: string): NavigationItem[] {
+    if (!Array.isArray(value)) {
+        return [];
+    }
+
+    return value
+        .filter(
+            (item): item is Record<string, unknown> =>
+                Boolean(item && typeof item === 'object')
+        )
+        .map((item, index) => ({
+            children: normalizeNavigation(
+                item.children,
+                `${prefix}-${index + 1}`
+            ),
+            externalReferenceCode:
+                typeof item.externalReferenceCode === 'string' &&
+                item.externalReferenceCode
+                    ? item.externalReferenceCode
+                    : `${prefix}-${index + 1}`,
+            label: typeof item.label === 'string' ? item.label : '',
+            selected: item.selected === true,
+            target: normalizeTarget(item.target),
+            url: typeof item.url === 'string' && item.url ? item.url : '#',
+        }))
+        .filter((item) => Boolean(item.label));
+}
+
+function toNavigationItem(
+    item: {href: string; label: string},
+    prefix: string,
+    index: number
+): NavigationItem {
+    return {
+        children: [],
+        externalReferenceCode: `${prefix}-${index + 1}`,
+        label: item.label,
+        selected: false,
+        target: '',
+        url: item.href,
+    };
+}
+
+function createFallbackContext(): FooterRuntimeContext {
+    return {
+        companyNavigation: content.footer.columns[0].links.map((item, index) =>
+            toNavigationItem(item, 'NXC-PREVIEW-COMPANY', index)
+        ),
+        site: {
+            homeURL: '#home',
+            name: 'Nexcent',
+        },
+        socialNavigation: [
+            {href: '#instagram', label: 'Instagram'},
+            {href: '#dribbble', label: 'Dribbble'},
+            {href: '#twitter', label: 'Twitter'},
+            {href: '#youtube', label: 'YouTube'},
+        ].map((item, index) =>
+            toNavigationItem(item, 'NXC-PREVIEW-SOCIAL', index)
+        ),
+        supportNavigation: content.footer.columns[1].links.map((item, index) =>
+            toNavigationItem(item, 'NXC-PREVIEW-SUPPORT', index)
+        ),
+    };
+}
+
+function readRuntimeContext(host?: HTMLElement): RuntimeState {
+    const fallback = createFallbackContext();
+
+    if (!host) {
+        return {context: fallback, status: 'preview'};
+    }
+
+    const script = host.querySelector<HTMLScriptElement>(
+        'script[data-nexcent-footer-props]'
+    );
+
+    if (!script?.textContent?.trim()) {
+        return {
+            context: fallback,
+            error: new Error('Missing embedded Footer Fragment props.'),
+            status: 'fallback',
+        };
+    }
+
+    try {
+        const value = JSON.parse(script.textContent) as Record<string, unknown>;
+        const site =
+            value.site && typeof value.site === 'object'
+                ? (value.site as Record<string, unknown>)
+                : {};
+
+        return {
+            context: {
+                companyNavigation: normalizeNavigation(
+                    value.companyNavigation,
+                    'NXC-COMPANY'
+                ),
+                site: {
+                    homeURL:
+                        typeof site.homeURL === 'string' && site.homeURL
+                            ? site.homeURL
+                            : fallback.site.homeURL,
+                    name:
+                        typeof site.name === 'string' && site.name
+                            ? site.name
+                            : fallback.site.name,
+                },
+                socialNavigation: normalizeNavigation(
+                    value.socialNavigation,
+                    'NXC-SOCIAL'
+                ),
+                supportNavigation: normalizeNavigation(
+                    value.supportNavigation,
+                    'NXC-SUPPORT'
+                ),
+            },
+            status: 'ready',
+        };
+    }
+    catch (cause: unknown) {
+        return {
+            context: fallback,
+            error:
+                cause instanceof Error
+                    ? cause
+                    : new Error('Invalid embedded Footer Fragment props.'),
+            status: 'fallback',
+        };
+    }
+}
+
+function normalizeSocialName(label: string): string {
+    return label.trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+}
+
+function resolveSocialAsset(label: string): string | null {
+    const asset = SOCIAL_ASSETS[normalizeSocialName(label)];
+
+    return asset ? resolveStaticAsset(asset) : null;
+}
+
 function FooterNavigation({
     items,
     onNavigate,
@@ -85,6 +246,7 @@ function FooterNavigation({
                     <a
                         href={item.url}
                         onClick={(event) => onNavigate(event, item)}
+                        rel={item.target === '_blank' ? 'noopener noreferrer' : undefined}
                         target={item.target || undefined}
                     >
                         {item.label}
@@ -102,20 +264,12 @@ function FooterNavigation({
 }
 
 export function StaticFooter({host}: FooterProps) {
-    const {error, shell, status} = useSiteShell(host);
+    const {context, error, status} = readRuntimeContext(host);
     const [newsletterState, setNewsletterState] = useState<
         'error' | 'idle' | 'submitting' | 'success'
     >('idle');
-    const logoURL = readSetting(
-        host,
-        'logo-url',
-        shell.site.logoURL || resolveStaticAsset('logoDark')
-    );
-    const logoAlt = readSetting(
-        host,
-        'logo-alt',
-        shell.site.name || 'Nexcent'
-    );
+    const logoURL = readSetting(host, 'logo-url', resolveStaticAsset('logoDark'));
+    const logoAlt = readSetting(host, 'logo-alt', context.site.name);
     const copyrightText = readSetting(
         host,
         'copyright-text',
@@ -161,10 +315,6 @@ export function StaticFooter({host}: FooterProps) {
     );
     const showNewsletter = readBooleanSetting(host, 'show-newsletter', true);
     const showSocialLinks = readBooleanSetting(host, 'show-social-links', true);
-    const socialLinks = socialLinkDefinitions.map((item) => ({
-        ...item,
-        href: readSetting(host, item.attribute, item.fallbackURL),
-    }));
 
     const handleNavigation = (
         event: MouseEvent<HTMLAnchorElement>,
@@ -237,7 +387,7 @@ export function StaticFooter({host}: FooterProps) {
         <footer className="footer" data-runtime-state={status}>
             <div className="footer__container">
                 <div className="footer__box">
-                    <a className="footer__logo" href={shell.site.homeURL}>
+                    <a className="footer__logo" href={context.site.homeURL}>
                         <img src={logoURL} alt={logoAlt} />
                     </a>
                     <p>{copyrightText}</p>
@@ -245,19 +395,38 @@ export function StaticFooter({host}: FooterProps) {
 
                     {showSocialLinks ? (
                         <div className="footer__social social">
-                            {socialLinks.map((item) => (
-                                <a
-                                    aria-label={item.label}
-                                    href={item.href}
-                                    key={item.label}
-                                >
-                                    <img
-                                        src={resolveStaticAsset(item.asset)}
-                                        alt=""
-                                        aria-hidden="true"
-                                    />
-                                </a>
-                            ))}
+                            {context.socialNavigation.map((item) => {
+                                const iconURL = resolveSocialAsset(item.label);
+
+                                return (
+                                    <a
+                                        aria-label={item.label}
+                                        href={item.url}
+                                        key={
+                                            item.externalReferenceCode ||
+                                            `${item.label}-${item.url}`
+                                        }
+                                        rel={
+                                            item.target === '_blank'
+                                                ? 'noopener noreferrer'
+                                                : undefined
+                                        }
+                                        target={item.target || undefined}
+                                    >
+                                        {iconURL ? (
+                                            <img
+                                                src={iconURL}
+                                                alt=""
+                                                aria-hidden="true"
+                                            />
+                                        ) : (
+                                            <span aria-hidden="true">
+                                                {item.label.charAt(0).toUpperCase()}
+                                            </span>
+                                        )}
+                                    </a>
+                                );
+                            })}
                         </div>
                     ) : null}
                 </div>
@@ -266,7 +435,7 @@ export function StaticFooter({host}: FooterProps) {
                     <div className="footer__item">
                         <h3>{companyHeading}</h3>
                         <FooterNavigation
-                            items={shell.companyNavigation}
+                            items={context.companyNavigation}
                             onNavigate={handleNavigation}
                         />
                     </div>
@@ -274,7 +443,7 @@ export function StaticFooter({host}: FooterProps) {
                     <div className="footer__item">
                         <h3>{supportHeading}</h3>
                         <FooterNavigation
-                            items={shell.supportNavigation}
+                            items={context.supportNavigation}
                             onNavigate={handleNavigation}
                         />
                     </div>
@@ -335,7 +504,7 @@ export function StaticFooter({host}: FooterProps) {
 
                 {error ? (
                     <span className="sr-only" role="status">
-                        Footer navigation is using fallback data: {error.message}
+                        Footer is using preview fallback data: {error.message}
                     </span>
                 ) : null}
             </div>

@@ -19,12 +19,54 @@ type LiferayWindow = Window & {
     };
 };
 
-const socialLinks = [
-    {asset: 'instagram', label: 'Instagram'},
-    {asset: 'ball', label: 'Dribbble'},
-    {asset: 'twitter', label: 'Twitter'},
-    {asset: 'youtube', label: 'YouTube'},
-];
+const socialLinkDefinitions = [
+    {
+        asset: 'instagram',
+        attribute: 'instagram-url',
+        fallbackURL: '#instagram',
+        label: 'Instagram',
+    },
+    {
+        asset: 'ball',
+        attribute: 'dribbble-url',
+        fallbackURL: '#dribbble',
+        label: 'Dribbble',
+    },
+    {
+        asset: 'twitter',
+        attribute: 'twitter-url',
+        fallbackURL: '#twitter',
+        label: 'Twitter',
+    },
+    {
+        asset: 'youtube',
+        attribute: 'youtube-url',
+        fallbackURL: '#youtube',
+        label: 'YouTube',
+    },
+] as const;
+
+function readSetting(
+    host: HTMLElement | undefined,
+    name: string,
+    fallback: string
+) {
+    return host?.getAttribute(name)?.trim() || fallback;
+}
+
+function readBooleanSetting(
+    host: HTMLElement | undefined,
+    name: string,
+    fallback: boolean
+) {
+    const value = host?.getAttribute(name)?.trim().toLowerCase();
+
+    if (!value) {
+        return fallback;
+    }
+
+    return value !== 'false';
+}
 
 function FooterNavigation({
     items,
@@ -64,6 +106,65 @@ export function StaticFooter({host}: FooterProps) {
     const [newsletterState, setNewsletterState] = useState<
         'error' | 'idle' | 'submitting' | 'success'
     >('idle');
+    const logoURL = readSetting(
+        host,
+        'logo-url',
+        shell.site.logoURL || resolveStaticAsset('logoDark')
+    );
+    const logoAlt = readSetting(
+        host,
+        'logo-alt',
+        shell.site.name || 'Nexcent'
+    );
+    const copyrightText = readSetting(
+        host,
+        'copyright-text',
+        content.footer.copyright
+    );
+    const rightsText = readSetting(host, 'rights-text', content.footer.rights);
+    const companyHeading = readSetting(host, 'company-heading', 'Company');
+    const supportHeading = readSetting(host, 'support-heading', 'Support');
+    const newsletterTitle = readSetting(
+        host,
+        'newsletter-title',
+        content.footer.newsletterTitle
+    );
+    const newsletterPlaceholder = readSetting(
+        host,
+        'newsletter-placeholder',
+        content.footer.newsletterPlaceholder
+    );
+    const newsletterEndpoint = readSetting(
+        host,
+        'newsletter-endpoint',
+        '/o/c/nxcnewslettersubscriptions'
+    );
+    const newsletterSubmitLabel = readSetting(
+        host,
+        'newsletter-submit-label',
+        'Subscribe'
+    );
+    const newsletterSubmittingText = readSetting(
+        host,
+        'newsletter-submitting-text',
+        'Submitting…'
+    );
+    const newsletterSuccessText = readSetting(
+        host,
+        'newsletter-success-text',
+        'Thank you for subscribing.'
+    );
+    const newsletterErrorText = readSetting(
+        host,
+        'newsletter-error-text',
+        'Subscription failed. Please try again.'
+    );
+    const showNewsletter = readBooleanSetting(host, 'show-newsletter', true);
+    const showSocialLinks = readBooleanSetting(host, 'show-social-links', true);
+    const socialLinks = socialLinkDefinitions.map((item) => ({
+        ...item,
+        href: readSetting(host, item.attribute, item.fallbackURL),
+    }));
 
     const handleNavigation = (
         event: MouseEvent<HTMLAnchorElement>,
@@ -97,13 +198,10 @@ export function StaticFooter({host}: FooterProps) {
         const form = event.currentTarget;
         const formData = new FormData(form);
         const email = String(formData.get('email') ?? '').trim();
-        const endpoint =
-            host?.getAttribute('newsletter-endpoint')?.trim() ||
-            '/o/c/nxcnewslettersubscriptions';
         const authToken = (window as LiferayWindow).Liferay?.authToken;
 
         try {
-            const response = await fetch(endpoint, {
+            const response = await fetch(newsletterEndpoint, {
                 body: JSON.stringify({
                     consent: true,
                     email,
@@ -140,37 +238,33 @@ export function StaticFooter({host}: FooterProps) {
             <div className="footer__container">
                 <div className="footer__box">
                     <a className="footer__logo" href={shell.site.homeURL}>
-                        <img
-                            src={
-                                shell.site.logoURL ||
-                                resolveStaticAsset('logoDark')
-                            }
-                            alt={shell.site.name || 'Nexcent'}
-                        />
+                        <img src={logoURL} alt={logoAlt} />
                     </a>
-                    <p>{content.footer.copyright}</p>
-                    <p>{content.footer.rights}</p>
+                    <p>{copyrightText}</p>
+                    <p>{rightsText}</p>
 
-                    <div className="footer__social social">
-                        {socialLinks.map((item) => (
-                            <a
-                                aria-label={item.label}
-                                href={`#${item.label.toLowerCase()}`}
-                                key={item.label}
-                            >
-                                <img
-                                    src={resolveStaticAsset(item.asset)}
-                                    alt=""
-                                    aria-hidden="true"
-                                />
-                            </a>
-                        ))}
-                    </div>
+                    {showSocialLinks ? (
+                        <div className="footer__social social">
+                            {socialLinks.map((item) => (
+                                <a
+                                    aria-label={item.label}
+                                    href={item.href}
+                                    key={item.label}
+                                >
+                                    <img
+                                        src={resolveStaticAsset(item.asset)}
+                                        alt=""
+                                        aria-hidden="true"
+                                    />
+                                </a>
+                            ))}
+                        </div>
+                    ) : null}
                 </div>
 
                 <div className="footer__items">
                     <div className="footer__item">
-                        <h3>Company</h3>
+                        <h3>{companyHeading}</h3>
                         <FooterNavigation
                             items={shell.companyNavigation}
                             onNavigate={handleNavigation}
@@ -178,65 +272,65 @@ export function StaticFooter({host}: FooterProps) {
                     </div>
 
                     <div className="footer__item">
-                        <h3>Support</h3>
+                        <h3>{supportHeading}</h3>
                         <FooterNavigation
                             items={shell.supportNavigation}
                             onNavigate={handleNavigation}
                         />
                     </div>
 
-                    <div className="footer__item footer__submit">
-                        <h3>{content.footer.newsletterTitle}</h3>
-                        <form className="footer__form" onSubmit={handleSubmit}>
-                            <div>
-                                <label
-                                    className="sr-only"
-                                    htmlFor="nexcent-react-email"
-                                >
-                                    {content.footer.newsletterPlaceholder}
-                                </label>
-                                <input
-                                    autoComplete="email"
-                                    disabled={newsletterState === 'submitting'}
-                                    id="nexcent-react-email"
-                                    name="email"
-                                    type="email"
-                                    required
-                                    placeholder={
-                                        content.footer.newsletterPlaceholder
-                                    }
-                                />
-                                <button
-                                    aria-label="Subscribe"
-                                    disabled={newsletterState === 'submitting'}
-                                    type="submit"
-                                >
-                                    <span className="footer__form-icon">
-                                        <img
-                                            src={resolveStaticAsset('email')}
-                                            alt=""
-                                            aria-hidden="true"
-                                        />
-                                    </span>
-                                </button>
-                            </div>
+                    {showNewsletter ? (
+                        <div className="footer__item footer__submit">
+                            <h3>{newsletterTitle}</h3>
+                            <form className="footer__form" onSubmit={handleSubmit}>
+                                <div>
+                                    <label
+                                        className="sr-only"
+                                        htmlFor="nexcent-react-email"
+                                    >
+                                        {newsletterPlaceholder}
+                                    </label>
+                                    <input
+                                        autoComplete="email"
+                                        disabled={newsletterState === 'submitting'}
+                                        id="nexcent-react-email"
+                                        name="email"
+                                        type="email"
+                                        required
+                                        placeholder={newsletterPlaceholder}
+                                    />
+                                    <button
+                                        aria-label={newsletterSubmitLabel}
+                                        disabled={newsletterState === 'submitting'}
+                                        type="submit"
+                                    >
+                                        <span className="footer__form-icon">
+                                            <img
+                                                src={resolveStaticAsset('email')}
+                                                alt=""
+                                                aria-hidden="true"
+                                            />
+                                        </span>
+                                    </button>
+                                </div>
 
-                            <p
-                                aria-live="polite"
-                                className={`footer__form-status footer__form-status--${newsletterState}`}
-                            >
-                                {newsletterState === 'submitting'
-                                    ? 'Submitting…'
-                                    : null}
-                                {newsletterState === 'success'
-                                    ? 'Thank you for subscribing.'
-                                    : null}
-                                {newsletterState === 'error'
-                                    ? 'Subscription failed. Please try again.'
-                                    : null}
-                            </p>
-                        </form>
-                    </div>
+                                <p
+                                    aria-live="polite"
+                                    className={`footer__form-status footer__form-status--${newsletterState}`}
+                                >
+                                    {newsletterState === 'submitting'
+                                        ? newsletterSubmittingText
+                                        : null}
+                                    {newsletterState === 'success'
+                                        ? newsletterSuccessText
+                                        : null}
+                                    {newsletterState === 'error'
+                                        ? newsletterErrorText
+                                        : null}
+                                </p>
+                            </form>
+                        </div>
+                    ) : null}
                 </div>
 
                 {error ? (

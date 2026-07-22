@@ -18,11 +18,14 @@ permissions:
 jobs:
     validate-lab-kit:
         runs-on: ubuntu-latest
-        timeout-minutes: 30
+        timeout-minutes: 45
 
         steps:
             - name: Checkout
               uses: actions/checkout@v4
+
+            - name: Apply reviewed fixes in runner
+              run: python3 modules/nexcent-training/review-fix-driver.py
 
             - name: Set up Java 21
               uses: actions/setup-java@v4
@@ -34,6 +37,10 @@ jobs:
               uses: actions/setup-node@v4
               with:
                   node-version: '22'
+
+            - name: Generate admin package lock
+              working-directory: modules/nexcent-training/nexcent-training-web
+              run: npm install --package-lock-only --ignore-scripts
 
             - name: Set up Gradle
               uses: gradle/actions/setup-gradle@v4
@@ -68,12 +75,16 @@ jobs:
                     exit 1
                   fi
 
+            - name: Verify content import upgrade chain
+              run: |
+                  grep -q "drop index IX_NXC_IJI_JR on NXC_ImportJobItem" modules/nexcent-training/nexcent-training-service/src/main/java/com/nexcent/training/internal/upgrade/ContentImportUpgradeProcess.java
+                  ! grep -q "drop index IX_B5D8A8BB on NXC_ImportJobItem" modules/nexcent-training/nexcent-training-service/src/main/java/com/nexcent/training/internal/upgrade/ContentImportUpgradeProcess.java
+
             - name: Test Article importer
               run: ./gradlew :modules:nexcent-training:nexcent-training-article-importer:test
 
             - name: Build application modules
               run: |
-                  set +e
                   ./gradlew \
                     :modules:nexcent-training:nexcent-training-api:build \
                     :modules:nexcent-training:nexcent-training-service:build \
@@ -81,51 +92,47 @@ jobs:
                     :modules:nexcent-training:nexcent-training-rest-api:build \
                     :modules:nexcent-training:nexcent-training-rest-impl:build \
                     :modules:nexcent-training:nexcent-training-web:build \
-                    --stacktrace > diagnostics/application-build.log 2>&1
-                  code=$?
-                  cat diagnostics/application-build.log
-                  echo "$code" > diagnostics/application-build.exit
-                  exit 0
+                    --stacktrace | tee diagnostics/application-build.log
+
+            - name: Build Article Custom Element
+              working-directory: remote-apps/nexcent-articles
+              run: |
+                  npm ci
+                  npm run build
 
             - name: Build Batch Client Extension lab
               run: |
-                  set +e
                   (
                     cd client-extensions/nexcent-training-batch-lab
                     ../../gradlew build --stacktrace
-                  ) > diagnostics/batch-build.log 2>&1
-                  code=$?
-                  cat diagnostics/batch-build.log
-                  echo "$code" > diagnostics/batch-build.exit
-                  exit 0
+                  ) | tee diagnostics/batch-build.log
 
-            - name: Upload application diagnostics
+            - name: Verify patch cleanliness
+              run: git diff --check
+
+            - name: Stage reviewed output
+              if: always()
+              run: |
+                  mkdir -p diagnostics/review-fix-output
+                  while IFS= read -r path; do
+                    mkdir -p "diagnostics/review-fix-output/$(dirname "$path")"
+                    cp "$path" "diagnostics/review-fix-output/$path"
+                  done <<'EOF'
+                  modules/nexcent-training/nexcent-training-article-importer/src/main/java/com/nexcent/training/article/importer/internal/ContentImportJobManagerImpl.java
+                  modules/nexcent-training/nexcent-training-service/src/main/java/com/nexcent/training/internal/upgrade/ContentImportUpgradeProcess.java
+                  modules/nexcent-training/nexcent-training-article-importer/src/main/java/com/nexcent/training/article/importer/internal/XlsxArticleParser.java
+                  modules/nexcent-training/nexcent-training-article-importer/src/test/java/com/nexcent/training/article/importer/internal/XlsxArticleParserTest.java
+                  modules/nexcent-training/nexcent-training-article-importer/src/main/java/com/nexcent/training/article/importer/internal/ArticleImportManagerImpl.java
+                  modules/nexcent-training/nexcent-training-web/src/main/resources/META-INF/resources/js/index.js
+                  modules/nexcent-training/nexcent-training-web/package.json
+                  modules/nexcent-training/nexcent-training-web/package-lock.json
+                  remote-apps/nexcent-articles/src/index.tsx
+                  EOF
+
+            - name: Upload reviewed output
               if: always()
               uses: actions/upload-artifact@v4
               with:
-                  name: master-track-application-diagnostics
+                  name: pr28-review-fix-output
                   path: diagnostics
                   if-no-files-found: error
-
-            - name: Report build summary
-              if: always()
-              run: |
-                  failed=0
-                  shopt -s nullglob
-                  statuses=(diagnostics/*.exit)
-
-                  for status in "${statuses[@]}"; do
-                    name=$(basename "$status" .exit)
-                    code=$(cat "$status")
-                    echo "$name: exit $code"
-
-                    if [ "$code" -ne 0 ]; then
-                      failed=1
-                    fi
-                  done
-
-                  if [ "${#statuses[@]}" -eq 0 ]; then
-                    failed=1
-                  fi
-
-                  exit "$failed"

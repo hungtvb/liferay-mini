@@ -15,9 +15,26 @@ into React components while keeping that prototype as the visual baseline.
 - The hero carousel is implemented with React state and timers, so Swiper and
   AOS CDNs are no longer runtime dependencies.
 
-Attach **Nexcent React Runtime** as Global JavaScript to the Master Page or
-page before using the Fragment shells.
+Attach **Nexcent React Runtime** as Global JavaScript to the Master Page before
+using the Fragment shells.
 
-Production Header and Footer remain owned by the existing editable/OOTB
-Liferay composition. `nexcent-react-header`, `nexcent-react-footer`, and
-`nexcent-react-page` exist for visual parity preview only.
+## Production Site Shell
+
+`nexcent-react-header` and `nexcent-react-footer` are production components.
+They share a cached request to:
+
+```text
+GET /o/nexcent-site-shell/v1.0/sites/{siteId}/site-shell
+```
+
+The endpoint returns permission-filtered Navigation Menu items, guest or
+authenticated account state, and site identity. The REST Builder contract is
+flat for generator compatibility; `siteShellClient.ts` reconstructs the nested
+navigation tree in the browser.
+
+If the endpoint is unavailable, both components render the bundled static
+fallback and mark their custom-element host with
+`data-site-shell-state="fallback"`.
+
+`nexcent-react-page` remains a visual parity preview that uses the same React
+components with fallback data.

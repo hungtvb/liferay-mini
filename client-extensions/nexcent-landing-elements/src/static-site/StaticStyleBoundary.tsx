@@ -9,6 +9,7 @@ const LOCAL_OVERRIDES = `
     font-family: Inter, Arial, sans-serif;
     line-height: 1.5;
     min-width: 0;
+    scroll-margin-top: 80px;
 }
 
 :host *, :host *::before, :host *::after {

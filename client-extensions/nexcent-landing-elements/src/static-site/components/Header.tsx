@@ -1,4 +1,4 @@
-import {useState} from 'react';
+import {type MouseEvent, useState} from 'react';
 
 import content from '../../../../../prototypes/nexcent-static/content.json';
 import {resolveStaticAsset} from '../assets';
@@ -6,10 +6,39 @@ import {resolveStaticAsset} from '../assets';
 export function StaticHeader() {
     const [open, setOpen] = useState(false);
 
+    const handleNavigation = (
+        event: MouseEvent<HTMLAnchorElement>,
+        href: string
+    ) => {
+        setOpen(false);
+
+        if (!href.startsWith('#')) {
+            return;
+        }
+
+        const rootNode = event.currentTarget.getRootNode();
+        const target =
+            rootNode instanceof ShadowRoot
+                ? rootNode.querySelector<HTMLElement>(href)
+                : null;
+
+        if (!target) {
+            return;
+        }
+
+        event.preventDefault();
+        target.scrollIntoView({behavior: 'smooth', block: 'start'});
+        window.history.replaceState(null, '', href);
+    };
+
     return (
         <header className="header">
             <div className="header__container">
-                <a className="header__logo" href="#home">
+                <a
+                    className="header__logo"
+                    href="#home"
+                    onClick={(event) => handleNavigation(event, '#home')}
+                >
                     <img src={resolveStaticAsset('logo')} alt="Nexcent" />
                 </a>
 
@@ -34,7 +63,12 @@ export function StaticHeader() {
                         <ul>
                             {content.navigation.map((item) => (
                                 <li key={item.label}>
-                                    <a href={item.href} onClick={() => setOpen(false)}>
+                                    <a
+                                        href={item.href}
+                                        onClick={(event) =>
+                                            handleNavigation(event, item.href)
+                                        }
+                                    >
                                         {item.label}
                                     </a>
                                     <span className="decor-line" />

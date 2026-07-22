@@ -45,6 +45,7 @@ jobs:
               run: |
                   node scripts/verify-course.mjs
                   node training/master-track-code-labs/scripts/validate-lab-kit.mjs
+                  node training/master-track-code-labs/scripts/validate-article-detail-fragment.mjs
 
             - name: Build OSGi component lab
               run: ./gradlew :modules:nexcent-training:nexcent-training-osgi:build

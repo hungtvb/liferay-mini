@@ -18,6 +18,7 @@ import com.liferay.site.navigation.type.SiteNavigationMenuItemType;
 import com.liferay.site.navigation.type.SiteNavigationMenuItemTypeRegistry;
 import com.nexcent.site.shell.rest.dto.v1_0.AccountContext;
 import com.nexcent.site.shell.rest.dto.v1_0.NavigationItem;
+import com.nexcent.site.shell.rest.dto.v1_0.NavigationMenu;
 import com.nexcent.site.shell.rest.dto.v1_0.SiteIdentity;
 import com.nexcent.site.shell.rest.dto.v1_0.SiteShell;
 import com.nexcent.site.shell.rest.resource.v1_0.SiteShellResource;
@@ -51,16 +52,16 @@ public class SiteShellResourceImpl extends BaseSiteShellResourceImpl {
 
         siteShell.setAccount(_toAccountContext(themeDisplay));
         siteShell.setCompanyNavigation(
-            _getNavigationItems(
+            _getNavigationMenu(
                 group.getGroupId(), "Footer Company", _COMPANY_MENU_ALIASES,
                 locale, themeDisplay, warnings));
         siteShell.setHeaderNavigation(
-            _getNavigationItems(
+            _getNavigationMenu(
                 group.getGroupId(), "Header", _HEADER_MENU_ALIASES, locale,
                 themeDisplay, warnings));
         siteShell.setSite(_toSiteIdentity(group, locale, themeDisplay));
         siteShell.setSupportNavigation(
-            _getNavigationItems(
+            _getNavigationMenu(
                 group.getGroupId(), "Footer Support", _SUPPORT_MENU_ALIASES,
                 locale, themeDisplay, warnings));
         siteShell.setWarnings(warnings.toArray(new String[0]));
@@ -68,25 +69,35 @@ public class SiteShellResourceImpl extends BaseSiteShellResourceImpl {
         return siteShell;
     }
 
-    private NavigationItem[] _getNavigationItems(
+    private NavigationMenu _getNavigationMenu(
             long groupId, String label, String[] aliases, Locale locale,
             ThemeDisplay themeDisplay, List<String> warnings)
         throws Exception {
 
         SiteNavigationMenu siteNavigationMenu = _resolveNavigationMenu(
             groupId, aliases);
+        NavigationMenu navigationMenu = new NavigationMenu();
+
+        navigationMenu.setName(label);
 
         if (siteNavigationMenu == null) {
+            navigationMenu.setExternalReferenceCode(StringPool.BLANK);
+            navigationMenu.setNavigationItems(new NavigationItem[0]);
             warnings.add("Missing navigation menu: " + label);
 
-            return new NavigationItem[0];
+            return navigationMenu;
         }
 
-        List<NavigationItem> navigationItems = _toNavigationItems(
-            siteNavigationMenu.getSiteNavigationMenuId(), 0, locale,
-            themeDisplay, new HashSet<>(), 0);
+        navigationMenu.setExternalReferenceCode(
+            siteNavigationMenu.getExternalReferenceCode());
+        navigationMenu.setName(siteNavigationMenu.getName());
+        navigationMenu.setNavigationItems(
+            _toNavigationItems(
+                siteNavigationMenu.getSiteNavigationMenuId(), 0,
+                StringPool.BLANK, locale, themeDisplay, new HashSet<>(), 0
+            ).toArray(new NavigationItem[0]));
 
-        return navigationItems.toArray(new NavigationItem[0]);
+        return navigationMenu;
     }
 
     private List<SiteNavigationMenuItem> _getSiteNavigationMenuItems(
@@ -175,8 +186,8 @@ public class SiteShellResourceImpl extends BaseSiteShellResourceImpl {
 
     private List<NavigationItem> _toNavigationItems(
             long siteNavigationMenuId, long parentSiteNavigationMenuItemId,
-            Locale locale, ThemeDisplay themeDisplay, Set<Long> visitedIds,
-            int depth)
+            String parentExternalReferenceCode, Locale locale,
+            ThemeDisplay themeDisplay, Set<Long> visitedIds, int depth)
         throws Exception {
 
         if (depth >= _MAX_DEPTH) {
@@ -196,6 +207,7 @@ public class SiteShellResourceImpl extends BaseSiteShellResourceImpl {
         PermissionChecker permissionChecker =
             PermissionThreadLocal.getPermissionChecker();
         Layout layout = (themeDisplay != null) ? themeDisplay.getLayout() : null;
+        int order = 0;
 
         for (SiteNavigationMenuItem siteNavigationMenuItem :
                 _getSiteNavigationMenuItems(
@@ -221,21 +233,19 @@ public class SiteShellResourceImpl extends BaseSiteShellResourceImpl {
                 continue;
             }
 
+            String externalReferenceCode =
+                siteNavigationMenuItem.getExternalReferenceCode();
             String url = siteNavigationMenuItemType.getRegularURL(
                 contextHttpServletRequest, siteNavigationMenuItem);
-
             NavigationItem navigationItem = new NavigationItem();
 
-            navigationItem.setChildren(
-                _toNavigationItems(
-                    siteNavigationMenuId, siteNavigationMenuItemId, locale,
-                    themeDisplay, visitedIds, depth + 1
-                ).toArray(new NavigationItem[0]));
-            navigationItem.setExternalReferenceCode(
-                siteNavigationMenuItem.getExternalReferenceCode());
+            navigationItem.setExternalReferenceCode(externalReferenceCode);
             navigationItem.setLabel(
                 siteNavigationMenuItemType.getTitle(
                     siteNavigationMenuItem, locale));
+            navigationItem.setOrder(order++);
+            navigationItem.setParentExternalReferenceCode(
+                parentExternalReferenceCode);
             navigationItem.setSelected(
                 (layout != null) && siteNavigationMenuItemType.isSelected(
                     true, siteNavigationMenuItem, layout));
@@ -245,6 +255,11 @@ public class SiteShellResourceImpl extends BaseSiteShellResourceImpl {
                 Validator.isNull(url) ? StringPool.POUND : url);
 
             navigationItems.add(navigationItem);
+            navigationItems.addAll(
+                _toNavigationItems(
+                    siteNavigationMenuId, siteNavigationMenuItemId,
+                    externalReferenceCode, locale, themeDisplay, visitedIds,
+                    depth + 1));
         }
 
         return navigationItems;

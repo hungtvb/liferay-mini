@@ -72,6 +72,7 @@ try {
         '--create',
         '--file',
         outputPath,
+        '--no-manifest',
         '-C',
         stagingDirectory,
         collectionKey,

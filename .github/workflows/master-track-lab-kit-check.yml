@@ -9,11 +9,12 @@ on:
             - 'client-extensions/nexcent-training-batch-lab/**'
             - 'docs/master-track/**'
             - 'modules/nexcent-training/**'
+            - 'remote-apps/nexcent-articles/**'
             - 'training/master-track-code-labs/**'
     workflow_dispatch:
 
 permissions:
-    contents: read
+    contents: write
 
 jobs:
     validate-lab-kit:
@@ -21,10 +22,13 @@ jobs:
         timeout-minutes: 45
 
         steps:
-            - name: Checkout
+            - name: Checkout branch
               uses: actions/checkout@v4
+              with:
+                  ref: feat/article-content-pipeline
+                  fetch-depth: 0
 
-            - name: Apply reviewed fixes in runner
+            - name: Apply remaining reviewed fixes
               run: python3 modules/nexcent-training/review-fix-driver.py
 
             - name: Set up Java 21
@@ -38,22 +42,26 @@ jobs:
               with:
                   node-version: '22'
 
-            - name: Generate admin package lock
-              working-directory: modules/nexcent-training/nexcent-training-web
-              run: npm install --package-lock-only --ignore-scripts
-
-            - name: Snapshot reviewed fixes
+            - name: Generate deterministic lockfiles
               run: |
-                  git config user.name "review-fix-runner"
-                  git config user.email "review-fix-runner@noreply.local"
-                  git add -A
-                  git commit -m "test: snapshot PR 28 review fixes"
+                  npm install --package-lock-only --ignore-scripts --prefix modules/nexcent-training/nexcent-training-web
+                  npm install --package-lock-only --ignore-scripts --prefix remote-apps/nexcent-articles
+
+            - name: Commit reviewed source fixes locally
+              run: |
+                  git config user.name "github-actions[bot]"
+                  git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+                  git add \
+                    modules/nexcent-training/nexcent-training-article-importer/src/main/java/com/nexcent/training/article/importer/internal/ArticleImportManagerImpl.java \
+                    modules/nexcent-training/nexcent-training-web/src/main/resources/META-INF/resources/js/index.js \
+                    modules/nexcent-training/nexcent-training-web/package.json \
+                    modules/nexcent-training/nexcent-training-web/package-lock.json \
+                    remote-apps/nexcent-articles/src/index.tsx \
+                    remote-apps/nexcent-articles/package-lock.json
+                  git commit -m "fix(content): complete PR 28 review fixes"
 
             - name: Set up Gradle
               uses: gradle/actions/setup-gradle@v4
-
-            - name: Create diagnostics directory
-              run: mkdir -p diagnostics
 
             - name: Validate repository and lab contracts
               run: |
@@ -69,15 +77,11 @@ jobs:
             - name: Generate REST Builder source
               run: ./gradlew :modules:nexcent-training:nexcent-training-rest-impl:buildREST
 
-            - name: Capture generated source changes
-              run: |
-                  git add -N modules/nexcent-training
-                  git diff --binary > diagnostics/generated-sources.patch
-
             - name: Verify generated sources are checked in
               run: |
-                  if [ -s diagnostics/generated-sources.patch ]; then
-                    cat diagnostics/generated-sources.patch
+                  git add -N modules/nexcent-training
+                  if ! git diff --quiet -- modules/nexcent-training; then
+                    git diff -- modules/nexcent-training
                     echo "Generated Service Builder or REST Builder sources are stale."
                     exit 1
                   fi
@@ -99,50 +103,21 @@ jobs:
                     :modules:nexcent-training:nexcent-training-rest-api:build \
                     :modules:nexcent-training:nexcent-training-rest-impl:build \
                     :modules:nexcent-training:nexcent-training-web:build \
-                    --stacktrace | tee diagnostics/application-build.log
+                    --stacktrace
 
             - name: Build Article Custom Element
               working-directory: remote-apps/nexcent-articles
               run: |
-                  set -o pipefail
-                  npm install --package-lock-only --ignore-scripts 2>&1 | tee ../../diagnostics/article-custom-element-build.log
-                  npm ci 2>&1 | tee -a ../../diagnostics/article-custom-element-build.log
-                  npm run build 2>&1 | tee -a ../../diagnostics/article-custom-element-build.log
+                  npm ci
+                  npm run build
 
             - name: Build Batch Client Extension lab
               run: |
-                  (
-                    cd client-extensions/nexcent-training-batch-lab
-                    ../../gradlew build --stacktrace
-                  ) | tee diagnostics/batch-build.log
+                  cd client-extensions/nexcent-training-batch-lab
+                  ../../gradlew build --stacktrace
 
-            - name: Verify patch cleanliness
+            - name: Verify clean tree
               run: git diff --check
 
-            - name: Stage reviewed output
-              if: always()
-              run: |
-                  mkdir -p diagnostics/review-fix-output
-                  while IFS= read -r path; do
-                    mkdir -p "diagnostics/review-fix-output/$(dirname "$path")"
-                    cp "$path" "diagnostics/review-fix-output/$path"
-                  done <<'EOF'
-                  modules/nexcent-training/nexcent-training-article-importer/src/main/java/com/nexcent/training/article/importer/internal/ContentImportJobManagerImpl.java
-                  modules/nexcent-training/nexcent-training-service/src/main/java/com/nexcent/training/internal/upgrade/ContentImportUpgradeProcess.java
-                  modules/nexcent-training/nexcent-training-article-importer/src/main/java/com/nexcent/training/article/importer/internal/XlsxArticleParser.java
-                  modules/nexcent-training/nexcent-training-article-importer/src/test/java/com/nexcent/training/article/importer/internal/XlsxArticleParserTest.java
-                  modules/nexcent-training/nexcent-training-article-importer/src/main/java/com/nexcent/training/article/importer/internal/ArticleImportManagerImpl.java
-                  modules/nexcent-training/nexcent-training-web/src/main/resources/META-INF/resources/js/index.js
-                  modules/nexcent-training/nexcent-training-web/package.json
-                  modules/nexcent-training/nexcent-training-web/package-lock.json
-                  remote-apps/nexcent-articles/src/index.tsx
-                  remote-apps/nexcent-articles/package-lock.json
-                  EOF
-
-            - name: Upload reviewed output
-              if: always()
-              uses: actions/upload-artifact@v4
-              with:
-                  name: pr28-review-fix-output
-                  path: diagnostics
-                  if-no-files-found: error
+            - name: Push validated fixes
+              run: git push origin HEAD:feat/article-content-pipeline

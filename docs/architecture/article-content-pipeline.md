@@ -4,6 +4,8 @@ Status: **DESIGN READY / IMPLEMENTATION AND RUNTIME QA PENDING**
 Target: **Liferay DXP 2026.Q1.1**  
 Decision owner: Nexcent training project
 
+> **Implementation delta at this commit:** the branch already contains the Service Builder job/row foundation and a transitional REST endpoint that accepts multipart XLSX directly. It does not yet implement the ZIP package contract, media-first import, standard Documents API handoff, or `nexcent-training-web` Site Administration App defined below. Treat this document as the normative target; runtime verification remains pending.
+
 ## 1. Decision
 
 Use classic Liferay Web Content (`StructuredContent`) as the Article source of truth for the 2026.Q1.1 baseline.

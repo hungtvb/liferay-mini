@@ -1,10 +1,8 @@
-import {mkdir, readdir, readFile, rm, writeFile} from 'node:fs/promises';
+import {spawn} from 'node:child_process';
+import {cp, mkdir, mkdtemp, readdir, readFile, rm} from 'node:fs/promises';
+import os from 'node:os';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
-import {createRequire} from 'node:module';
-
-const require = createRequire(import.meta.url);
-const {default: JSZip} = await import('jszip');
 
 const projectDirectory = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const fragmentSourceDirectory = path.join(projectDirectory, 'fragments');
@@ -12,24 +10,20 @@ const outputDirectory = path.join(projectDirectory, 'build', 'fragments');
 const outputPath = path.join(outputDirectory, 'collections-nexcent-components.zip');
 const collectionKey = 'nexcent-components';
 
-async function addDirectory(zip, sourceDirectory, zipDirectory) {
-    const entries = await readdir(sourceDirectory, {withFileTypes: true});
+function run(command, args, options = {}) {
+    return new Promise((resolve, reject) => {
+        const child = spawn(command, args, {stdio: 'inherit', ...options});
 
-    for (const entry of entries) {
-        if (entry.name === '.gitkeep' || entry.name.endsWith('.zip')) {
-            continue;
-        }
-
-        const sourcePath = path.join(sourceDirectory, entry.name);
-        const targetPath = path.posix.join(zipDirectory, entry.name);
-
-        if (entry.isDirectory()) {
-            await addDirectory(zip, sourcePath, targetPath);
-        }
-        else {
-            zip.file(targetPath, await readFile(sourcePath));
-        }
-    }
+        child.on('error', reject);
+        child.on('exit', (code) => {
+            if (code === 0) {
+                resolve();
+            }
+            else {
+                reject(new Error(`${command} exited with code ${code}`));
+            }
+        });
+    });
 }
 
 const collectionPath = path.join(fragmentSourceDirectory, 'collection.json');
@@ -55,19 +49,36 @@ for (const entry of fragmentEntries) {
     for (const propertyName of ['htmlPath', 'cssPath', 'jsPath', 'configurationPath']) {
         const referencedFile = fragmentDefinition[propertyName];
 
-        if (!referencedFile) {
-            continue;
+        if (referencedFile) {
+            await readFile(path.join(fragmentDirectory, referencedFile));
         }
-
-        await readFile(path.join(fragmentDirectory, referencedFile));
     }
 }
 
 await rm(outputDirectory, {force: true, recursive: true});
 await mkdir(outputDirectory, {recursive: true});
 
-const zip = new JSZip();
-await addDirectory(zip, fragmentSourceDirectory, collectionKey);
-await writeFile(outputPath, await zip.generateAsync({compression: 'DEFLATE', type: 'nodebuffer'}));
+const stagingDirectory = await mkdtemp(path.join(os.tmpdir(), 'nexcent-fragments-'));
+const stagedCollectionDirectory = path.join(stagingDirectory, collectionKey);
+
+try {
+    await cp(fragmentSourceDirectory, stagedCollectionDirectory, {
+        filter: (source) =>
+            path.basename(source) !== '.gitkeep' && !source.endsWith('.zip'),
+        recursive: true,
+    });
+
+    await run('jar', [
+        '--create',
+        '--file',
+        outputPath,
+        '-C',
+        stagingDirectory,
+        collectionKey,
+    ]);
+}
+finally {
+    await rm(stagingDirectory, {force: true, recursive: true});
+}
 
 console.log(`Created Fragment Set package: ${outputPath}`);

@@ -14,10 +14,7 @@ try:
     lines = []
 
     for line in source[start:end].splitlines():
-        if line and not line.startswith('          '):
-            raise RuntimeError(f'Unexpected YAML indentation: {line[:80]}')
-
-        lines.append(line[10:] if line else '')
+        lines.append(line[10:] if line.startswith('          ') else line)
 
     script = '\n'.join(lines) + '\n'
     exec(compile(script, str(workflow_path), 'exec'))

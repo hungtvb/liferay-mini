@@ -22,6 +22,28 @@ type NavigationListProps = {
     root?: boolean;
 };
 
+function readSetting(
+    host: HTMLElement | undefined,
+    name: string,
+    fallback: string
+) {
+    return host?.getAttribute(name)?.trim() || fallback;
+}
+
+function readBooleanSetting(
+    host: HTMLElement | undefined,
+    name: string,
+    fallback: boolean
+) {
+    const value = host?.getAttribute(name)?.trim().toLowerCase();
+
+    if (!value) {
+        return fallback;
+    }
+
+    return value !== 'false';
+}
+
 function NavigationList({items, onNavigate, root = false}: NavigationListProps) {
     return (
         <ul className={root ? 'header__navigation-list' : 'header__submenu'}>
@@ -64,6 +86,29 @@ export function StaticHeader({host}: HeaderProps) {
                 .map((part) => part[0]?.toUpperCase())
                 .join('') || 'U',
         [shell.account.displayName]
+    );
+    const logoURL = readSetting(
+        host,
+        'logo-url',
+        shell.site.logoURL || resolveStaticAsset('logo')
+    );
+    const logoAlt = readSetting(
+        host,
+        'logo-alt',
+        shell.site.name || 'Nexcent'
+    );
+    const loginLabel = readSetting(host, 'login-label', 'Login');
+    const signUpLabel = readSetting(host, 'sign-up-label', 'Sign up');
+    const myAccountLabel = readSetting(
+        host,
+        'my-account-label',
+        'My Account'
+    );
+    const signOutLabel = readSetting(host, 'sign-out-label', 'Sign out');
+    const showAccountActions = readBooleanSetting(
+        host,
+        'show-account-actions',
+        true
     );
 
     useEffect(() => {
@@ -131,10 +176,7 @@ export function StaticHeader({host}: HeaderProps) {
                         })
                     }
                 >
-                    <img
-                        src={shell.site.logoURL || resolveStaticAsset('logo')}
-                        alt={shell.site.name || 'Nexcent'}
-                    />
+                    <img src={logoURL} alt={logoAlt} />
                 </a>
 
                 <button
@@ -162,75 +204,77 @@ export function StaticHeader({host}: HeaderProps) {
                         />
                     </nav>
 
-                    <div className="header__btns">
-                        {shell.account.signedIn ? (
-                            <div className="header__account">
-                                <button
-                                    aria-expanded={accountOpen}
-                                    className="header__account-trigger"
-                                    onClick={() =>
-                                        setAccountOpen((value) => !value)
-                                    }
-                                    type="button"
-                                >
-                                    {shell.account.portraitURL ? (
-                                        <img
-                                            className="header__account-avatar"
-                                            src={shell.account.portraitURL}
-                                            alt=""
-                                        />
-                                    ) : (
-                                        <span
-                                            aria-hidden="true"
-                                            className="header__account-initials"
-                                        >
-                                            {initials}
+                    {showAccountActions ? (
+                        <div className="header__btns">
+                            {shell.account.signedIn ? (
+                                <div className="header__account">
+                                    <button
+                                        aria-expanded={accountOpen}
+                                        className="header__account-trigger"
+                                        onClick={() =>
+                                            setAccountOpen((value) => !value)
+                                        }
+                                        type="button"
+                                    >
+                                        {shell.account.portraitURL ? (
+                                            <img
+                                                className="header__account-avatar"
+                                                src={shell.account.portraitURL}
+                                                alt=""
+                                            />
+                                        ) : (
+                                            <span
+                                                aria-hidden="true"
+                                                className="header__account-initials"
+                                            >
+                                                {initials}
+                                            </span>
+                                        )}
+                                        <span className="header__account-name">
+                                            {shell.account.displayName}
                                         </span>
-                                    )}
-                                    <span className="header__account-name">
-                                        {shell.account.displayName}
-                                    </span>
-                                    <span aria-hidden="true">▾</span>
-                                </button>
+                                        <span aria-hidden="true">▾</span>
+                                    </button>
 
-                                <div
-                                    className={`header__account-menu${
-                                        accountOpen ? ' is-open' : ''
-                                    }`}
-                                >
-                                    <a
-                                        href={shell.account.accountURL}
-                                        onClick={closeNavigation}
+                                    <div
+                                        className={`header__account-menu${
+                                            accountOpen ? ' is-open' : ''
+                                        }`}
                                     >
-                                        My Account
-                                    </a>
-                                    <a
-                                        href={shell.account.logoutURL}
-                                        onClick={closeNavigation}
-                                    >
-                                        Sign out
-                                    </a>
+                                        <a
+                                            href={shell.account.accountURL}
+                                            onClick={closeNavigation}
+                                        >
+                                            {myAccountLabel}
+                                        </a>
+                                        <a
+                                            href={shell.account.logoutURL}
+                                            onClick={closeNavigation}
+                                        >
+                                            {signOutLabel}
+                                        </a>
+                                    </div>
                                 </div>
-                            </div>
-                        ) : (
-                            <>
-                                <a
-                                    className="btn btn-light"
-                                    href={shell.account.loginURL}
-                                    onClick={closeNavigation}
-                                >
-                                    Login
-                                </a>
-                                <a
-                                    className="btn"
-                                    href={shell.account.createAccountURL}
-                                    onClick={closeNavigation}
-                                >
-                                    Sign up
-                                </a>
-                            </>
-                        )}
-                    </div>
+                            ) : (
+                                <>
+                                    <a
+                                        className="btn btn-light"
+                                        href={shell.account.loginURL}
+                                        onClick={closeNavigation}
+                                    >
+                                        {loginLabel}
+                                    </a>
+                                    <a
+                                        className="btn"
+                                        href={shell.account.createAccountURL}
+                                        onClick={closeNavigation}
+                                    >
+                                        {signUpLabel}
+                                    </a>
+                                </>
+                            )}
+                        </div>
+                    ) : null}
                 </div>
 
                 {error ? (

@@ -104,7 +104,7 @@ for (const componentName of ['StaticCommunity', 'StaticMarketing']) {
 
 for (const endpoint of [
     '/content-structures?pageSize=200',
-    '/structured-contents?pageSize=',
+    '/structured-contents?flatten=true&pageSize=',
 ]) {
     if (!headlessClient.includes(endpoint)) {
         throw new Error(`Headless content client is missing ${endpoint}.`);

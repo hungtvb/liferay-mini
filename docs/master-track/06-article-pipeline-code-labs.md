@@ -1,6 +1,6 @@
 # Article Pipeline Code Labs
 
-> **Status:** DESIGN READY / IMPLEMENTATION AND RUNTIME QA PENDING
+> **Status:** SOURCE READY / RUNTIME QA PENDING
 >
 > Target runtime: Liferay DXP 2026.Q1.1. Complete these labs on a clean local bundle and keep screenshots for every checkpoint. Do not merge the Article branch until the final screenshot matrix passes.
 
@@ -8,6 +8,7 @@ Read first:
 
 - [`../architecture/article-content-pipeline.md`](../architecture/article-content-pipeline.md)
 - [`../contracts/article-contract.md`](../contracts/article-contract.md)
+- [`../guides/article-feature-liferay-runbook.md`](../guides/article-feature-liferay-runbook.md)
 
 ---
 
@@ -261,7 +262,7 @@ ArticleContentImportHandler
 ArticleImportConfiguration
 ```
 
-Use Apache POI and ZIP processing inside this module only. Reject traversal, symlinks, duplicate entries, decompression bombs, invalid MIME signatures, and configured size/count limits. Stream files; do not buffer the full package. The REST implementation must not parse worksheets or import media.
+Use Apache POI and ZIP processing inside this module only. Reject traversal, symlinks, duplicate entries, decompression bombs, invalid MIME signatures, and configured size/count limits. Enforce the committed package, entry, workbook, and row limits so memory usage remains bounded. For production-scale bulk packages, move execution to Background Task/Message Bus and stream payloads where the selected Liferay APIs allow it. The REST implementation must not parse worksheets or import media.
 
 Extend Service Builder with `ImportJob` and `ImportJobItem` from the detailed design. Then regenerate:
 
@@ -295,7 +296,7 @@ GET  /sites/{siteId}/content-import-jobs/{jobERC}
 GET  /sites/{siteId}/content-import-jobs/{jobERC}/items
 ```
 
-The UI discovers `NXC_ARTICLE_V1`, uploads the ZIP through the standard Documents API, then creates the generic job with `packageFileEntryId` and `importProfileKey`. REST Builder returns `202 Accepted`; collection endpoints use Liferay pagination. Adding a future handler must not require a REST resource change.
+The UI discovers `NXC_ARTICLE_V1`, uploads the ZIP through the standard Documents API, then creates the generic job with `packageFileEntryId` and `importProfileKey`. Job creation returns `202 Accepted`; validate, execute, and retry currently return `200 OK` with the updated durable job. Collection endpoints use Liferay pagination. Adding a future handler must not require a REST resource change.
 
 Regenerate:
 
@@ -334,9 +335,11 @@ Site Menu → Content & Data → Nexcent Content Import
 
 Required views:
 
-- Upload and Validate: server-driven import-profile dropdown, selected-profile template download, ZIP chooser, Draft/Publish option, validation summary.
-- Job History: paged status, progress, creator, timestamps, and counts.
-- Job Detail: package, asset, and Article row results; stable error codes; retry and report download.
+- Upload and Validate: server-driven import-profile dropdown, ZIP chooser, and validation summary.
+- Job History: status, creator, timestamps, and created/updated/failed/no-change counts.
+- Job Detail: package, asset, and Article row results; stable error codes, retry, and error CSV download.
+
+Template download and a separate Draft/Publish switch are future enhancements. In the current contract, the package supplies `publish`, defaulting to `false`.
 
 The app derives the current site from Liferay context and populates the dropdown from `GET /content-import-profiles`. Do not hard-code Article/profile options, expose a numeric site-ID input, add the app to Home, or apply the public Master Page. Create the `Nexcent Content Importer` site role and keep Publish as a separate permission.
 
@@ -353,13 +356,13 @@ The app derives the current site from Liferay context and populates the dropdown
 
 # Lab ART-09 — Wire the Article List
 
-The list component must:
+The `remote-apps/nexcent-articles` Custom Element, registered by `client-extensions/nexcent-articles-client-extension`, must:
 
 1. resolve the Article Structure by stable ERC/key;
 2. call Structured Content collection with `flatten=true` and pagination;
 3. map fields by `name`;
 4. render loading, ready, empty, and error states;
-5. link each card to `/w/{friendlyUrlPath}`;
+5. link each card with the Headless Delivery `contentUrl`, which resolves to the default Display Page Template canonical URL;
 6. avoid hard-coded business content and numeric IDs.
 
 Do not perform client-side filtering over an unbounded content collection. Use a supported Headless filter, a Liferay Collection/Info provider, or a dedicated read endpoint.

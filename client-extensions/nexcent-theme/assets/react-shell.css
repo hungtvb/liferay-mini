@@ -1,0 +1,79 @@
+/*
+ * React Site Shell host contract.
+ *
+ * Component visuals stay encapsulated in Shadow DOM. This stylesheet only
+ * normalizes Liferay Fragment wrappers and exposes the active Style Book token
+ * values on every Nexcent React custom-element host.
+ */
+
+nexcent-react-page,
+nexcent-react-header,
+nexcent-react-hero,
+nexcent-react-clients,
+nexcent-react-community,
+nexcent-react-feature-primary,
+nexcent-react-statistics,
+nexcent-react-feature-secondary,
+nexcent-react-testimonial,
+nexcent-react-marketing,
+nexcent-react-cta,
+nexcent-react-footer {
+    color: var(--nxc-color-text);
+    display: block;
+    font-family: var(--nxc-font-family);
+    min-width: 0;
+    width: 100%;
+}
+
+nexcent-react-page,
+nexcent-react-header,
+nexcent-react-footer {
+    --nxc-react-container-width: var(--nxc-container-width);
+    --nxc-react-wide-container-width: var(--nxc-wide-container-width);
+    --nxc-react-page-gutter: var(--nxc-page-gutter);
+    --nxc-react-header-height: var(--nxc-header-height);
+}
+
+nexcent-react-header {
+    min-height: var(--nxc-header-height);
+    position: relative;
+    z-index: 20;
+}
+
+nexcent-react-footer {
+    overflow-x: clip;
+}
+
+/* Remove Page Builder spacing around the thin React shell Fragments. */
+.lfr-layout-structure-item-nexcent-react-header,
+.lfr-layout-structure-item-nexcent-react-footer,
+.lfr-layout-structure-item-nexcent-react-page,
+.lfr-layout-structure-item-nexcent-react-hero,
+.lfr-layout-structure-item-nexcent-react-clients,
+.lfr-layout-structure-item-nexcent-react-community,
+.lfr-layout-structure-item-nexcent-react-feature-primary,
+.lfr-layout-structure-item-nexcent-react-statistics,
+.lfr-layout-structure-item-nexcent-react-feature-secondary,
+.lfr-layout-structure-item-nexcent-react-testimonial,
+.lfr-layout-structure-item-nexcent-react-marketing,
+.lfr-layout-structure-item-nexcent-react-cta {
+    margin: 0 !important;
+    max-width: none !important;
+    min-width: 0;
+    padding: 0 !important;
+    width: 100% !important;
+}
+
+/* Keep editor chrome usable while the component itself stays full width. */
+.has-edit-mode-menu nexcent-react-header,
+.has-edit-mode-menu nexcent-react-footer,
+.has-edit-mode-menu nexcent-react-page {
+    isolation: isolate;
+}
+
+@media (max-width: 767.98px) {
+    nexcent-react-header {
+        position: sticky;
+        top: 0;
+    }
+}

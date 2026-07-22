@@ -30,7 +30,7 @@
     <script ${nonceAttribute} data-nexcent-header-props type="application/json">
         {
             "account": {
-                "accountURL": "${(themeDisplay.getURLMyAccount()!"")?json_string}",
+                "accountURL": "${(themeDisplay.getURLMyAccount()!"")?string?json_string}",
                 "createAccountURL": "${(configuration.createAccountURL!"/web/guest/create-account")?json_string}",
                 "displayName": "${(account.getFullName()!"")?json_string}",
                 "loginURL": "${(themeDisplay.getURLSignIn()!"/c/portal/login")?json_string}",

@@ -1,6 +1,14 @@
 import type {ReactNode} from 'react';
 
 const RUNTIME_OVERRIDES = `
+/* Shadow DOM does not inherit the reference body rule automatically. */
+:host {
+    color: var(--nxc-color-text, #717171);
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 1.42;
+}
+
 /* Reproduce the Swiper geometry used by the static reference without its CDN. */
 .swiper-wrapper {
     display: flex;

@@ -17,6 +17,7 @@ try:
         lines.append(line[10:] if line.startswith('          ') else line)
 
     script = '\n'.join(lines) + '\n'
+    Path('diagnostics/extracted-review-fix.py').write_text(script)
     exec(compile(script, str(workflow_path), 'exec'))
 except BaseException:
     Path('diagnostics/review-fix-traceback.log').write_text(

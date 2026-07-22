@@ -211,6 +211,20 @@ public interface ImportJobModel
 	public void setJobKey(String jobKey);
 
 	/**
+	 * Returns the file entry ID of this import job.
+	 *
+	 * @return the file entry ID of this import job
+	 */
+	public long getFileEntryId();
+
+	/**
+	 * Sets the file entry ID of this import job.
+	 *
+	 * @param fileEntryId the file entry ID of this import job
+	 */
+	public void setFileEntryId(long fileEntryId);
+
+	/**
 	 * Returns the file name of this import job.
 	 *
 	 * @return the file name of this import job
@@ -224,6 +238,36 @@ public interface ImportJobModel
 	 * @param fileName the file name of this import job
 	 */
 	public void setFileName(String fileName);
+
+	/**
+	 * Returns the sha256 of this import job.
+	 *
+	 * @return the sha256 of this import job
+	 */
+	@AutoEscape
+	public String getSha256();
+
+	/**
+	 * Sets the sha256 of this import job.
+	 *
+	 * @param sha256 the sha256 of this import job
+	 */
+	public void setSha256(String sha256);
+
+	/**
+	 * Returns the structure erc of this import job.
+	 *
+	 * @return the structure erc of this import job
+	 */
+	@AutoEscape
+	public String getStructureERC();
+
+	/**
+	 * Sets the structure erc of this import job.
+	 *
+	 * @param structureERC the structure erc of this import job
+	 */
+	public void setStructureERC(String structureERC);
 
 	/**
 	 * Returns the status of this import job.
@@ -255,18 +299,46 @@ public interface ImportJobModel
 	public void setTotalRows(int totalRows);
 
 	/**
-	 * Returns the success rows of this import job.
+	 * Returns the created rows of this import job.
 	 *
-	 * @return the success rows of this import job
+	 * @return the created rows of this import job
 	 */
-	public int getSuccessRows();
+	public int getCreatedRows();
 
 	/**
-	 * Sets the success rows of this import job.
+	 * Sets the created rows of this import job.
 	 *
-	 * @param successRows the success rows of this import job
+	 * @param createdRows the created rows of this import job
 	 */
-	public void setSuccessRows(int successRows);
+	public void setCreatedRows(int createdRows);
+
+	/**
+	 * Returns the updated rows of this import job.
+	 *
+	 * @return the updated rows of this import job
+	 */
+	public int getUpdatedRows();
+
+	/**
+	 * Sets the updated rows of this import job.
+	 *
+	 * @param updatedRows the updated rows of this import job
+	 */
+	public void setUpdatedRows(int updatedRows);
+
+	/**
+	 * Returns the skipped rows of this import job.
+	 *
+	 * @return the skipped rows of this import job
+	 */
+	public int getSkippedRows();
+
+	/**
+	 * Sets the skipped rows of this import job.
+	 *
+	 * @param skippedRows the skipped rows of this import job
+	 */
+	public void setSkippedRows(int skippedRows);
 
 	/**
 	 * Returns the failed rows of this import job.
@@ -281,6 +353,34 @@ public interface ImportJobModel
 	 * @param failedRows the failed rows of this import job
 	 */
 	public void setFailedRows(int failedRows);
+
+	/**
+	 * Returns the started date of this import job.
+	 *
+	 * @return the started date of this import job
+	 */
+	public Date getStartedDate();
+
+	/**
+	 * Sets the started date of this import job.
+	 *
+	 * @param startedDate the started date of this import job
+	 */
+	public void setStartedDate(Date startedDate);
+
+	/**
+	 * Returns the completed date of this import job.
+	 *
+	 * @return the completed date of this import job
+	 */
+	public Date getCompletedDate();
+
+	/**
+	 * Sets the completed date of this import job.
+	 *
+	 * @param completedDate the completed date of this import job
+	 */
+	public void setCompletedDate(Date completedDate);
 
 	/**
 	 * Returns the error message of this import job.
@@ -305,4 +405,4 @@ public interface ImportJobModel
 	}
 
 }
-// LIFERAY-SERVICE-BUILDER-HASH:-1680607272
+// LIFERAY-SERVICE-BUILDER-HASH:1624497383

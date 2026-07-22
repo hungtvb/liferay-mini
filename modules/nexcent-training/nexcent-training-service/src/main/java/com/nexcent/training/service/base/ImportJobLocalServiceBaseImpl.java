@@ -39,6 +39,8 @@ import com.liferay.portal.kernel.util.PortalUtil;
 
 import com.nexcent.training.model.ImportJob;
 import com.nexcent.training.service.ImportJobLocalService;
+import com.nexcent.training.service.persistence.ArticleImportStatePersistence;
+import com.nexcent.training.service.persistence.ImportJobItemPersistence;
 import com.nexcent.training.service.persistence.ImportJobPersistence;
 
 import java.io.Serializable;
@@ -566,10 +568,16 @@ public abstract class ImportJobLocalServiceBaseImpl
 		}
 	}
 
+	@Reference
+	protected ArticleImportStatePersistence articleImportStatePersistence;
+
 	protected ImportJobLocalService importJobLocalService;
 
 	@Reference
 	protected ImportJobPersistence importJobPersistence;
+
+	@Reference
+	protected ImportJobItemPersistence importJobItemPersistence;
 
 	@Reference
 	protected com.liferay.counter.kernel.service.CounterLocalService
@@ -591,4 +599,4 @@ public abstract class ImportJobLocalServiceBaseImpl
 		ImportJobLocalServiceBaseImpl.class);
 
 }
-// LIFERAY-SERVICE-BUILDER-HASH:488983364
+// LIFERAY-SERVICE-BUILDER-HASH:-31316468

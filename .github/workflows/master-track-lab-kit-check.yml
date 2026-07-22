@@ -56,7 +56,9 @@ jobs:
               run: ./gradlew :modules:nexcent-training:nexcent-training-rest-impl:buildREST
 
             - name: Capture generated source changes
-              run: git diff --binary > diagnostics/generated-sources.patch
+              run: |
+                  git add -N modules/nexcent-training
+                  git diff --binary > diagnostics/generated-sources.patch
 
             - name: Test Article importer
               run: ./gradlew :modules:nexcent-training:nexcent-training-article-importer:test
@@ -100,8 +102,10 @@ jobs:
               if: always()
               run: |
                   failed=0
+                  shopt -s nullglob
+                  statuses=(diagnostics/*.exit)
 
-                  for status in diagnostics/*.exit; do
+                  for status in "${statuses[@]}"; do
                     name=$(basename "$status" .exit)
                     code=$(cat "$status")
                     echo "$name: exit $code"
@@ -110,5 +114,9 @@ jobs:
                       failed=1
                     fi
                   done
+
+                  if [ "${#statuses[@]}" -eq 0 ]; then
+                    failed=1
+                  fi
 
                   exit "$failed"

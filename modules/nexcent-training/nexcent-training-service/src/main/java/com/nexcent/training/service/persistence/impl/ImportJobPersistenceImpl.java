@@ -1217,6 +1217,349 @@ public class ImportJobPersistenceImpl
 	private static final String _FINDER_COLUMN_G_GROUPID_2 =
 		"importJob.groupId = ?";
 
+	private FinderPath _finderPathWithPaginationFindByG_S;
+	private FinderPath _finderPathWithoutPaginationFindByG_S;
+	private FinderPath _finderPathCountByG_S;
+
+	/**
+	 * Returns all the import jobs where groupId = &#63; and status = &#63;.
+	 *
+	 * @param groupId the group ID
+	 * @param status the status
+	 * @return the matching import jobs
+	 */
+	@Override
+	public List<ImportJob> findByG_S(long groupId, String status) {
+		return findByG_S(
+			groupId, status, QueryUtil.ALL_POS, QueryUtil.ALL_POS, null);
+	}
+
+	/**
+	 * Returns a range of all the import jobs where groupId = &#63; and status = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>ImportJobModelImpl</code>.
+	 * </p>
+	 *
+	 * @param groupId the group ID
+	 * @param status the status
+	 * @param start the lower bound of the range of import jobs
+	 * @param end the upper bound of the range of import jobs (not inclusive)
+	 * @return the range of matching import jobs
+	 */
+	@Override
+	public List<ImportJob> findByG_S(
+		long groupId, String status, int start, int end) {
+
+		return findByG_S(groupId, status, start, end, null);
+	}
+
+	/**
+	 * Returns an ordered range of all the import jobs where groupId = &#63; and status = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>ImportJobModelImpl</code>.
+	 * </p>
+	 *
+	 * @param groupId the group ID
+	 * @param status the status
+	 * @param start the lower bound of the range of import jobs
+	 * @param end the upper bound of the range of import jobs (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @return the ordered range of matching import jobs
+	 */
+	@Override
+	public List<ImportJob> findByG_S(
+		long groupId, String status, int start, int end,
+		OrderByComparator<ImportJob> orderByComparator) {
+
+		return findByG_S(groupId, status, start, end, orderByComparator, true);
+	}
+
+	/**
+	 * Returns an ordered range of all the import jobs where groupId = &#63; and status = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>ImportJobModelImpl</code>.
+	 * </p>
+	 *
+	 * @param groupId the group ID
+	 * @param status the status
+	 * @param start the lower bound of the range of import jobs
+	 * @param end the upper bound of the range of import jobs (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @param useFinderCache whether to use the finder cache
+	 * @return the ordered range of matching import jobs
+	 */
+	@Override
+	public List<ImportJob> findByG_S(
+		long groupId, String status, int start, int end,
+		OrderByComparator<ImportJob> orderByComparator,
+		boolean useFinderCache) {
+
+		status = Objects.toString(status, "");
+
+		FinderPath finderPath = null;
+		Object[] finderArgs = null;
+
+		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
+			(orderByComparator == null)) {
+
+			if (useFinderCache) {
+				finderPath = _finderPathWithoutPaginationFindByG_S;
+				finderArgs = new Object[] {groupId, status};
+			}
+		}
+		else if (useFinderCache) {
+			finderPath = _finderPathWithPaginationFindByG_S;
+			finderArgs = new Object[] {
+				groupId, status, start, end, orderByComparator
+			};
+		}
+
+		List<ImportJob> list = null;
+
+		if (useFinderCache) {
+			list = (List<ImportJob>)finderCache.getResult(
+				finderPath, finderArgs, this);
+
+			if ((list != null) && !list.isEmpty()) {
+				for (ImportJob importJob : list) {
+					if ((groupId != importJob.getGroupId()) ||
+						!status.equals(importJob.getStatus())) {
+
+						list = null;
+
+						break;
+					}
+				}
+			}
+		}
+
+		if (list == null) {
+			StringBundler sb = null;
+
+			if (orderByComparator != null) {
+				sb = new StringBundler(
+					4 + (orderByComparator.getOrderByFields().length * 2));
+			}
+			else {
+				sb = new StringBundler(4);
+			}
+
+			sb.append(_SQL_SELECT_IMPORTJOB_WHERE);
+
+			sb.append(_FINDER_COLUMN_G_S_GROUPID_2);
+
+			boolean bindStatus = false;
+
+			if (status.isEmpty()) {
+				sb.append(_FINDER_COLUMN_G_S_STATUS_3);
+			}
+			else {
+				bindStatus = true;
+
+				sb.append(_FINDER_COLUMN_G_S_STATUS_2);
+			}
+
+			if (orderByComparator != null) {
+				appendOrderByComparator(
+					sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
+			}
+			else {
+				sb.append(ImportJobModelImpl.ORDER_BY_JPQL);
+			}
+
+			String sql = sb.toString();
+
+			Session session = null;
+
+			try {
+				session = openSession();
+
+				Query query = session.createQuery(sql);
+
+				QueryPos queryPos = QueryPos.getInstance(query);
+
+				queryPos.add(groupId);
+
+				if (bindStatus) {
+					queryPos.add(status);
+				}
+
+				list = (List<ImportJob>)QueryUtil.list(
+					query, getDialect(), start, end);
+
+				cacheResult(list);
+
+				if (useFinderCache) {
+					finderCache.putResult(finderPath, finderArgs, list);
+				}
+			}
+			catch (Exception exception) {
+				throw processException(exception);
+			}
+			finally {
+				closeSession(session);
+			}
+		}
+
+		return list;
+	}
+
+	/**
+	 * Returns the first import job in the ordered set where groupId = &#63; and status = &#63;.
+	 *
+	 * @param groupId the group ID
+	 * @param status the status
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the first matching import job
+	 * @throws NoSuchImportJobException if a matching import job could not be found
+	 */
+	@Override
+	public ImportJob findByG_S_First(
+			long groupId, String status,
+			OrderByComparator<ImportJob> orderByComparator)
+		throws NoSuchImportJobException {
+
+		ImportJob importJob = fetchByG_S_First(
+			groupId, status, orderByComparator);
+
+		if (importJob != null) {
+			return importJob;
+		}
+
+		StringBundler sb = new StringBundler(6);
+
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
+
+		sb.append("groupId=");
+		sb.append(groupId);
+
+		sb.append(", status=");
+		sb.append(status);
+
+		sb.append("}");
+
+		throw new NoSuchImportJobException(sb.toString());
+	}
+
+	/**
+	 * Returns the first import job in the ordered set where groupId = &#63; and status = &#63;.
+	 *
+	 * @param groupId the group ID
+	 * @param status the status
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the first matching import job, or <code>null</code> if a matching import job could not be found
+	 */
+	@Override
+	public ImportJob fetchByG_S_First(
+		long groupId, String status,
+		OrderByComparator<ImportJob> orderByComparator) {
+
+		List<ImportJob> list = findByG_S(
+			groupId, status, 0, 1, orderByComparator);
+
+		if (!list.isEmpty()) {
+			return list.get(0);
+		}
+
+		return null;
+	}
+
+	/**
+	 * Removes all the import jobs where groupId = &#63; and status = &#63; from the database.
+	 *
+	 * @param groupId the group ID
+	 * @param status the status
+	 */
+	@Override
+	public void removeByG_S(long groupId, String status) {
+		for (ImportJob importJob :
+				findByG_S(
+					groupId, status, QueryUtil.ALL_POS, QueryUtil.ALL_POS,
+					null)) {
+
+			remove(importJob);
+		}
+	}
+
+	/**
+	 * Returns the number of import jobs where groupId = &#63; and status = &#63;.
+	 *
+	 * @param groupId the group ID
+	 * @param status the status
+	 * @return the number of matching import jobs
+	 */
+	@Override
+	public int countByG_S(long groupId, String status) {
+		status = Objects.toString(status, "");
+
+		FinderPath finderPath = _finderPathCountByG_S;
+
+		Object[] finderArgs = new Object[] {groupId, status};
+
+		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+
+		if (count == null) {
+			StringBundler sb = new StringBundler(3);
+
+			sb.append(_SQL_COUNT_IMPORTJOB_WHERE);
+
+			sb.append(_FINDER_COLUMN_G_S_GROUPID_2);
+
+			boolean bindStatus = false;
+
+			if (status.isEmpty()) {
+				sb.append(_FINDER_COLUMN_G_S_STATUS_3);
+			}
+			else {
+				bindStatus = true;
+
+				sb.append(_FINDER_COLUMN_G_S_STATUS_2);
+			}
+
+			String sql = sb.toString();
+
+			Session session = null;
+
+			try {
+				session = openSession();
+
+				Query query = session.createQuery(sql);
+
+				QueryPos queryPos = QueryPos.getInstance(query);
+
+				queryPos.add(groupId);
+
+				if (bindStatus) {
+					queryPos.add(status);
+				}
+
+				count = (Long)query.uniqueResult();
+
+				finderCache.putResult(finderPath, finderArgs, count);
+			}
+			catch (Exception exception) {
+				throw processException(exception);
+			}
+			finally {
+				closeSession(session);
+			}
+		}
+
+		return count.intValue();
+	}
+
+	private static final String _FINDER_COLUMN_G_S_GROUPID_2 =
+		"importJob.groupId = ? AND ";
+
+	private static final String _FINDER_COLUMN_G_S_STATUS_2 =
+		"importJob.status = ?";
+
+	private static final String _FINDER_COLUMN_G_S_STATUS_3 =
+		"(importJob.status IS NULL OR importJob.status = '')";
+
 	private FinderPath _finderPathFetchByJK_G;
 
 	/**
@@ -2058,6 +2401,25 @@ public class ImportJobPersistenceImpl
 			new String[] {Long.class.getName()}, new String[] {"groupId"},
 			false);
 
+		_finderPathWithPaginationFindByG_S = new FinderPath(
+			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByG_S",
+			new String[] {
+				Long.class.getName(), String.class.getName(),
+				Integer.class.getName(), Integer.class.getName(),
+				OrderByComparator.class.getName()
+			},
+			new String[] {"groupId", "status"}, true);
+
+		_finderPathWithoutPaginationFindByG_S = new FinderPath(
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByG_S",
+			new String[] {Long.class.getName(), String.class.getName()},
+			new String[] {"groupId", "status"}, true);
+
+		_finderPathCountByG_S = new FinderPath(
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByG_S",
+			new String[] {Long.class.getName(), String.class.getName()},
+			new String[] {"groupId", "status"}, false);
+
 		_finderPathFetchByJK_G = new FinderPath(
 			FINDER_CLASS_NAME_ENTITY, "fetchByJK_G",
 			new String[] {String.class.getName(), Long.class.getName()},
@@ -2137,4 +2499,4 @@ public class ImportJobPersistenceImpl
 	}
 
 }
-// LIFERAY-SERVICE-BUILDER-HASH:1360096777
+// LIFERAY-SERVICE-BUILDER-HASH:-284635011

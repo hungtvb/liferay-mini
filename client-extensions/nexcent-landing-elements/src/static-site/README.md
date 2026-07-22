@@ -5,8 +5,8 @@ into React components while keeping that prototype as the visual baseline.
 
 ## Standalone static preview
 
-The complete React page can run without Liferay and without the Site Shell API.
-It reads the bundled mock content from:
+The complete React page can run without Liferay and without the Site Shell or
+Headless Delivery APIs. It reads the bundled mock content from:
 
 ```text
 prototypes/nexcent-static/content.json
@@ -27,9 +27,7 @@ http://localhost:4173
 ```
 
 This preview renders `nexcent-react-page`, including the React Header, all body
-sections, and the React Footer. Header and Footer intentionally use the bundled
-fallback Site Shell generated from `content.json`; no request is sent to
-Liferay.
+sections, and the React Footer. No request is sent to Liferay.
 
 The intended side-by-side workflow is:
 
@@ -47,7 +45,7 @@ Liferay runtime:       http://localhost:8080
   the static source was authored against a 62.5% root font size.
 - Static preview copy is read from `prototypes/nexcent-static/content.json`; it
   is not embedded in JSX.
-- The hero carousel is implemented with React state and timers, so Swiper and
+- The Hero carousel is implemented with React state and timers, so Swiper and
   AOS CDNs are no longer runtime dependencies.
 
 Attach **Nexcent React Runtime** as Global JavaScript to the Master Page before
@@ -93,8 +91,9 @@ Production body sections intentionally use two data paths:
 ```text
 Fragment Settings → custom-element attributes → React props
 ├── Clients
-├── Feature
+├── Feature Primary
 ├── Statistics
+├── Feature Secondary
 ├── Testimonial
 └── CTA
 
@@ -104,8 +103,31 @@ Headless Delivery API
 └── Marketing / Articles
 ```
 
-`content.json` remains the visual-test fixture and development fallback; it is
-not the intended production source for body copy.
+The three Headless sections resolve a configured Content Structure identifier,
+load approved Structured Content, filter inactive entries, sort by `sortOrder`,
+and share one browser request cache.
+
+```text
+GET /o/headless-delivery/v1.0/sites/{siteId}/content-structures?pageSize=200
+GET /o/headless-delivery/v1.0/content-structures/{structureId}/structured-contents?pageSize=100
+```
+
+`content.json` remains the visual-test fixture and runtime fallback; it is not
+the intended production source for body copy.
+
+The complete field and Fragment Settings contract is documented in:
+
+```text
+docs/master-track/body-data-sources.md
+```
+
+Validate the split locally with:
+
+```bash
+npm run validate:data-sources
+npm test
+npm run typecheck
+```
 
 ## Production Site Shell
 

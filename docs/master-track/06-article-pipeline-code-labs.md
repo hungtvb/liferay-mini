@@ -76,23 +76,31 @@ NXC-TOPIC-TECHNOLOGY  → Technology
 
 Associate the vocabulary with Web Content where the runtime requires asset-type configuration.
 
-## 2. Upload cover images
+## 2. Create stable media folders
 
-Create a Documents and Media folder for Article covers. Upload the three sample images and assign:
+Create separate Documents and Media folders:
 
 ```text
-NXC-DOC-COMMUNITY-01
-NXC-DOC-COMMUNITY-02
-NXC-DOC-COMMUNITY-03
+NXC-FOLDER-ARTICLE-ASSETS          → imported public Article media
+NXC-FOLDER-ARTICLE-IMPORT-PACKAGES → restricted source ZIP packages
 ```
 
-The workbook references media by ERC, not filename or numeric `fileEntryId`.
+The ZIP package owns sample images and maps each `imageKey` to a stable D&M ERC such as:
+
+```text
+NXC-DOC-ARTICLE-001
+NXC-DOC-ARTICLE-002
+NXC-DOC-ARTICLE-003
+```
+
+Do not pre-upload the baseline sample images manually. This lab must prove that the importer creates or updates Documents and Media before creating dependent Articles. A manually uploaded file may be used only for the separate Display Page smoke test.
 
 ## Checkpoint
 
-- Every category and image resolves by ERC.
-- Guest can view only the media used by published public Articles.
-- Import upload files are stored in a separate restricted folder.
+- Every category and folder resolves by ERC.
+- The importer can create sample images with stable document ERCs from the package.
+- Guest can view only media used by published public Articles.
+- ZIP packages remain in the separate restricted folder.
 
 ---
 
@@ -169,45 +177,62 @@ Use only fields declared filterable by the running OpenAPI contract. Do not inve
 
 ---
 
-# Lab ART-05 — Prepare and Validate Excel
+# Lab ART-05 — Prepare and Validate the Import Package
 
-Use:
+Use the generated workbook and sample assets to build:
 
 ```text
-training/master-track-code-labs/sample-data/nxc-article-import-template.xlsx
+nexcent-article-import.zip
+├── manifest.json
+├── articles.xlsx
+└── assets/
+    ├── community-management-cover.webp
+    ├── membership-guide-cover.webp
+    └── safeguarding-guide-cover.webp
 ```
 
-The workbook has `Articles`, `Taxonomy`, and `Instructions` sheets. Keep headers unchanged.
+The workbook has `Articles`, `Assets`, `Taxonomy`, and `Instructions` sheets. Keep headers unchanged.
 
 Before upload:
 
-- verify all image and category ERCs exist;
 - keep `publish=false` for the first run;
 - use UTC Date/Time values;
-- keep one `(externalReferenceCode, locale)` per row;
-- remove formulas, macros, and external links.
+- keep one `(externalReferenceCode, locale)` per Article row;
+- make every `coverImageKey` resolve to one Assets row;
+- give each asset a stable `documentERC` and relative `assets/...` path;
+- remove formulas, macros, external links, absolute paths, and Base64 data.
 
-Upload the workbook, run **Validate**, review all row results, then run **Execute** only when the job is `VALIDATED`.
+In the Nexcent Article Import Site Administration App:
+
+1. upload the ZIP to the restricted package folder;
+2. run **Validate** and review package, asset, and Article results;
+3. run **Execute** only when the job is `VALIDATED`;
+4. verify media is imported before Articles.
 
 ## Negative exercises
 
-Create separate workbook copies containing:
+Create separate package copies containing:
 
-1. duplicate ERC and locale;
-2. unknown image ERC;
-3. unknown category ERC;
-4. duplicate friendly URL;
-5. unsafe `<script>` HTML;
-6. invalid publication/expiration order;
-7. a formula cell.
+1. duplicate Article ERC and locale;
+2. missing image key;
+3. missing image file;
+4. duplicate document ERC;
+5. unknown category ERC;
+6. duplicate friendly URL;
+7. unsafe `<script>` HTML;
+8. invalid publication/expiration order;
+9. a formula cell;
+10. `../` ZIP path traversal or a duplicate ZIP entry;
+11. a renamed non-image payload with an image extension.
 
-Every case must fail validation before Article mutation.
+Every case must fail validation before asset or Article mutation.
 
 ## Checkpoint
 
-- First valid run creates Draft Articles.
-- An identical second run reports `NO_CHANGE` and creates no duplicates.
-- A changed row creates an updated Web Content version.
+- First valid run creates D&M images and Draft Articles.
+- An identical second run reports `NO_CHANGE` and creates no duplicate media, Article, or unnecessary version.
+- Changed image bytes update the existing document identified by ERC.
+- A changed Article row creates a new Web Content version.
 - `ARCHIVE` expires content and keeps its history.
 
 ---
@@ -223,14 +248,18 @@ modules/nexcent-training/nexcent-training-article-importer
 Responsibilities:
 
 ```text
+SafeZipPackageReader
+ImportManifestParser
 XlsxArticleParser
+ArticleAssetValidator
+ArticleAssetImporter
 ArticleImportValidator
 ArticleImportExecutor
 ArticleImportManager
 ArticleImportConfiguration
 ```
 
-Use Apache POI inside this module only. The REST implementation must not parse worksheets.
+Use Apache POI and ZIP processing inside this module only. Reject traversal, symlinks, duplicate entries, decompression bombs, invalid MIME signatures, and configured size/count limits. Stream files; do not buffer the full package. The REST implementation must not parse worksheets or import media.
 
 Extend Service Builder with `ImportJob` and `ImportJobItem` from the detailed design. Then regenerate:
 
@@ -262,7 +291,7 @@ GET  /sites/{siteId}/article-import-jobs/{jobERC}
 GET  /sites/{siteId}/article-import-jobs/{jobERC}/items
 ```
 
-The upload endpoint is `multipart/form-data` and returns `202 Accepted`. Collection endpoints use Liferay pagination.
+The UI uploads the ZIP through the standard Documents API, then creates the job with JSON containing `packageFileEntryId`. REST Builder returns `202 Accepted`; collection endpoints use Liferay pagination.
 
 Regenerate:
 
@@ -276,13 +305,46 @@ Compile and deploy API → service → importer → REST API → REST implementa
 
 - `buildREST` succeeds and a second generation produces no unexpected diff.
 - Endpoints appear in `/o/api`.
-- Guest receives `401/403` for upload, validate, and execute.
+- Guest receives `401/403` for create-job, validate, and execute.
+- A package outside the approved site/folder or owned by another site is rejected.
 - Invalid state transitions return `INVALID_STATE`.
 - Row result pagination is stable.
 
 ---
 
-# Lab ART-08 — Wire the Article List
+# Lab ART-08 — Build the Site Administration App
+
+Create:
+
+```text
+modules/nexcent-training/nexcent-training-web
+```
+
+Deliver a React UI inside an MVC Portlet and register it with a `PanelApp` under:
+
+```text
+Site Menu → Content & Data → Nexcent Article Import
+```
+
+Required views:
+
+- Upload and Validate: template download, ZIP chooser, Draft/Publish option, validation summary.
+- Job History: paged status, progress, creator, timestamps, and counts.
+- Job Detail: package, asset, and Article row results; stable error codes; retry and report download.
+
+The app derives the current site from Liferay context. Do not expose a numeric site-ID input, add the app to Home, or apply the public Master Page. Create the `Nexcent Content Importer` site role and keep Publish as a separate permission.
+
+## Checkpoint
+
+- The app appears only for authorized users in the current site's Content & Data menu.
+- Guest and ordinary members cannot open or call it.
+- Package upload uses Documents and Media; orchestration uses REST Builder.
+- Refreshing Job Detail preserves durable state from Service Builder.
+- The public landing page contains no import widget.
+
+---
+
+# Lab ART-09 — Wire the Article List
 
 The list component must:
 
@@ -303,7 +365,7 @@ Do not perform client-side filtering over an unbounded content collection. Use a
 
 ---
 
-# Lab ART-09 — Runtime and Responsive QA Gate
+# Lab ART-10 — Runtime and Responsive QA Gate
 
 Capture Article list and detail screenshots at:
 
@@ -323,7 +385,7 @@ For each viewport verify:
 - canonical URL and SEO/social metadata;
 - Master Page has only the new Header/Footer visual shells, with no duplicate wrapper padding.
 
-Also capture API Explorer or curl evidence for upload → validate → execute and the final import counts.
+Also capture the Site Administration App plus API Explorer/curl evidence for D&M package upload → create job → validate → execute, media-first results, retry/no-change behavior, and final counts.
 
 ## Merge gate
 

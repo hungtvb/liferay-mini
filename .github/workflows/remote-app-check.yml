@@ -3,25 +3,25 @@ name: Remote App Check
 on:
   pull_request:
     paths:
-      - "remote-apps/nexcent-community-app/**"
-      - "client-extensions/nexcent-remote-app-registration/**"
+      - "remote-apps/nexcent-articles/**"
+      - "client-extensions/nexcent-articles-client-extension/**"
       - "scripts/assemble-vercel-output.mjs"
       - "vercel.json"
       - "docs/course/08-remote-app.md"
       - "scripts/verify-course.mjs"
-      - ".github/workflows/remote-app-check.yml"
+      - ".github/workflows/articles-check.yml"
   push:
     branches:
       - main
       - final
     paths:
-      - "remote-apps/nexcent-community-app/**"
-      - "client-extensions/nexcent-remote-app-registration/**"
+      - "remote-apps/nexcent-articles/**"
+      - "client-extensions/nexcent-articles-client-extension/**"
       - "scripts/assemble-vercel-output.mjs"
       - "vercel.json"
       - "docs/course/08-remote-app.md"
       - "scripts/verify-course.mjs"
-      - ".github/workflows/remote-app-check.yml"
+      - ".github/workflows/articles-check.yml"
   workflow_dispatch:
 
 permissions:
@@ -33,7 +33,7 @@ jobs:
 
     defaults:
       run:
-        working-directory: remote-apps/nexcent-community-app
+        working-directory: remote-apps/nexcent-articles
 
     steps:
       - name: Check out repository
@@ -62,9 +62,9 @@ jobs:
       - name: Verify Liferay registration
         working-directory: .
         run: |
-          grep -q "baseURL: https://nexcent-liferay-static.vercel.app/remote-app" client-extensions/nexcent-remote-app-registration/client-extension.yaml
-          grep -q "htmlElementName: nexcent-community-app" client-extensions/nexcent-remote-app-registration/client-extension.yaml
-          grep -q "type: customElement" client-extensions/nexcent-remote-app-registration/client-extension.yaml
+          grep -q "baseURL: https://nexcent-liferay-static.vercel.app/articles" client-extensions/nexcent-articles-client-extension/client-extension.yaml
+          grep -q "htmlElementName: nexcent-articles" client-extensions/nexcent-articles-client-extension/client-extension.yaml
+          grep -q "type: customElement" client-extensions/nexcent-articles-client-extension/client-extension.yaml
           node scripts/verify-course.mjs
 
       - name: Verify combined Vercel output
@@ -72,6 +72,6 @@ jobs:
         run: |
           node scripts/assemble-vercel-output.mjs
           test -f .vercel-static/index.html
-          test -f .vercel-static/remote-app/index.html
-          test -f .vercel-static/remote-app/index.js
-          test -f .vercel-static/remote-app/style.css
+          test -f .vercel-static/articles/index.html
+          test -f .vercel-static/articles/index.js
+          test -f .vercel-static/articles/style.css

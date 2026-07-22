@@ -18,6 +18,15 @@ nexcent-react-testimonial,
 nexcent-react-marketing,
 nexcent-react-cta,
 nexcent-react-footer {
+    --nxc-react-color-primary: var(--nxc-color-primary);
+    --nxc-react-color-primary-hover: var(--nxc-color-primary-hover);
+    --nxc-react-color-primary-active: var(--nxc-color-primary-active);
+    --nxc-react-color-surface: var(--nxc-color-surface);
+    --nxc-react-color-secondary: var(--nxc-color-secondary);
+    --nxc-react-color-text: var(--nxc-color-text);
+    --nxc-react-color-white: var(--nxc-color-white);
+    --nxc-react-font-family: var(--nxc-font-family);
+
     color: var(--nxc-color-text);
     display: block;
     font-family: var(--nxc-font-family);

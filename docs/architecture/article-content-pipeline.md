@@ -106,13 +106,12 @@ The package is self-contained for repeatable import into a fresh environment. Ne
   "schemaVersion": "1.0",
   "importProfileKey": "NXC_ARTICLE_V1",
   "siteExternalReferenceCode": "NEXCENT-PUBLIC-WEBSITE",
-  "structureExternalReferenceCode": "NXC-STRUCTURE-ARTICLE",
   "defaultLanguageId": "en_US",
   "mode": "UPSERT"
 }
 ```
 
-The backend validates the manifest against the current site and supported package schema before reading executable rows.
+The backend validates the manifest against the current site and supported package schema before reading executable rows. `NXC_ARTICLE_V1` owns the target Structure ERC; editors do not provide or override it.
 
 ### 4.3 Workbook sheets
 

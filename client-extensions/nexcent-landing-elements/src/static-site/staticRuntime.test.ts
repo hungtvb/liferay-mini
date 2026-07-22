@@ -15,6 +15,12 @@ describe('Nexcent static React runtime', () => {
         );
     });
 
+    it('maps prototype brand colors to inherited Style Book variables', () => {
+        expect(normalizeStaticCss('color: #4caf4f; background: #fff;')).toBe(
+            'color: var(--nxc-color-primary, #4caf4f); background: var(--nxc-color-white, #fff);'
+        );
+    });
+
     it('removes the prototype source map comment', () => {
         expect(
             normalizeStaticCss('a{}/*# sourceMappingURL=style.css.map */')

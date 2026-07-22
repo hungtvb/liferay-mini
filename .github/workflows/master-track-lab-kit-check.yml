@@ -105,7 +105,8 @@ jobs:
               working-directory: remote-apps/nexcent-articles
               run: |
                   set -o pipefail
-                  npm ci 2>&1 | tee ../../diagnostics/article-custom-element-build.log
+                  npm install --package-lock-only --ignore-scripts 2>&1 | tee ../../diagnostics/article-custom-element-build.log
+                  npm ci 2>&1 | tee -a ../../diagnostics/article-custom-element-build.log
                   npm run build 2>&1 | tee -a ../../diagnostics/article-custom-element-build.log
 
             - name: Build Batch Client Extension lab
@@ -135,6 +136,7 @@ jobs:
                   modules/nexcent-training/nexcent-training-web/package.json
                   modules/nexcent-training/nexcent-training-web/package-lock.json
                   remote-apps/nexcent-articles/src/index.tsx
+                  remote-apps/nexcent-articles/package-lock.json
                   EOF
 
             - name: Upload reviewed output

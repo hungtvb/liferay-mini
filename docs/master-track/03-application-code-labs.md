@@ -1,6 +1,6 @@
 # Application Developer Code Labs
 
-> **Article importer target:** Service Builder owns durable job/row state and REST Builder owns orchestration. The package binary is uploaded through the standard Documents API; ZIP/Excel/image processing remains in `ArticleImportManager`. The current multipart-XLSX endpoint is transitional and must be refactored to this target. Complete the Site Administration App and runtime flow in [Article Pipeline Code Labs](06-article-pipeline-code-labs.md).
+> **Article importer target:** Service Builder owns durable job/row state and REST Builder owns orchestration. The package binary is uploaded through the standard Documents API; ZIP/Excel/image processing remains in `ArticleImportManager`. The current Article-specific multipart-XLSX endpoint is transitional and must be refactored to generic profile discovery and content-job endpoints. Complete the Site Administration App and runtime flow in [Article Pipeline Code Labs](06-article-pipeline-code-labs.md).
 
 > **Source status:** CI VERIFIED / RUNTIME PENDING
 >
@@ -251,12 +251,13 @@ http://localhost:8080/o/api
 Find `Liferay.Nexcent.Training` and verify:
 
 ```text
-POST /o/nexcent-training/v1.0/sites/{siteId}/article-import-jobs
-POST /o/nexcent-training/v1.0/sites/{siteId}/article-import-jobs/{jobERC}/validate
-POST /o/nexcent-training/v1.0/sites/{siteId}/article-import-jobs/{jobERC}/execute
-GET  /o/nexcent-training/v1.0/sites/{siteId}/article-import-jobs
-GET  /o/nexcent-training/v1.0/sites/{siteId}/article-import-jobs/{jobERC}
-GET  /o/nexcent-training/v1.0/sites/{siteId}/article-import-jobs/{jobERC}/items
+GET  /o/nexcent-training/v1.0/sites/{siteId}/content-import-profiles
+POST /o/nexcent-training/v1.0/sites/{siteId}/content-import-jobs
+POST /o/nexcent-training/v1.0/sites/{siteId}/content-import-jobs/{jobERC}/validate
+POST /o/nexcent-training/v1.0/sites/{siteId}/content-import-jobs/{jobERC}/execute
+GET  /o/nexcent-training/v1.0/sites/{siteId}/content-import-jobs
+GET  /o/nexcent-training/v1.0/sites/{siteId}/content-import-jobs/{jobERC}
+GET  /o/nexcent-training/v1.0/sites/{siteId}/content-import-jobs/{jobERC}/items
 ```
 
 Before creating a job, upload `nexcent-article-import.zip` through the standard Documents API to the restricted Article import package folder and capture its `fileEntryId`.
@@ -267,11 +268,11 @@ Sample create-job request:
 {
   "externalReferenceCode": "NXC-ARTICLE-IMPORT-20260722-001",
   "packageFileEntryId": 38201,
-  "structureExternalReferenceCode": "NXC-STRUCTURE-ARTICLE"
+  "importProfileKey": "NXC_ARTICLE_V1"
 }
 ```
 
-The REST resource validates package ownership, site scope, approved folder, and permission, then delegates to `ArticleImportManager`. It never parses ZIP or Excel directly.
+The generic REST resource validates profile registration, manifest agreement, package ownership, site scope, approved folder, and permission, then delegates to `ContentImportJobManager`; the registry selects `ArticleContentImportHandler`. It never parses ZIP or Excel directly.
 
 ## Idempotency and state exercise
 
@@ -286,7 +287,7 @@ The REST resource validates package ownership, site scope, approved folder, and 
 
 - `buildREST` completes.
 - API, service, importer, REST API, and REST implementation modules compile.
-- Endpoints appear in API Explorer after deployment.
+- Profile discovery and generic content-job endpoints appear in API Explorer after deployment.
 - Service Builder persists job and row results.
 - Guest receives `401/403`.
 - A package from another site/folder is rejected.

@@ -84,6 +84,14 @@ public abstract class BaseArticleImportJobItemResourceImpl
 			@io.swagger.v3.oas.annotations.Parameter(
 				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
 				name = "externalReferenceCode"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "page"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "pageSize"
 			)
 		}
 	)
@@ -108,7 +116,8 @@ public abstract class BaseArticleImportJobItemResourceImpl
 			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
 			@jakarta.validation.constraints.NotNull
 			@jakarta.ws.rs.PathParam("externalReferenceCode")
-			String externalReferenceCode)
+			String externalReferenceCode,
+			@jakarta.ws.rs.core.Context Pagination pagination)
 		throws Exception {
 
 		return Page.of(Collections.emptyList());
@@ -170,7 +179,7 @@ public abstract class BaseArticleImportJobItemResourceImpl
 		if (parameters.containsKey("siteId")) {
 			return getSiteArticleImportJobItemsPage(
 				(Long)parameters.get("siteId"),
-				(String)parameters.get("externalReferenceCode"));
+				(String)parameters.get("externalReferenceCode"), pagination);
 		}
 		else {
 			throw new NotSupportedException(
@@ -545,4 +554,4 @@ public abstract class BaseArticleImportJobItemResourceImpl
 		LogFactoryUtil.getLog(BaseArticleImportJobItemResourceImpl.class);
 
 }
-// LIFERAY-REST-BUILDER-HASH:-697704772
+// LIFERAY-REST-BUILDER-HASH:674007299

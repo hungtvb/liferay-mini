@@ -16,6 +16,7 @@ import com.liferay.portal.vulcan.accept.language.AcceptLanguage;
 import com.liferay.portal.vulcan.batch.engine.resource.VulcanBatchEngineImportTaskResource;
 import com.liferay.portal.vulcan.multipart.MultipartBody;
 import com.liferay.portal.vulcan.pagination.Page;
+import com.liferay.portal.vulcan.pagination.Pagination;
 
 import com.nexcent.training.rest.dto.v1_0.ArticleImportJob;
 
@@ -50,7 +51,8 @@ public interface ArticleImportJobResource {
 			Long siteId, String externalReferenceCode)
 		throws Exception;
 
-	public Page<ArticleImportJob> getSiteArticleImportJobsPage(Long siteId)
+	public Page<ArticleImportJob> getSiteArticleImportJobsPage(
+			Long siteId, Pagination pagination)
 		throws Exception;
 
 	public ArticleImportJob postSiteArticleImportJob(
@@ -162,4 +164,4 @@ public interface ArticleImportJobResource {
 	}
 
 }
-// LIFERAY-REST-BUILDER-HASH:-1839882021
+// LIFERAY-REST-BUILDER-HASH:2142790199

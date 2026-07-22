@@ -15,6 +15,7 @@ import com.liferay.portal.vulcan.accept.language.AcceptLanguage;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.pagination.Page;
+import com.liferay.portal.vulcan.pagination.Pagination;
 
 import com.nexcent.training.rest.dto.v1_0.ArticleImportJob;
 import com.nexcent.training.rest.dto.v1_0.ArticleImportJobItem;
@@ -80,11 +81,13 @@ public class Query {
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {articleImportJobs(siteKey: ___){items {__}, page, pageSize, totalCount}}"}' -u 'test@liferay.com:test'
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {articleImportJobs(page: ___, pageSize: ___, siteKey: ___){items {__}, page, pageSize, totalCount}}"}' -u 'test@liferay.com:test'
 	 */
 	@GraphQLField
 	public ArticleImportJobPage articleImportJobs(
-			@GraphQLName("siteKey") @NotEmpty String siteKey)
+			@GraphQLName("siteKey") @NotEmpty String siteKey,
+			@GraphQLName("pageSize") int pageSize,
+			@GraphQLName("page") int page)
 		throws Exception {
 
 		return _applyComponentServiceObjects(
@@ -92,18 +95,20 @@ public class Query {
 			this::_populateResourceContext,
 			articleImportJobResource -> new ArticleImportJobPage(
 				articleImportJobResource.getSiteArticleImportJobsPage(
-					Long.valueOf(siteKey))));
+					Long.valueOf(siteKey), Pagination.of(page, pageSize))));
 	}
 
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {articleImportJobItems(externalReferenceCode: ___, siteKey: ___){items {__}, page, pageSize, totalCount}}"}' -u 'test@liferay.com:test'
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {articleImportJobItems(externalReferenceCode: ___, page: ___, pageSize: ___, siteKey: ___){items {__}, page, pageSize, totalCount}}"}' -u 'test@liferay.com:test'
 	 */
 	@GraphQLField
 	public ArticleImportJobItemPage articleImportJobItems(
 			@GraphQLName("siteKey") @NotEmpty String siteKey,
-			@GraphQLName("externalReferenceCode") String externalReferenceCode)
+			@GraphQLName("externalReferenceCode") String externalReferenceCode,
+			@GraphQLName("pageSize") int pageSize,
+			@GraphQLName("page") int page)
 		throws Exception {
 
 		return _applyComponentServiceObjects(
@@ -111,7 +116,8 @@ public class Query {
 			this::_populateResourceContext,
 			articleImportJobItemResource -> new ArticleImportJobItemPage(
 				articleImportJobItemResource.getSiteArticleImportJobItemsPage(
-					Long.valueOf(siteKey), externalReferenceCode)));
+					Long.valueOf(siteKey), externalReferenceCode,
+					Pagination.of(page, pageSize))));
 	}
 
 	@GraphQLName("ArticleImportJobPage")
@@ -261,4 +267,4 @@ public class Query {
 	private com.liferay.portal.kernel.model.User _user;
 
 }
-// LIFERAY-REST-BUILDER-HASH:1828402176
+// LIFERAY-REST-BUILDER-HASH:624089182

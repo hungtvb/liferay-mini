@@ -125,6 +125,14 @@ public abstract class BaseArticleImportJobResourceImpl
 			@io.swagger.v3.oas.annotations.Parameter(
 				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
 				name = "siteId"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "page"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "pageSize"
 			)
 		}
 	)
@@ -141,7 +149,8 @@ public abstract class BaseArticleImportJobResourceImpl
 			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
 			@jakarta.validation.constraints.NotNull
 			@jakarta.ws.rs.PathParam("siteId")
-			Long siteId)
+			Long siteId,
+			@jakarta.ws.rs.core.Context Pagination pagination)
 		throws Exception {
 
 		return Page.of(Collections.emptyList());
@@ -413,7 +422,8 @@ public abstract class BaseArticleImportJobResourceImpl
 		throws Exception {
 
 		if (parameters.containsKey("siteId")) {
-			return getSiteArticleImportJobsPage((Long)parameters.get("siteId"));
+			return getSiteArticleImportJobsPage(
+				(Long)parameters.get("siteId"), pagination);
 		}
 		else {
 			throw new NotSupportedException(
@@ -800,4 +810,4 @@ public abstract class BaseArticleImportJobResourceImpl
 	}
 
 }
-// LIFERAY-REST-BUILDER-HASH:-1231897541
+// LIFERAY-REST-BUILDER-HASH:-865998488

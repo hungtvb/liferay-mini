@@ -45,8 +45,9 @@ Current required scope includes:
 - Sites, pages, navigation, Master Pages, Fragments, assets, Asset Library, taxonomy, Forms, roles, and permissions required by the Nexcent flow.
 - Theme CSS, Style Books, Global CSS/JS, favicon, Custom Elements, and Remote App.
 - Web Content Structures, Templates, ERCs, Documents and Media, and Headless Delivery.
-- OSGi, Gogo Shell, Service Builder, and REST Builder BFF for the `ImportJob` business flow.
-- Excel import, Batch Client Extension, integration QA, and final runtime evidence.
+- OSGi, Gogo Shell, Service Builder, and REST Builder for the `ImportJob` business flow.
+- A site-scoped Article Import administration app under Content & Data.
+- ZIP-packaged Excel + image import, Batch Client Extension, integration QA, and final runtime evidence.
 
 Collections, Search Blueprints, Publications, advanced workflow, Objects dashboards, personalization, Commerce, Analytics Cloud, and performance labs are optional future upgrades. They do not block the current course or the `final` submission.
 
@@ -78,11 +79,17 @@ Web Content + Documents and Media + Service Builder
       ↓
 Database
 
-Excel / Batch Engine export
+ZIP package: manifest + Excel + images
       ↓
-Importer + Batch Client Extension
+Site Administration App + REST Builder
       ↓
-Assets + Web Content + ImportJob status
+Importer: D&M assets first, then Web Content
+      ↓
+Service Builder ImportJob status
+
+Version-generated Batch Engine export
+      ↓
+Batch Client Extension for repeatable migration
 ```
 
 ## Repository structure
@@ -101,7 +108,8 @@ liferay-mini/
 │       ├── nexcent-training-service/
 │       ├── nexcent-training-osgi/
 │       ├── nexcent-training-rest-api/
-│       └── nexcent-training-rest-impl/
+│       ├── nexcent-training-rest-impl/
+│       └── nexcent-training-web/
 ├── remote-apps/
 │   └── nexcent-community-app/
 ├── prototypes/
@@ -191,7 +199,7 @@ node training/master-track-code-labs/scripts/validate-lab-kit.mjs
 8. OSGi and Gogo Shell.
 9. Service Builder.
 10. REST Builder BFF.
-11. Excel importer and Batch Client Extension.
+11. Article ZIP importer, Site Administration App, and Batch Client Extension.
 12. Integration QA and final demonstration.
 
 ## Evidence labels

@@ -13,11 +13,19 @@ import com.nexcent.training.content.importer.ContentImportProfile;
 import com.nexcent.training.model.ImportJob;
 import com.nexcent.training.service.ImportJobLocalService;
 
+import java.io.InputStream;
+
+import java.security.MessageDigest;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.locks.ReentrantLock;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -37,29 +45,52 @@ public class ContentImportJobManagerImpl implements ContentImportJobManager {
             throw new ContentImportException("INVALID_JOB_ERC", jobKey);
         }
 
-        ContentImportHandler handler =
-            _contentImportHandlerRegistry.getHandler(importProfileKey);
-        ContentImportProfile profile = handler.getProfile(groupId);
+        return _withJobLock(
+            groupId, jobKey,
+            () -> {
+                ImportJob existing = _importJobLocalService.fetchImportJob(
+                    groupId, jobKey);
 
-        if (!profile.isEnabled()) {
-            throw new ContentImportException(
-                profile.getDisabledReasonCode(), importProfileKey);
-        }
+                if ((existing != null) &&
+                    _ACTIVE_STATUSES.contains(existing.getStatus())) {
 
-        _validatePackageLocation(groupId, packageFileEntryId);
+                    throw new ContentImportException(
+                        "IMPORT_JOB_ACTIVE",
+                        "An active job cannot be reset: " + jobKey);
+                }
 
-        return handler.create(
-            userId, groupId, jobKey, packageFileEntryId, serviceContext);
+                ContentImportHandler handler =
+                    _contentImportHandlerRegistry.getHandler(importProfileKey);
+                ContentImportProfile profile = handler.getProfile(groupId);
+
+                if (!profile.isEnabled()) {
+                    throw new ContentImportException(
+                        profile.getDisabledReasonCode(), importProfileKey);
+                }
+
+                _validatePackageLocation(groupId, packageFileEntryId);
+
+                return handler.create(
+                    userId, groupId, jobKey, packageFileEntryId,
+                    serviceContext);
+            });
     }
 
     @Override
     public ImportJob execute(long userId, long groupId, String jobKey)
         throws PortalException {
 
-        ImportJob importJob = _getImportJob(groupId, jobKey);
+        return _withJobLock(
+            groupId, jobKey,
+            () -> {
+                ImportJob importJob = _getImportJob(groupId, jobKey);
 
-        return _contentImportHandlerRegistry.getHandler(
-            importJob.getImportProfileKey()).execute(userId, importJob);
+                _assertPackageUnchanged(importJob);
+
+                return _contentImportHandlerRegistry.getHandler(
+                    importJob.getImportProfileKey()).execute(
+                        userId, importJob);
+            });
     }
 
     @Override
@@ -92,47 +123,87 @@ public class ContentImportJobManagerImpl implements ContentImportJobManager {
     public ImportJob retry(long userId, long groupId, String jobKey)
         throws PortalException {
 
-        ImportJob importJob = _getImportJob(groupId, jobKey);
-        String status = importJob.getStatus();
+        return _withJobLock(
+            groupId, jobKey,
+            () -> {
+                ImportJob importJob = _getImportJob(groupId, jobKey);
+                String status = importJob.getStatus();
 
-        if (!Arrays.asList(
-                "FAILED", "INVALID", "COMPLETED_WITH_ERRORS").contains(
-                    status)) {
+                if (!Arrays.asList(
+                        "FAILED", "INVALID", "COMPLETED_WITH_ERRORS").contains(
+                            status)) {
 
-            throw new ContentImportException(
-                "INVALID_STATE", "Retry requires a failed or invalid job");
-        }
+                    throw new ContentImportException(
+                        "INVALID_STATE",
+                        "Retry requires a failed or invalid job");
+                }
 
-        ServiceContext serviceContext = new ServiceContext();
+                _assertPackageUnchanged(importJob);
 
-        serviceContext.setCompanyId(importJob.getCompanyId());
-        serviceContext.setScopeGroupId(groupId);
-        serviceContext.setUserId(userId);
+                ServiceContext serviceContext = new ServiceContext();
 
-        ContentImportHandler handler =
-            _contentImportHandlerRegistry.getHandler(
-                importJob.getImportProfileKey());
+                serviceContext.setCompanyId(importJob.getCompanyId());
+                serviceContext.setScopeGroupId(groupId);
+                serviceContext.setUserId(userId);
 
-        importJob = handler.create(
-            userId, groupId, jobKey, importJob.getFileEntryId(),
-            serviceContext);
-        importJob = handler.validate(userId, importJob);
+                ContentImportHandler handler =
+                    _contentImportHandlerRegistry.getHandler(
+                        importJob.getImportProfileKey());
 
-        if ("VALIDATED".equals(importJob.getStatus())) {
-            importJob = handler.execute(userId, importJob);
-        }
+                importJob = handler.create(
+                    userId, groupId, jobKey, importJob.getFileEntryId(),
+                    serviceContext);
+                importJob = handler.validate(userId, importJob);
 
-        return importJob;
+                if ("VALIDATED".equals(importJob.getStatus())) {
+                    importJob = handler.execute(userId, importJob);
+                }
+
+                return importJob;
+            });
     }
 
     @Override
     public ImportJob validate(long userId, long groupId, String jobKey)
         throws PortalException {
 
-        ImportJob importJob = _getImportJob(groupId, jobKey);
+        return _withJobLock(
+            groupId, jobKey,
+            () -> {
+                ImportJob importJob = _getImportJob(groupId, jobKey);
 
-        return _contentImportHandlerRegistry.getHandler(
-            importJob.getImportProfileKey()).validate(userId, importJob);
+                _assertPackageUnchanged(importJob);
+
+                return _contentImportHandlerRegistry.getHandler(
+                    importJob.getImportProfileKey()).validate(
+                        userId, importJob);
+            });
+    }
+
+    private void _assertPackageUnchanged(ImportJob importJob)
+        throws PortalException {
+
+        String expectedSha256 = importJob.getSha256();
+
+        if ((expectedSha256 == null) || expectedSha256.isBlank()) {
+            throw new ContentImportException(
+                "PACKAGE_FINGERPRINT_MISSING",
+                "Re-upload the package before validation or execution");
+        }
+
+        _validatePackageLocation(
+            importJob.getGroupId(), importJob.getFileEntryId());
+
+        FileEntry fileEntry = _dlAppLocalService.getFileEntry(
+            importJob.getFileEntryId());
+        String actualSha256 = _sha256(fileEntry);
+
+        if (!expectedSha256.equals(actualSha256)) {
+            throw new ContentImportException(
+                "PACKAGE_CHANGED_AFTER_JOB_CREATED",
+                "The Documents and Media package changed after the job was " +
+                    "created; create a new job and validate it again");
+        }
     }
 
     private ImportJob _getImportJob(long groupId, String jobKey)
@@ -146,6 +217,31 @@ public class ContentImportJobManagerImpl implements ContentImportJobManager {
         }
 
         return importJob;
+    }
+
+    private String _sha256(FileEntry fileEntry) throws ContentImportException {
+        try (InputStream inputStream = fileEntry.getContentStream()) {
+            MessageDigest messageDigest = MessageDigest.getInstance("SHA-256");
+            byte[] buffer = new byte[8192];
+            int read;
+
+            while ((read = inputStream.read(buffer)) != -1) {
+                messageDigest.update(buffer, 0, read);
+            }
+
+            StringBuilder sb = new StringBuilder();
+
+            for (byte value : messageDigest.digest()) {
+                sb.append(String.format("%02x", value));
+            }
+
+            return sb.toString();
+        }
+        catch (Exception exception) {
+            throw new ContentImportException(
+                "PACKAGE_FINGERPRINT_FAILED", fileEntry.getFileName(),
+                exception);
+        }
     }
 
     private void _validatePackageLocation(
@@ -168,6 +264,27 @@ public class ContentImportJobManagerImpl implements ContentImportJobManager {
         }
     }
 
+    private ImportJob _withJobLock(
+            long groupId, String jobKey, JobOperation jobOperation)
+        throws PortalException {
+
+        String lockKey = groupId + ":" + jobKey;
+        ReentrantLock lock = _jobLocks.computeIfAbsent(
+            lockKey, key -> new ReentrantLock());
+
+        lock.lock();
+
+        try {
+            return jobOperation.execute();
+        }
+        finally {
+            lock.unlock();
+        }
+    }
+
+    private static final Set<String> _ACTIVE_STATUSES = Set.of(
+        "RUNNING", "VALIDATING");
+
     private static final String _PACKAGE_FOLDER_ERC =
         "NXC-FOLDER-ARTICLE-IMPORT-PACKAGES";
 
@@ -188,4 +305,13 @@ public class ContentImportJobManagerImpl implements ContentImportJobManager {
 
     @Reference
     private ImportJobLocalService _importJobLocalService;
+
+    private final ConcurrentMap<String, ReentrantLock> _jobLocks =
+        new ConcurrentHashMap<>();
+
+    @FunctionalInterface
+    private interface JobOperation {
+
+        ImportJob execute() throws PortalException;
+    }
 }

@@ -9,19 +9,21 @@ export type Page<T> = {
 
 export type ContentStructure = {
     externalReferenceCode?: string;
-    id: number;
+    id: number | string;
+    key?: string;
     name: string;
 };
 
 export type ImageValue = {
     contentUrl?: string;
     description?: string;
-    id?: number;
+    id?: number | string;
     title?: string;
 };
 
 export type ContentFieldValue = {
     data?: unknown;
+    document?: ImageValue;
     image?: ImageValue;
 };
 
@@ -33,17 +35,45 @@ export type ContentField = {
 
 export type StructuredContent = {
     contentFields: ContentField[];
-    contentStructureId: number;
+    contentStructureId: number | string;
+    datePublished?: string;
     externalReferenceCode: string;
-    id: number;
+    friendlyUrlPath?: string;
+    id: number | string;
     title: string;
 };
 
+const requestCache = new Map<string, Promise<unknown>>();
+
+function normalizeIdentifier(value: string | number | undefined): string {
+    return String(value ?? '').trim().toLowerCase();
+}
+
+function cachedPortalFetch<T>(path: string, locale = ''): Promise<T> {
+    const cacheKey = `${locale}:${path}`;
+    const cachedRequest = requestCache.get(cacheKey);
+
+    if (cachedRequest) {
+        return cachedRequest as Promise<T>;
+    }
+
+    const request = portalFetch<T>(path, {
+        headers: locale ? {'Accept-Language': locale} : undefined,
+    });
+
+    requestCache.set(cacheKey, request);
+    request.catch(() => requestCache.delete(cacheKey));
+
+    return request;
+}
+
 export async function listContentStructures(
-    siteId: string
+    siteId: string,
+    locale = ''
 ): Promise<ContentStructure[]> {
-    const page = await portalFetch<Page<ContentStructure>>(
-        `/o/headless-delivery/v1.0/sites/${encodeURIComponent(siteId)}/content-structures?pageSize=100`
+    const page = await cachedPortalFetch<Page<ContentStructure>>(
+        `/o/headless-delivery/v1.0/sites/${encodeURIComponent(siteId)}/content-structures?pageSize=200`,
+        locale
     );
 
     return page.items;
@@ -51,15 +81,27 @@ export async function listContentStructures(
 
 export async function resolveContentStructure(
     siteId: string,
-    identifier: string
+    identifier: string,
+    locale = ''
 ): Promise<ContentStructure> {
-    const normalizedIdentifier = identifier.trim().toLowerCase();
-    const structures = await listContentStructures(siteId);
-    const structure = structures.find(
-        (item) =>
-            item.externalReferenceCode?.toLowerCase() ===
-                normalizedIdentifier ||
-            item.name.trim().toLowerCase() === normalizedIdentifier
+    const normalizedIdentifier = normalizeIdentifier(identifier);
+
+    if (!normalizedIdentifier) {
+        throw new Error('A Content Structure identifier is required.');
+    }
+
+    if (/^\d+$/.test(normalizedIdentifier)) {
+        return {
+            id: normalizedIdentifier,
+            name: identifier,
+        };
+    }
+
+    const structures = await listContentStructures(siteId, locale);
+    const structure = structures.find((item) =>
+        [item.externalReferenceCode, item.key, item.name, item.id].some(
+            (candidate) => normalizeIdentifier(candidate) === normalizedIdentifier
+        )
     );
 
     if (!structure) {
@@ -72,13 +114,21 @@ export async function resolveContentStructure(
 }
 
 export async function listStructuredContents(
-    contentStructureId: number
+    contentStructureId: number | string,
+    locale = ''
 ): Promise<StructuredContent[]> {
-    const page = await portalFetch<Page<StructuredContent>>(
-        `/o/headless-delivery/v1.0/content-structures/${contentStructureId}/structured-contents?flatten=true&pageSize=100`
+    const page = await cachedPortalFetch<Page<StructuredContent>>(
+        `/o/headless-delivery/v1.0/content-structures/${encodeURIComponent(
+            String(contentStructureId)
+        )}/structured-contents?flatten=true&pageSize=100`,
+        locale
     );
 
     return page.items;
+}
+
+export function clearStructuredContentRequestCache(): void {
+    requestCache.clear();
 }
 
 export function flattenContentFields(
@@ -146,5 +196,7 @@ export function readImage(
     fields: Map<string, ContentFieldValue>,
     name: string
 ): ImageValue | undefined {
-    return fields.get(name)?.image;
+    const value = fields.get(name);
+
+    return value?.image ?? value?.document;
 }

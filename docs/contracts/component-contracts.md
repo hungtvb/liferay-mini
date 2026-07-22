@@ -770,49 +770,54 @@ Master Page/Fragment + Navigation Menus + Site Settings
 
 ---
 
-# 12. Excel Content Importer
+# 12. Article Import Site Administration App
 
-## FE responsibility
+## UI responsibility
 
-- Implement `nexcent-content-importer` Custom Element.
-- Accept workbook and asset selections.
-- Parse all required sheets.
-- Display row-level validation errors.
-- Upload missing assets.
-- Create or update Structured Content by ERC.
-- Display created, updated, skipped, and failed counts.
+- Deliver a React UI inside the `nexcent-training-web` MVC Portlet.
+- Register it through `PanelApp` under Site Menu → Content & Data.
+- Accept one ZIP package containing `manifest.json`, `articles.xlsx`, and `assets/`.
+- Upload the package to the restricted Documents and Media import folder.
+- Display package, asset, and Article row validation before mutation.
+- Display durable job history, progress, created/updated/skipped/failed counts, row errors, retry, and error-report download.
+- Derive the current site from Liferay context; never ask editors for numeric IDs.
+- Never render the importer on the public landing page.
 
-## BE responsibility
+## Backend responsibility
 
-- Own workbook schema and validation rules.
-- Configure API permissions.
-- Provide Structure discovery by stable name/ERC.
-- Validate allowed HTML and URLs.
-- Define prerequisite asset and Structure order.
+- Own package schema, ZIP-safety limits, workbook schema, MIME/checksum validation, permissions, and state transitions.
+- Upsert Documents and Media by stable document ERC before dependent Web Content.
+- Upsert Structured Content by Article ERC.
+- Persist operational jobs and row results through Service Builder.
+- Expose orchestration through REST Builder; reuse the standard Documents API for the package binary.
+- Validate allowed HTML, URLs, taxonomy, locales, workflow, and publish permission.
 
-## Workbook sheets
+## Package contract
 
 ```text
+nexcent-article-import.zip
+├── manifest.json
+├── articles.xlsx
+└── assets/
+    └── <image files>
+```
+
+Workbook sheets:
+
+```text
+Articles
+Assets
+Taxonomy
 Instructions
-Heroes
-ClientsIntro
-Clients
-ServicesIntro
-Services
-Features
-StatisticsIntro
-Statistics
-Testimonials
-CommunityIntro
-CommunityCards
-CTA
 ```
 
 ## Acceptance
 
-- First import creates the expected records.
-- Second import updates records and creates no duplicate ERC.
-- Missing asset, duplicate ERC, invalid select value, invalid URL, and unsafe HTML are blocked before submission.
+- First import creates media and Draft Articles.
+- Second identical import reports `NO_CHANGE` and creates no duplicate ERC or unnecessary version.
+- Missing asset, duplicate ERC, invalid select value, unsafe HTML, unsafe ZIP path, corrupt image, and invalid URL are blocked before mutation.
+- Guest and ordinary site members cannot access the app or execute its API.
+- Imported images live in the Article media folder; source ZIPs remain in a separate restricted folder.
 
 ---
 

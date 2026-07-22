@@ -1,5 +1,7 @@
 package com.nexcent.training.article.importer.internal;
 
+import com.liferay.portal.kernel.json.JSONFactoryUtil;
+import com.liferay.portal.kernel.json.JSONObject;
 import com.nexcent.training.content.importer.ContentImportException;
 
 import java.io.ByteArrayInputStream;
@@ -17,9 +19,6 @@ import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 class SafeZipPackageReader {
 
     ArticleImportPackage read(byte[] bytes) throws ContentImportException {
@@ -28,7 +27,7 @@ class SafeZipPackageReader {
             (bytes[1] != 'K')) {
 
             throw new ContentImportException(
-                "INVALID_PACKAGE_LAYOUT", "Package must be a ZIP up to 100 MiB");
+                "INVALID_PACKAGE_LAYOUT", "Package must be a ZIP up to 25 MiB");
         }
 
         Map<String, byte[]> entries = new HashMap<>();
@@ -48,13 +47,13 @@ class SafeZipPackageReader {
                         "UNSAFE_ZIP_ENTRY", "Duplicate ZIP entry " + name);
                 }
 
-                if (zipEntry.isDirectory()) {
-                    continue;
-                }
-
                 if (names.size() > _MAX_ENTRIES) {
                     throw new ContentImportException(
                         "PACKAGE_LIMIT_EXCEEDED", "Package has too many entries");
+                }
+
+                if (zipEntry.isDirectory()) {
+                    continue;
                 }
 
                 ByteArrayOutputStream outputStream =
@@ -68,7 +67,13 @@ class SafeZipPackageReader {
                     if (expandedBytes > _MAX_EXPANDED_BYTES) {
                         throw new ContentImportException(
                             "PACKAGE_LIMIT_EXCEEDED",
-                            "Expanded package exceeds 250 MiB");
+                            "Expanded package exceeds 64 MiB");
+                    }
+
+                    if ((outputStream.size() + read) > _MAX_ENTRY_BYTES) {
+                        throw new ContentImportException(
+                            "PACKAGE_LIMIT_EXCEEDED",
+                            "ZIP entry exceeds 15 MiB: " + name);
                     }
 
                     outputStream.write(buffer, 0, read);
@@ -89,6 +94,7 @@ class SafeZipPackageReader {
         byte[] workbook = entries.get("articles.xlsx");
 
         if ((manifestBytes == null) || (workbook == null) ||
+            (manifestBytes.length > _MAX_MANIFEST_BYTES) ||
             (workbook.length > _MAX_WORKBOOK_BYTES)) {
 
             throw new ContentImportException(
@@ -97,13 +103,13 @@ class SafeZipPackageReader {
         }
 
         try {
-            String manifest = new String(
-                manifestBytes, StandardCharsets.UTF_8);
-            String schemaVersion = _jsonString(manifest, "schemaVersion");
-            String profileKey = _jsonString(manifest, "importProfileKey");
-            String siteERC = _jsonString(
-                manifest, "siteExternalReferenceCode");
-            String mode = _jsonString(manifest, "mode").toUpperCase(
+            JSONObject manifest = JSONFactoryUtil.createJSONObject(
+                new String(manifestBytes, StandardCharsets.UTF_8));
+            String schemaVersion = manifest.getString("schemaVersion").trim();
+            String profileKey = manifest.getString("importProfileKey").trim();
+            String siteERC = manifest.getString(
+                "siteExternalReferenceCode").trim();
+            String mode = manifest.getString("mode").trim().toUpperCase(
                 Locale.ROOT);
 
             if (schemaVersion.isEmpty() || profileKey.isEmpty() ||
@@ -126,36 +132,12 @@ class SafeZipPackageReader {
         }
     }
 
-    private String _jsonString(String json, String name)
-        throws ContentImportException {
-
-        Pattern pattern = Pattern.compile(
-            "\\\"" + Pattern.quote(name) +
-                "\\\"\\s*:\\s*\\\"([^\\\"]*)\\\"");
-        Matcher matcher = pattern.matcher(json);
-
-        if (!matcher.find()) {
-            throw new ContentImportException(
-                "INVALID_MANIFEST", "Manifest field " + name +
-                    " must occur exactly once");
-        }
-
-        String value = matcher.group(1);
-
-        if (matcher.find()) {
-            throw new ContentImportException(
-                "INVALID_MANIFEST", "Manifest field " + name +
-                    " must occur exactly once");
-        }
-
-        return value;
-    }
-
     private String _normalize(String name) throws ContentImportException {
         String normalized = name.replace('\\', '/');
 
-        if (normalized.startsWith("/") || normalized.contains("../") ||
-            normalized.equals("..") || normalized.contains("/./") ||
+        if (normalized.isBlank() || normalized.startsWith("/") ||
+            normalized.contains("../") || normalized.equals("..") ||
+            normalized.contains("/./") || normalized.endsWith("/..") ||
             normalized.indexOf('\0') >= 0 || normalized.contains(":")) {
 
             throw new ContentImportException(
@@ -165,8 +147,10 @@ class SafeZipPackageReader {
         return normalized;
     }
 
-    private static final int _MAX_COMPRESSED_BYTES = 100 * 1024 * 1024;
-    private static final int _MAX_ENTRIES = 512;
-    private static final int _MAX_EXPANDED_BYTES = 250 * 1024 * 1024;
+    private static final int _MAX_COMPRESSED_BYTES = 25 * 1024 * 1024;
+    private static final int _MAX_ENTRIES = 256;
+    private static final int _MAX_ENTRY_BYTES = 15 * 1024 * 1024;
+    private static final int _MAX_EXPANDED_BYTES = 64 * 1024 * 1024;
+    private static final int _MAX_MANIFEST_BYTES = 64 * 1024;
     private static final int _MAX_WORKBOOK_BYTES = 10 * 1024 * 1024;
 }

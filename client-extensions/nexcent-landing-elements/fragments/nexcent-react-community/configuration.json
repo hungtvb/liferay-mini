@@ -1,0 +1,49 @@
+{
+    "fieldSets": [
+        {
+            "fields": [
+                {
+                    "dataType": "string",
+                    "defaultValue": "Nexcent Service",
+                    "label": "Content Structure identifier",
+                    "name": "structureIdentifier",
+                    "type": "text"
+                },
+                {
+                    "dataType": "int",
+                    "defaultValue": "3",
+                    "label": "Maximum cards",
+                    "name": "maxItems",
+                    "type": "select",
+                    "typeOptions": {
+                        "validValues": [
+                            {"label": "3", "value": "3"},
+                            {"label": "6", "value": "6"},
+                            {"label": "9", "value": "9"}
+                        ]
+                    }
+                }
+            ],
+            "label": "Headless content"
+        },
+        {
+            "fields": [
+                {
+                    "dataType": "string",
+                    "defaultValue": "Manage your entire community in a single system",
+                    "label": "Title",
+                    "name": "title",
+                    "type": "text"
+                },
+                {
+                    "dataType": "string",
+                    "defaultValue": "Who is Nexcent suitable for?",
+                    "label": "Description",
+                    "name": "description",
+                    "type": "text"
+                }
+            ],
+            "label": "Section copy"
+        }
+    ]
+}

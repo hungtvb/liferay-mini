@@ -21,11 +21,11 @@ Required labs currently cover:
 - Runtime and Liferay Workspace foundation.
 - Site, Pages, Navigation, Master Page, Fragments, assets, Asset Library, taxonomy, Forms, roles, and permissions needed by Nexcent.
 - Theme CSS, Style Book, Global CSS/JS, Custom Elements, and Remote App.
-- Web Content, Documents and Media, ERC, and Headless Delivery.
-- OSGi, Gogo Shell, Service Builder, and REST Builder BFF for `ImportJob`.
-- Excel import, Batch Client Extension, QA, and final submission evidence.
+- Web Content, Documents and Media, ERC, Headless Delivery, Article Display Pages, and the Excel Article pipeline.
+- OSGi, Gogo Shell, Service Builder, and REST Builder for durable Article import jobs.
+- Batch Client Extension, QA, and final submission evidence.
 
-Optional future upgrades include Collections, Search Blueprints, Publications, advanced workflow, Objects dashboards, personalization, Commerce, Analytics Cloud, performance labs, and a full Liferay CMS + Spaces migration.
+Optional future upgrades include Collections, Search Blueprints, Publications, advanced workflow, Objects dashboards, personalization, Commerce, Analytics Cloud, performance labs, and migration to the newer Liferay Headless CMS after its release-feature behavior is validated for the target update.
 
 ## Local training identity
 
@@ -41,11 +41,12 @@ Role-specific users are created during the Practitioner exercise and also use th
 ## Status labels
 
 - **SOURCE READY:** files and commands are present in GitHub.
+- **DESIGN READY:** contract and lab sequence are approved, but implementation is not yet complete.
 - **RUNTIME PENDING:** the source still requires deployment on a clean Liferay DXP 2026.Q1.1 instance.
 - **VERIFIED:** reserved for evidence captured from the target runtime.
 - **OPTIONAL BACKLOG:** useful enhancement outside the current submission gate.
 
-The modules in this kit are **SOURCE READY / RUNTIME PENDING**.
+The existing modules are **SOURCE READY / RUNTIME PENDING**. The Article importer changes are **DESIGN READY / IMPLEMENTATION AND RUNTIME QA PENDING**; the current JSON metadata-only `ImportJob` endpoint is a foundation, not the final Article import API.
 
 ## Lab map
 
@@ -57,12 +58,13 @@ The modules in this kit are **SOURCE READY / RUNTIME PENDING**.
 | Frontend | Configurable section Fragment | `training/master-track-code-labs/fragments/nexcent-section-wrapper` | ZIP the fragment files and import in Site Menu → Design → Fragments |
 | Frontend | Community Remote App | `remote-apps/nexcent-community-app` and `client-extensions/nexcent-remote-app-registration` | Build app, host assets, deploy registration CE |
 | Content | Hero and Service preview templates | `training/master-track-code-labs/web-content-templates` | Create Liferay Web Content Templates and paste FreeMarker code |
+| Article | Structure, taxonomy, DPT, Excel, import, list, and detail | `06-article-pipeline-code-labs.md` | Complete ART-01 through ART-09 and capture runtime evidence |
 | Practitioner | Vocabulary, Categories, Tags, and asset classification | `training/master-track-code-labs/sample-data/nexcent-taxonomy.json` | Configure in Site Menu → Categorization and capture runtime evidence |
 | Application | OSGi and Gogo Shell | `modules/nexcent-training/nexcent-training-osgi` | `./gradlew :modules:nexcent-training:nexcent-training-osgi:deploy` |
-| Application | Service Builder | `modules/nexcent-training/nexcent-training-api` and `nexcent-training-service` | Run `buildService`, then deploy API and service modules |
-| Application | REST Builder | `modules/nexcent-training/nexcent-training-rest-api` and `nexcent-training-rest-impl` | Run `buildREST`, then deploy all dependent modules |
+| Application | Service Builder foundation | `modules/nexcent-training/nexcent-training-api` and `nexcent-training-service` | Run `buildService`, then deploy API and service modules |
+| Application | REST Builder foundation | `modules/nexcent-training/nexcent-training-rest-api` and `nexcent-training-rest-impl` | Run `buildREST`, then deploy all dependent modules |
+| Migration | Article workbook | `training/master-track-code-labs/sample-data/nxc-article-import-template.xlsx` | Upload → Validate → Execute after the importer modules are implemented |
 | Migration | Batch Client Extension | `client-extensions/nexcent-training-batch-lab` | Package a version-generated Batch Engine export, then build the CE |
-| Migration | Sample content | `training/master-track-code-labs/sample-data` | Use mock JSON first; use CSV as the Excel import source |
 
 ## Documents
 
@@ -72,21 +74,29 @@ The modules in this kit are **SOURCE READY / RUNTIME PENDING**.
 4. [OSGi, Service Builder, and REST Builder labs](03-application-code-labs.md)
 5. [Batch and migration labs](04-migration-code-labs.md)
 6. [Vocabulary, Categories, Tags, and asset classification](05-taxonomy-and-asset-classification.md)
+7. [Article pipeline code labs](06-article-pipeline-code-labs.md)
+
+Related contracts:
+
+- [Article solution and detailed design](../architecture/article-content-pipeline.md)
+- [Article FE–BE contract](../contracts/article-contract.md)
 
 ## Golden path
 
 ```text
-Copy source
+Create stable content schema and ERCs
     ↓
 Build or generate code
     ↓
 Deploy to clean Liferay
     ↓
-Verify in UI / Gogo / API Explorer
+Upload → Validate → Execute
     ↓
-Capture evidence
+Verify list, Display Page detail, API, and permissions
+    ↓
+Capture 1440px, 768px, and 375px evidence
 ```
 
 Do not copy generated numeric IDs into frontend configuration. Use stable Structure identifiers and external reference codes.
 
-Only required Nexcent labs participate in the current submission gate. Optional backlog items may be added later without invalidating the completed course.
+The Header/Footer and Article pipelines have independent screenshot gates. No merge occurs until both gates pass. Optional backlog items may be added later without invalidating the completed course.

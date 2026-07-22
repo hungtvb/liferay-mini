@@ -1,5 +1,7 @@
 # Application Developer Code Labs
 
+> **Article importer status:** the `ImportJob` Service Builder and JSON REST endpoint below are a persistence/API foundation, not the final production importer. Extend them with upload → validate → execute and row results in [Article Pipeline Code Labs](06-article-pipeline-code-labs.md).
+
 > **Source status:** CI VERIFIED / RUNTIME PENDING
 >
 > The repository contains the complete generated Service Builder source. Learners copy the full modules, regenerate to verify the contract, and deploy. They do not start from an empty hand-made Service Builder module.

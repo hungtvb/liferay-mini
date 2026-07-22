@@ -24,6 +24,7 @@ Public frontend preview: `https://nexcent-liferay-static.vercel.app`
 - Application lab source: [`modules/nexcent-training`](modules/nexcent-training)
 - Copyable training assets: [`training/master-track-code-labs`](training/master-track-code-labs)
 - 2026.Q1 architecture audit: [`docs/architecture/liferay-2026-q1-audit.md`](docs/architecture/liferay-2026-q1-audit.md)
+- Extensible Content Import Framework: [`docs/architecture/content-import-framework.md`](docs/architecture/content-import-framework.md)
 - Previous delivery-oriented course: [`archive/course-v1`](https://github.com/hungtvb/liferay-mini/tree/archive/course-v1)
 
 ## Scope alignment
@@ -46,7 +47,7 @@ Current required scope includes:
 - Theme CSS, Style Books, Global CSS/JS, favicon, Custom Elements, and Remote App.
 - Web Content Structures, Templates, ERCs, Documents and Media, and Headless Delivery.
 - OSGi, Gogo Shell, Service Builder, and REST Builder for the `ImportJob` business flow.
-- A site-scoped Article Import administration app under Content & Data.
+- A site-scoped Content Import administration app with server-discovered import profiles under Content & Data.
 - ZIP-packaged Excel + image import, Batch Client Extension, integration QA, and final runtime evidence.
 
 Collections, Search Blueprints, Publications, advanced workflow, Objects dashboards, personalization, Commerce, Analytics Cloud, and performance labs are optional future upgrades. They do not block the current course or the `final` submission.
@@ -81,9 +82,9 @@ Database
 
 ZIP package: manifest + Excel + images
       ↓
-Site Administration App + REST Builder
+Generic Site Administration App + profile discovery + REST Builder
       ↓
-Importer: D&M assets first, then Web Content
+Selected handler: D&M assets first, then target content
       ↓
 Service Builder ImportJob status
 
@@ -199,7 +200,7 @@ node training/master-track-code-labs/scripts/validate-lab-kit.mjs
 8. OSGi and Gogo Shell.
 9. Service Builder.
 10. REST Builder BFF.
-11. Article ZIP importer, Site Administration App, and Batch Client Extension.
+11. Generic Content Import Framework, `NXC_ARTICLE_V1`, Site Administration App, and Batch Client Extension.
 12. Integration QA and final demonstration.
 
 ## Evidence labels

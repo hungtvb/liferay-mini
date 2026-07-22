@@ -22,7 +22,7 @@ Required labs currently cover:
 - Site, Pages, Navigation, Master Page, Fragments, assets, Asset Library, taxonomy, Forms, roles, and permissions needed by Nexcent.
 - Theme CSS, Style Book, Global CSS/JS, Custom Elements, and Remote App.
 - Web Content, Documents and Media, ERC, Headless Delivery, Article Display Pages, and the ZIP-based Excel + image pipeline.
-- OSGi, Gogo Shell, Service Builder, REST Builder, and a native Site Administration App for durable Article import jobs.
+- OSGi, Gogo Shell, Service Builder, REST Builder, a profile registry, and a native Site Administration App for durable content import jobs.
 - Batch Client Extension, QA, and final submission evidence.
 
 Optional future upgrades include Collections, Search Blueprints, Publications, advanced workflow, Objects dashboards, personalization, Commerce, Analytics Cloud, performance labs, and migration to the newer Liferay Headless CMS after its release-feature behavior is validated for the target update.
@@ -46,7 +46,7 @@ Role-specific users are created during the Practitioner exercise and also use th
 - **VERIFIED:** reserved for evidence captured from the target runtime.
 - **OPTIONAL BACKLOG:** useful enhancement outside the current submission gate.
 
-The existing modules are **SOURCE READY / RUNTIME PENDING**. The Article pipeline target is **DESIGN READY / IMPLEMENTATION AND RUNTIME QA PENDING**. The current branch has the Service Builder job/row foundation and a transitional multipart-XLSX REST endpoint; ZIP + assets, media-first execution, standard Documents API handoff, and the Site Administration App are not yet complete.
+The existing modules are **SOURCE READY / RUNTIME PENDING**. The Article pipeline target is **DESIGN READY / IMPLEMENTATION AND RUNTIME QA PENDING**. The current branch has the Service Builder job/row foundation and a transitional Article-specific multipart-XLSX REST endpoint. Generic profile discovery/jobs, ZIP + assets, media-first execution, standard Documents API handoff, and the Site Administration App dropdown are not yet complete.
 
 ## Lab map
 
@@ -58,7 +58,7 @@ The existing modules are **SOURCE READY / RUNTIME PENDING**. The Article pipelin
 | Frontend | Configurable section Fragment | `training/master-track-code-labs/fragments/nexcent-section-wrapper` | ZIP the fragment files and import in Site Menu → Design → Fragments |
 | Frontend | Community Remote App | `remote-apps/nexcent-community-app` and `client-extensions/nexcent-remote-app-registration` | Build app, host assets, deploy registration CE |
 | Content | Hero and Service preview templates | `training/master-track-code-labs/web-content-templates` | Create Liferay Web Content Templates and paste FreeMarker code |
-| Article | Structure, taxonomy, DPT, ZIP package, images, Site Admin App, import, list, and detail | `06-article-pipeline-code-labs.md` | Complete ART-01 through ART-10 and capture runtime evidence |
+| Article | `NXC_ARTICLE_V1` profile, Structure, taxonomy, DPT, ZIP package, images, generic Site Admin App, list, and detail | `06-article-pipeline-code-labs.md` | Complete ART-01 through ART-10 and capture runtime evidence |
 | Practitioner | Vocabulary, Categories, Tags, and asset classification | `training/master-track-code-labs/sample-data/nexcent-taxonomy.json` | Configure in Site Menu → Categorization and capture runtime evidence |
 | Application | OSGi and Gogo Shell | `modules/nexcent-training/nexcent-training-osgi` | `./gradlew :modules:nexcent-training:nexcent-training-osgi:deploy` |
 | Application | Service Builder foundation | `modules/nexcent-training/nexcent-training-api` and `nexcent-training-service` | Run `buildService`, then deploy API and service modules |
@@ -78,6 +78,7 @@ The existing modules are **SOURCE READY / RUNTIME PENDING**. The Article pipelin
 
 Related contracts:
 
+- [Content Import Framework](../architecture/content-import-framework.md)
 - [Article solution and detailed design](../architecture/article-content-pipeline.md)
 - [Article FE–BE contract](../contracts/article-contract.md)
 

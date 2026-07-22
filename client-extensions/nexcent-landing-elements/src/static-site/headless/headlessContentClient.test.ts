@@ -2,6 +2,7 @@ import {afterEach, describe, expect, it, vi} from 'vitest';
 
 import {
     clearHeadlessContentRequestCache,
+    type HeadlessStructuredContent,
     loadStructuredContents,
     readContentBoolean,
     readContentImage,
@@ -16,8 +17,10 @@ afterEach(() => {
 
 describe('Headless content client', () => {
     it('resolves a structure identifier and shares cached requests', async () => {
-        const fetchMock = vi.fn().mockImplementation(async (input: string) => {
-            if (input.includes('/content-structures?pageSize=200')) {
+        const fetchMock = vi.fn().mockImplementation(async (input: RequestInfo | URL) => {
+            const url = String(input);
+
+            if (url.includes('/content-structures?pageSize=200')) {
                 return {
                     json: async () => ({
                         items: [
@@ -48,7 +51,10 @@ describe('Headless content client', () => {
                                     name: 'sortOrder',
                                 },
                             ],
+                            contentStructureId: 456,
                             externalReferenceCode: 'SERVICE-B',
+                            id: 2,
+                            title: 'Service B',
                         },
                         {
                             contentFields: [
@@ -61,7 +67,10 @@ describe('Headless content client', () => {
                                     name: 'sortOrder',
                                 },
                             ],
+                            contentStructureId: 456,
                             externalReferenceCode: 'SERVICE-A',
+                            id: 1,
+                            title: 'Service A',
                         },
                     ],
                 }),
@@ -89,7 +98,7 @@ describe('Headless content client', () => {
     });
 
     it('reads nested text, booleans, numbers, and image values', () => {
-        const content = {
+        const structuredContent: HeadlessStructuredContent = {
             contentFields: [
                 {
                     name: 'group',
@@ -118,13 +127,17 @@ describe('Headless content client', () => {
                     ],
                 },
             ],
+            contentStructureId: 456,
+            externalReferenceCode: 'TEST-CONTENT',
+            id: 1,
+            title: 'Test content',
         };
 
-        expect(readContentText(content, ['title'])).toBe('Nested title');
-        expect(readContentBoolean(content, ['active'], true)).toBe(false);
-        expect(readContentNumber(content, ['sortOrder'])).toBe(42);
+        expect(readContentText(structuredContent, ['title'])).toBe('Nested title');
+        expect(readContentBoolean(structuredContent, ['active'], true)).toBe(false);
+        expect(readContentNumber(structuredContent, ['sortOrder'])).toBe(42);
         expect(
-            readContentImage(content, ['image'], {
+            readContentImage(structuredContent, ['image'], {
                 alt: 'Fallback',
                 url: '/fallback.png',
             })

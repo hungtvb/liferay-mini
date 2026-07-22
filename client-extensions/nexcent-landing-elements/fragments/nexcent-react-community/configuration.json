@@ -4,8 +4,8 @@
             "fields": [
                 {
                     "dataType": "string",
-                    "defaultValue": "NXC Service Item",
-                    "label": "Content Structure identifier",
+                    "defaultValue": "NXC_SERVICE_ITEM",
+                    "label": "Content Structure key",
                     "name": "structureIdentifier",
                     "type": "text"
                 },

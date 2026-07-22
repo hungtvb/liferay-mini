@@ -162,7 +162,7 @@ export function StaticCommunity({host}: HostProps) {
     const structureIdentifier = readStringSetting(
         host,
         'structure-identifier',
-        'Nexcent Service'
+        'NXC Service Item'
     );
     const maxItems = readNumberSetting(host, 'max-items', 3, {
         max: 12,
@@ -444,7 +444,7 @@ function mapMarketingContent(
         linkLabel: readContentText(
             structuredContent,
             ['linkLabel', 'ctaLabel'],
-            fallback.linkLabel
+            ''
         ),
         linkTarget: readContentText(
             structuredContent,
@@ -463,7 +463,7 @@ export function StaticMarketing({host}: HostProps) {
     const structureIdentifier = readStringSetting(
         host,
         'structure-identifier',
-        'Nexcent Article'
+        'NXC Community Card'
     );
     const maxItems = readNumberSetting(host, 'max-items', 3, {
         max: 12,
@@ -514,7 +514,7 @@ export function StaticMarketing({host}: HostProps) {
 
                 {error ? (
                     <span className="sr-only" role="status">
-                        Articles are using fallback content: {error.message}
+                        Marketing cards are using fallback content: {error.message}
                     </span>
                 ) : null}
             </div>

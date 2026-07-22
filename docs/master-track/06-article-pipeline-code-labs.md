@@ -202,7 +202,7 @@ Before upload:
 - give each asset a stable `documentERC` and relative `assets/...` path;
 - remove formulas, macros, external links, absolute paths, and Base64 data.
 
-In the Nexcent Article Import Site Administration App:
+In the generic Nexcent Content Import Site Administration App, select `NXC_ARTICLE_V1`:
 
 1. upload the ZIP to the restricted package folder;
 2. run **Validate** and review package, asset, and Article results;

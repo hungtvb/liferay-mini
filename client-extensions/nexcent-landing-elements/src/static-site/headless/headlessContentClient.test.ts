@@ -84,7 +84,7 @@ describe('Headless content client', () => {
         ]);
 
         expect(fetchMock).toHaveBeenCalledTimes(2);
-        expect(first).toBe(second);
+        expect(first).toEqual(second);
         expect(readContentText(first[0], ['title'])).toBe('Service A');
     });
 

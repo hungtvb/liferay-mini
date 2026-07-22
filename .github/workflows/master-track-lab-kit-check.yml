@@ -42,6 +42,13 @@ jobs:
               working-directory: modules/nexcent-training/nexcent-training-web
               run: npm install --package-lock-only --ignore-scripts
 
+            - name: Snapshot reviewed fixes
+              run: |
+                  git config user.name "review-fix-runner"
+                  git config user.email "review-fix-runner@noreply.local"
+                  git add -A
+                  git commit -m "test: snapshot PR 28 review fixes"
+
             - name: Set up Gradle
               uses: gradle/actions/setup-gradle@v4
 

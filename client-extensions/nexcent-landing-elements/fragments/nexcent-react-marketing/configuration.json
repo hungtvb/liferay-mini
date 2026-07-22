@@ -4,8 +4,8 @@
             "fields": [
                 {
                     "dataType": "string",
-                    "defaultValue": "NXC Community Card",
-                    "label": "Content Structure identifier",
+                    "defaultValue": "NXC_COMMUNITY_CARD",
+                    "label": "Content Structure key",
                     "name": "structureIdentifier",
                     "type": "text"
                 },

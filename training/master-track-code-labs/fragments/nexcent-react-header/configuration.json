@@ -1,0 +1,62 @@
+{
+    "fieldSets": [
+        {
+            "fields": [
+                {
+                    "dataType": "string",
+                    "defaultValue": "",
+                    "label": "Logo URL override",
+                    "name": "logoURL",
+                    "type": "text"
+                },
+                {
+                    "dataType": "string",
+                    "defaultValue": "Nexcent",
+                    "label": "Logo alt text",
+                    "name": "logoAlt",
+                    "type": "text"
+                }
+            ],
+            "label": "Branding"
+        },
+        {
+            "fields": [
+                {
+                    "defaultValue": true,
+                    "label": "Show account actions",
+                    "name": "showAccountActions",
+                    "type": "checkbox"
+                },
+                {
+                    "dataType": "string",
+                    "defaultValue": "Login",
+                    "label": "Login label",
+                    "name": "loginLabel",
+                    "type": "text"
+                },
+                {
+                    "dataType": "string",
+                    "defaultValue": "Sign up",
+                    "label": "Sign-up label",
+                    "name": "signUpLabel",
+                    "type": "text"
+                },
+                {
+                    "dataType": "string",
+                    "defaultValue": "My Account",
+                    "label": "My Account label",
+                    "name": "myAccountLabel",
+                    "type": "text"
+                },
+                {
+                    "dataType": "string",
+                    "defaultValue": "Sign out",
+                    "label": "Sign-out label",
+                    "name": "signOutLabel",
+                    "type": "text"
+                }
+            ],
+            "label": "Account actions"
+        }
+    ]
+}

@@ -159,7 +159,8 @@ public class SiteShellResourceImpl extends BaseSiteShellResourceImpl {
         AccountContext accountContext = new AccountContext();
 
         accountContext.setAccountURL(
-            (themeDisplay != null) ? themeDisplay.getURLMyAccount() :
+            (themeDisplay != null) ?
+                String.valueOf(themeDisplay.getURLMyAccount()) :
                 "/group/control_panel/manage");
         accountContext.setCreateAccountURL(
             (themeDisplay != null) ?

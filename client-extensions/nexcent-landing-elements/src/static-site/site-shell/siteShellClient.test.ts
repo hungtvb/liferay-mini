@@ -22,31 +22,37 @@ describe('Site Shell client', () => {
         expect(fallback.account.signedIn).toBe(false);
     });
 
-    it('normalizes nested navigation and account state', () => {
+    it('rebuilds a nested tree from the flat REST Builder contract', () => {
         const shell = normalizeSiteShell({
             account: {
                 displayName: 'Hung Tran',
                 signedIn: true,
             },
-            companyNavigation: [],
-            headerNavigation: [
-                {
-                    children: [
-                        {
-                            label: 'Child',
-                            url: '/child',
-                        },
-                    ],
-                    label: 'Parent',
-                    selected: true,
-                    url: '/parent',
-                },
-            ],
+            companyNavigation: {navigationItems: []},
+            headerNavigation: {
+                navigationItems: [
+                    {
+                        externalReferenceCode: 'NXC-PARENT',
+                        label: 'Parent',
+                        order: 0,
+                        parentExternalReferenceCode: '',
+                        selected: true,
+                        url: '/parent',
+                    },
+                    {
+                        externalReferenceCode: 'NXC-CHILD',
+                        label: 'Child',
+                        order: 0,
+                        parentExternalReferenceCode: 'NXC-PARENT',
+                        url: '/child',
+                    },
+                ],
+            },
             site: {
                 name: 'Nexcent',
                 siteId: 123,
             },
-            supportNavigation: [],
+            supportNavigation: {navigationItems: []},
             warnings: [],
         });
 
@@ -60,10 +66,10 @@ describe('Site Shell client', () => {
         const fetchMock = vi.fn().mockResolvedValue({
             json: async () => ({
                 account: {signedIn: false},
-                companyNavigation: [],
-                headerNavigation: [],
+                companyNavigation: {navigationItems: []},
+                headerNavigation: {navigationItems: []},
                 site: {name: 'Nexcent', siteId: 321},
-                supportNavigation: [],
+                supportNavigation: {navigationItems: []},
                 warnings: [],
             }),
             ok: true,

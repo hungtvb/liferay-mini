@@ -5,11 +5,12 @@ nexcent-community-remote-app:
     friendlyURLMapping: nexcent-community
     htmlElementName: nexcent-community-app
     instanceable: false
-    name: Nexcent Community Remote App
+    name: Nexcent Articles
     portletCategoryName: category.client-extensions
     properties:
-        intro-structure-identifier: NXC Community Intro
-        item-structure-identifier: NXC Community Card
+        article-structure-identifier: NXC-STRUCTURE-ARTICLE
+        description: The Nexcent blog is the best place to read about the latest membership insights, trends and more. See who's joining the community, read about how our community are increasing their membership income and lot's more.
+        heading: Caring is the new marketing
     type: customElement
     urls:
         - /index.js

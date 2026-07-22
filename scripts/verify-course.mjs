@@ -87,11 +87,11 @@ const requiredFiles = [
     'client-extensions/nexcent-landing-elements/package.json',
     'client-extensions/nexcent-landing-elements/package-lock.json',
     'client-extensions/nexcent-landing-elements/src/index.tsx',
-    'client-extensions/nexcent-remote-app-registration/client-extension.yaml',
-    'remote-apps/nexcent-community-app/package.json',
-    'remote-apps/nexcent-community-app/package-lock.json',
-    'remote-apps/nexcent-community-app/src/index.tsx',
-    'remote-apps/nexcent-community-app/src/styles.css',
+    'client-extensions/nexcent-articles-client-extension/client-extension.yaml',
+    'remote-apps/nexcent-articles/package.json',
+    'remote-apps/nexcent-articles/package-lock.json',
+    'remote-apps/nexcent-articles/src/index.tsx',
+    'remote-apps/nexcent-articles/src/styles.css',
     'client-extensions/nexcent-content-batch/client-extension.yaml',
     'client-extensions/nexcent-training-batch-lab/client-extension.yaml',
     'modules/nexcent-training/nexcent-training-osgi/build.gradle',
@@ -190,17 +190,17 @@ await requireText(`${themeRoot}/assets/global.js`, [
 ]);
 
 await requireText(
-    'client-extensions/nexcent-remote-app-registration/client-extension.yaml',
+    'client-extensions/nexcent-articles-client-extension/client-extension.yaml',
     [
-        'baseURL: https://nexcent-liferay-static.vercel.app/remote-app',
-        'htmlElementName: nexcent-community-app',
+        'baseURL: https://nexcent-liferay-static.vercel.app/articles',
+        'htmlElementName: nexcent-articles',
         'type: customElement',
         'useESM: true',
     ]
 );
 
-await requireText('remote-apps/nexcent-community-app/src/index.tsx', [
-    "const ELEMENT_NAME = 'nexcent-community-app'",
+await requireText('remote-apps/nexcent-articles/src/index.tsx', [
+    "const ELEMENT_NAME = 'nexcent-articles'",
     'NXC-STRUCTURE-ARTICLE',
     'Caring is the new marketing',
     'coverImage',
@@ -365,7 +365,7 @@ async function scanFrontendDirectory(relativeDirectory) {
 }
 
 await scanFrontendDirectory('client-extensions/nexcent-landing-elements/src');
-await scanFrontendDirectory('remote-apps/nexcent-community-app/src');
+await scanFrontendDirectory('remote-apps/nexcent-articles/src');
 
 if (await exists('docs/lab-guide')) {
     const legacyLessons = (

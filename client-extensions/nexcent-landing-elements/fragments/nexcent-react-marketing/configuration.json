@@ -4,7 +4,7 @@
             "fields": [
                 {
                     "dataType": "string",
-                    "defaultValue": "Nexcent Article",
+                    "defaultValue": "NXC Community Card",
                     "label": "Content Structure identifier",
                     "name": "structureIdentifier",
                     "type": "text"

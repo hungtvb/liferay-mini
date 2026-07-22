@@ -548,10 +548,18 @@ public class ArticleImportManagerImpl implements ArticleImportManager {
                 serviceContext.setUserId(userId);
 
                 if (existing == null) {
-                    _dlAppLocalService.addFileEntry(
+                    FileEntry created = _dlAppLocalService.addFileEntry(
                         asset.documentERC, userId, importJob.getGroupId(),
-                        folder.getFolderId(), fileName, mimeType, bytes,
-                        asset.title, asset.altText, null, serviceContext);
+                        folder.getFolderId(), fileName, mimeType, bytes, null,
+                        null, null, serviceContext);
+
+                    _dlAppLocalService.updateFileEntry(
+                        userId, created.getFileEntryId(), fileName, mimeType,
+                        asset.title, asset.altText,
+                        "Imported by " + importJob.getJobKey(),
+                        "Content import asset metadata",
+                        DLVersionNumberIncrease.MINOR, bytes, null, null, null,
+                        serviceContext);
 
                     result.created++;
                     _markItem(

@@ -1,6 +1,6 @@
 # Application Developer Code Labs
 
-> **Article importer status:** the `ImportJob` Service Builder and JSON REST endpoint below are a persistence/API foundation, not the final production importer. Extend them with upload → validate → execute and row results in [Article Pipeline Code Labs](06-article-pipeline-code-labs.md).
+> **Article importer status:** Service Builder owns durable job/row state and REST Builder owns orchestration. The package binary is uploaded through the standard Documents API; ZIP/Excel/image processing remains in `ArticleImportManager`. Complete the Site Administration App and runtime flow in [Article Pipeline Code Labs](06-article-pipeline-code-labs.md).
 
 > **Source status:** CI VERIFIED / RUNTIME PENDING
 >
@@ -248,55 +248,50 @@ Open:
 http://localhost:8080/o/api
 ```
 
-Find `Liferay.Nexcent.Training` and test:
+Find `Liferay.Nexcent.Training` and verify:
 
 ```text
-POST /o/nexcent-training/v1.0/sites/{siteId}/import-jobs
-GET  /o/nexcent-training/v1.0/sites/{siteId}/import-jobs/{externalReferenceCode}
+POST /o/nexcent-training/v1.0/sites/{siteId}/article-import-jobs
+POST /o/nexcent-training/v1.0/sites/{siteId}/article-import-jobs/{jobERC}/validate
+POST /o/nexcent-training/v1.0/sites/{siteId}/article-import-jobs/{jobERC}/execute
+GET  /o/nexcent-training/v1.0/sites/{siteId}/article-import-jobs
+GET  /o/nexcent-training/v1.0/sites/{siteId}/article-import-jobs/{jobERC}
+GET  /o/nexcent-training/v1.0/sites/{siteId}/article-import-jobs/{jobERC}/items
 ```
 
-Sample request:
+Before creating a job, upload `nexcent-article-import.zip` through the standard Documents API to the restricted Article import package folder and capture its `fileEntryId`.
+
+Sample create-job request:
 
 ```json
 {
-  "externalReferenceCode": "NXC-IMPORT-20260720-001",
-  "fileName": "community-articles.xlsx",
-  "totalRows": 3
+  "externalReferenceCode": "NXC-ARTICLE-IMPORT-20260722-001",
+  "packageFileEntryId": 38201,
+  "structureExternalReferenceCode": "NXC-STRUCTURE-ARTICLE"
 }
 ```
 
-Authenticated curl example:
+The REST resource validates package ownership, site scope, approved folder, and permission, then delegates to `ArticleImportManager`. It never parses ZIP or Excel directly.
 
-```bash
-curl \
-  --user '<ADMIN_EMAIL>:<PASSWORD>' \
-  --header 'Content-Type: application/json' \
-  --request POST \
-  --data '{"externalReferenceCode":"NXC-IMPORT-20260720-001","fileName":"community-articles.xlsx","totalRows":3}' \
-  'http://localhost:8080/o/nexcent-training/v1.0/sites/<SITE_ID>/import-jobs'
-```
+## Idempotency and state exercise
 
-Read the record back:
-
-```bash
-curl \
-  --user '<ADMIN_EMAIL>:<PASSWORD>' \
-  'http://localhost:8080/o/nexcent-training/v1.0/sites/<SITE_ID>/import-jobs/NXC-IMPORT-20260720-001'
-```
-
-## Idempotency exercise
-
-POST the same external reference code a second time. The REST resource passes it to `ImportJobLocalService`, which maps it to the internal `jobKey` and resets the existing record rather than inserting a duplicate.
+1. Create the job.
+2. Validate it and confirm no Web Content or imported asset was mutated.
+3. Execute it and inspect paged row results.
+4. Submit the same package/job ERC again.
+5. Confirm the existing operational job is reset safely and the identical payload reports `NO_CHANGE`.
+6. Call execute twice concurrently and confirm one request is rejected with `INVALID_STATE`.
 
 ## Checkpoint
 
 - `buildREST` completes.
-- API, service, REST API, and REST implementation modules compile.
-- API appears in API Explorer after deployment.
-- POST persists through Service Builder.
-- GET reads the same operational record.
-- Repeating the same external reference code does not create a duplicate.
-- Unknown keys return an explicit not-found response.
+- API, service, importer, REST API, and REST implementation modules compile.
+- Endpoints appear in API Explorer after deployment.
+- Service Builder persists job and row results.
+- Guest receives `401/403`.
+- A package from another site/folder is rejected.
+- Repeating stable ERCs creates no duplicate job, media, or Article.
+- Unknown job keys return an explicit not-found response.
 
 ## Troubleshooting
 
@@ -322,6 +317,7 @@ Confirm this activation order:
 ```text
 Nexcent Training API
 → Nexcent Training Service
+→ Nexcent Training Article Importer
 → Nexcent Training REST API
 → Nexcent Training REST Impl
 ```

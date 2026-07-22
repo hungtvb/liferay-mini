@@ -32,6 +32,19 @@ public class XlsxArticleParserTest {
     }
 
     @Test
+    public void testRejectsDecimalSortOrder() throws Exception {
+        try {
+            new XlsxArticleParser().parse(_workbook(false, 10.05));
+
+            Assert.fail("Expected decimal integer rejection");
+        }
+        catch (ArticleImportException articleImportException) {
+            Assert.assertEquals(
+                "INVALID_INTEGER", articleImportException.getCode());
+        }
+    }
+
+    @Test
     public void testRejectsFormulaCells() throws Exception {
         try {
             new XlsxArticleParser().parse(_workbook(true));
@@ -45,6 +58,12 @@ public class XlsxArticleParserTest {
     }
 
     private byte[] _workbook(boolean formula) throws Exception {
+        return _workbook(formula, 10);
+    }
+
+    private byte[] _workbook(boolean formula, double sortOrder)
+        throws Exception {
+
         try (XSSFWorkbook workbook = new XSSFWorkbook()) {
             Sheet sheet = workbook.createSheet("Articles");
             Row header = sheet.createRow(3);
@@ -61,7 +80,8 @@ public class XlsxArticleParserTest {
                 "This summary is deliberately longer than forty characters.",
                 "<p>Safe body</p>", "cover-1", "Cover alt",
                 "Nexcent Editorial Team", new Date(1782867600000L), "",
-                "NXC-TOPIC-1;NXC-TOPIC-2", "one;two", true, 10, false
+                "NXC-TOPIC-1;NXC-TOPIC-2", "one;two", true,
+                sortOrder, false
             };
 
             for (int i = 0; i < values.length; i++) {

@@ -1,26 +1,109 @@
-import {type MouseEvent, useState} from 'react';
+import {
+    type MouseEvent,
+    useEffect,
+    useMemo,
+    useState,
+} from 'react';
 
-import content from '../../../../../prototypes/nexcent-static/content.json';
 import {resolveStaticAsset} from '../assets';
+import type {NavigationItem} from '../site-shell/types';
+import {useSiteShell} from '../site-shell/useSiteShell';
 
-export function StaticHeader() {
-    const [open, setOpen] = useState(false);
+type HeaderProps = {
+    host?: HTMLElement;
+};
+
+type NavigationListProps = {
+    items: NavigationItem[];
+    onNavigate: (
+        event: MouseEvent<HTMLAnchorElement>,
+        navigationItem: NavigationItem
+    ) => void;
+    root?: boolean;
+};
+
+function NavigationList({items, onNavigate, root = false}: NavigationListProps) {
+    return (
+        <ul className={root ? 'header__navigation-list' : 'header__submenu'}>
+            {items.map((item) => (
+                <li
+                    className={item.selected ? 'is-selected' : undefined}
+                    key={item.externalReferenceCode || `${item.label}-${item.url}`}
+                >
+                    <a
+                        aria-current={item.selected ? 'page' : undefined}
+                        href={item.url}
+                        onClick={(event) => onNavigate(event, item)}
+                        target={item.target || undefined}
+                    >
+                        {item.label}
+                    </a>
+                    <span className="decor-line" />
+                    {item.children.length > 0 ? (
+                        <NavigationList
+                            items={item.children}
+                            onNavigate={onNavigate}
+                        />
+                    ) : null}
+                </li>
+            ))}
+        </ul>
+    );
+}
+
+export function StaticHeader({host}: HeaderProps) {
+    const {error, shell, status} = useSiteShell(host);
+    const [accountOpen, setAccountOpen] = useState(false);
+    const [menuOpen, setMenuOpen] = useState(false);
+    const initials = useMemo(
+        () =>
+            shell.account.displayName
+                .split(/\s+/)
+                .filter(Boolean)
+                .slice(0, 2)
+                .map((part) => part[0]?.toUpperCase())
+                .join('') || 'U',
+        [shell.account.displayName]
+    );
+
+    useEffect(() => {
+        const handleEscape = (event: KeyboardEvent) => {
+            if (event.key !== 'Escape') {
+                return;
+            }
+
+            setAccountOpen(false);
+            setMenuOpen(false);
+        };
+
+        window.addEventListener('keydown', handleEscape);
+
+        return () => window.removeEventListener('keydown', handleEscape);
+    }, []);
+
+    const closeNavigation = () => {
+        setAccountOpen(false);
+        setMenuOpen(false);
+    };
 
     const handleNavigation = (
         event: MouseEvent<HTMLAnchorElement>,
-        href: string
+        navigationItem: NavigationItem
     ) => {
-        setOpen(false);
+        closeNavigation();
 
-        if (!href.startsWith('#')) {
+        const href = navigationItem.url;
+
+        if (!href.startsWith('#') || href === '#') {
             return;
         }
 
         const rootNode = event.currentTarget.getRootNode();
-        const target =
+        const shadowTarget =
             rootNode instanceof ShadowRoot
                 ? rootNode.querySelector<HTMLElement>(href)
                 : null;
+        const target = document.querySelector<HTMLElement>(href) ?? shadowTarget;
 
         if (!target) {
             return;
@@ -32,22 +115,34 @@ export function StaticHeader() {
     };
 
     return (
-        <header className="header">
+        <header className="header" data-runtime-state={status}>
             <div className="header__container">
                 <a
                     className="header__logo"
-                    href="#home"
-                    onClick={(event) => handleNavigation(event, '#home')}
+                    href={shell.site.homeURL}
+                    onClick={(event) =>
+                        handleNavigation(event, {
+                            children: [],
+                            externalReferenceCode: 'NXC-HOME',
+                            label: shell.site.name,
+                            selected: false,
+                            target: '',
+                            url: shell.site.homeURL,
+                        })
+                    }
                 >
-                    <img src={resolveStaticAsset('logo')} alt="Nexcent" />
+                    <img
+                        src={shell.site.logoURL || resolveStaticAsset('logo')}
+                        alt={shell.site.name || 'Nexcent'}
+                    />
                 </a>
 
                 <button
                     aria-controls="nexcent-react-navigation"
-                    aria-expanded={open}
-                    aria-label={open ? 'Close navigation' : 'Open navigation'}
-                    className={`header__burger-menu${open ? ' active' : ''}`}
-                    onClick={() => setOpen((value) => !value)}
+                    aria-expanded={menuOpen}
+                    aria-label={menuOpen ? 'Close navigation' : 'Open navigation'}
+                    className={`header__burger-menu${menuOpen ? ' active' : ''}`}
+                    onClick={() => setMenuOpen((value) => !value)}
                     type="button"
                 >
                     <span />
@@ -56,42 +151,93 @@ export function StaticHeader() {
                 </button>
 
                 <div
-                    className={`header__menu${open ? ' active' : ''}`}
+                    className={`header__menu${menuOpen ? ' active' : ''}`}
                     id="nexcent-react-navigation"
                 >
                     <nav aria-label="Primary navigation">
-                        <ul>
-                            {content.navigation.map((item) => (
-                                <li key={item.label}>
-                                    <a
-                                        href={item.href}
-                                        onClick={(event) =>
-                                            handleNavigation(event, item.href)
-                                        }
-                                    >
-                                        {item.label}
-                                    </a>
-                                    <span className="decor-line" />
-                                </li>
-                            ))}
-                        </ul>
+                        <NavigationList
+                            items={shell.headerNavigation}
+                            onNavigate={handleNavigation}
+                            root
+                        />
                     </nav>
 
                     <div className="header__btns">
-                        {content.headerActions.map((action) => (
-                            <a
-                                className={`btn${
-                                    action.variant === 'light' ? ' btn-light' : ''
-                                }`}
-                                href={action.href}
-                                key={action.label}
-                                onClick={() => setOpen(false)}
-                            >
-                                {action.label}
-                            </a>
-                        ))}
+                        {shell.account.signedIn ? (
+                            <div className="header__account">
+                                <button
+                                    aria-expanded={accountOpen}
+                                    className="header__account-trigger"
+                                    onClick={() =>
+                                        setAccountOpen((value) => !value)
+                                    }
+                                    type="button"
+                                >
+                                    {shell.account.portraitURL ? (
+                                        <img
+                                            className="header__account-avatar"
+                                            src={shell.account.portraitURL}
+                                            alt=""
+                                        />
+                                    ) : (
+                                        <span
+                                            aria-hidden="true"
+                                            className="header__account-initials"
+                                        >
+                                            {initials}
+                                        </span>
+                                    )}
+                                    <span className="header__account-name">
+                                        {shell.account.displayName}
+                                    </span>
+                                    <span aria-hidden="true">▾</span>
+                                </button>
+
+                                <div
+                                    className={`header__account-menu${
+                                        accountOpen ? ' is-open' : ''
+                                    }`}
+                                >
+                                    <a
+                                        href={shell.account.accountURL}
+                                        onClick={closeNavigation}
+                                    >
+                                        My Account
+                                    </a>
+                                    <a
+                                        href={shell.account.logoutURL}
+                                        onClick={closeNavigation}
+                                    >
+                                        Sign out
+                                    </a>
+                                </div>
+                            </div>
+                        ) : (
+                            <>
+                                <a
+                                    className="btn btn-light"
+                                    href={shell.account.loginURL}
+                                    onClick={closeNavigation}
+                                >
+                                    Login
+                                </a>
+                                <a
+                                    className="btn"
+                                    href={shell.account.createAccountURL}
+                                    onClick={closeNavigation}
+                                >
+                                    Sign up
+                                </a>
+                            </>
+                        )}
                     </div>
                 </div>
+
+                {error ? (
+                    <span className="sr-only" role="status">
+                        Site navigation is using fallback data: {error.message}
+                    </span>
+                ) : null}
             </div>
         </header>
     );

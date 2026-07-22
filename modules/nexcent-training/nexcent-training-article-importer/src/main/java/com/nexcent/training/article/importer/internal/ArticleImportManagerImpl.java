@@ -988,11 +988,25 @@ public class ArticleImportManagerImpl implements ArticleImportManager {
         }
 
         try {
-            if (_dlAppLocalService.fetchFolderByExternalReferenceCode(
-                    asset.folderERC, groupId) == null) {
+            Folder folder =
+                _dlAppLocalService.fetchFolderByExternalReferenceCode(
+                    asset.folderERC, groupId);
 
+            if (folder == null) {
                 errors.add(new ValidationError(
                     "ASSET_FOLDER_NOT_FOUND", asset.folderERC));
+            }
+            else {
+                FileEntry existing =
+                    _dlAppLocalService.fetchFileEntryByExternalReferenceCode(
+                        groupId, asset.documentERC);
+
+                if ((existing != null) &&
+                    (existing.getFolderId() != folder.getFolderId())) {
+
+                    errors.add(new ValidationError(
+                        "ASSET_ERC_FOLDER_CONFLICT", asset.documentERC));
+                }
             }
         }
         catch (PortalException portalException) {

@@ -46,7 +46,7 @@ Role-specific users are created during the Practitioner exercise and also use th
 - **VERIFIED:** reserved for evidence captured from the target runtime.
 - **OPTIONAL BACKLOG:** useful enhancement outside the current submission gate.
 
-The existing modules are **SOURCE READY / RUNTIME PENDING**. The Article importer changes are **DESIGN READY / IMPLEMENTATION AND RUNTIME QA PENDING**; the current JSON metadata-only `ImportJob` endpoint is a foundation, not the final Article import API.
+The existing modules are **SOURCE READY / RUNTIME PENDING**. The Article pipeline target is **DESIGN READY / IMPLEMENTATION AND RUNTIME QA PENDING**. The current branch has the Service Builder job/row foundation and a transitional multipart-XLSX REST endpoint; ZIP + assets, media-first execution, standard Documents API handoff, and the Site Administration App are not yet complete.
 
 ## Lab map
 

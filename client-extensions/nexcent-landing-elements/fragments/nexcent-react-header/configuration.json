@@ -15,9 +15,14 @@
                     "label": "Logo alt text",
                     "name": "logoAlt",
                     "type": "text"
+                },
+                {
+                    "label": "Header navigation",
+                    "name": "navigationSource",
+                    "type": "navigationMenuSelector"
                 }
             ],
-            "label": "Branding"
+            "label": "Branding and navigation"
         },
         {
             "fields": [
@@ -39,6 +44,13 @@
                     "defaultValue": "Sign up",
                     "label": "Sign-up label",
                     "name": "signUpLabel",
+                    "type": "text"
+                },
+                {
+                    "dataType": "string",
+                    "defaultValue": "/web/guest/create-account",
+                    "label": "Create account URL",
+                    "name": "createAccountURL",
                     "type": "text"
                 },
                 {

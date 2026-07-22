@@ -27,7 +27,7 @@ public class ContentImportUpgradeProcess extends UpgradeProcess {
                 "'STRUCTURED_CONTENT', sheetName = 'Articles' " +
                     "where targetType is null");
 
-        runSQL("drop index IX_B5D8A8BB on NXC_ImportJobItem");
+        runSQL("drop index IX_NXC_IJI_JR on NXC_ImportJobItem");
         runSQL(
             "create unique index IX_E64EC9B1 on NXC_ImportJobItem " +
                 "(importJobId, sheetName, rowNumber)");

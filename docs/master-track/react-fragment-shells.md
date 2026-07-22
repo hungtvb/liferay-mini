@@ -1,18 +1,74 @@
-# React section runtime and Fragment shells
+# React Site Shell and section Fragment shells
 
 ## Goal
 
-The original reference frontend under `prototypes/nexcent-static` is now
-available as React components in:
+The reference frontend under `prototypes/nexcent-static` is implemented as
+React custom elements in:
 
 ```text
 client-extensions/nexcent-landing-elements/src/static-site/
 ```
 
-The Liferay Fragment source remains intentionally thin. Each
-`nexcent-react-*` Fragment contains only the matching custom-element tag.
+The production Master Page can now use React for Header, body sections, and
+Footer. Every Liferay Fragment remains intentionally thin and contains only the
+matching custom-element tag.
 
-## Build and deploy the runtime
+## Runtime architecture
+
+```text
+Nexcent Master Page
+├── Nexcent React Header
+├── Main Content drop zone
+└── Nexcent React Footer
+        │
+        ▼
+Nexcent React Runtime Global JavaScript
+        │
+        ▼
+GET /o/nexcent-site-shell/v1.0/sites/{siteId}/site-shell
+        ├── Header Navigation Menu
+        ├── Footer Company Navigation Menu
+        ├── Footer Support Navigation Menu
+        ├── Guest/authenticated account context
+        └── Site identity
+```
+
+Header and Footer share one browser request cache. The BFF resolves the menus by
+stable ERC first and by name as a compatibility fallback. Menu items are filtered
+through the current Liferay permission checker before being returned.
+
+Expected menu aliases:
+
+```text
+Header:
+NXC-HEADER | NEXCENT-HEADER | Nexcent Header | Header
+
+Footer Company:
+NXC-FOOTER-COMPANY | NEXCENT-FOOTER-COMPANY
+Nexcent Footer Company | Footer Company
+
+Footer Support:
+NXC-FOOTER-SUPPORT | NEXCENT-FOOTER-SUPPORT
+Nexcent Footer Support | Footer Support
+```
+
+## Build and deploy
+
+Generate and build the read-only Site Shell REST modules:
+
+```bash
+./gradlew \
+  :modules:nexcent-site-shell:nexcent-site-shell-rest-impl:buildREST \
+  :modules:nexcent-site-shell:nexcent-site-shell-rest-api:build \
+  :modules:nexcent-site-shell:nexcent-site-shell-rest-impl:build
+
+cp modules/nexcent-site-shell/nexcent-site-shell-rest-api/build/libs/*.jar \
+  bundles/osgi/modules/
+cp modules/nexcent-site-shell/nexcent-site-shell-rest-impl/build/libs/*.jar \
+  bundles/osgi/modules/
+```
+
+Build and deploy the React runtime:
 
 ```bash
 cd client-extensions/nexcent-landing-elements
@@ -24,12 +80,8 @@ npm run build
 cp dist/*.zip ../../bundles/osgi/client-extensions/
 ```
 
-After deployment, add **Nexcent React Runtime** to the Master Page or page
-under Global JavaScript. The runtime is an ES module and registers every
-`nexcent-react-*` tag once.
-
-A Fragment tag by itself does not load JavaScript. The Global JavaScript
-binding is therefore required before any React Fragment shell can render.
+Add **Nexcent React Runtime** as Global JavaScript to the Master Page. A
+Fragment custom tag does not load the JavaScript bundle by itself.
 
 ## Package and import the Fragments
 
@@ -37,13 +89,27 @@ binding is therefore required before any React Fragment shell can render.
 ./training/master-track-code-labs/scripts/package-fragments.ps1
 ```
 
-Import the generated
-`training/master-track-code-labs/fragments/collections-nexcent-components.zip`
-into **Site Menu → Design → Fragments**.
+Import:
 
-## Production page composition
+```text
+training/master-track-code-labs/fragments/collections-nexcent-components.zip
+```
 
-Use the body shells in this order:
+through **Site Menu → Design → Fragments**.
+
+## Master Page composition
+
+```text
+Nexcent React Header
+Main Content drop zone
+Nexcent React Footer
+```
+
+The Header and Footer Fragment HTML stays one tag only. It passes the runtime
+site ID from `themeDisplay.getScopeGroupId()` to React. The Footer also passes
+the newsletter Object endpoint.
+
+Recommended body order:
 
 ```text
 Nexcent React Hero
@@ -57,23 +123,52 @@ Nexcent React Marketing
 Nexcent React CTA
 ```
 
-Keep the reviewed editable/OOTB Header and Footer in the Master Page.
-`Nexcent React Header Preview`, `Nexcent React Footer Preview`, and
-`Nexcent React Full Page Preview` are visual parity tools only.
+Remove the previous OOTB/editable Header and Footer composition from the new
+Master Page to avoid duplicated navigation, spacing, and mobile overlays.
+
+## Authentication and fallback behavior
+
+- Guest users receive Login and Sign up URLs.
+- Authenticated users receive portrait, display name, My Account, and Sign out.
+- The endpoint is read-only and guest accessible; each navigation item still
+  passes its Liferay permission check.
+- If the REST module is unavailable, React renders the bundled static fallback
+  and marks the custom element with `data-site-shell-state="fallback"` plus an
+  error detail attribute for runtime diagnostics.
+
+## Newsletter
+
+The Footer posts to:
+
+```text
+/o/c/nxcnewslettersubscriptions
+```
+
+Expected Object fields:
+
+```text
+email
+locale
+sourcePage
+consent
+```
+
+The UI exposes submitting, success, and error states. Change the
+`newsletter-endpoint` attribute in the thin Footer Fragment if the Object ERC
+or endpoint differs.
 
 ## Content and styling
 
-- Demo copy is stored in `prototypes/nexcent-static/content.json`.
-- Images and icons are imported from the static prototype so there is one
-  visual asset source.
-- Each React section uses Shadow DOM. The original reset and selectors cannot
-  leak into Clay or other Liferay fragments.
-- The hero carousel is implemented in React; Swiper and AOS CDN scripts are no
-  longer required.
+- Static demo copy remains in `prototypes/nexcent-static/content.json`.
+- Images and icons reuse the original prototype assets.
+- React elements use Shadow DOM so the static reset cannot leak into Clay.
+- Style Book CSS variables remain available through the custom-element host.
+- Hero carousel behavior is React-owned; Swiper and AOS CDN scripts are not
+  required.
 
 ## Runtime gates
 
-Capture the page at `1440px`, `768px`, and `375px` and compare it with the
-static prototype. Do not merge while spacing, typography, image crop,
-three-card desktop layout, article overlays, hover states, Header, or Footer
-still diverge.
+Capture the complete Master Page at `1440px`, `768px`, and `375px`. Do not merge
+while typography, navigation dropdowns, authenticated/guest states, mobile
+menu, article overlays, newsletter states, Header, or Footer still diverge or
+produce console/network errors.

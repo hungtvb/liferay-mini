@@ -97,7 +97,7 @@ export function StaticHero({host}: HeroProps) {
     const structureIdentifier = readStringSetting(
         host,
         'structure-identifier',
-        'Nexcent Hero'
+        'NXC Landing Hero'
     );
     const maxSlides = readNumberSetting(host, 'max-slides', 3, {
         max: 10,

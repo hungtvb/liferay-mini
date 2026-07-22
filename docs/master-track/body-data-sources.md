@@ -16,8 +16,11 @@ Fragment Settings → custom-element attributes → React props
 Headless Delivery API
 ├── Hero
 ├── Community / Services
-└── Marketing / Articles
+└── Marketing / Community cards
 ```
+
+The split satisfies the requirement that at least three sections use Headless
+APIs without making every component perform a runtime request.
 
 `prototypes/nexcent-static/content.json` is only the standalone preview fixture,
 visual parity baseline, test data, and runtime fallback. It is not the intended
@@ -25,45 +28,57 @@ production content source.
 
 ## Shared Headless runtime
 
-The three Headless sections use one browser request cache and the same loader:
+The project has one shared Structured Content API client. Legacy lab components
+and the pixel-perfect React sections both reuse it.
 
 ```text
 GET /o/headless-delivery/v1.0/sites/{siteId}/content-structures?pageSize=200
-        ↓ resolve configured structure identifier
-GET /o/headless-delivery/v1.0/content-structures/{structureId}/structured-contents?pageSize=100
+        ↓ resolve configured Structure identifier
+GET /o/headless-delivery/v1.0/content-structures/{structureId}/structured-contents?flatten=true&pageSize=100
 ```
 
-The Fragment setting **Content Structure identifier** accepts any value returned
-by the API as:
+The client:
 
-- Numeric structure ID.
-- External reference code.
-- Structure key.
-- Structure name.
+- Shares one browser request cache.
+- Sends the current page locale.
+- Includes Web Content stored in folders by using `flatten=true`.
+- Resolves a Structure by numeric ID, external reference code, key, or name.
+- Filters entries with `active=false`.
+- Sorts by `sortOrder` or `displayOrder`.
+- Applies the maximum-item value configured on the Fragment.
 
-Use a stable external reference code or key when the target environment exposes
-it. A numeric ID is supported for local lab setup but is not portable between
-environments.
+No credentials, OAuth secrets, passwords, or fixed portal host are embedded in
+the React bundle. Requests are same-origin and use the current Liferay session.
 
-Only approved Structured Content is delivered by Headless Delivery. The client
-filters entries with `active=false`, sorts by `sortOrder` or `displayOrder`, and
-then applies the Fragment maximum-item setting.
+## Structure defaults
 
-All requests use the current site ID and page locale passed by the thin Fragment.
-No credentials, passwords, OAuth secrets, or fixed host names are embedded in the
-React bundle.
+The Fragment defaults are intentionally aligned with the existing Excel importer
+in `nexcent-landing-elements`:
+
+```text
+Hero                 NXC Landing Hero
+Community / Services NXC Service Item
+Marketing cards      NXC Community Card
+```
+
+These are Structure names used by the current lab importer. A Fragment can be
+pointed to a numeric ID, ERC, key, or different Structure name in General
+settings when another environment uses different identifiers.
+
+Do not change these defaults to `Nexcent Hero`, `Nexcent Service`, or
+`Nexcent Article` unless the corresponding Structures have actually been created
+and the importer contract has been updated too.
 
 ## Hero
 
-The Hero is a list of Structured Content entries. One entry represents one slide.
-This matches the existing `Heroes` Excel sheet and allows slides to be created,
-updated, reordered, scheduled, localized, and removed independently.
+One Structured Content entry represents one slide. This matches the `Heroes`
+Excel sheet and allows each slide to have an independent workflow, localization,
+schedule, active state, and order.
 
-Recommended structure name/ERC:
+Default Structure:
 
 ```text
-Nexcent Hero
-NXC-HERO
+NXC Landing Hero
 ```
 
 Supported fields:
@@ -75,8 +90,8 @@ description
 ctaLabel
 ctaUrl
 ctaTarget
-image or illustration
-imageAlt
+illustration or image
+illustrationAlt or imageAlt
 sortOrder
 active
 ```
@@ -94,26 +109,30 @@ Show pagination
 
 ## Community / Services
 
-The section heading belongs to the Fragment instance. The cards are reusable
-Structured Content entries.
+The section title and description belong to the Fragment instance. Reusable
+service cards come from Structured Content.
 
-Recommended structure name/ERC:
+Default Structure:
 
 ```text
-Nexcent Service
-NXC-SERVICE
+NXC Service Item
 ```
 
-Supported card fields:
+Supported fields:
 
 ```text
 title
 description
 icon or image
 iconAlt
+linkLabel
+linkUrl
 sortOrder
 active
 ```
+
+The current pixel-perfect card layout does not render the optional service link,
+but the importer keeps it for reuse by a Services page or another card variant.
 
 Fragment Settings:
 
@@ -124,24 +143,19 @@ Title
 Description
 ```
 
-The current pixel-perfect design does not render the optional service link. The
-Headless model can retain `linkLabel` and `linkUrl` for another card variant or a
-future Services page without changing this section layout.
+## Marketing cards
 
-## Marketing / Articles
+The section title and description belong to the Fragment instance. The current
+branch loads the three marketing cards from the Structure already supported by
+the workbook importer.
 
-The section heading belongs to the Fragment instance. Article cards come from a
-Structured Content structure so each article can have its own workflow,
-localization, taxonomy, and Display Page.
-
-Recommended structure name/ERC:
+Default Structure:
 
 ```text
-Nexcent Article
-NXC-ARTICLE
+NXC Community Card
 ```
 
-Supported card fields:
+Supported fields:
 
 ```text
 title
@@ -151,6 +165,7 @@ thumbnailAlt
 targetUrl or linkUrl
 linkLabel
 linkTarget
+publishedDate
 sortOrder
 active
 ```
@@ -165,6 +180,10 @@ targetUrl / linkUrl / ctaUrl
 static fallback URL
 ```
 
+The separate Article pipeline may later configure this Fragment to use an Article
+Structure and Display Page. It is not the default until that pipeline is deployed
+to the same target environment.
+
 Fragment Settings:
 
 ```text
@@ -174,9 +193,6 @@ Title
 Description
 Read more label
 ```
-
-Configure a Display Page Template for the Article structure before relying on the
-`/w/{friendlyUrlPath}` fallback.
 
 ## Fragment Settings-only sections
 
@@ -205,9 +221,8 @@ Show button
 Button label, URL, and target
 ```
 
-Both fragments render the same React feature component with different default
-copy. They remain separate Fragment entries so the current page composition and
-visual ordering do not change.
+Both Fragments render the same React feature implementation with different
+default copy and placement in the page composition.
 
 ### Statistics
 
@@ -240,7 +255,7 @@ Show button
 Button label, URL, and target
 ```
 
-## Runtime diagnostics and fallback
+## Runtime diagnostics
 
 Each Headless custom element exposes:
 
@@ -249,14 +264,33 @@ data-content-state="loading|ready|fallback"
 data-content-error="..."
 ```
 
-Fallback behavior is intentional so a missing local structure does not destroy
-the page layout. A runtime acceptance screenshot is valid only when all three
-Headless elements report `data-content-state="ready"` and the Network panel has
-no failed Headless Delivery request.
+Fallback prevents a missing local Structure from destroying the page layout, but
+it is not a runtime pass. A Liferay screenshot is accepted only when all three
+Headless hosts report:
+
+```text
+data-content-state="ready"
+```
+
+The browser Network panel must also have no failed Headless Delivery request.
+
+## Import and runtime order
+
+```text
+1. Create the required Web Content Structures.
+2. Deploy Nexcent React Runtime.
+3. Import the Nexcent Fragment Set.
+4. Run the Excel importer with referenced assets.
+5. Add the Fragments to the page.
+6. Confirm each Headless Fragment default points to the imported Structure.
+7. Reload the page and verify data-content-state="ready".
+```
+
+The importer requires the Structures to exist first; it creates or updates Web
+Content entries and uploads missing Documents and Media assets, but it does not
+invent an unknown Structure contract at runtime.
 
 ## Validation
-
-Run:
 
 ```bash
 cd client-extensions/nexcent-landing-elements
@@ -267,5 +301,10 @@ npm run build
 npm run package:fragments
 ```
 
-The Frontend Check workflow enforces this contract and verifies that the packaged
-Fragment Set contains the Headless and Fragment Settings configurations.
+The Frontend Check workflow enforces:
+
+- Exactly three Headless body sections.
+- Six Fragment Settings-only body sections.
+- Importer-aligned Structure defaults.
+- Reuse of the shared Structured Content API client.
+- Presence of every configuration file in the packaged Fragment Set.

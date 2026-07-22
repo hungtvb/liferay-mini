@@ -14,6 +14,8 @@ type ContentField = {
 
 type StructuredContent = {
     contentFields?: ContentField[];
+    contentUrl?: string;
+    datePublished?: string;
     externalReferenceCode?: string;
     id?: number;
     title?: string;
@@ -29,12 +31,11 @@ type ContentStructure = {
     name?: string;
 };
 
-type CommunityCard = {
-    active: boolean;
+type ArticleCard = {
     externalReferenceCode: string;
+    featured: boolean;
     publishedDate?: string;
     sortOrder: number;
-    summary?: string;
     targetUrl: string;
     thumbnail: {
         alt: string;
@@ -43,19 +44,17 @@ type CommunityCard = {
     title: string;
 };
 
-type CommunityData = {
-    intro: {
-        description?: string;
-        heading: string;
-    };
-    items: CommunityCard[];
+type ArticleData = {
+    description: string;
+    heading: string;
+    items: ArticleCard[];
 };
 
 type LoadState =
     | {status: 'loading'}
     | {status: 'empty'}
     | {message: string; status: 'error'}
-    | {data: CommunityData; status: 'ready'};
+    | {data: ArticleData; status: 'ready'};
 
 type ThemeDisplay = {
     getPortalURL?: () => string;
@@ -68,10 +67,17 @@ declare global {
     }
 }
 
+const DEFAULT_HEADING = 'Caring is the new marketing';
+const DEFAULT_DESCRIPTION =
+    "The Nexcent blog is the best place to read about the latest membership insights, trends and more. See who's joining the community, read about how our community are increasing their membership income and lot's more.";
+
 function fieldMap(content: StructuredContent): Map<string, ContentField> {
     return new Map(
         (content.contentFields ?? [])
-            .filter((field): field is ContentField & {name: string} => Boolean(field.name))
+            .filter(
+                (field): field is ContentField & {name: string} =>
+                    Boolean(field.name)
+            )
             .map((field) => [field.name, field])
     );
 }
@@ -82,7 +88,11 @@ function text(fields: Map<string, ContentField>, name: string): string {
     return value == null ? '' : String(value).trim();
 }
 
-function bool(fields: Map<string, ContentField>, name: string, fallback = true): boolean {
+function bool(
+    fields: Map<string, ContentField>,
+    name: string,
+    fallback = false
+): boolean {
     const value = fields.get(name)?.contentFieldValue?.data;
 
     if (typeof value === 'boolean') {
@@ -90,13 +100,16 @@ function bool(fields: Map<string, ContentField>, name: string, fallback = true):
     }
 
     if (typeof value === 'string') {
-        return value.toLowerCase() !== 'false';
+        return value.toLowerCase() === 'true';
     }
 
     return fallback;
 }
 
-function numberValue(fields: Map<string, ContentField>, name: string): number {
+function numberValue(
+    fields: Map<string, ContentField>,
+    name: string
+): number {
     const parsed = Number(fields.get(name)?.contentFieldValue?.data ?? 0);
 
     return Number.isFinite(parsed) ? parsed : 0;
@@ -125,7 +138,8 @@ function mediaUrl(
     portalURL: string
 ): string {
     const value = fields.get(name)?.contentFieldValue;
-    const contentUrl = value?.image?.contentUrl ?? value?.document?.contentUrl ?? '';
+    const contentUrl =
+        value?.image?.contentUrl ?? value?.document?.contentUrl ?? '';
 
     return contentUrl ? new URL(contentUrl, `${portalURL}/`).toString() : '';
 }
@@ -133,7 +147,7 @@ function mediaUrl(
 async function getJson<T>(url: string): Promise<T> {
     const response = await fetch(url, {
         credentials: 'include',
-        headers: {'Accept': 'application/json'},
+        headers: {Accept: 'application/json'},
     });
 
     if (!response.ok) {
@@ -143,28 +157,31 @@ async function getJson<T>(url: string): Promise<T> {
     return (await response.json()) as T;
 }
 
-async function resolveStructureIds(
+async function resolveStructureId(
     portalURL: string,
     siteId: string,
-    identifiers: string[]
-): Promise<number[]> {
+    identifier: string
+): Promise<number> {
     const response = await getJson<CollectionResponse<ContentStructure>>(
-        `${portalURL}/o/headless-delivery/v1.0/sites/${encodeURIComponent(siteId)}/content-structures?pageSize=200`
+        `${portalURL}/o/headless-delivery/v1.0/sites/${encodeURIComponent(
+            siteId
+        )}/content-structures?pageSize=200`
     );
-    return identifiers.map((identifier) => {
-        const normalized = identifier.trim().toLowerCase();
-        const structure = (response.items ?? []).find((item) =>
-            [item.name, item.externalReferenceCode]
-                .filter(Boolean)
-                .some((value) => String(value).trim().toLowerCase() === normalized)
-        );
+    const normalized = identifier.trim().toLowerCase();
+    const structure = (response.items ?? []).find((item) =>
+        [item.name, item.externalReferenceCode]
+            .filter(Boolean)
+            .some(
+                (value) =>
+                    String(value).trim().toLowerCase() === normalized
+            )
+    );
 
-        if (!structure?.id) {
-            throw new Error(`Content Structure not found: ${identifier}`);
-        }
+    if (!structure?.id) {
+        throw new Error(`Content Structure not found: ${identifier}`);
+    }
 
-        return structure.id;
-    });
+    return structure.id;
 }
 
 async function getStructuredContents(
@@ -172,13 +189,15 @@ async function getStructuredContents(
     structureId: number
 ): Promise<StructuredContent[]> {
     const response = await getJson<CollectionResponse<StructuredContent>>(
-        `${portalURL}/o/headless-delivery/v1.0/content-structures/${structureId}/structured-contents?flatten=true&pageSize=200`
+        `${portalURL}/o/headless-delivery/v1.0/content-structures/${structureId}/structured-contents?flatten=true&page=1&pageSize=100&sort=datePublished:desc`
     );
 
     return response.items ?? [];
 }
 
-async function loadCommunityData(element: HTMLElement): Promise<CommunityData | null> {
+async function loadArticleData(
+    element: HTMLElement
+): Promise<ArticleData | null> {
     const themeDisplay = window.Liferay?.ThemeDisplay;
     const portalURL = (
         element.getAttribute('liferay-base-url') ??
@@ -188,88 +207,85 @@ async function loadCommunityData(element: HTMLElement): Promise<CommunityData | 
     const siteId =
         element.getAttribute('site-id') ??
         String(themeDisplay?.getScopeGroupId?.() ?? '');
-    const introIdentifier =
-        element.getAttribute('intro-structure-identifier') ??
-        'NXC Community Intro';
-    const itemIdentifier =
-        element.getAttribute('item-structure-identifier') ??
-        'NXC Community Card';
+    const structureIdentifier =
+        element.getAttribute('article-structure-identifier') ??
+        'NXC-STRUCTURE-ARTICLE';
 
     if (!siteId) {
         throw new Error(
-            'Site context is unavailable. Add site-id when running the app outside Liferay.'
+            'Site context is unavailable. Add site-id when running outside Liferay.'
         );
     }
 
-    const [introStructureId, itemStructureId] = await resolveStructureIds(
+    const structureId = await resolveStructureId(
         portalURL,
         siteId,
-        [introIdentifier, itemIdentifier]
+        structureIdentifier
     );
-    const [introContents, itemContents] = await Promise.all([
-        getStructuredContents(portalURL, introStructureId),
-        getStructuredContents(portalURL, itemStructureId),
-    ]);
-    const introContent = introContents[0];
-
-    if (!introContent) {
-        return null;
-    }
-
-    const introFields = fieldMap(introContent);
-    const items = itemContents
-        .map((content): CommunityCard | null => {
+    const contents = await getStructuredContents(portalURL, structureId);
+    const items = contents
+        .map((content): ArticleCard | null => {
             const fields = fieldMap(content);
-            const title = text(fields, 'title') || content.title?.trim() || '';
-            const targetUrl = safeLinkUrl(text(fields, 'targetUrl'));
-            const thumbnailUrl = mediaUrl(fields, 'thumbnail', portalURL);
+            const title = content.title?.trim() || '';
+            const targetUrl = safeLinkUrl(content.contentUrl ?? '');
+            const thumbnailUrl = mediaUrl(fields, 'coverImage', portalURL);
 
-            if (!bool(fields, 'active') || !title || !targetUrl || !thumbnailUrl) {
+            if (!title || !targetUrl || !thumbnailUrl) {
                 return null;
             }
 
             return {
-                active: true,
-                externalReferenceCode: content.externalReferenceCode ?? String(content.id ?? ''),
-                publishedDate: text(fields, 'publishedDate') || undefined,
+                externalReferenceCode:
+                    content.externalReferenceCode ?? String(content.id ?? ''),
+                featured: bool(fields, 'featured'),
+                publishedDate: content.datePublished,
                 sortOrder: numberValue(fields, 'sortOrder'),
-                summary: text(fields, 'summary') || undefined,
                 targetUrl,
                 thumbnail: {
-                    alt: text(fields, 'thumbnailAlt'),
+                    alt: text(fields, 'coverImageAlt') || title,
                     url: thumbnailUrl,
                 },
                 title,
             };
         })
-        .filter((item): item is CommunityCard => item !== null)
-        .sort((left, right) => left.sortOrder - right.sortOrder);
+        .filter((item): item is ArticleCard => item !== null)
+        .sort(
+            (left, right) =>
+                Number(right.featured) - Number(left.featured) ||
+                left.sortOrder - right.sortOrder ||
+                String(right.publishedDate ?? '').localeCompare(
+                    String(left.publishedDate ?? '')
+                )
+        )
+        .slice(0, 3);
 
     if (!items.length) {
         return null;
     }
 
     return {
-        intro: {
-            description: text(introFields, 'description') || undefined,
-            heading: text(introFields, 'heading') || introContent.title || 'Community updates',
-        },
+        description:
+            element.getAttribute('description') ?? DEFAULT_DESCRIPTION,
+        heading: element.getAttribute('heading') ?? DEFAULT_HEADING,
         items,
     };
 }
 
-function CommunityThumbnail({item}: {item: CommunityCard}) {
+function ArticleThumbnail({item}: {item: ArticleCard}) {
     const [failed, setFailed] = useState(false);
 
     if (failed) {
         return (
             <div
-                aria-label={item.thumbnail.alt || `Image unavailable for ${item.title}`}
-                className="nxc-community-card__image-fallback"
+                aria-label={`Image unavailable for ${item.title}`}
+                className="nxc-articles-card__image-fallback"
                 role="img"
             >
                 <svg aria-hidden="true" viewBox="0 0 48 48">
-                    <path d="M7 9h34v30H7V9Zm4 4v17l8-8 6 6 4-4 8 8V13H11Zm8 5a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z" fill="currentColor" />
+                    <path
+                        d="M7 9h34v30H7V9Zm4 4v17l8-8 6 6 4-4 8 8V13H11Zm8 5a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z"
+                        fill="currentColor"
+                    />
                 </svg>
                 <span>Image unavailable</span>
             </div>
@@ -279,7 +295,7 @@ function CommunityThumbnail({item}: {item: CommunityCard}) {
     return (
         <img
             alt={item.thumbnail.alt}
-            className="nxc-community-card__image"
+            className="nxc-articles-card__image"
             loading="lazy"
             onError={() => setFailed(true)}
             src={item.thumbnail.url}
@@ -287,41 +303,35 @@ function CommunityThumbnail({item}: {item: CommunityCard}) {
     );
 }
 
-function formatPublishedDate(value: string): string {
-    const date = new Date(value);
-
-    return Number.isNaN(date.getTime())
-        ? value
-        : new Intl.DateTimeFormat(undefined, {dateStyle: 'medium'}).format(date);
-}
-
-function CommunityApp({host}: {host: HTMLElement}) {
+function ArticleApp({host}: {host: HTMLElement}) {
     const [reloadKey, setReloadKey] = useState(0);
     const [state, setState] = useState<LoadState>({status: 'loading'});
-    const retry = useMemo(() => () => setReloadKey((value) => value + 1), []);
+    const retry = useMemo(
+        () => () => setReloadKey((value) => value + 1),
+        []
+    );
 
     useEffect(() => {
         let active = true;
 
         setState({status: 'loading'});
 
-        loadCommunityData(host)
+        loadArticleData(host)
             .then((data) => {
-                if (!active) {
-                    return;
+                if (active) {
+                    setState(data ? {data, status: 'ready'} : {status: 'empty'});
                 }
-
-                setState(data ? {data, status: 'ready'} : {status: 'empty'});
             })
             .catch((error: unknown) => {
-                if (!active) {
-                    return;
+                if (active) {
+                    setState({
+                        message:
+                            error instanceof Error
+                                ? error.message
+                                : 'Unable to load articles.',
+                        status: 'error',
+                    });
                 }
-
-                const message =
-                    error instanceof Error ? error.message : 'Unable to load community updates.';
-
-                setState({message, status: 'error'});
             });
 
         return () => {
@@ -331,9 +341,12 @@ function CommunityApp({host}: {host: HTMLElement}) {
 
     if (state.status === 'loading') {
         return (
-            <section aria-busy="true" className="nxc-community nxc-community--state">
-                <p>Loading community updates…</p>
-                <div className="nxc-community__loading-grid" aria-hidden="true">
+            <section
+                aria-busy="true"
+                aria-label="Loading articles"
+                className="nxc-articles nxc-articles--state"
+            >
+                <div className="nxc-articles__loading-grid" aria-hidden="true">
                     <span /><span /><span />
                 </div>
             </section>
@@ -342,19 +355,28 @@ function CommunityApp({host}: {host: HTMLElement}) {
 
     if (state.status === 'empty') {
         return (
-            <section className="nxc-community nxc-community--state">
-                <h2>Community updates</h2>
-                <p>No published community updates are available.</p>
+            <section className="nxc-articles nxc-articles--state">
+                <h2>{host.getAttribute('heading') ?? DEFAULT_HEADING}</h2>
+                <p>
+                    No published articles with a Display Page are available.
+                </p>
             </section>
         );
     }
 
     if (state.status === 'error') {
         return (
-            <section className="nxc-community nxc-community--state" role="alert">
-                <h2>Community updates are unavailable</h2>
+            <section
+                className="nxc-articles nxc-articles--state"
+                role="alert"
+            >
+                <h2>Articles are unavailable</h2>
                 <p>{state.message}</p>
-                <button className="nxc-button nxc-button--primary" onClick={retry} type="button">
+                <button
+                    className="nxc-articles__retry"
+                    onClick={retry}
+                    type="button"
+                >
                     Try again
                 </button>
             </section>
@@ -362,26 +384,31 @@ function CommunityApp({host}: {host: HTMLElement}) {
     }
 
     return (
-        <section className="nxc-community" aria-labelledby="nxc-community-heading">
-            <div className="nxc-community__container">
-                <header className="nxc-community__header">
-                    <h2 id="nxc-community-heading">{state.data.intro.heading}</h2>
-                    {state.data.intro.description ? <p>{state.data.intro.description}</p> : null}
+        <section
+            aria-labelledby="nxc-articles-heading"
+            className="nxc-articles"
+        >
+            <div className="nxc-articles__container">
+                <header className="nxc-articles__header">
+                    <h2 id="nxc-articles-heading">{state.data.heading}</h2>
+                    <p>{state.data.description}</p>
                 </header>
-                <div className="nxc-community__grid">
+
+                <div className="nxc-articles__grid">
                     {state.data.items.map((item) => (
-                        <article className="nxc-community-card" key={item.externalReferenceCode}>
-                            <CommunityThumbnail item={item} />
-                            <div className="nxc-community-card__body">
-                                {item.publishedDate ? (
-                                    <time dateTime={item.publishedDate}>
-                                        {formatPublishedDate(item.publishedDate)}
-                                    </time>
-                                ) : null}
+                        <article
+                            className="nxc-articles-card"
+                            key={item.externalReferenceCode}
+                        >
+                            <ArticleThumbnail item={item} />
+                            <div className="nxc-articles-card__overlay">
                                 <h3>{item.title}</h3>
-                                {item.summary ? <p>{item.summary}</p> : null}
-                                <a className="nxc-community-card__link" href={item.targetUrl}>
-                                    Read more <span aria-hidden="true">→</span>
+                                <a
+                                    className="nxc-articles-card__link"
+                                    href={item.targetUrl}
+                                >
+                                    Read more
+                                    <span aria-hidden="true">→</span>
                                 </a>
                             </div>
                         </article>
@@ -400,7 +427,7 @@ class NexcentCommunityElement extends HTMLElement {
             this.root = createRoot(this);
         }
 
-        this.root.render(<CommunityApp host={this} />);
+        this.root.render(<ArticleApp host={this} />);
     }
 
     disconnectedCallback() {

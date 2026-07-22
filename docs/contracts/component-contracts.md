@@ -770,13 +770,14 @@ Master Page/Fragment + Navigation Menus + Site Settings
 
 ---
 
-# 12. Article Import Site Administration App
+# 12. Content Import Site Administration App
 
 ## UI responsibility
 
 - Deliver a React UI inside the `nexcent-training-web` MVC Portlet.
 - Register it through `PanelApp` under Site Menu → Content & Data.
-- Accept one ZIP package containing `manifest.json`, `articles.xlsx`, and `assets/`.
+- Discover enabled import profiles from REST and render a content-type/profile selector.
+- Accept the selected profile's ZIP package containing `manifest.json`, workbook, and `assets/`.
 - Upload the package to the restricted Documents and Media import folder.
 - Display package, asset, and Article row validation before mutation.
 - Display durable job history, progress, created/updated/skipped/failed counts, row errors, retry, and error-report download.
@@ -785,19 +786,20 @@ Master Page/Fragment + Navigation Menus + Site Settings
 
 ## Backend responsibility
 
-- Own package schema, ZIP-safety limits, workbook schema, MIME/checksum validation, permissions, and state transitions.
+- Own the generic profile registry, package schema, ZIP-safety limits, MIME/checksum validation, permissions, and state transitions.
+- Delegate workbook schema, field mapping, and business validation to the selected `ContentImportHandler`.
 - Upsert Documents and Media by stable document ERC before dependent Web Content.
 - Upsert Structured Content by Article ERC.
 - Persist operational jobs and row results through Service Builder.
-- Expose orchestration through REST Builder; reuse the standard Documents API for the package binary.
+- Expose profile discovery and generic job orchestration through REST Builder; reuse the standard Documents API for the package binary.
 - Validate allowed HTML, URLs, taxonomy, locales, workflow, and publish permission.
 
 ## Package contract
 
 ```text
-nexcent-article-import.zip
+<selected-profile>-import.zip
 ├── manifest.json
-├── articles.xlsx
+├── content.xlsx
 └── assets/
     └── <image files>
 ```
@@ -813,10 +815,11 @@ Instructions
 
 ## Acceptance
 
-- First import creates media and Draft Articles.
+- `NXC_ARTICLE_V1` is the first enabled implementation and creates media plus Draft Articles.
 - Second identical import reports `NO_CHANGE` and creates no duplicate ERC or unnecessary version.
 - Missing asset, duplicate ERC, invalid select value, unsafe HTML, unsafe ZIP path, corrupt image, and invalid URL are blocked before mutation.
 - Guest and ordinary site members cannot access the app or execute its API.
+- Registering another valid handler adds its profile to the dropdown without changing generic UI or REST resource code.
 - Imported images live in the Article media folder; source ZIPs remain in a separate restricted folder.
 
 ---

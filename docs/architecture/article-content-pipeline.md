@@ -9,10 +9,13 @@ Decision owner: Nexcent training project
 Use classic Liferay Web Content (`StructuredContent`) as the Article source of truth for the 2026.Q1.1 baseline.
 
 - Web Content owns editorial data, localization, versions, workflow, permissions, taxonomy, friendly URLs, and display pages.
-- Documents and Media owns cover images. Articles reference files by external reference code (ERC).
-- A server-side Excel importer validates and upserts Articles by ERC.
+- Documents and Media owns cover images. Articles reference files by stable external reference code (ERC), never by filename or numeric ID.
+- Editors upload one portable ZIP package containing `manifest.json`, `articles.xlsx`, and an `assets/` directory.
+- A Site Administration App appears under the current site's **Content & Data** menu; it is not placed on the public landing page and is not hosted as a separate external tool.
+- The admin UI uploads the ZIP to a restricted Documents and Media import folder, then calls the Article import API with the resulting package `fileEntryId`.
+- A server-side importer validates the package, upserts media first, and then upserts Articles by ERC.
 - Service Builder stores only import operations and row results. It does not duplicate Article content.
-- REST Builder exposes the upload, validate, execute, and status workflow.
+- REST Builder exposes create-job, validate, execute, status, row-result, and retry orchestration endpoints. It does not parse Excel or write SQL.
 - The Article list consumes the standard Headless Delivery API.
 - Article detail is rendered by a Display Page Template at `/w/{friendlyUrlPath}`.
 
@@ -22,15 +25,17 @@ Liferay's newer object-based Headless CMS is an optional evaluation lab, not the
 
 ```mermaid
 flowchart TD
-    A["Editor workbook"] --> B["Article Import REST API"]
-    B --> C["Validate and execute service"]
-    C --> D["ImportJob and ImportJobItem"]
-    C --> E["Web Content and D&M"]
-    E --> F["Headless Delivery list"]
-    E --> G["Display Page detail"]
+    A["ZIP: manifest + XLSX + assets"] --> B["Nexcent Site Admin App"]
+    B --> C["Restricted D&M package upload"]
+    B --> D["Article Import REST API"]
+    C --> D
+    D --> E["ArticleImportManager"]
+    E --> F["ImportJob and row results"]
+    E --> G["D&M assets, then Web Content"]
+    G --> H["Headless list and Display Page detail"]
 ```
 
-The REST resource is an adapter. Parsing, validation, and import orchestration live in a dedicated OSGi service so that REST, scheduled jobs, and future UI clients can reuse the same logic.
+The REST resource is an adapter. ZIP inspection, Excel parsing, validation, media upsert, and Article orchestration live in a dedicated OSGi service so REST, scheduled jobs, and future clients can reuse the same logic. The React admin UI is delivered inside a Liferay MVC Portlet registered through `PanelApp`; the portlet is a native site-scoped administration shell, not the business layer.
 
 ## 3. Content model
 
@@ -72,21 +77,50 @@ The structure JSON exported from the target runtime is the deployable schema art
 
 Categories are controlled classification; tags are free-form discovery metadata. Import validation rejects unknown category ERCs but may create missing tags when the caller has permission.
 
-## 4. Excel contract
+## 4. Import package contract
 
-Workbook: `nxc-article-import-template.xlsx`
+Package: `nexcent-article-import.zip`
 
-### 4.1 Sheets
+### 4.1 Package layout
+
+```text
+nexcent-article-import.zip
+├── manifest.json
+├── articles.xlsx
+└── assets/
+    ├── community-management-cover.webp
+    ├── membership-guide-cover.webp
+    └── safeguarding-guide-cover.webp
+```
+
+The package is self-contained for repeatable import into a fresh environment. Never put Base64 images, absolute workstation paths, or Liferay numeric IDs in Excel.
+
+### 4.2 Manifest
+
+```json
+{
+  "schemaVersion": "1.0",
+  "siteExternalReferenceCode": "NEXCENT-PUBLIC-WEBSITE",
+  "structureExternalReferenceCode": "NXC-STRUCTURE-ARTICLE",
+  "defaultLanguageId": "en_US",
+  "mode": "UPSERT"
+}
+```
+
+The backend validates the manifest against the current site and supported package schema before reading executable rows.
+
+### 4.3 Workbook sheets
 
 | Sheet | Purpose |
 |---|---|
-| `Articles` | Import payload; one localized Article per row |
+| `Articles` | Article payload; one localized Article per row |
+| `Assets` | Stable image key → packaged file and D&M ERC mapping |
 | `Taxonomy` | Allowed category ERC reference |
 | `Instructions` | Authoring, validation, and workflow rules |
 
-Only `Articles` is executable input. The other sheets are documentation and lookup references.
+Only `Articles` and `Assets` are executable input. The other sheets are documentation and lookup references.
 
-### 4.2 Article columns
+### 4.4 Article columns
 
 | Column | Required | Contract |
 |---|---:|---|
@@ -97,7 +131,7 @@ Only `Articles` is executable input. The other sheets are documentation and look
 | `friendlyUrlPath` | Yes | Lowercase path segment, unique per locale |
 | `summary` | Yes | Plain text, 40–320 characters |
 | `bodyHtml` | Yes for UPSERT | Sanitized rich text |
-| `coverImageERC` | Yes for UPSERT | Existing D&M file ERC |
+| `coverImageKey` | Yes for UPSERT | Key from the `Assets` sheet |
 | `coverImageAlt` | Yes for UPSERT | Non-empty accessible description |
 | `authorName` | Yes for UPSERT | Display author |
 | `publicationDate` | Yes for UPSERT | Excel Date/Time or ISO-8601; normalized to UTC |
@@ -110,14 +144,29 @@ Only `Articles` is executable input. The other sheets are documentation and look
 
 Localized rows reuse the same Article ERC. The first row for an ERC must use the site's default locale; later locale rows update translations on the same Web Content item.
 
-### 4.3 File constraints
+### 4.5 Asset columns
 
-- Accept only `.xlsx`; reject legacy `.xls`, CSV disguised as XLSX, macros, external links, formulas, and encrypted files.
-- Maximum file size: 10 MiB.
-- Maximum data rows: 5,000.
-- Read cell values with Apache POI's `DataFormatter`; do not execute formulas.
-- Store SHA-256 for audit and duplicate-upload detection.
-- Stream the upload to Documents and Media; do not hold the entire workbook in heap.
+| Column | Required | Contract |
+|---|---:|---|
+| `imageKey` | Yes | Unique workbook key referenced by Articles |
+| `filePath` | Yes for packaged assets | Relative path below `assets/`; no `..`, absolute path, or symlink |
+| `documentERC` | Yes | Stable target D&M ERC such as `NXC-DOC-ARTICLE-001` |
+| `title` | Yes | D&M display title |
+| `altText` | Yes | Default accessible description |
+| `folderERC` | Yes | Stable target folder ERC |
+
+Import assets before Articles. For an existing `documentERC`, compare the SHA-256 checksum: update the file only when bytes changed; otherwise report `NO_CHANGE`. Filename is display metadata, not identity.
+
+### 4.6 Package constraints
+
+- Accept only `.zip` packages containing one `manifest.json` and one `articles.xlsx`.
+- Reject ZIP path traversal, symlinks, duplicate entry names, encrypted archives, and decompression bombs.
+- Suggested lab limits: 100 MiB compressed package, 250 MiB expanded content, 10 MiB workbook, 5,000 Article rows, and 500 assets.
+- Accept only approved image MIME signatures and extensions; validate actual bytes, not only filenames.
+- Reject legacy `.xls`, macros, external workbook links, formulas, and encrypted workbooks.
+- Read cells with Apache POI's `DataFormatter`; never execute formulas.
+- Store package and per-asset SHA-256 values for audit and idempotency.
+- Stream uploads and extraction; never retain the full package or all images in heap.
 
 ## 5. Import workflow
 
@@ -136,34 +185,37 @@ stateDiagram-v2
 
 ### 5.1 Upload
 
-1. Require `UPDATE` permission for site content and `ADD_DOCUMENT` for the import folder.
-2. Validate extension, MIME signature, size, and filename.
-3. Save the original workbook in a restricted D&M folder.
-4. Create or reset one `ImportJob` using `(groupId, jobKey)` as the idempotency key.
-5. Return `202 Accepted` with status `UPLOADED`.
+1. The Site Administration App requires the dedicated Article Import action plus permission to add a document to the restricted package folder.
+2. Upload the ZIP through the standard Documents API and obtain its package `fileEntryId`.
+3. POST job metadata to REST Builder; verify that the file belongs to the current site and approved import folder.
+4. Validate ZIP signature, filename, size, checksum, and caller permissions.
+5. Create or reset one `ImportJob` using `(groupId, jobKey)` as the idempotency key.
+6. Return `202 Accepted` with status `UPLOADED`.
 
 ### 5.2 Validate
 
 Validation is read-only with respect to Articles.
 
-1. Parse the exact headers and reject missing, duplicate, or unknown required columns.
-2. Normalize whitespace, booleans, integer values, timestamps, slug, categories, and tags.
-3. Validate duplicate `(ERC, locale)` and duplicate `(friendlyUrlPath, locale)` values inside the workbook.
-4. Resolve the Article structure by ERC.
-5. Resolve each cover image and category by ERC.
-6. Check target-site locales and caller permissions.
-7. Sanitize HTML and report rejected markup.
-8. Compare each normalized row with existing Web Content and classify it as `CREATE`, `UPDATE`, `NO_CHANGE`, or `ARCHIVE`.
-9. Persist one `ImportJobItem` per row and aggregate counts.
-10. Transition to `VALIDATED` only when no error exists; warnings do not block execution.
+1. Inspect ZIP entries safely and validate `manifest.json` before extracting executable files.
+2. Parse exact `Articles` and `Assets` headers; reject missing, duplicate, or unknown required columns.
+3. Normalize whitespace, booleans, integers, timestamps, slugs, paths, categories, and tags.
+4. Validate duplicate `(ERC, locale)`, friendly URLs, image keys, document ERCs, and package paths.
+5. Resolve the Article structure, taxonomy, target folders, and any reusable existing media by ERC.
+6. Verify every referenced `coverImageKey` and validate image MIME, size, checksum, and dimensions.
+7. Check target-site locales and caller permissions.
+8. Sanitize HTML and report rejected markup.
+9. Classify asset and Article rows as `CREATE`, `UPDATE`, `NO_CHANGE`, or `ARCHIVE` without mutating content.
+10. Persist row results and aggregate counts.
+11. Transition to `VALIDATED` only when no error exists; warnings do not block execution.
 
 ### 5.3 Execute
 
 Execution is allowed only from `VALIDATED` and uses the persisted normalized validation result.
 
-- Process in bounded chunks of 100 rows.
-- Use a new transaction per row or small chunk; one bad row must not roll back the whole workbook.
-- UPSERT by Article ERC, then apply the locale translation, taxonomy, dates, and D&M reference.
+- Import validated assets before Article rows so every image reference resolves before content mutation.
+- Process in bounded chunks of 100 Article rows and bounded media streams.
+- Use a new transaction per row or small chunk; one bad row must not roll back the whole package.
+- UPSERT media by `documentERC`, then UPSERT Article by ERC and apply locale, taxonomy, dates, and the resulting D&M reference.
 - Create a new Web Content version only when the normalized row changes content.
 - `publish=false` saves Draft or starts configured workflow; `publish=true` requires explicit Publish permission.
 - `ARCHIVE` expires the Article and preserves history; it never hard-deletes editorial content.
@@ -225,24 +277,46 @@ Generated Service Builder classes are regenerated from `service.xml`; generated 
 
 Base path: `/o/nexcent-training/v1.0`
 
+The package binary is uploaded first through the standard Documents API. REST Builder receives the resulting `packageFileEntryId`; it does not duplicate Liferay's document-upload API.
+
 | Method | Path | Result |
 |---|---|---|
-| `POST` | `/sites/{siteId}/article-import-jobs` | Multipart upload; returns `202` job |
+| `POST` | `/sites/{siteId}/article-import-jobs` | JSON job request with `packageFileEntryId`; returns `202` |
 | `POST` | `/sites/{siteId}/article-import-jobs/{jobERC}/validate` | Starts/synchronously performs validation |
 | `POST` | `/sites/{siteId}/article-import-jobs/{jobERC}/execute` | Queues execution; returns `202` |
 | `GET` | `/sites/{siteId}/article-import-jobs` | Paged site job history |
 | `GET` | `/sites/{siteId}/article-import-jobs/{jobERC}` | Job counts and status |
 | `GET` | `/sites/{siteId}/article-import-jobs/{jobERC}/items` | Paged row results |
 
-Upload request fields:
+Create-job request:
 
-- `file`: binary XLSX, required;
-- `externalReferenceCode`: job ERC, required;
-- `structureExternalReferenceCode`: defaults to `NXC-STRUCTURE-ARTICLE`.
+```json
+{
+  "externalReferenceCode": "NXC-ARTICLE-IMPORT-20260722-001",
+  "packageFileEntryId": 38201,
+  "structureExternalReferenceCode": "NXC-STRUCTURE-ARTICLE"
+}
+```
+
+The service verifies site scope, approved folder, permissions, checksum, and ZIP signature before accepting the job.
 
 Use standard Liferay pagination (`Page<T>`), problem responses, permissions, and OpenAPI generation. Return stable error codes such as `INVALID_HEADER`, `DUPLICATE_ERC_LOCALE`, `IMAGE_ERC_NOT_FOUND`, `CATEGORY_ERC_NOT_FOUND`, `UNSAFE_HTML`, and `INVALID_STATE`.
 
 Do not implement parsing inside `ImportJobResourceImpl`. It invokes an `ArticleImportManager` OSGi service and maps models to DTOs.
+
+### 7.1 Site Administration App
+
+Deliver `nexcent-training-web` as a React UI inside an MVC Portlet and register it with a `PanelApp` under the current site's **Content & Data** category.
+
+Required screens:
+
+- Upload: download template, choose ZIP, select Draft/Publish and Validate/Execute options.
+- Job history: paged status, progress, creator, timestamps, and counts.
+- Job detail: asset results, Article row results, stable error codes, retry failed rows, and error-report download.
+
+The app always derives the current site from Liferay context. It is never placed on the public Home page, never inherits the public Master Page, and never asks editors to enter a numeric site ID. A dedicated site role such as `Nexcent Content Importer` grants least-privilege access; Publish remains a separate permission.
+
+A private site page with a Custom Element is acceptable only as a short PoC. A separately hosted tool is deferred until multiple instances, enterprise ETL orchestration, or SaaS constraints justify OAuth, hosting, CORS, secret management, and cross-system retry.
 
 ## 8. Headless list delivery
 
@@ -293,7 +367,8 @@ Set it as the default Display Page Template for the structure. Verify the canoni
 
 - Require authenticated import; never grant Guest import endpoints.
 - Use Liferay permission checks at both REST and service layers.
-- Store uploads in a non-public D&M folder and apply retention cleanup after the audit window.
+- Store ZIP packages in a non-public D&M folder, store imported article media in a separate public-content folder, and apply retention cleanup to packages after the audit window.
+- Reject ZIP traversal, symlinks, duplicate entries, decompression bombs, unapproved MIME signatures, and oversized media.
 - Sanitize Rich Text server-side even if the workbook UI validates it.
 - Escape all row-level messages; never echo raw HTML into the importer UI.
 - Emit structured logs with `jobERC`, site ID, row number, Article ERC, duration, and result; omit body HTML and credentials.
@@ -305,7 +380,7 @@ Set it as the default Display Page Template for the structure. Verify the canoni
 ### Contract tests
 
 - Structure field references and ERCs match this document.
-- XLSX headers match exactly and workbook contains no formula errors.
+- ZIP layout, manifest, workbook headers, and Assets mappings match exactly; the workbook contains no formulas.
 - OpenAPI generates successfully.
 - `buildService` and `buildREST` produce no uncommitted generated-source diff.
 
@@ -313,8 +388,8 @@ Set it as the default Display Page Template for the structure. Verify the canoni
 
 - create, update, translation, no-change, and archive;
 - duplicate ERC/locale and slug;
-- missing image/category ERC;
-- unsafe HTML, formula, macro, oversize workbook, invalid timestamp;
+- missing image key/file/category ERC, duplicate D&M ERC, unsafe ZIP path, and corrupt image;
+- unsafe HTML, formula, macro, oversized package/workbook, invalid timestamp;
 - authorization and cross-site isolation;
 - retry after partial failure and duplicate execute request.
 
@@ -326,15 +401,15 @@ No Article work is merged until the runtime import, list, and detail screenshots
 
 ## 12. Implementation order
 
-1. Create/export Structure and taxonomy artifacts in the target runtime.
-2. Pre-upload cover images with stable D&M ERCs.
-3. Create and verify the Display Page Template manually.
-4. Implement Service Builder job and row entities; regenerate and compile.
-5. Implement `ArticleImportManager` with parser, validator, and executor tests.
-6. Implement REST Builder contracts and resource adapters; regenerate and compile.
-7. Import the sample workbook as Draft, review, then publish.
+1. Create/export Structure, taxonomy, D&M folder ERCs, and Display Page Template artifacts in the target runtime.
+2. Define the ZIP manifest, workbook, Assets sheet, and sample image package.
+3. Implement Service Builder job and row entities; regenerate and compile.
+4. Implement `ArticleImportManager` with safe ZIP reader, Excel parser, asset importer, validator, executor, and tests.
+5. Implement REST Builder job orchestration; upload the package through the standard Documents API.
+6. Build the Site Administration App and register it under Site Menu → Content & Data.
+7. Import the sample ZIP as Draft, review, retry/no-change test, then publish.
 8. Wire the Article list to Headless Delivery and canonical detail URLs.
-9. Run responsive and failure-state QA; capture screenshots before merge.
+9. Run permission, failure-state, and responsive QA; capture screenshots before merge.
 
 ## 13. Official references
 

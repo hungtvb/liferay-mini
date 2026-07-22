@@ -218,7 +218,7 @@ export async function loadStructuredContents({
     const response = await requestJSON<HeadlessCollection<HeadlessStructuredContent>>(
         `/o/headless-delivery/v1.0/content-structures/${encodeURIComponent(
             structureId
-        )}/structured-contents?pageSize=${pageSize}`,
+        )}/structured-contents?flatten=true&pageSize=${pageSize}`,
         locale
     );
 

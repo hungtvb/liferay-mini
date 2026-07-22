@@ -1,24 +1,612 @@
 from pathlib import Path
+import json
 import traceback
 
 Path('diagnostics').mkdir(exist_ok=True)
-workflow_path = Path('.github/workflows/apply-pr28-review-fixes.yml')
+
+
+def replace_once(path, old, new):
+    file_path = Path(path)
+    content = file_path.read_text()
+    count = content.count(old)
+
+    if count != 1:
+        raise RuntimeError(f'Expected one match in {path}, found {count}')
+
+    file_path.write_text(content.replace(old, new, 1))
+
 
 try:
-    source = workflow_path.read_text()
-    start_marker = "          python3 <<'PY'\n"
-    end_marker = "\n          PY\n\n      - name: Generate admin package lock"
+    manager_path = Path(
+        'modules/nexcent-training/nexcent-training-article-importer/'
+        'src/main/java/com/nexcent/training/article/importer/internal/'
+        'ContentImportJobManagerImpl.java'
+    )
+    manager_path.write_text('''package com.nexcent.training.article.importer.internal;
 
-    start = source.index(start_marker) + len(start_marker)
-    end = source.index(end_marker, start)
-    lines = []
+import com.liferay.document.library.kernel.service.DLAppLocalService;
+import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.repository.model.FileEntry;
+import com.liferay.portal.kernel.repository.model.Folder;
+import com.liferay.portal.kernel.service.ServiceContext;
+import com.nexcent.training.content.importer.ContentImportException;
+import com.nexcent.training.content.importer.ContentImportHandler;
+import com.nexcent.training.content.importer.ContentImportHandlerRegistry;
+import com.nexcent.training.content.importer.ContentImportJobManager;
+import com.nexcent.training.content.importer.ContentImportProfile;
+import com.nexcent.training.model.ImportJob;
+import com.nexcent.training.service.ImportJobLocalService;
 
-    for line in source[start:end].splitlines():
-        lines.append(line[10:] if line.startswith('          ') else line)
+import java.io.InputStream;
 
-    script = '\n'.join(lines) + '\n'
-    Path('diagnostics/extracted-review-fix.py').write_text(script)
-    exec(compile(script, str(workflow_path), 'exec'))
+import java.security.MessageDigest;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.locks.ReentrantLock;
+
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
+
+@Component(service = ContentImportJobManager.class)
+public class ContentImportJobManagerImpl implements ContentImportJobManager {
+
+    @Override
+    public ImportJob create(
+            long userId, long groupId, String jobKey, long packageFileEntryId,
+            String importProfileKey, ServiceContext serviceContext)
+        throws PortalException {
+
+        if ((jobKey == null) ||
+            !jobKey.matches("NXC-CONTENT-IMPORT-[A-Z0-9._-]+")) {
+
+            throw new ContentImportException("INVALID_JOB_ERC", jobKey);
+        }
+
+        return _withJobLock(
+            groupId, jobKey,
+            () -> {
+                ImportJob existing = _importJobLocalService.fetchImportJob(
+                    groupId, jobKey);
+
+                if ((existing != null) &&
+                    _ACTIVE_STATUSES.contains(existing.getStatus())) {
+
+                    throw new ContentImportException(
+                        "IMPORT_JOB_ACTIVE",
+                        "An active job cannot be reset: " + jobKey);
+                }
+
+                ContentImportHandler handler =
+                    _contentImportHandlerRegistry.getHandler(importProfileKey);
+                ContentImportProfile profile = handler.getProfile(groupId);
+
+                if (!profile.isEnabled()) {
+                    throw new ContentImportException(
+                        profile.getDisabledReasonCode(), importProfileKey);
+                }
+
+                _validatePackageLocation(groupId, packageFileEntryId);
+
+                return handler.create(
+                    userId, groupId, jobKey, packageFileEntryId,
+                    serviceContext);
+            });
+    }
+
+    @Override
+    public ImportJob execute(long userId, long groupId, String jobKey)
+        throws PortalException {
+
+        return _withJobLock(
+            groupId, jobKey,
+            () -> {
+                ImportJob importJob = _getImportJob(groupId, jobKey);
+
+                _assertPackageUnchanged(importJob);
+
+                return _contentImportHandlerRegistry.getHandler(
+                    importJob.getImportProfileKey()).execute(
+                        userId, importJob);
+            });
+    }
+
+    @Override
+    public List<ContentImportProfile> getProfiles(long groupId)
+        throws PortalException {
+
+        List<ContentImportProfile> profiles = new ArrayList<>();
+        Set<String> registeredKeys = new HashSet<>();
+
+        for (ContentImportHandler handler :
+                _contentImportHandlerRegistry.getHandlers()) {
+
+            profiles.add(handler.getProfile(groupId));
+            registeredKeys.add(handler.getImportProfileKey());
+        }
+
+        for (String[] planned : _PLANNED_PROFILES) {
+            if (!registeredKeys.contains(planned[0])) {
+                profiles.add(
+                    new ContentImportProfile(
+                        planned[0], planned[1], "1.0", "STRUCTURED_CONTENT",
+                        planned[2], false, "HANDLER_NOT_REGISTERED"));
+            }
+        }
+
+        return profiles;
+    }
+
+    @Override
+    public ImportJob retry(long userId, long groupId, String jobKey)
+        throws PortalException {
+
+        return _withJobLock(
+            groupId, jobKey,
+            () -> {
+                ImportJob importJob = _getImportJob(groupId, jobKey);
+                String status = importJob.getStatus();
+
+                if (!Arrays.asList(
+                        "FAILED", "INVALID", "COMPLETED_WITH_ERRORS").contains(
+                            status)) {
+
+                    throw new ContentImportException(
+                        "INVALID_STATE",
+                        "Retry requires a failed or invalid job");
+                }
+
+                _assertPackageUnchanged(importJob);
+
+                ServiceContext serviceContext = new ServiceContext();
+
+                serviceContext.setCompanyId(importJob.getCompanyId());
+                serviceContext.setScopeGroupId(groupId);
+                serviceContext.setUserId(userId);
+
+                ContentImportHandler handler =
+                    _contentImportHandlerRegistry.getHandler(
+                        importJob.getImportProfileKey());
+
+                importJob = handler.create(
+                    userId, groupId, jobKey, importJob.getFileEntryId(),
+                    serviceContext);
+                importJob = handler.validate(userId, importJob);
+
+                if ("VALIDATED".equals(importJob.getStatus())) {
+                    importJob = handler.execute(userId, importJob);
+                }
+
+                return importJob;
+            });
+    }
+
+    @Override
+    public ImportJob validate(long userId, long groupId, String jobKey)
+        throws PortalException {
+
+        return _withJobLock(
+            groupId, jobKey,
+            () -> {
+                ImportJob importJob = _getImportJob(groupId, jobKey);
+
+                _assertPackageUnchanged(importJob);
+
+                return _contentImportHandlerRegistry.getHandler(
+                    importJob.getImportProfileKey()).validate(
+                        userId, importJob);
+            });
+    }
+
+    private void _assertPackageUnchanged(ImportJob importJob)
+        throws PortalException {
+
+        String expectedSha256 = importJob.getSha256();
+
+        if ((expectedSha256 == null) || expectedSha256.isBlank()) {
+            throw new ContentImportException(
+                "PACKAGE_FINGERPRINT_MISSING",
+                "Re-upload the package before validation or execution");
+        }
+
+        _validatePackageLocation(
+            importJob.getGroupId(), importJob.getFileEntryId());
+
+        FileEntry fileEntry = _dlAppLocalService.getFileEntry(
+            importJob.getFileEntryId());
+        String actualSha256 = _sha256(fileEntry);
+
+        if (!expectedSha256.equals(actualSha256)) {
+            throw new ContentImportException(
+                "PACKAGE_CHANGED_AFTER_JOB_CREATED",
+                "The Documents and Media package changed after the job was " +
+                    "created; create a new job and validate it again");
+        }
+    }
+
+    private ImportJob _getImportJob(long groupId, String jobKey)
+        throws ContentImportException {
+
+        ImportJob importJob = _importJobLocalService.fetchImportJob(
+            groupId, jobKey);
+
+        if (importJob == null) {
+            throw new ContentImportException("IMPORT_JOB_NOT_FOUND", jobKey);
+        }
+
+        return importJob;
+    }
+
+    private String _sha256(FileEntry fileEntry) throws ContentImportException {
+        try (InputStream inputStream = fileEntry.getContentStream()) {
+            MessageDigest messageDigest = MessageDigest.getInstance("SHA-256");
+            byte[] buffer = new byte[8192];
+            int read;
+
+            while ((read = inputStream.read(buffer)) != -1) {
+                messageDigest.update(buffer, 0, read);
+            }
+
+            StringBuilder sb = new StringBuilder();
+
+            for (byte value : messageDigest.digest()) {
+                sb.append(String.format("%02x", value));
+            }
+
+            return sb.toString();
+        }
+        catch (Exception exception) {
+            throw new ContentImportException(
+                "PACKAGE_FINGERPRINT_FAILED", fileEntry.getFileName(),
+                exception);
+        }
+    }
+
+    private void _validatePackageLocation(
+            long groupId, long packageFileEntryId)
+        throws PortalException {
+
+        FileEntry fileEntry = _dlAppLocalService.getFileEntry(
+            packageFileEntryId);
+
+        if (fileEntry.getGroupId() != groupId) {
+            throw new ContentImportException(
+                "INVALID_PACKAGE_SCOPE", "Package belongs to another site");
+        }
+
+        Folder folder = _dlAppLocalService.getFolder(fileEntry.getFolderId());
+
+        if (!_PACKAGE_FOLDER_ERC.equals(folder.getExternalReferenceCode())) {
+            throw new ContentImportException(
+                "INVALID_PACKAGE_FOLDER", _PACKAGE_FOLDER_ERC);
+        }
+    }
+
+    private ImportJob _withJobLock(
+            long groupId, String jobKey, JobOperation jobOperation)
+        throws PortalException {
+
+        String lockKey = groupId + ":" + jobKey;
+        ReentrantLock lock = _jobLocks.computeIfAbsent(
+            lockKey, key -> new ReentrantLock());
+
+        lock.lock();
+
+        try {
+            return jobOperation.execute();
+        }
+        finally {
+            lock.unlock();
+        }
+    }
+
+    private static final Set<String> _ACTIVE_STATUSES = Set.of(
+        "RUNNING", "VALIDATING");
+
+    private static final String _PACKAGE_FOLDER_ERC =
+        "NXC-FOLDER-ARTICLE-IMPORT-PACKAGES";
+
+    private static final String[][] _PLANNED_PROFILES = {
+        {"NXC_HERO_V1", "Hero Slide", "NXC-STRUCTURE-HERO"},
+        {"NXC_SERVICE_V1", "Service Item", "NXC-STRUCTURE-SERVICE"},
+        {"NXC_FEATURE_V1", "Feature Item", "NXC-STRUCTURE-FEATURE"},
+        {"NXC_TESTIMONIAL_V1", "Testimonial", "NXC-STRUCTURE-TESTIMONIAL"},
+        {"NXC_COMMUNITY_CARD_V1", "Community Card",
+            "NXC-STRUCTURE-COMMUNITY-CARD"}
+    };
+
+    @Reference
+    private ContentImportHandlerRegistry _contentImportHandlerRegistry;
+
+    @Reference
+    private DLAppLocalService _dlAppLocalService;
+
+    @Reference
+    private ImportJobLocalService _importJobLocalService;
+
+    private final ConcurrentMap<String, ReentrantLock> _jobLocks =
+        new ConcurrentHashMap<>();
+
+    @FunctionalInterface
+    private interface JobOperation {
+
+        ImportJob execute() throws PortalException;
+    }
+}
+''')
+
+    replace_once(
+        'modules/nexcent-training/nexcent-training-service/src/main/java/'
+        'com/nexcent/training/internal/upgrade/ContentImportUpgradeProcess.java',
+        'runSQL("drop index IX_B5D8A8BB on NXC_ImportJobItem");',
+        'runSQL("drop index IX_NXC_IJI_JR on NXC_ImportJobItem");'
+    )
+
+    parser_path = (
+        'modules/nexcent-training/nexcent-training-article-importer/'
+        'src/main/java/com/nexcent/training/article/importer/internal/'
+        'XlsxArticleParser.java'
+    )
+    replace_once(
+        parser_path,
+        '''    private int _integer(
+            Row row, Map<String, Integer> indexes, String name)
+        throws ArticleImportException {
+
+        String value = _value(row, indexes, name);
+
+        try {
+            return Integer.parseInt(value.replace(".0", ""));
+        }
+        catch (NumberFormatException numberFormatException) {
+            throw new ArticleImportException(
+                "INVALID_INTEGER", _message(row, name, value));
+        }
+    }
+''',
+        '''    private int _integer(
+            Row row, Map<String, Integer> indexes, String name)
+        throws ArticleImportException {
+
+        Cell cell = row.getCell(indexes.get(name));
+
+        if ((cell != null) && (cell.getCellType() == CellType.NUMERIC)) {
+            double value = cell.getNumericCellValue();
+
+            if (!Double.isFinite(value) || (value != Math.rint(value)) ||
+                (value < Integer.MIN_VALUE) || (value > Integer.MAX_VALUE)) {
+
+                throw new ArticleImportException(
+                    "INVALID_INTEGER", _message(
+                        row, name, String.valueOf(value)));
+            }
+
+            return (int)value;
+        }
+
+        String value = _value(row, indexes, name);
+
+        try {
+            return Integer.parseInt(value);
+        }
+        catch (NumberFormatException numberFormatException) {
+            throw new ArticleImportException(
+                "INVALID_INTEGER", _message(row, name, value));
+        }
+    }
+'''
+    )
+
+    parser_test = (
+        'modules/nexcent-training/nexcent-training-article-importer/'
+        'src/test/java/com/nexcent/training/article/importer/internal/'
+        'XlsxArticleParserTest.java'
+    )
+    replace_once(
+        parser_test,
+        '''    @Test
+    public void testRejectsFormulaCells() throws Exception {''',
+        '''    @Test
+    public void testRejectsDecimalSortOrder() throws Exception {
+        try {
+            new XlsxArticleParser().parse(_workbook(false, 10.05));
+
+            Assert.fail("Expected decimal integer rejection");
+        }
+        catch (ArticleImportException articleImportException) {
+            Assert.assertEquals(
+                "INVALID_INTEGER", articleImportException.getCode());
+        }
+    }
+
+    @Test
+    public void testRejectsFormulaCells() throws Exception {'''
+    )
+    replace_once(
+        parser_test,
+        '''    private byte[] _workbook(boolean formula) throws Exception {
+        try (XSSFWorkbook workbook = new XSSFWorkbook()) {''',
+        '''    private byte[] _workbook(boolean formula) throws Exception {
+        return _workbook(formula, 10);
+    }
+
+    private byte[] _workbook(boolean formula, double sortOrder)
+        throws Exception {
+
+        try (XSSFWorkbook workbook = new XSSFWorkbook()) {'''
+    )
+    replace_once(
+        parser_test,
+        '''                "NXC-TOPIC-1;NXC-TOPIC-2", "one;two", true, 10, false''',
+        '''                "NXC-TOPIC-1;NXC-TOPIC-2", "one;two", true,
+                sortOrder, false'''
+    )
+
+    replace_once(
+        'modules/nexcent-training/nexcent-training-article-importer/'
+        'src/main/java/com/nexcent/training/article/importer/internal/'
+        'ArticleImportManagerImpl.java',
+        '''                    if ("ARCHIVE".equals(row.operation)) {
+                        _archive(userId, groupId, row);
+                        _markItem(item, "ARCHIVE", "INFO", StringPool.BLANK,
+                            "Article expired");''',
+        '''                    if ("ARCHIVE".equals(row.operation)) {
+                        _archive(userId, groupId, row);
+                        updatedRows++;
+                        _markItem(item, "ARCHIVE", "INFO", StringPool.BLANK,
+                            "Article expired");'''
+    )
+
+    admin_js = (
+        'modules/nexcent-training/nexcent-training-web/src/main/resources/'
+        'META-INF/resources/js/index.js'
+    )
+    replace_once(
+        admin_js,
+        "import ReactDOM from 'react-dom';",
+        "import {createRoot} from 'react-dom/client';"
+    )
+    replace_once(
+        admin_js,
+        '''    const showJob = async (job) => {
+        setSelectedJob(job);
+        setItems([]);
+
+        try {
+            const data = await api(
+                `/sites/${siteId}/content-import-jobs/` +
+                    `${job.externalReferenceCode}/items?page=1&pageSize=200`
+            );
+
+            setItems(data.items || []);
+        }
+        catch (error) {
+            setNotice({message: error.message, tone: 'danger'});
+        }
+    };''',
+        '''    const showJob = async (job) => {
+        setSelectedJob(job);
+        setItems([]);
+
+        try {
+            const values = [];
+            let page = 1;
+
+            while (true) {
+                const data = await api(
+                    `/sites/${siteId}/content-import-jobs/` +
+                        `${job.externalReferenceCode}/items?page=${page}&pageSize=200`
+                );
+                const batch = data.items || [];
+                const totalCount = Number(data.totalCount);
+
+                values.push(...batch);
+
+                if (
+                    !batch.length ||
+                    (Number.isFinite(totalCount) &&
+                        values.length >= totalCount) ||
+                    batch.length < 200
+                ) {
+                    break;
+                }
+
+                page += 1;
+            }
+
+            setItems(values);
+        }
+        catch (error) {
+            setNotice({message: error.message, tone: 'danger'});
+        }
+    };'''
+    )
+    replace_once(
+        admin_js,
+        '''export default function main({rootId, siteId}) {
+    ReactDOM.render(
+        <ContentImportApp siteId={siteId} />,
+        document.getElementById(rootId)
+    );
+}''',
+        '''export default function main({rootId, siteId}) {
+    const rootElement = document.getElementById(rootId);
+
+    if (!rootElement) {
+        throw new Error(`Content Import root not found: ${rootId}`);
+    }
+
+    createRoot(rootElement).render(<ContentImportApp siteId={siteId} />);
+}'''
+    )
+
+    package_path = Path(
+        'modules/nexcent-training/nexcent-training-web/package.json'
+    )
+    package_data = json.loads(package_path.read_text())
+    package_data['dependencies']['react'] = '18.2.0'
+    package_data['dependencies']['react-dom'] = '18.2.0'
+    package_path.write_text(json.dumps(package_data, indent=4) + '\n')
+
+    remote_app = 'remote-apps/nexcent-articles/src/index.tsx'
+    replace_once(
+        remote_app,
+        '''type CollectionResponse<T> = {
+    items?: T[];
+};''',
+        '''type CollectionResponse<T> = {
+    items?: T[];
+    totalCount?: number;
+};'''
+    )
+    replace_once(
+        remote_app,
+        '''async function getStructuredContents(
+    portalURL: string,
+    structureId: number
+): Promise<StructuredContent[]> {
+    const response = await getJson<CollectionResponse<StructuredContent>>(
+        `${portalURL}/o/headless-delivery/v1.0/content-structures/${structureId}/structured-contents?flatten=true&page=1&pageSize=100&sort=datePublished:desc`
+    );
+
+    return response.items ?? [];
+}''',
+        '''async function getStructuredContents(
+    portalURL: string,
+    structureId: number
+): Promise<StructuredContent[]> {
+    const items: StructuredContent[] = [];
+    let page = 1;
+
+    while (true) {
+        const response = await getJson<CollectionResponse<StructuredContent>>(
+            `${portalURL}/o/headless-delivery/v1.0/content-structures/${structureId}/structured-contents?flatten=true&page=${page}&pageSize=100&sort=datePublished:desc`
+        );
+        const batch = response.items ?? [];
+        const totalCount = response.totalCount;
+
+        items.push(...batch);
+
+        if (
+            !batch.length ||
+            (typeof totalCount === 'number' && items.length >= totalCount) ||
+            batch.length < 100
+        ) {
+            break;
+        }
+
+        page += 1;
+    }
+
+    return items;
+}'''
+    )
 except BaseException:
     Path('diagnostics/review-fix-traceback.log').write_text(
         traceback.format_exc()

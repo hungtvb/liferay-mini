@@ -1,157 +1,196 @@
 # Excel Web Content Importer — Detailed Design
 
-Status: **DESIGN APPROVED / IMPLEMENTATION PENDING**  
+Status: **REVIEWED / IMPLEMENTATION PENDING**  
 Target runtime: **Liferay DXP 2026.Q1.1 LTS**  
 Implementation branch: **`feat/excel-web-content-importer`**  
 Scope: **assessment exercise, Article only**
 
 ## 1. Purpose
 
-Build a small Liferay administration tool that imports `NXC Article` Web Content from Excel while proving these capabilities:
+Build a small Liferay administration tool that imports `NXC Article` Web Content from Excel and proves these capabilities:
 
 1. Upload an Excel workbook through Liferay.
 2. Parse and validate workbook rows with Apache POI.
-3. Resolve the target Web Content Structure by external reference code.
-4. Resolve pre-uploaded Documents and Media images by external reference code.
-5. Transform valid rows into `StructuredContent` DTO JSON.
-6. Submit one Liferay Batch Engine `ImportTask` per workbook.
-7. Track task status and progress using Liferay Batch Engine.
-8. Show import history by linking the uploaded workbook to the Batch Engine task.
+3. Resolve a classic Web Content Structure by external reference code (ERC).
+4. Resolve pre-uploaded Documents and Media images by ERC.
+5. Transform valid rows into `StructuredContent` batch JSON.
+6. Submit exactly one Liferay Batch Engine `ImportTask` per valid workbook.
+7. Track task status, progress, and failed items.
+8. Show submission history by linking the exact workbook version to its Batch Engine task.
 
-The feature must use Liferay as the source of truth. It must not implement a custom queue, worker, batch status engine, or per-row execution framework.
+The feature must not implement a custom queue, worker, batch status machine, retry engine, or per-row executor.
 
-## 2. Scope
+## 2. Terminology
 
-### 2.1 In scope
+This runtime tool is **not** a Liferay Client Extension with `type: batch`.
+
+A Batch Client Extension deploys source-controlled `*.batch-engine-data.json` payloads from a LUFFA. It does not accept an arbitrary Excel upload at runtime.
+
+This design uses:
+
+```text
+Excel Import UI
+→ custom REST Builder API
+→ Apache POI preflight
+→ Liferay Batch Engine ImportTask
+→ classic Web Content StructuredContent
+```
+
+The word **batch** in this document means the Liferay Batch Engine runtime API.
+
+## 3. Scope
+
+### 3.1 In scope
 
 - One fixed content type: `NXC Article`.
-- One Excel sheet: `Articles`.
-- One source workbook per import submission.
-- Images uploaded manually to Documents and Media before Excel import.
-- Images referenced from Excel by Documents and Media ERC.
-- Read-only preflight validation before Batch Engine submission.
-- One Structured Content Batch Engine task per valid workbook.
-- Batch task tracking: status, processed count, total count, failed items.
-- Thin history record containing workbook and Batch Engine task references.
-- Re-import by Article ERC using the runtime-supported UPSERT strategy.
-- A sample workbook and operating guide.
+- One sheet: `Articles`.
+- One locale for the assessment: `en-US`.
+- One source workbook per submission.
+- Images uploaded manually before Excel import.
+- Images referenced by Documents and Media ERC.
+- Read-only preflight validation before Batch submission.
+- One `StructuredContent` Batch Engine task per valid workbook.
+- Live task tracking from Batch Engine.
+- Thin submission history linking the workbook version and Batch task.
+- Re-import by Article ERC using runtime-verified UPSERT support.
+- Sample Structure JSON, workbook, images, and operating guide.
 
-### 2.2 Out of scope
+### 3.2 Out of scope
 
-- Uploading image binaries from the importer.
-- ZIP packages or manifests.
-- Generic content-type profiles.
+- Runtime image binary upload.
+- ZIP packages and manifests.
+- Multiple locales or translations.
+- A generic content-type/profile framework.
 - Multiple Web Content Structures.
-- Taxonomy or category import.
-- Archive/delete operations.
-- Custom retry engine.
-- Custom asynchronous worker or queue.
-- Custom execution status machine.
+- Taxonomy, categories, and tags.
+- Scheduling, archive, and delete operations.
+- A workbook `publish` option.
+- Custom retry, queue, worker, or status engine.
 - Persisting Batch Engine failed items in custom tables.
-- Importing the Web Content Structure through a Batch Client Extension.
+- Deploying the classic Web Content Structure through a Batch Client Extension.
 
-## 3. Key architecture decisions
+## 4. Architecture decisions
 
-### ADR-01 — Use classic Web Content Structured Content
+### ADR-01 — Use classic Web Content
 
-`NXC Article` is a classic Liferay Web Content article backed by a Web Content Structure. The importer creates or updates `StructuredContent` items.
+`NXC Article` is a classic Liferay Web Content article backed by a Web Content Structure and represented by the Headless Delivery `StructuredContent` DTO.
 
-### ADR-02 — Structure definition is source-controlled but imported manually
+### ADR-02 — Import the Structure JSON manually
 
-The exported structure JSON is committed to source control:
+The exported Structure JSON is source-controlled:
 
 ```text
 training/excel-web-content-importer/
 └── nxc-article-structure.json
 ```
 
-For a fresh environment, an administrator imports the JSON once through:
+For a fresh environment, import it once through:
 
 ```text
-Site Menu → Content & Data → Web Content → Structures → Options → Import Structure
+Site Menu
+→ Content & Data
+→ Web Content
+→ Structures
+→ Options
+→ Import Structure
 ```
 
-The structure is not packaged in a Batch Client Extension because this exercise targets classic Web Content Structures and does not assume a Batch Engine delegate for structure creation.
+The assessment Structure contains no fieldsets. If fieldsets are added later, import them before the Structure.
 
-### ADR-03 — Images are prepared before workbook import
+### ADR-03 — Upload images before Excel
 
-Editors upload cover images to Documents and Media first and assign stable ERCs. Excel stores `coverImageERC`, never a numeric file ID or a local path.
+Editors upload cover images to Documents and Media and assign stable ERCs. Excel stores only `coverImageERC` and `coverImageAlt`.
 
-### ADR-04 — Batch Engine owns execution state
+### ADR-04 — Batch Engine owns execution
 
-The importer submits a single Liferay Batch Engine import task containing all valid Article DTOs. Liferay owns:
+Liferay Batch Engine owns:
 
 - asynchronous execution;
-- task status;
+- `executeStatus`;
 - processed and total item counts;
 - failed item details;
-- task error message.
+- task error message;
+- start and end timestamps.
 
-### ADR-05 — History is an audit link, not a second batch engine
+### ADR-05 — Custom history is audit metadata only
 
-A thin Service Builder entity links the uploaded Excel file to the Liferay Batch Engine task. Execution status is always read from Batch Engine.
+A thin `ExcelImportSubmission` entity links the exact workbook version to the Batch Engine task. It does not duplicate Batch status or failed items.
 
-## 4. System context
+### ADR-06 — UI tracks through the custom site-scoped API
+
+The UI does not call the company-scoped Batch Engine API directly during normal use. It polls the custom submission detail endpoint, which:
+
+1. verifies site permission and ownership of the submission;
+2. loads the linked Batch task server-side;
+3. returns a normalized site-scoped response.
+
+The standard Batch Engine endpoint remains useful for API Explorer and runtime QA.
+
+## 5. System context
 
 ```mermaid
 flowchart LR
-    A[Administrator] --> B[Nexcent Excel Import UI]
+    A[Administrator] --> B[Nexcent Excel Import Admin UI]
     B --> C[Documents API]
-    C --> D[Restricted Excel Import Folder]
-    B --> E[Nexcent Import REST API]
-    E --> F[Excel Parser and Validator]
-    F --> G[DDM Structure Resolver]
-    F --> H[Documents and Media Resolver]
-    F --> I[StructuredContent DTO Transformer]
+    C --> D[Restricted Excel Folder]
+    B --> E[Nexcent REST Builder API]
+    E --> F[Workbook Parser]
+    F --> G[Structure Validator]
+    F --> H[Document ERC Resolver]
+    F --> I[StructuredContent Transformer]
     I --> J[Liferay Batch Engine]
-    J --> K[Web Content]
-    B --> L[Batch ImportTask API]
+    J --> K[Classic Web Content]
+    E --> L[ExcelImportSubmission]
     L --> J
-    B --> M[Import History API]
-    M --> N[ExcelImportSubmission]
-    N --> J
 ```
 
-## 5. Deployment and environment setup
-
-### 5.1 Source-controlled artifacts
+## 6. Deployment artifacts
 
 ```text
-client-extensions/
-└── nexcent-excel-importer/                 # frontend client extension or hosted UI
-
 modules/nexcent-training/
-├── nexcent-training-api/                   # submission service contract
-├── nexcent-training-service/               # thin Service Builder history
-├── nexcent-training-rest-api/              # REST Builder DTO/resource
-├── nexcent-training-rest-impl/             # REST implementation
-├── nexcent-training-excel-importer/         # parser, validator, transformer, batch gateway
-└── nexcent-training-web/                    # Site Administration UI shell if retained
+├── nexcent-training-api/
+├── nexcent-training-service/              # thin submission history
+├── nexcent-training-rest-api/
+├── nexcent-training-rest-impl/
+├── nexcent-training-excel-importer/        # parser, validators, transformer, batch gateway
+└── nexcent-training-web/                   # Site Administration UI
 
 training/excel-web-content-importer/
 ├── nxc-article-structure.json
 ├── nxc-article-import-template.xlsx
+├── sample-images/
 └── README.md
 ```
 
-The final implementation may host the React UI inside the existing Site Administration MVC portlet or as a frontend client extension. The backend contract remains the same.
+For this assessment, use the native Site Administration MVC portlet in `nexcent-training-web`. Do not implement both an MVC portlet and a Custom Element UI.
 
-### 5.2 Manual fresh-environment steps
+## 7. Fresh-environment setup
 
-1. Deploy workspace modules and client extensions.
-2. Import `nxc-article-structure.json` manually.
-3. Verify the structure ERC is `NXC-STRUCTURE-ARTICLE`.
-4. Create the Documents and Media folder `NXC Article Assets`.
-5. Upload Article cover images.
-6. Assign stable Document ERCs such as `NXC-DOC-ARTICLE-001-COVER`.
-7. Create the restricted folder `NXC Article Excel Imports`.
-8. Configure permissions for the importer role.
-9. Verify the `StructuredContent` Batch Engine class name using `/o/api` on the target runtime.
-10. Import a sample workbook.
+1. Deploy workspace modules.
+2. Import `nxc-article-structure.json`.
+3. Verify Structure key `NXC_ARTICLE` and ERC `NXC-STRUCTURE-ARTICLE`.
+4. Create Documents and Media folder:
 
-## 6. Content Structure contract
+```text
+Name: NXC Article Assets
+ERC:  NXC-FOLDER-ARTICLE-ASSETS
+```
 
-### 6.1 Identity
+5. Upload sample cover images and assign Document ERCs.
+6. Create restricted workbook folder:
+
+```text
+Name: NXC Article Excel Imports
+ERC:  NXC-FOLDER-ARTICLE-EXCEL-IMPORTS
+```
+
+7. Configure importer role permissions.
+8. Inspect `/o/api` and record the runtime `StructuredContent` `x-class-name`.
+9. Run the runtime capability spike in section 18 before implementing the complete flow.
+
+## 8. Content Structure contract
+
+### 8.1 Identity
 
 | Property | Value |
 |---|---|
@@ -160,9 +199,9 @@ The final implementation may host the React UI inside the existing Site Administ
 | Structure ERC | `NXC-STRUCTURE-ARTICLE` |
 | Default locale | `en-US` |
 
-### 6.2 Fields
+### 8.2 Fields
 
-| Label | Field reference | Expected type | Required |
+| Label | Field reference | Logical type | Required |
 |---|---|---|---:|
 | Summary | `summary` | Long Text | Yes |
 | Body | `body` | Rich Text | Yes |
@@ -172,9 +211,11 @@ The final implementation may host the React UI inside the existing Site Administ
 | Featured | `featured` | Boolean | Yes |
 | Sort Order | `sortOrder` | Integer/Number | Yes |
 
-The importer validates the runtime structure before reading executable rows. It resolves fields by field reference, not display label or array position.
+The exported Structure JSON from the target runtime is the exact schema artifact. The validator resolves fields by **field reference**, not label or array position.
 
-### 6.3 Structure validation codes
+Runtime DDM field type strings can differ from UI labels. The implementation must define a small normalized mapping based on the exported DXP 2026.Q1.1 JSON rather than compare directly with labels such as `Long Text` or `Rich Text`.
+
+### 8.3 Structure validation codes
 
 ```text
 STRUCTURE_NOT_FOUND
@@ -184,11 +225,11 @@ STRUCTURE_FIELD_REQUIRED_MISMATCH
 UNSUPPORTED_REQUIRED_STRUCTURE_FIELD
 ```
 
-A structure validation error blocks Batch Engine submission.
+Any Structure contract error blocks Batch task creation.
 
-## 7. Documents and Media image contract
+## 9. Image contract
 
-### 7.1 Preparation
+### 9.1 Preparation
 
 Images are uploaded before Excel import using standard Documents and Media UI or API.
 
@@ -200,27 +241,26 @@ NXC-DOC-ARTICLE-002-COVER
 NXC-DOC-ARTICLE-003-COVER
 ```
 
-### 7.2 Excel reference
-
-Excel stores:
+### 9.2 Excel reference
 
 ```text
 coverImageERC
 coverImageAlt
 ```
 
-The importer resolves the file by `(siteId, coverImageERC)` and maps the runtime file ID and scope information into the Structured Content image field.
+The importer resolves the file by site and Document ERC, then maps its runtime ID and scope ERC into the image `ContentDocument`.
 
-### 7.3 Validation rules
+### 9.3 Validation rules
 
 - `coverImageERC` is required.
 - The Document must exist.
-- The Document must belong to the current site or an explicitly supported asset-library scope.
+- The Document must belong to the current site for the assessment.
 - The current user must be able to view the Document.
-- `coverImageAlt` is required and limited to 180 characters.
-- Numeric file IDs are rejected as workbook integration keys.
+- `coverImageAlt` is required and at most 180 characters.
+- Numeric file IDs are not accepted as workbook integration keys.
+- Asset Library scope is deferred; it is not part of the assessment.
 
-### 7.4 Error codes
+### 9.4 Error codes
 
 ```text
 COVER_IMAGE_ERC_REQUIRED
@@ -230,44 +270,60 @@ COVER_IMAGE_PERMISSION_DENIED
 COVER_IMAGE_ALT_REQUIRED
 ```
 
-## 8. Excel workbook contract
+## 10. Excel contract
 
-### 8.1 Workbook
+### 10.1 Workbook
 
-File type: `.xlsx` only.  
-Sheet name: `Articles`.
+```text
+File:  .xlsx only
+Sheet: Articles
+Rows:  maximum 500
+Size:  maximum 10 MiB
+Locale: en-US only
+```
 
-### 8.2 Columns
+### 10.2 Columns
 
 | Column | Required | Rule |
 |---|---:|---|
 | `externalReferenceCode` | Yes | Stable; `NXC-ARTICLE-*` |
-| `locale` | Yes | Enabled site locale; baseline `en-US` |
 | `title` | Yes | 1–255 characters |
-| `friendlyUrlPath` | Yes | Lowercase URL segment |
+| `friendlyUrlPath` | Yes | Lowercase URL path segment |
 | `summary` | Yes | 40–320 characters |
 | `bodyHtml` | Yes | Safe editorial HTML |
-| `coverImageERC` | Yes | Existing Documents and Media ERC |
-| `coverImageAlt` | Yes | Meaningful accessible description |
+| `coverImageERC` | Yes | Existing Document ERC in current site |
+| `coverImageAlt` | Yes | Accessible description |
 | `authorName` | Yes | 1–120 characters |
-| `featured` | Yes | `true` or `false` |
+| `featured` | Yes | Strict `true` or `false` |
 | `sortOrder` | Yes | Integer `0..999999` |
-| `publish` | No | Defaults to `false` |
 
-### 8.3 Parser rules
+There is no `locale` or `publish` column in the assessment workbook.
+
+### 10.3 Parser rules
 
 - Use Apache POI.
-- Reject `.xls`, formulas, macros, encrypted workbooks, and external links.
-- Validate exact required headers.
+- Reject `.xls`, formula cells, macros, encrypted workbooks, and external links.
+- Validate the exact header set.
 - Ignore fully empty rows.
-- Reject duplicate `(externalReferenceCode, locale)` rows.
-- Reject duplicate friendly URL paths in the workbook.
+- Reject duplicate Article ERCs in the workbook.
+- Reject duplicate friendly URL paths.
 - Parse booleans strictly.
-- Reject fractional values for integer fields.
-- Sanitize or reject unsafe HTML: scripts, iframes, inline event handlers, and `javascript:` URLs.
-- Limit the assessment workbook to 500 Article rows and 10 MiB.
+- Reject fractional integer values.
+- Reject scripts, iframes, inline event handlers, and `javascript:` URLs.
+- Read the workbook through the exact stored `FileVersion`, not the mutable latest `FileEntry` stream.
 
-### 8.4 Row validation result
+### 10.4 Validation behavior
+
+Preflight is all-or-nothing:
+
+```text
+Any preflight error
+→ no Batch task
+→ no ExcelImportSubmission history row
+→ return complete validation report
+```
+
+Example:
 
 ```json
 {
@@ -278,89 +334,95 @@ Sheet name: `Articles`.
 }
 ```
 
-If any preflight error exists, the workbook is not submitted to Batch Engine.
+The uploaded invalid workbook remains in the restricted folder and can be removed manually during lab cleanup.
 
-## 9. Runtime workflow
-
-### 9.1 Sequence
+## 11. Runtime sequence
 
 ```mermaid
 sequenceDiagram
     actor Admin
-    participant UI as Excel Import UI
+    participant UI as Import Admin UI
     participant Docs as Documents API
-    participant API as Nexcent Import REST
-    participant Parser as Parser/Validator
+    participant API as Nexcent REST API
+    participant Preflight as Parser and Validators
     participant Batch as Liferay Batch Engine
+    participant DB as Submission Audit
     participant WC as Web Content
 
     Admin->>UI: Select articles.xlsx
     UI->>Docs: Upload workbook to restricted folder
-    Docs-->>UI: fileEntryId
-    UI->>API: POST submission(fileEntryId)
-    API->>Parser: Parse and validate workbook
-    Parser->>Parser: Resolve Structure ERC
-    Parser->>Parser: Resolve Document ERCs
+    Docs-->>UI: fileEntryId and fileVersionId
+    UI->>API: POST import(fileVersionId)
+    API->>Preflight: Parse and validate exact version
     alt validation failed
-        Parser-->>API: Row errors
+        Preflight-->>API: All errors
         API-->>UI: 400 validation report
     else validation passed
-        Parser-->>API: StructuredContent DTO array
-        API->>Batch: Submit one ImportTask
-        Batch-->>API: importTaskId + INITIAL
-        API->>API: Save thin submission audit
-        API-->>UI: 202 submission + task
-        loop until terminal state
-            UI->>Batch: GET ImportTask
-            Batch-->>UI: status and counts
+        Preflight-->>API: DTO array and row count
+        API->>Batch: Create ImportTask
+        API->>DB: Save submission and task link
+        API->>API: Register execution after transaction commit
+        API-->>UI: 202 submission response
+        loop while INITIAL or STARTED
+            UI->>API: GET submission detail
+            API->>Batch: Read linked task
+            Batch-->>API: Status, counts, failed items
+            API-->>UI: Site-scoped normalized status
         end
-        Batch->>WC: Create/update Structured Content
+        Batch->>WC: Create or update Articles
     end
 ```
 
-### 9.2 Processing steps
+## 12. DTO mapping
 
-1. UI uploads the workbook to a restricted Documents and Media folder.
-2. UI sends the returned `fileEntryId` to the custom REST endpoint.
-3. Backend validates site scope, folder ERC, extension, file size, and permission.
-4. Backend reads the workbook stream from Documents and Media.
-5. Parser validates headers and row data.
-6. Structure validator resolves `NXC-STRUCTURE-ARTICLE` and verifies its field contract.
-7. Image resolver resolves all `coverImageERC` values.
-8. Transformer creates one `StructuredContent` DTO per valid row.
-9. Batch gateway serializes the DTO array as JSON.
-10. Batch gateway creates one Liferay Batch Engine import task.
-11. Backend stores the workbook/task association.
-12. UI polls the standard Batch Engine ImportTask endpoint.
-13. UI displays final Batch Engine failed items when present.
+### 12.1 System fields
 
-## 10. Structured Content DTO mapping
-
-### 10.1 System fields
-
-| Excel | StructuredContent |
+| Source | `StructuredContent` |
 |---|---|
-| `externalReferenceCode` | `externalReferenceCode` |
-| `title` | `title` |
-| `friendlyUrlPath` | `friendlyUrlPath` |
-| `publish` | workflow/status behavior supported by target API |
-| runtime Structure | `contentStructureId` |
+| Article ERC | `externalReferenceCode` |
+| title | `title` |
+| friendly URL | `friendlyUrlPath` |
+| resolved Structure | `contentStructureId` |
 
-### 10.2 Content fields
+Publication/workflow behavior is not exposed as an Excel option. The runtime capability spike must record the actual status produced by the target Batch delegate.
 
-| Excel/runtime value | Content field |
+### 12.2 Content fields
+
+| Source | Field reference |
 |---|---|
-| `summary` | `summary` |
-| `bodyHtml` | `body` |
+| summary | `summary` |
+| bodyHtml | `body` |
 | resolved Document | `coverImage` |
-| `coverImageAlt` | `coverImageAlt` |
-| `authorName` | `authorName` |
-| `featured` | `featured` |
-| `sortOrder` | `sortOrder` |
+| coverImageAlt | `coverImageAlt` |
+| authorName | `authorName` |
+| featured | `featured` |
+| sortOrder | `sortOrder` |
 
-### 10.3 Example payload
+### 12.3 Data type rule
 
-The exact image object property names must be verified against the DXP 2026.Q1.1 `/o/api` schema. The expected logical payload is:
+`ContentFieldValue.data` is a string in the Headless Delivery DTO. Therefore boolean and numeric fields are serialized as string values:
+
+```json
+{
+  "name": "featured",
+  "contentFieldValue": {
+    "data": "true"
+  }
+}
+```
+
+```json
+{
+  "name": "sortOrder",
+  "contentFieldValue": {
+    "data": "10"
+  }
+}
+```
+
+### 12.4 Logical payload example
+
+The final payload must be copied from a successful single-item request in the target runtime API Explorer before batch submission is implemented.
 
 ```json
 [
@@ -407,13 +469,13 @@ The exact image object property names must be verified against the DXP 2026.Q1.1
       {
         "name": "featured",
         "contentFieldValue": {
-          "data": true
+          "data": "true"
         }
       },
       {
         "name": "sortOrder",
         "contentFieldValue": {
-          "data": 10
+          "data": "10"
         }
       }
     ]
@@ -421,79 +483,67 @@ The exact image object property names must be verified against the DXP 2026.Q1.1
 ]
 ```
 
-## 11. Batch Engine integration
+## 13. Batch Engine integration
 
-### 11.1 Batch class name
+### 13.1 Runtime class name
 
-Resolve and verify the target entity class from the runtime `/o/api` schema using its `x-class-name` value. Do not copy an unverified class name from documentation or another DXP build.
+Inspect `/o/api`, find the `StructuredContent` schema, and record its `x-class-name`. The expected class can be compiled through `StructuredContent.class.getName()`, but runtime verification is still a release gate.
 
-The implementation may compile against the target `StructuredContent` DTO and use `StructuredContent.class.getName()` after runtime verification.
-
-### 11.2 Submission properties
+### 13.2 Task parameters
 
 | Property | Value |
 |---|---|
-| Task ERC | `NXC-EXCEL-IMPORT-{timestamp-or-uuid}` |
+| Task ERC | `NXC-EXCEL-IMPORT-{UUID}` |
 | Content type | `JSON` |
 | Operation | `CREATE` |
-| Create strategy | `UPSERT` |
+| Create strategy | `UPSERT`, only after runtime confirmation |
 | Import strategy | `ON_ERROR_CONTINUE` |
-| Scope parameter | `siteId={currentSiteId}` |
-| Payload | JSON array of `StructuredContent` DTOs |
+| Task item delegate | `DEFAULT`, unless `/o/api` proves otherwise |
+| Scope | `siteId={currentSiteId}` |
+| Payload | JSON array of Article DTOs |
 
-The runtime must confirm that `StructuredContent` supports `UPSERT`. If the delegate exposes a different supported strategy set, the implementation must use the runtime-supported equivalent and document the behavior.
+### 13.3 Service implementation
 
-### 11.3 Submission implementation
-
-Inside the same Liferay JVM, use the OOTB Batch Engine services:
+Inside the same JVM, use OOTB Batch Engine services:
 
 ```text
 BatchEngineImportTaskLocalService
 BatchEngineImportTaskExecutor
 ```
 
-The custom module is only a gateway that:
+Create the Batch task and `ExcelImportSubmission` in the same transaction. Register the executor callback only after the transaction commits.
 
-1. creates the Batch Engine task with the normalized JSON payload;
-2. schedules execution after the transaction commits;
-3. returns the Liferay task ID.
-
-It does not iterate over Article rows to execute them.
-
-### 11.4 Tracking
-
-UI reads:
+Required atomic behavior:
 
 ```text
-GET /o/headless-batch-engine/v1.0/import-task/{importTaskId}
+Task creation fails
+→ rollback submission
+
+Submission save fails
+→ rollback task
+
+Transaction commits
+→ start Batch execution
 ```
 
-Required fields:
+No custom row loop is allowed.
+
+### 13.4 Execute statuses
+
+Supported statuses for the target API are:
 
 ```text
-id
-externalReferenceCode
-executeStatus
-processedItemsCount
-totalItemsCount
-failedItems
-errorMessage
-startTime
-endTime
-```
-
-Terminal statuses:
-
-```text
+INITIAL
+STARTED
 COMPLETED
 FAILED
 ```
 
-UI must also tolerate intermediate statuses returned by the target runtime, including `INITIAL` and `STARTED`.
+Terminal statuses are `COMPLETED` and `FAILED`.
 
-## 12. History persistence
+## 14. Submission history
 
-### 12.1 Entity: `ExcelImportSubmission`
+### 14.1 Entity: `ExcelImportSubmission`
 
 | Field | Type | Purpose |
 |---|---|---|
@@ -503,22 +553,24 @@ UI must also tolerate intermediate statuses returned by the target runtime, incl
 | `userId` | long | Submitted by |
 | `userName` | String | History display |
 | `createDate` | Date | Submission time |
-| `fileEntryId` | long | Uploaded source workbook |
-| `fileName` | String | Original workbook name |
+| `fileEntryId` | long | Source file identity |
+| `fileVersionId` | long | Exact imported workbook version |
+| `fileName` | String | Original file name |
+| `fileVersion` | String | Human-readable D&M version |
+| `sha256` | String | Exact source fingerprint |
 | `structureERC` | String | `NXC-STRUCTURE-ARTICLE` |
-| `batchImportTaskId` | long | Liferay Batch Engine task ID |
+| `submittedRowsCount` | int | Rows serialized into the Batch payload |
+| `batchImportTaskId` | long | Liferay Batch task ID |
 | `batchImportTaskERC` | String | Stable task reference |
 
 Finders:
 
 ```text
-G(groupId) ordered by createDate descending
-G_T(groupId, batchImportTaskId) unique
+G(groupId), newest first
+G_T(groupId, batchImportTaskId), unique
 ```
 
-### 12.2 Explicitly not persisted
-
-Do not persist these Batch Engine-owned values in the custom entity:
+### 14.2 Not persisted
 
 ```text
 executeStatus
@@ -530,13 +582,9 @@ startTime
 endTime
 ```
 
-The history API enriches each submission by reading its current Batch Engine task.
+These values are always read from Batch Engine.
 
-### 12.3 Validation failures
-
-A workbook that fails preflight is not a submitted import and does not create `ExcelImportSubmission`. The UI displays the validation report immediately. This keeps the assessment history focused on actual Batch Engine submissions.
-
-## 13. REST API design
+## 15. REST API
 
 Base path:
 
@@ -544,7 +592,7 @@ Base path:
 /o/nexcent-training/v1.0
 ```
 
-### 13.1 Create and submit import
+### 15.1 Submit workbook
 
 ```http
 POST /sites/{siteId}/article-excel-imports
@@ -555,24 +603,28 @@ Request:
 
 ```json
 {
-  "fileEntryId": 38200
+  "fileVersionId": 48201
 }
 ```
 
-Success response: `202 Accepted`
+Success: `202 Accepted`
 
 ```json
 {
   "id": 101,
   "fileEntryId": 38200,
+  "fileVersionId": 48201,
   "fileName": "articles.xlsx",
+  "submittedRowsCount": 5,
   "batchImportTaskId": 5012,
-  "batchImportTaskExternalReferenceCode": "NXC-EXCEL-IMPORT-20260722-001",
+  "batchImportTaskExternalReferenceCode": "NXC-EXCEL-IMPORT-550e8400-e29b-41d4-a716-446655440000",
   "status": "INITIAL",
   "processedItemsCount": 0,
-  "totalItemsCount": 5
+  "totalItemsCount": 0
 }
 ```
+
+`submittedRowsCount` is known from preflight. Batch Engine `totalItemsCount` may still be zero while the task is `INITIAL`.
 
 Validation failure: `400 Bad Request`
 
@@ -590,239 +642,221 @@ Validation failure: `400 Bad Request`
 }
 ```
 
-### 13.2 Get submission detail
+### 15.2 Submission detail and tracking
 
 ```http
 GET /sites/{siteId}/article-excel-imports/{submissionId}
 ```
 
-Returns submission audit plus live Batch Engine task status.
+Returns audit metadata enriched with live Batch task fields:
 
-### 13.3 Get history
+```text
+status
+processedItemsCount
+totalItemsCount
+failedItems
+errorMessage
+startTime
+endTime
+```
+
+### 15.3 History
 
 ```http
 GET /sites/{siteId}/article-excel-imports?page=1&pageSize=20
 ```
 
-Returns paged submissions ordered newest first, enriched with current Batch Engine status.
+Returns newest submissions first. For list performance, enrich only task summary fields. Load full `failedItems` only in the detail endpoint.
 
-### 13.4 Failed items
+## 16. UI design
 
-Use the standard Batch Engine task response or failed-item report endpoint. Do not copy failed items into a custom REST model unless only normalizing the OOTB response for UI display.
-
-## 14. UI design
-
-The application appears under:
+Application location:
 
 ```text
 Site Menu → Content & Data → Nexcent Excel Importer
 ```
 
-### 14.1 Import view
+### 16.1 Import view
 
-Components:
-
-- Structure label: `NXC Article` read-only.
-- File input accepting `.xlsx`.
+- Read-only target: `NXC Article`.
+- `.xlsx` file input.
+- Setup note explaining Document ERCs.
 - Import button.
-- Required setup note: images must already exist in Documents and Media and Excel must contain Document ERCs.
-- Validation result table.
+- Complete preflight error table.
 
-### 14.2 Tracking view
+### 16.2 Tracking view
 
 ```text
 Workbook: articles.xlsx
+Submitted rows: 5
 Task: 5012
 Status: STARTED
-Progress: 3 / 5
+Batch progress: 3 / 5
 Failed: 0
 ```
 
-Polling behavior:
+Polling:
 
-- poll every 2 seconds while non-terminal;
-- stop polling on `COMPLETED` or `FAILED`;
-- stop polling when the component unmounts;
-- provide a manual Refresh action;
-- display Batch Engine failed item index and message.
+- every 2 seconds during `INITIAL` or `STARTED`;
+- stop on `COMPLETED` or `FAILED`;
+- cancel polling on unmount;
+- provide manual Refresh;
+- poll the custom site-scoped detail endpoint.
 
-### 14.3 History view
-
-Columns:
+### 16.3 History view
 
 ```text
 Submitted date
-Workbook
+Workbook and version
 Submitted by
+Submitted rows
 Batch task ID
 Status
 Progress
-Action: View
+View
 ```
 
-No Retry action is required for the assessment. The user corrects the Excel file and creates a new submission.
+No Retry action is required. Correct the workbook and create a new submission.
 
-## 15. Error handling
+## 17. Security
 
-### 15.1 Preflight errors
+- Require site `UPDATE` permission or a dedicated importer action.
+- Verify the exact FileVersion belongs to the current site.
+- Verify its FileEntry is in folder ERC `NXC-FOLDER-ARTICLE-EXCEL-IMPORTS`.
+- Verify all Documents are in the current site and visible to the submitting user.
+- Execute the Batch task as the submitting user.
+- Do not accept site ID, Structure ID, Document ID, or FileEntry ID from workbook cells.
+- Keep Excel files non-public.
+- Do not expose another site's submission or Batch task.
+- Do not log workbook bytes or full body HTML.
 
-Preflight errors block task creation and are reported with row and field context.
+## 18. Mandatory runtime capability spike
 
-Groups:
+Before full implementation, perform these checks on DXP 2026.Q1.1:
+
+1. Import the Structure JSON.
+2. Upload one cover image and assign a Document ERC.
+3. Use `/o/api` to capture:
+   - `StructuredContent` `x-class-name`;
+   - POST request schema;
+   - image field schema;
+   - available Batch create strategies.
+4. Create one Article through the normal Headless Delivery POST endpoint.
+5. Confirm the exact image payload works.
+6. Record the resulting Web Content workflow/publication status.
+7. Submit the same payload through Batch Engine with `siteId`.
+8. Confirm the task reaches `COMPLETED`.
+9. Submit the same Article ERC again with `UPSERT`.
+10. Confirm it updates rather than duplicates.
+
+The spike produces a checked-in fixture:
 
 ```text
-FILE
-WORKBOOK
-STRUCTURE
-DOCUMENT
-ROW
-SECURITY
+training/excel-web-content-importer/runtime-contract/
+├── structured-content-class-name.txt
+├── single-article-request.json
+├── batch-article-request.json
+└── README.md
 ```
 
-### 15.2 Batch execution errors
+Do not implement the full importer until this gate passes.
 
-Batch Engine is the source of truth. UI displays:
-
-- task-level `errorMessage`;
-- failed item index;
-- failed item payload summary when safe;
-- failed item message.
-
-### 15.3 Failure boundaries
-
-- Invalid workbook: no history row, no Batch task.
-- Failure while creating Batch task: no history row; return infrastructure error.
-- Batch task fails after creation: history remains and displays Batch Engine `FAILED` status.
-- History enrichment cannot read a task: display `TASK_UNAVAILABLE` without changing stored audit data.
-
-## 16. Security and permissions
-
-- Require site `UPDATE` permission or a dedicated `Nexcent Excel Importer` action.
-- Verify the source workbook belongs to the current site.
-- Verify the source workbook is in the restricted Excel import folder.
-- Verify every referenced Document is visible to the current user.
-- Do not trust `siteId`, file IDs, structure IDs, or Document IDs supplied from workbook cells.
-- Reject formula cells and unsafe HTML.
-- Keep uploaded Excel files non-public.
-- Do not expose the full workbook or sensitive Batch Engine item payloads to unauthorized users.
-
-## 17. Idempotency
-
-### 17.1 Article identity
+## 19. Failure boundaries
 
 ```text
-(siteId, externalReferenceCode)
+Invalid workbook
+→ no Batch task
+→ no history row
+
+Batch task creation or history save fails
+→ transaction rollback
+
+Batch task fails after commit
+→ history remains
+→ status comes from Batch Engine
+
+Batch task cannot be read
+→ return TASK_UNAVAILABLE
+→ do not mutate audit data
 ```
 
-Excel uses stable Article ERCs. Re-import must update the existing Article rather than create duplicates when the target Batch Engine delegate supports UPSERT.
+## 20. Tests
 
-### 17.2 Submission identity
+### Unit
 
-Each Import button action creates a new task ERC and a new history record. The same workbook may therefore produce multiple submissions, while the Article ERC preserves content idempotency.
-
-### 17.3 Image identity
-
-Images are identified by Document ERC. Re-import reuses the existing Document; the importer does not version or mutate the image.
-
-## 18. Observability
-
-Log only task-level technical information:
-
-```text
-submissionId
-siteId
-fileEntryId
-batchImportTaskId
-batchImportTaskERC
-rowCount
-duration of preflight
-```
-
-Do not log full body HTML or workbook binary data.
-
-Recommended log events:
-
-```text
-ARTICLE_EXCEL_IMPORT_VALIDATION_STARTED
-ARTICLE_EXCEL_IMPORT_VALIDATION_FAILED
-ARTICLE_EXCEL_IMPORT_BATCH_SUBMITTED
-ARTICLE_EXCEL_IMPORT_TASK_LOOKUP_FAILED
-```
-
-## 19. Test design
-
-### 19.1 Unit tests
-
-- Exact header validation.
-- Required field validation.
+- Exact headers.
+- Required fields.
 - Strict boolean parsing.
 - Fractional integer rejection.
-- Formula cell rejection.
-- Duplicate ERC/locale rejection.
+- Formula rejection.
+- Duplicate Article ERC rejection.
+- Duplicate friendly URL rejection.
 - Unsafe HTML rejection.
-- Structure contract validation.
-- Missing Document ERC validation.
-- DTO transformation.
-- Batch task parameter construction.
+- Structure contract normalization.
+- Missing Document ERC.
+- DTO string serialization for boolean and number fields.
+- Batch parameter construction.
 
-### 19.2 Integration tests
+### Integration
 
 - Resolve Structure by ERC.
 - Resolve Document by ERC in current site.
-- Submit one Batch Engine task for multiple rows.
-- Read task progress and failed items.
-- Save and list `ExcelImportSubmission` history.
-- Re-import the same Article ERC without creating a duplicate.
+- Read exact FileVersion.
+- Create Batch task and audit record atomically.
+- Start execution only after commit.
+- Submit one task for multiple rows.
+- Read live status through the custom detail endpoint.
+- Re-import the same Article ERC without duplication.
 
-### 19.3 Runtime QA
+### Runtime QA
 
-1. Import the Structure JSON on a fresh site.
-2. Upload three cover images and assign ERCs.
+1. Import Structure JSON on a fresh site.
+2. Upload three images and assign ERCs.
 3. Import a valid three-row workbook.
-4. Confirm one Batch Engine task is created.
-5. Confirm three Web Content Articles exist under `NXC Article`.
-6. Confirm cover images render in Web Content preview/detail.
-7. Import a workbook with one missing Document ERC and confirm no task is created.
-8. Import a workbook with one execution-level invalid item and confirm Batch Engine failed item tracking.
-9. Re-import a corrected workbook and confirm Article ERCs are updated, not duplicated.
-10. Confirm history shows each submitted workbook and its live Batch task status.
+4. Confirm exactly one Batch task.
+5. Confirm three Web Content Articles.
+6. Confirm cover images render.
+7. Import a workbook with a missing Document ERC and confirm no task/history row.
+8. Trigger one execution-level failure and confirm failed item tracking.
+9. Re-import corrected content and confirm ERC-based update.
+10. Confirm history shows workbook version and live task status.
 
-## 20. Acceptance criteria
+## 21. Acceptance criteria
 
-The assessment passes when all conditions are met:
+1. Structure JSON is source-controlled and imports successfully.
+2. Images are uploaded first and referenced by Document ERC.
+3. UI uploads one `.xlsx` file through Liferay.
+4. Backend parses the exact FileVersion with Apache POI.
+5. Preflight validates Structure, rows, and Documents.
+6. A valid workbook creates exactly one Liferay Batch Engine task.
+7. Batch Engine, not custom code, executes Article creation/update.
+8. UI displays live status, counts, and failed items through a site-scoped API.
+9. History links the exact workbook version and hash to the Batch task.
+10. Batch status and failures are not duplicated in custom persistence.
+11. Re-import by ERC updates rather than duplicates after UPSERT capability is proven.
+12. No custom queue, retry engine, status machine, or per-row executor exists.
 
-1. `NXC Article` Structure JSON is stored in source control and can be imported manually on a fresh environment.
-2. Images are uploaded before import and referenced from Excel by Document ERC.
-3. The UI uploads one `.xlsx` file through Liferay.
-4. The backend parses Excel using Apache POI.
-5. Preflight validates Structure fields, required row values, and Document ERC references.
-6. A valid workbook creates exactly one Liferay Batch Engine ImportTask.
-7. The Batch Engine task creates or updates all valid Web Content Articles.
-8. The UI displays task status, processed count, total count, and failed items.
-9. History links the source Excel file to its Batch Engine task.
-10. Custom persistence does not duplicate Batch Engine status or failed item data.
-11. Re-importing the same Article ERC does not create duplicate Articles when UPSERT is supported by the runtime.
-12. No custom queue, retry engine, or per-row executor exists.
-
-## 21. Implementation order
+## 22. Implementation order
 
 ```text
-1. Add exported NXC Article Structure JSON and sample workbook
-2. Add thin ExcelImportSubmission Service Builder entity
-3. Implement workbook parser and row validation
-4. Implement runtime Structure contract validation
-5. Implement Documents and Media ERC resolver
-6. Implement StructuredContent DTO transformer
-7. Implement Batch Engine gateway
-8. Implement REST Builder endpoints
-9. Implement import, tracking, and history UI
-10. Add tests and fresh-runtime QA guide
+0. Run and check in the runtime capability spike
+1. Add Structure JSON, workbook, images, and guide
+2. Add thin ExcelImportSubmission entity
+3. Implement exact FileVersion loading
+4. Implement parser and preflight validation
+5. Implement Structure contract validator
+6. Implement Document ERC resolver
+7. Implement StructuredContent transformer
+8. Implement atomic Batch gateway and history save
+9. Implement REST Builder endpoints
+10. Implement import, tracking, and history UI
+11. Add tests and fresh-runtime QA evidence
 ```
 
-## 22. Official references
+## 23. Official references
 
 - Batch Engine API Basics — Importing Data: https://learn.liferay.com/w/dxp/integration/headless-apis/using-liferay-as-a-headless-platform/consuming-apis/batch-engine-api-basics-importing-data
-- Batch Engine API Basics — Exporting Data and `x-class-name`: https://learn.liferay.com/w/dxp/integration/headless-apis/using-liferay-as-a-headless-platform/consuming-apis/batch-engine-api-basics-exporting-data
+- Batch Engine API Basics — Exporting Data: https://learn.liferay.com/w/dxp/integration/headless-apis/using-liferay-as-a-headless-platform/consuming-apis/batch-engine-api-basics-exporting-data
 - Web Content API Basics: https://learn.liferay.com/w/dxp/integration/headless-apis/content-management-apis/web-content-apis/web-content-api-basics
 - Managing Web Content Structures: https://learn.liferay.com/w/dxp/content-management-system/web-content/web-content-structures/managing-web-content-structures
 - Web Content Structures with Data Engine: https://learn.liferay.com/w/dxp/content-management-system/web-content/web-content-structures/web-content-structures-with-data-engine

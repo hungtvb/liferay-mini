@@ -1,6 +1,20 @@
 import type {ReactNode} from 'react';
 
 const RUNTIME_OVERRIDES = `
+/* Reproduce the Swiper geometry used by the static reference without its CDN. */
+.swiper-wrapper {
+    display: flex;
+    height: 100%;
+    width: 100%;
+}
+
+.swiper-slide {
+    flex-shrink: 0;
+    height: 100%;
+    position: relative;
+    width: 100%;
+}
+
 /* Keep the original clipped navigation underline without blocking nested menus. */
 .header__navigation-list > li {
     overflow: hidden !important;

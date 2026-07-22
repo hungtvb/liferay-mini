@@ -25,6 +25,8 @@ Public frontend preview: `https://nexcent-liferay-static.vercel.app`
 - Copyable training assets: [`training/master-track-code-labs`](training/master-track-code-labs)
 - 2026.Q1 architecture audit: [`docs/architecture/liferay-2026-q1-audit.md`](docs/architecture/liferay-2026-q1-audit.md)
 - Extensible Content Import Framework: [`docs/architecture/content-import-framework.md`](docs/architecture/content-import-framework.md)
+- Full Article feature runbook: [`docs/guides/article-feature-liferay-runbook.md`](docs/guides/article-feature-liferay-runbook.md)
+- Article FE–BE contract: [`docs/contracts/article-contract.md`](docs/contracts/article-contract.md)
 - Previous delivery-oriented course: [`archive/course-v1`](https://github.com/hungtvb/liferay-mini/tree/archive/course-v1)
 
 ## Scope alignment

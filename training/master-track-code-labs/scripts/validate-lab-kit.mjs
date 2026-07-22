@@ -26,12 +26,23 @@ const requiredFiles = [
     'training/master-track-code-labs/fragments/nexcent-mobile-navigation/index.js',
     'training/master-track-code-labs/fragments/nexcent-section-wrapper/fragment.json',
     'training/master-track-code-labs/fragments/nexcent-section-wrapper/configuration.json',
-    'training/master-track-code-labs/fragments/nexcent-react-header/fragment.json',
-    'training/master-track-code-labs/fragments/nexcent-react-header/configuration.json',
-    'training/master-track-code-labs/fragments/nexcent-react-header/index.html',
-    'training/master-track-code-labs/fragments/nexcent-react-footer/fragment.json',
-    'training/master-track-code-labs/fragments/nexcent-react-footer/configuration.json',
-    'training/master-track-code-labs/fragments/nexcent-react-footer/index.html',
+    'client-extensions/nexcent-landing-elements/fragments/collection.json',
+    'client-extensions/nexcent-landing-elements/fragments/nexcent-react-header/fragment.json',
+    'client-extensions/nexcent-landing-elements/fragments/nexcent-react-header/configuration.json',
+    'client-extensions/nexcent-landing-elements/fragments/nexcent-react-header/index.html',
+    'client-extensions/nexcent-landing-elements/fragments/nexcent-react-hero/fragment.json',
+    'client-extensions/nexcent-landing-elements/fragments/nexcent-react-clients/fragment.json',
+    'client-extensions/nexcent-landing-elements/fragments/nexcent-react-community/fragment.json',
+    'client-extensions/nexcent-landing-elements/fragments/nexcent-react-feature-primary/fragment.json',
+    'client-extensions/nexcent-landing-elements/fragments/nexcent-react-statistics/fragment.json',
+    'client-extensions/nexcent-landing-elements/fragments/nexcent-react-feature-secondary/fragment.json',
+    'client-extensions/nexcent-landing-elements/fragments/nexcent-react-testimonial/fragment.json',
+    'client-extensions/nexcent-landing-elements/fragments/nexcent-react-marketing/fragment.json',
+    'client-extensions/nexcent-landing-elements/fragments/nexcent-react-cta/fragment.json',
+    'client-extensions/nexcent-landing-elements/fragments/nexcent-react-footer/fragment.json',
+    'client-extensions/nexcent-landing-elements/fragments/nexcent-react-footer/configuration.json',
+    'client-extensions/nexcent-landing-elements/fragments/nexcent-react-footer/index.html',
+    'client-extensions/nexcent-landing-elements/scripts/package-fragments.mjs',
     'training/master-track-code-labs/web-content-templates/nxc-landing-hero.ftl',
     'training/master-track-code-labs/web-content-templates/nxc-service-item.ftl',
     'training/master-track-code-labs/sample-data/nexcent-landing.mock.json',
@@ -254,8 +265,8 @@ for (const expected of [
 }
 
 for (const fragmentPath of [
-    'training/master-track-code-labs/fragments/nexcent-react-header/index.html',
-    'training/master-track-code-labs/fragments/nexcent-react-footer/index.html',
+    'client-extensions/nexcent-landing-elements/fragments/nexcent-react-header/index.html',
+    'client-extensions/nexcent-landing-elements/fragments/nexcent-react-footer/index.html',
 ]) {
     const fragmentHtml = (await readFile(fragmentPath, 'utf8')).trim();
 

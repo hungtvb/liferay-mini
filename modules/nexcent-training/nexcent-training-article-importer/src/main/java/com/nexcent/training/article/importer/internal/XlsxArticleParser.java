@@ -252,10 +252,26 @@ class XlsxArticleParser {
             Row row, Map<String, Integer> indexes, String name)
         throws ArticleImportException {
 
+        Cell cell = row.getCell(indexes.get(name));
+
+        if ((cell != null) && (cell.getCellType() == CellType.NUMERIC)) {
+            double value = cell.getNumericCellValue();
+
+            if (!Double.isFinite(value) || (value != Math.rint(value)) ||
+                (value < Integer.MIN_VALUE) || (value > Integer.MAX_VALUE)) {
+
+                throw new ArticleImportException(
+                    "INVALID_INTEGER", _message(
+                        row, name, String.valueOf(value)));
+            }
+
+            return (int)value;
+        }
+
         String value = _value(row, indexes, name);
 
         try {
-            return Integer.parseInt(value.replace(".0", ""));
+            return Integer.parseInt(value);
         }
         catch (NumberFormatException numberFormatException) {
             throw new ArticleImportException(

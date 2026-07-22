@@ -4,8 +4,8 @@
             "fields": [
                 {
                     "dataType": "string",
-                    "defaultValue": "NXC Landing Hero",
-                    "label": "Content Structure identifier",
+                    "defaultValue": "NXC_LANDING_HERO",
+                    "label": "Content Structure key",
                     "name": "structureIdentifier",
                     "type": "text"
                 },

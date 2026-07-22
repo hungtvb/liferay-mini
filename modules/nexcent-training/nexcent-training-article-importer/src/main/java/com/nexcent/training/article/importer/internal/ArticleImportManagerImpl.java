@@ -668,9 +668,15 @@ public class ArticleImportManagerImpl implements ArticleImportManager {
         return _parser.parseWorkbook(_readWorkbook(importJob));
     }
 
-    private byte[] _readFileEntry(FileEntry fileEntry) throws Exception {
+    private byte[] _readFileEntry(FileEntry fileEntry)
+        throws ArticleImportException {
+
         try (InputStream inputStream = fileEntry.getContentStream()) {
             return inputStream.readAllBytes();
+        }
+        catch (Exception exception) {
+            throw new ArticleImportException(
+                "FILE_ENTRY_READ_FAILED", fileEntry.getFileName(), exception);
         }
     }
 

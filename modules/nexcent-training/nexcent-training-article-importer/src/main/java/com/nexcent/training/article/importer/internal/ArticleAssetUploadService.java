@@ -178,10 +178,10 @@ public class ArticleAssetUploadService {
 
     static class Result {
 
-        private int created;
-        private int skipped;
-        private int updated;
-        private final Map<String, ArticleBatchPayloadTransformer.DocumentReference>
+        int created;
+        int skipped;
+        int updated;
+        final Map<String, ArticleBatchPayloadTransformer.DocumentReference>
             documentsByERC = new HashMap<>();
     }
 

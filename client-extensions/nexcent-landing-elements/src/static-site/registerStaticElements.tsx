@@ -76,27 +76,33 @@ export function registerStaticElements() {
     registerShadowReactElement('nexcent-react-header', (element) => (
         <StaticHeader host={element} />
     ));
-    registerShadowReactElement('nexcent-react-hero', () => <StaticHero />);
-    registerShadowReactElement('nexcent-react-clients', () => <StaticClients />);
-    registerShadowReactElement('nexcent-react-community', () => (
-        <StaticCommunity />
+    registerShadowReactElement('nexcent-react-hero', (element) => (
+        <StaticHero host={element} />
     ));
-    registerShadowReactElement('nexcent-react-feature-primary', () => (
-        <StaticFeature featureKey="primary" />
+    registerShadowReactElement('nexcent-react-clients', (element) => (
+        <StaticClients host={element} />
     ));
-    registerShadowReactElement('nexcent-react-statistics', () => (
-        <StaticStatistics />
+    registerShadowReactElement('nexcent-react-community', (element) => (
+        <StaticCommunity host={element} />
     ));
-    registerShadowReactElement('nexcent-react-feature-secondary', () => (
-        <StaticFeature featureKey="secondary" />
+    registerShadowReactElement('nexcent-react-feature-primary', (element) => (
+        <StaticFeature featureKey="primary" host={element} />
     ));
-    registerShadowReactElement('nexcent-react-testimonial', () => (
-        <StaticTestimonial />
+    registerShadowReactElement('nexcent-react-statistics', (element) => (
+        <StaticStatistics host={element} />
     ));
-    registerShadowReactElement('nexcent-react-marketing', () => (
-        <StaticMarketing />
+    registerShadowReactElement('nexcent-react-feature-secondary', (element) => (
+        <StaticFeature featureKey="secondary" host={element} />
     ));
-    registerShadowReactElement('nexcent-react-cta', () => <StaticCta />);
+    registerShadowReactElement('nexcent-react-testimonial', (element) => (
+        <StaticTestimonial host={element} />
+    ));
+    registerShadowReactElement('nexcent-react-marketing', (element) => (
+        <StaticMarketing host={element} />
+    ));
+    registerShadowReactElement('nexcent-react-cta', (element) => (
+        <StaticCta host={element} />
+    ));
     registerShadowReactElement('nexcent-react-footer', (element) => (
         <StaticFooter host={element} />
     ));

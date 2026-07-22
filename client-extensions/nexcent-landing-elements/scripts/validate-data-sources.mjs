@@ -88,6 +88,95 @@ for (const fragmentName of settingsFragments) {
     }
 }
 
+const shellContracts = {
+    'nexcent-react-footer': {
+        embeddedPropsMarker: 'data-nexcent-footer-props',
+        selectors: [
+            'companyNavigation',
+            'supportNavigation',
+            'socialNavigation',
+        ],
+    },
+    'nexcent-react-header': {
+        embeddedPropsMarker: 'data-nexcent-header-props',
+        selectors: ['navigationSource'],
+    },
+};
+
+for (const [fragmentName, contract] of Object.entries(shellContracts)) {
+    const directory = path.join(fragmentDirectory, fragmentName);
+    const configuration = JSON.parse(
+        await readFile(path.join(directory, 'configuration.json'), 'utf8')
+    );
+    const html = await readFile(path.join(directory, 'index.html'), 'utf8');
+    const fields = configuration.fieldSets.flatMap(
+        (fieldSet) => fieldSet.fields ?? []
+    );
+
+    for (const selectorName of contract.selectors) {
+        const selector = fields.find((field) => field.name === selectorName);
+
+        if (selector?.type !== 'navigationMenuSelector') {
+            throw new Error(
+                `${fragmentName} must expose ${selectorName} as navigationMenuSelector.`
+            );
+        }
+    }
+
+    if (!html.includes(contract.embeddedPropsMarker)) {
+        throw new Error(
+            `${fragmentName} must embed its Liferay context as JSON props.`
+        );
+    }
+}
+
+const footerConfiguration = JSON.parse(
+    await readFile(
+        path.join(
+            fragmentDirectory,
+            'nexcent-react-footer',
+            'configuration.json'
+        ),
+        'utf8'
+    )
+);
+const footerFields = footerConfiguration.fieldSets.flatMap(
+    (fieldSet) => fieldSet.fields ?? []
+);
+
+for (const obsoleteSocialField of [
+    'instagramURL',
+    'dribbbleURL',
+    'twitterURL',
+    'youtubeURL',
+]) {
+    if (footerFields.some((field) => field.name === obsoleteSocialField)) {
+        throw new Error(
+            `Footer must use Social Navigation instead of ${obsoleteSocialField}.`
+        );
+    }
+}
+
+const headerSource = await readFile(
+    path.join(projectDirectory, 'src/static-site/components/Header.tsx'),
+    'utf8'
+);
+const footerSource = await readFile(
+    path.join(projectDirectory, 'src/static-site/components/Footer.tsx'),
+    'utf8'
+);
+
+for (const [componentName, source] of [
+    ['Header', headerSource],
+    ['Footer', footerSource],
+]) {
+    if (source.includes('useSiteShell')) {
+        throw new Error(
+            `${componentName} must consume embedded Fragment props without the Site Shell BFF.`
+        );
+    }
+}
+
 const heroSource = await readFile(
     path.join(projectDirectory, 'src/static-site/components/Hero.tsx'),
     'utf8'
@@ -147,5 +236,5 @@ if (sharedHeadlessApi.includes('item.name, item.id')) {
 }
 
 console.log(
-    `Validated ${headlessFragments.length} Headless sections and ${settingsFragments.length} Fragment Settings sections.`
+    `Validated ${headlessFragments.length} Headless sections, ${settingsFragments.length} Fragment Settings sections, and ${Object.keys(shellContracts).length} embedded shell contracts.`
 );

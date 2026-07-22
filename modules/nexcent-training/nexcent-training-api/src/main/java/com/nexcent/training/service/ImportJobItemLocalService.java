@@ -280,4 +280,4 @@ public interface ImportJobItemLocalService
 		throws PortalException;
 
 }
-// LIFERAY-SERVICE-BUILDER-HASH:-866146685
+// LIFERAY-SERVICE-BUILDER-HASH:-920302272

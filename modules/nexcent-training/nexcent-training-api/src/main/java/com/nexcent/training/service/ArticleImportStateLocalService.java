@@ -274,4 +274,4 @@ public interface ArticleImportStateLocalService
 		String payloadHash, long lastImportJobId);
 
 }
-// LIFERAY-SERVICE-BUILDER-HASH:578619914
+// LIFERAY-SERVICE-BUILDER-HASH:-1404216042

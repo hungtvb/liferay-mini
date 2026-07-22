@@ -6,12 +6,13 @@
 
 ## Package source
 
-Use:
+Use the workbook template:
 
 ```text
 training/master-track-code-labs/sample-data/nxc-article-import-template.xlsx
-training/master-track-code-labs/sample-data/article-import-package/
 ```
+
+During implementation, create the package staging directory and sample assets; do not treat that directory as SOURCE READY until it exists and passes the package validator.
 
 Build:
 

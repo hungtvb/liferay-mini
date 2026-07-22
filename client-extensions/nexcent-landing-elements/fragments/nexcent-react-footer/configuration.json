@@ -43,11 +43,21 @@
                     "type": "text"
                 },
                 {
+                    "label": "Company navigation",
+                    "name": "companyNavigation",
+                    "type": "navigationMenuSelector"
+                },
+                {
                     "dataType": "string",
                     "defaultValue": "Support",
                     "label": "Support heading",
                     "name": "supportHeading",
                     "type": "text"
+                },
+                {
+                    "label": "Support navigation",
+                    "name": "supportNavigation",
+                    "type": "navigationMenuSelector"
                 }
             ],
             "label": "Navigation columns"
@@ -121,32 +131,9 @@
                     "type": "checkbox"
                 },
                 {
-                    "dataType": "string",
-                    "defaultValue": "",
-                    "label": "Instagram URL",
-                    "name": "instagramURL",
-                    "type": "text"
-                },
-                {
-                    "dataType": "string",
-                    "defaultValue": "",
-                    "label": "Dribbble URL",
-                    "name": "dribbbleURL",
-                    "type": "text"
-                },
-                {
-                    "dataType": "string",
-                    "defaultValue": "",
-                    "label": "Twitter URL",
-                    "name": "twitterURL",
-                    "type": "text"
-                },
-                {
-                    "dataType": "string",
-                    "defaultValue": "",
-                    "label": "YouTube URL",
-                    "name": "youtubeURL",
-                    "type": "text"
+                    "label": "Social navigation",
+                    "name": "socialNavigation",
+                    "type": "navigationMenuSelector"
                 }
             ],
             "label": "Social links"

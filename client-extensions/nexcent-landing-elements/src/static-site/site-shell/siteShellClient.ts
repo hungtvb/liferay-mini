@@ -10,6 +10,11 @@ type LiferayWindow = Window & {
     };
 };
 
+type RuntimeNavigationItem = NavigationItem & {
+    order: number;
+    parentExternalReferenceCode: string;
+};
+
 const requestCache = new Map<string, Promise<SiteShell>>();
 
 function toNavigationItem(
@@ -55,17 +60,33 @@ export function createFallbackSiteShell(): SiteShell {
     };
 }
 
-function normalizeNavigationItems(value: unknown): NavigationItem[] {
-    if (!Array.isArray(value)) {
+function getNavigationSource(value: unknown): unknown[] {
+    if (Array.isArray(value)) {
+        return value;
+    }
+
+    if (!value || typeof value !== 'object') {
         return [];
     }
 
-    return value
-        .filter((item): item is Record<string, unknown> => Boolean(item && typeof item === 'object'))
+    const navigationMenu = value as Record<string, unknown>;
+
+    return Array.isArray(navigationMenu.navigationItems)
+        ? navigationMenu.navigationItems
+        : [];
+}
+
+function normalizeNestedNavigationItems(value: unknown): NavigationItem[] {
+    return getNavigationSource(value)
+        .filter(
+            (item): item is Record<string, unknown> =>
+                Boolean(item && typeof item === 'object')
+        )
         .map((item, index) => ({
-            children: normalizeNavigationItems(item.children),
+            children: normalizeNestedNavigationItems(item.children),
             externalReferenceCode:
-                typeof item.externalReferenceCode === 'string'
+                typeof item.externalReferenceCode === 'string' &&
+                item.externalReferenceCode
                     ? item.externalReferenceCode
                     : `NXC-RUNTIME-${index + 1}`,
             label: typeof item.label === 'string' ? item.label : '',
@@ -74,6 +95,65 @@ function normalizeNavigationItems(value: unknown): NavigationItem[] {
             url: typeof item.url === 'string' && item.url ? item.url : '#',
         }))
         .filter((item) => Boolean(item.label));
+}
+
+function normalizeFlatNavigationItems(value: unknown): NavigationItem[] {
+    const runtimeItems: RuntimeNavigationItem[] = getNavigationSource(value)
+        .filter(
+            (item): item is Record<string, unknown> =>
+                Boolean(item && typeof item === 'object')
+        )
+        .map((item, index) => ({
+            children: [],
+            externalReferenceCode:
+                typeof item.externalReferenceCode === 'string' &&
+                item.externalReferenceCode
+                    ? item.externalReferenceCode
+                    : `NXC-RUNTIME-${index + 1}`,
+            label: typeof item.label === 'string' ? item.label : '',
+            order: typeof item.order === 'number' ? item.order : index,
+            parentExternalReferenceCode:
+                typeof item.parentExternalReferenceCode === 'string'
+                    ? item.parentExternalReferenceCode
+                    : '',
+            selected: item.selected === true,
+            target: typeof item.target === 'string' ? item.target : '',
+            url: typeof item.url === 'string' && item.url ? item.url : '#',
+        }))
+        .filter((item) => Boolean(item.label))
+        .sort((left, right) => left.order - right.order);
+    const itemByExternalReferenceCode = new Map(
+        runtimeItems.map((item) => [item.externalReferenceCode, item])
+    );
+    const roots: RuntimeNavigationItem[] = [];
+
+    for (const item of runtimeItems) {
+        const parent = item.parentExternalReferenceCode
+            ? itemByExternalReferenceCode.get(item.parentExternalReferenceCode)
+            : undefined;
+
+        if (parent && parent !== item) {
+            parent.children.push(item);
+        }
+        else {
+            roots.push(item);
+        }
+    }
+
+    return roots;
+}
+
+function normalizeNavigationItems(value: unknown): NavigationItem[] {
+    const source = getNavigationSource(value);
+    const isFlatContract = source.some(
+        (item) =>
+            Boolean(item && typeof item === 'object') &&
+            'parentExternalReferenceCode' in (item as Record<string, unknown>)
+    );
+
+    return isFlatContract
+        ? normalizeFlatNavigationItems(value)
+        : normalizeNestedNavigationItems(value);
 }
 
 export function normalizeSiteShell(value: unknown): SiteShell {
@@ -104,9 +184,13 @@ export function normalizeSiteShell(value: unknown): SiteShell {
                     ? account.createAccountURL
                     : fallback.account.createAccountURL,
             displayName:
-                typeof account.displayName === 'string' ? account.displayName : '',
+                typeof account.displayName === 'string'
+                    ? account.displayName
+                    : '',
             emailAddress:
-                typeof account.emailAddress === 'string' ? account.emailAddress : '',
+                typeof account.emailAddress === 'string'
+                    ? account.emailAddress
+                    : '',
             loginURL:
                 typeof account.loginURL === 'string'
                     ? account.loginURL
@@ -116,10 +200,14 @@ export function normalizeSiteShell(value: unknown): SiteShell {
                     ? account.logoutURL
                     : fallback.account.logoutURL,
             portraitURL:
-                typeof account.portraitURL === 'string' ? account.portraitURL : '',
+                typeof account.portraitURL === 'string'
+                    ? account.portraitURL
+                    : '',
             signedIn: account.signedIn === true,
         },
-        companyNavigation: normalizeNavigationItems(response.companyNavigation),
+        companyNavigation: normalizeNavigationItems(
+            response.companyNavigation
+        ),
         headerNavigation: normalizeNavigationItems(response.headerNavigation),
         site: {
             externalReferenceCode:
@@ -131,10 +219,13 @@ export function normalizeSiteShell(value: unknown): SiteShell {
                     ? site.homeURL
                     : fallback.site.homeURL,
             logoURL: typeof site.logoURL === 'string' ? site.logoURL : '',
-            name: typeof site.name === 'string' ? site.name : fallback.site.name,
+            name:
+                typeof site.name === 'string' ? site.name : fallback.site.name,
             siteId: typeof site.siteId === 'number' ? site.siteId : 0,
         },
-        supportNavigation: normalizeNavigationItems(response.supportNavigation),
+        supportNavigation: normalizeNavigationItems(
+            response.supportNavigation
+        ),
         warnings: Array.isArray(response.warnings)
             ? response.warnings.filter(
                   (warning): warning is string => typeof warning === 'string'

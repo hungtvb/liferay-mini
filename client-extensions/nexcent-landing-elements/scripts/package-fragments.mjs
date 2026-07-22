@@ -60,13 +60,19 @@ await mkdir(outputDirectory, {recursive: true});
 
 const stagingDirectory = await mkdtemp(path.join(os.tmpdir(), 'nexcent-fragments-'));
 const stagedCollectionDirectory = path.join(stagingDirectory, collectionKey);
+const stagedFragmentsDirectory = path.join(stagedCollectionDirectory, 'fragments');
 
 try {
-    await cp(fragmentSourceDirectory, stagedCollectionDirectory, {
-        filter: (source) =>
-            path.basename(source) !== '.gitkeep' && !source.endsWith('.zip'),
-        recursive: true,
-    });
+    await mkdir(stagedFragmentsDirectory, {recursive: true});
+    await cp(collectionPath, path.join(stagedCollectionDirectory, 'collection.json'));
+
+    for (const entry of fragmentEntries) {
+        await cp(
+            path.join(fragmentSourceDirectory, entry.name),
+            path.join(stagedFragmentsDirectory, entry.name),
+            {recursive: true}
+        );
+    }
 
     await run('jar', [
         '--create',

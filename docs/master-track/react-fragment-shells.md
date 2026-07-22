@@ -10,12 +10,12 @@ client-extensions/nexcent-landing-elements/src/static-site/
 ```
 
 The production Master Page uses thin Liferay Fragment shells. Each shell owns
-only the matching custom-element tag and the attributes generated from Fragment
+only the matching custom-element tag and attributes generated from Fragment
 Settings.
 
 ## Source layout
 
-The React runtime and its production Fragment Set are colocated:
+The React runtime and production Fragment Set are colocated:
 
 ```text
 client-extensions/nexcent-landing-elements/
@@ -33,13 +33,15 @@ client-extensions/nexcent-landing-elements/
 │   ├── nexcent-react-marketing/
 │   ├── nexcent-react-cta/
 │   └── nexcent-react-footer/
-├── scripts/package-fragments.mjs
+├── scripts/
+│   ├── package-fragments.mjs
+│   └── validate-data-sources.mjs
 └── src/static-site/
 ```
 
 This `fragments/` directory is the production source of truth. The training
-folder contains course examples and compatibility scripts; it must not be used
-as the source for the production React Fragment Set.
+folder contains course examples and compatibility scripts; it is not the source
+for the production React Fragment Set.
 
 ## Runtime architecture
 
@@ -53,18 +55,18 @@ Nexcent Master Page
         ├── Nexcent Theme CSS / Style Book tokens
         └── Nexcent Global CSS React host bridge
                 │
-                ▼
-GET /o/nexcent-site-shell/v1.0/sites/{siteId}/site-shell
-        ├── Header Navigation Menu
-        ├── Footer Company Navigation Menu
-        ├── Footer Support Navigation Menu
-        ├── Guest/authenticated account context
-        └── Site identity
+                ├── Site Shell REST Builder
+                └── Headless Delivery API
 ```
 
-Header and Footer share one browser request cache. The BFF resolves menus by
-stable ERC first and by name as a compatibility fallback. Every item passes the
-current Liferay permission check.
+Header and Footer share one cached Site Shell request:
+
+```text
+GET /o/nexcent-site-shell/v1.0/sites/{siteId}/site-shell
+```
+
+The BFF resolves Navigation Menus by stable ERC first and by name as a
+compatibility fallback. Every item passes the current Liferay permission check.
 
 Expected menu aliases:
 
@@ -83,13 +85,14 @@ Nexcent Footer Support | Footer Support
 
 ## Body content strategy
 
-The body intentionally uses the simplest suitable source per component.
+The body uses the simplest suitable production source per section.
 
 ```text
 Fragment Settings → custom-element attributes → React props
 ├── Clients
-├── Feature
+├── Feature Primary
 ├── Statistics
+├── Feature Secondary
 ├── Testimonial
 └── CTA
 
@@ -99,23 +102,189 @@ Headless Delivery API
 └── Marketing / Articles
 ```
 
-The three Headless sections satisfy the course requirement while covering three
-different use cases:
+The three Headless sections share one browser cache and use:
 
 ```text
-Hero
-→ one Structured Content item with repeatable slide fields
+GET /o/headless-delivery/v1.0/sites/{siteId}/content-structures?pageSize=200
+        ↓ resolve Structure identifier
+GET /o/headless-delivery/v1.0/content-structures/{structureId}/structured-contents?pageSize=100
+```
 
-Community / Services
-→ a list of Structured Content items
+The configured Structure identifier may be a numeric ID, external reference
+code, key, or name. Prefer an ERC or key for environment portability.
 
-Marketing / Articles
-→ article collection, image, and detail Display Page
+The loader:
+
+- Sends the current page locale.
+- Loads approved Structured Content.
+- Excludes entries with `active=false`.
+- Sorts by `sortOrder` or `displayOrder`.
+- Applies the Fragment maximum-item setting.
+- Caches duplicate structure and content requests.
+- Marks the host with `data-content-state` and `data-content-error`.
+
+### Hero
+
+One Structured Content entry represents one slide. This matches the existing
+`Heroes` Excel sheet and allows each slide to have an independent workflow,
+localization, schedule, and order.
+
+Recommended Structure identifier:
+
+```text
+Nexcent Hero
+NXC-HERO
+```
+
+Expected fields:
+
+```text
+title
+highlightedText
+description
+ctaLabel
+ctaUrl
+ctaTarget
+image or illustration
+imageAlt
+sortOrder
+active
+```
+
+Fragment Settings:
+
+```text
+Content Structure identifier
+Maximum slides
+Autoplay
+Slide interval
+Pause on hover
+Show pagination
+```
+
+### Community / Services
+
+The section heading comes from Fragment Settings. Reusable service cards come
+from Structured Content.
+
+Recommended Structure identifier:
+
+```text
+Nexcent Service
+NXC-SERVICE
+```
+
+Expected fields:
+
+```text
+title
+description
+icon or image
+iconAlt
+sortOrder
+active
+```
+
+Fragment Settings:
+
+```text
+Content Structure identifier
+Maximum cards
+Title
+Description
+```
+
+### Marketing / Articles
+
+The section heading comes from Fragment Settings. Cards come from Article
+Structured Content and can link to a Display Page.
+
+Recommended Structure identifier:
+
+```text
+Nexcent Article
+NXC-ARTICLE
+```
+
+Expected fields:
+
+```text
+title
+summary
+thumbnail or image
+thumbnailAlt
+targetUrl or linkUrl
+linkLabel
+linkTarget
+sortOrder
+active
+```
+
+When no target URL field is populated, React uses `/w/{friendlyUrlPath}`. Set up
+a Display Page Template for the Article Structure before using this fallback.
+
+Fragment Settings:
+
+```text
+Content Structure identifier
+Maximum articles
+Title
+Description
+Read more label
+```
+
+The complete mapping contract is in:
+
+```text
+docs/master-track/body-data-sources.md
 ```
 
 `prototypes/nexcent-static/content.json` remains the static preview fixture,
-visual parity baseline, unit-test data, and development fallback. It is not the
-intended production source for body copy.
+visual parity baseline, unit-test data, and runtime fallback. It is not the
+production body-content source.
+
+## Fragment Settings-only sections
+
+These sections do not make body-content API requests.
+
+### Clients
+
+```text
+Title and description
+Ticker visibility
+Six logo URL and alt-text pairs
+```
+
+### Feature Primary and Secondary
+
+```text
+Title and description
+Image URL and alt text
+Button visibility, label, URL, and target
+```
+
+### Statistics
+
+```text
+Title, highlighted text, and description
+Four metric value, label, icon URL, and icon-alt groups
+```
+
+### Testimonial
+
+```text
+Quote, author, and organization
+Portrait URL and alt text
+Partner-logo visibility
+Link label, URL, and target
+```
+
+### CTA
+
+```text
+Title
+Button visibility, label, URL, and target
+```
 
 ## Theme and Style Book contract
 
@@ -140,7 +309,7 @@ React custom-element host
 Shadow DOM component CSS
 ```
 
-`global.css` keeps legacy Master Page rules. `react-shell.css` contains only host
+`global.css` keeps legacy Master Page rules. `react-shell.css` contains host
 defaults, Style Book aliases, Liferay wrapper normalization, and Header stacking.
 Component-level visual rules remain inside the Shadow DOM.
 
@@ -165,8 +334,9 @@ Build and deploy React runtime:
 ```bash
 cd client-extensions/nexcent-landing-elements
 npm ci
-npm run typecheck
+npm run validate:data-sources
 npm test
+npm run typecheck
 npm run build
 ../../gradlew clean build
 cp build/liferay-client-extension-build/*.zip \
@@ -187,8 +357,6 @@ CSS** remains applied to the Master Page.
 
 ## Package and import the Fragments
 
-From the React project:
-
 ```bash
 cd client-extensions/nexcent-landing-elements
 npm run package:fragments
@@ -201,13 +369,13 @@ client-extensions/nexcent-landing-elements/
 build/fragments/collections-nexcent-components.zip
 ```
 
-Import the ZIP through:
+Import through:
 
 ```text
 Site Menu → Design → Fragments
 ```
 
-The old command remains available as a compatibility alias and delegates to the
+The old PowerShell command remains as a compatibility alias and delegates to the
 same production source:
 
 ```powershell
@@ -249,47 +417,11 @@ Nexcent React CTA
 Remove the previous OOTB/editable Header and Footer composition to avoid duplicate
 navigation, spacing, and mobile overlays.
 
-## Header and Footer Fragment Settings
+## Header and Footer settings
 
-Header:
-
-```text
-Branding
-├── Logo URL override
-└── Logo alt text
-
-Account actions
-├── Show account actions
-├── Login label
-├── Sign-up label
-├── My Account label
-└── Sign-out label
-```
-
-Footer:
-
-```text
-Branding
-├── Footer logo URL override
-├── Logo alt text
-├── Copyright text
-└── Rights text
-
-Navigation columns
-├── Company heading
-└── Support heading
-
-Newsletter
-├── Show newsletter
-├── Title and placeholder
-├── Object endpoint
-├── Submit label
-└── Submitting, success, and error messages
-
-Social links
-├── Show social links
-└── Instagram, Dribbble, Twitter, and YouTube URLs
-```
+Header supports logo overrides, account-action visibility, and guest/authenticated
+labels. Footer supports branding, navigation headings, newsletter endpoint and
+state messages, visibility toggles, and social URLs.
 
 Header/Footer value precedence:
 
@@ -324,11 +456,13 @@ consent
 
 Capture the complete Master Page at `1440px`, `768px`, and `375px`. Also verify:
 
+- All three Headless hosts report `data-content-state="ready"`.
+- No failed Headless Delivery or Site Shell requests.
 - Guest and authenticated Header states.
 - Mobile menu and nested navigation.
 - Newsletter submit, success, and error states.
-- Style Book primary color propagation through Shadow DOM.
+- Style Book primary-color propagation through Shadow DOM.
 - No wrapper spacing or horizontal overflow.
-- No console errors or failed Site Shell/content requests.
+- No console errors.
 
 Keep the PR Draft until runtime screenshots pass.

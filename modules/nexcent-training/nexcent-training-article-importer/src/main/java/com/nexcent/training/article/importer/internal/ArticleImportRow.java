@@ -8,7 +8,8 @@ class ArticleImportRow {
     ArticleImportRow(
         int rowNumber, String operation, String externalReferenceCode,
         String locale, String title, String friendlyUrlPath, String summary,
-        String bodyHtml, String coverImageERC, String coverImageAlt,
+        String bodyHtml, String coverImageKey, String coverImageERC,
+        String coverImageAlt,
         String authorName, Date publicationDate, Date expirationDate,
         List<String> categoryERCs, List<String> tags, boolean featured,
         int sortOrder, boolean publish) {
@@ -21,6 +22,7 @@ class ArticleImportRow {
         this.friendlyUrlPath = friendlyUrlPath;
         this.summary = summary;
         this.bodyHtml = bodyHtml;
+        this.coverImageKey = coverImageKey;
         this.coverImageERC = coverImageERC;
         this.coverImageAlt = coverImageAlt;
         this.authorName = authorName;
@@ -38,6 +40,7 @@ class ArticleImportRow {
     final List<String> categoryERCs;
     final String coverImageAlt;
     final String coverImageERC;
+    final String coverImageKey;
     final Date expirationDate;
     final String externalReferenceCode;
     final boolean featured;

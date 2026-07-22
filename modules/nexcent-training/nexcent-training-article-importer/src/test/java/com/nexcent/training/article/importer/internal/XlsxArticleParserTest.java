@@ -25,6 +25,8 @@ public class XlsxArticleParserTest {
         Assert.assertEquals(1, rows.size());
         Assert.assertEquals("NXC-ARTICLE-001", rows.get(0).externalReferenceCode);
         Assert.assertEquals("en-US", rows.get(0).locale);
+        Assert.assertEquals("cover-1", rows.get(0).coverImageKey);
+        Assert.assertEquals("NXC-DOC-001", rows.get(0).coverImageERC);
         Assert.assertEquals(2, rows.get(0).categoryERCs.size());
         Assert.assertFalse(rows.get(0).publish);
     }
@@ -57,7 +59,7 @@ public class XlsxArticleParserTest {
                 "UPSERT", "NXC-ARTICLE-001", "en-US", "Article title",
                 "article-title",
                 "This summary is deliberately longer than forty characters.",
-                "<p>Safe body</p>", "NXC-DOC-001", "Cover alt",
+                "<p>Safe body</p>", "cover-1", "Cover alt",
                 "Nexcent Editorial Team", new Date(1782867600000L), "",
                 "NXC-TOPIC-1;NXC-TOPIC-2", "one;two", true, 10, false
             };
@@ -82,6 +84,27 @@ public class XlsxArticleParserTest {
 
             if (formula) {
                 row.getCell(3).setCellFormula("\"Injected title\"");
+            }
+
+            Sheet assets = workbook.createSheet("Assets");
+            Row assetHeader = assets.createRow(0);
+            String[] assetHeaders = {
+                "imageKey", "filePath", "documentERC", "title", "altText",
+                "folderERC"
+            };
+
+            for (int i = 0; i < assetHeaders.length; i++) {
+                assetHeader.createCell(i).setCellValue(assetHeaders[i]);
+            }
+
+            Row asset = assets.createRow(1);
+            String[] assetValues = {
+                "cover-1", "assets/cover.webp", "NXC-DOC-001",
+                "Cover image", "Cover alt", "NXC-FOLDER-ARTICLE-MEDIA"
+            };
+
+            for (int i = 0; i < assetValues.length; i++) {
+                asset.createCell(i).setCellValue(assetValues[i]);
             }
 
             try (ByteArrayOutputStream outputStream =

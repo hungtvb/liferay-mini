@@ -6,6 +6,11 @@ import com.nexcent.training.model.ImportJob;
 
 public interface ArticleImportManager {
 
+    public ImportJob createFromPackage(
+            long userId, long groupId, String externalReferenceCode,
+            long packageFileEntryId, ServiceContext serviceContext)
+        throws PortalException;
+
     public ImportJob execute(
             long userId, long groupId, String externalReferenceCode)
         throws PortalException;

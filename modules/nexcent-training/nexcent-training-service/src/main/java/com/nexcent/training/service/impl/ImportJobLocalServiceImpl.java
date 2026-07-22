@@ -16,6 +16,7 @@ public class ImportJobLocalServiceImpl extends ImportJobLocalServiceBaseImpl {
     public ImportJob addOrResetImportJob(
             long userId, long groupId, String externalReferenceCode,
             long fileEntryId, String fileName, String sha256,
+            String importProfileKey, String packageSchemaVersion,
             String structureERC, ServiceContext serviceContext)
         throws PortalException {
 
@@ -42,6 +43,8 @@ public class ImportJobLocalServiceImpl extends ImportJobLocalServiceBaseImpl {
         importJob.setFileEntryId(fileEntryId);
         importJob.setFileName(fileName);
         importJob.setSha256(sha256);
+        importJob.setImportProfileKey(importProfileKey);
+        importJob.setPackageSchemaVersion(packageSchemaVersion);
         importJob.setStructureERC(structureERC);
         importJob.setStatus("UPLOADED");
         importJob.setTotalRows(0);

@@ -7,8 +7,8 @@ import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 import com.nexcent.training.model.ImportJob;
 import com.nexcent.training.model.ImportJobItem;
-import com.nexcent.training.rest.dto.v1_0.ArticleImportJobItem;
-import com.nexcent.training.rest.resource.v1_0.ArticleImportJobItemResource;
+import com.nexcent.training.rest.dto.v1_0.ContentImportJobItem;
+import com.nexcent.training.rest.resource.v1_0.ContentImportJobItemResource;
 import com.nexcent.training.service.ImportJobItemLocalService;
 import com.nexcent.training.service.ImportJobLocalService;
 
@@ -22,29 +22,28 @@ import org.osgi.service.component.annotations.ServiceScope;
 
 @Component(
     properties =
-        "OSGI-INF/liferay/rest/v1_0/article-import-job-item.properties",
+        "OSGI-INF/liferay/rest/v1_0/content-import-job-item.properties",
     scope = ServiceScope.PROTOTYPE,
-    service = ArticleImportJobItemResource.class
+    service = ContentImportJobItemResource.class
 )
-public class ArticleImportJobItemResourceImpl
-    extends BaseArticleImportJobItemResourceImpl {
+public class ContentImportJobItemResourceImpl
+    extends BaseContentImportJobItemResourceImpl {
 
     @Override
-    public Page<ArticleImportJobItem> getSiteArticleImportJobItemsPage(
-            Long siteId, String externalReferenceCode, Pagination pagination)
+    public Page<ContentImportJobItem> getSiteContentImportJobItemsPage(
+            Long siteId, String jobExternalReferenceCode,
+            Pagination pagination)
         throws Exception {
 
         GroupPermissionUtil.check(
             PermissionThreadLocal.getPermissionChecker(), siteId,
             ActionKeys.UPDATE);
-
         ImportJob importJob = _importJobLocalService.fetchImportJob(
-            siteId, externalReferenceCode);
+            siteId, jobExternalReferenceCode);
 
         if (importJob == null) {
             throw new NotFoundException(
-                "No Article import job exists for ERC " +
-                    externalReferenceCode);
+                "No content import job " + jobExternalReferenceCode);
         }
 
         List<ImportJobItem> models =
@@ -58,10 +57,9 @@ public class ArticleImportJobItemResourceImpl
                 importJob.getImportJobId()));
     }
 
-    private ArticleImportJobItem _toDTO(ImportJobItem model) {
-        ArticleImportJobItem dto = new ArticleImportJobItem();
+    private ContentImportJobItem _toDTO(ImportJobItem model) {
+        ContentImportJobItem dto = new ContentImportJobItem();
 
-        dto.setArticleExternalReferenceCode(model.getArticleERC());
         dto.setId(model.getImportJobItemId());
         dto.setLocale(model.getLocale());
         dto.setMessage(model.getMessage());
@@ -71,6 +69,9 @@ public class ArticleImportJobItemResourceImpl
         dto.setResult(model.getResult());
         dto.setRowNumber(model.getRowNumber());
         dto.setSeverity(model.getSeverity());
+        dto.setSheetName(model.getSheetName());
+        dto.setTargetExternalReferenceCode(model.getTargetERC());
+        dto.setTargetType(model.getTargetType());
 
         return dto;
     }

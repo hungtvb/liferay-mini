@@ -1,0 +1,4 @@
+Bundle-Name: Nexcent Training Web
+Bundle-SymbolicName: com.nexcent.training.web
+Bundle-Version: 1.0.0
+Web-ContextPath: /nexcent-training-web

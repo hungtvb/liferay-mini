@@ -7,6 +7,7 @@ const requiredFiles = [
     'modules/nexcent-training/nexcent-training-rest-impl/rest-config.yaml',
     'modules/nexcent-training/nexcent-training-rest-impl/rest-openapi.yaml',
     'modules/nexcent-training/nexcent-training-article-importer/build.gradle',
+    'modules/nexcent-training/nexcent-training-web/build.gradle',
     'training/master-track-code-labs/fragments/nexcent-account-actions/fragment.json',
     'training/master-track-code-labs/fragments/nexcent-mobile-navigation/fragment.json',
     'training/master-track-code-labs/fragments/nexcent-mobile-navigation/configuration.json',
@@ -22,6 +23,8 @@ const requiredFiles = [
     'training/master-track-code-labs/sample-data/community-articles.csv',
     'training/master-track-code-labs/sample-data/article-import-template.csv',
     'training/master-track-code-labs/sample-data/nxc-article-import-template.xlsx',
+    'training/master-track-code-labs/sample-data/nexcent-article-import.zip',
+    'training/master-track-code-labs/sample-data/article-import-package/manifest.json',
     'client-extensions/nexcent-training-batch-lab/client-extension.yaml',
 ];
 
@@ -143,6 +146,11 @@ for (const expected of [
     'name="ImportJobItem"',
     'name="ArticleImportState"',
     'name="jobKey"',
+    'name="importProfileKey"',
+    'name="packageSchemaVersion"',
+    'name="targetERC"',
+    'name="targetType"',
+    'name="sheetName"',
     'name="JK_G"',
     'name="G_A_L"',
 ]) {
@@ -166,12 +174,14 @@ const restOpenApi = await readFile(
 );
 
 for (const expected of [
-    'postSiteArticleImportJob',
-    'postSiteArticleImportJobValidate',
-    'postSiteArticleImportJobExecute',
-    'getSiteArticleImportJobItemsPage',
-    '/sites/{siteId}/article-import-jobs',
-    'multipart/form-data',
+    'getSiteContentImportProfilesPage',
+    'postSiteContentImportJob',
+    'postSiteContentImportJobValidate',
+    'postSiteContentImportJobExecute',
+    'postSiteContentImportJobRetry',
+    'getSiteContentImportJobItemsPage',
+    '/sites/{siteId}/content-import-jobs',
+    'ContentImportJobRequest',
 ]) {
     if (!restOpenApi.includes(expected)) {
         throw new Error(`REST Builder contract is missing ${expected}.`);

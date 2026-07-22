@@ -35,12 +35,18 @@ class XlsxArticleParser {
     static final List<String> HEADERS = Collections.unmodifiableList(
         Arrays.asList(
             "operation", "externalReferenceCode", "locale", "title",
-            "friendlyUrlPath", "summary", "bodyHtml", "coverImageERC",
+            "friendlyUrlPath", "summary", "bodyHtml", "coverImageKey",
             "coverImageAlt", "authorName", "publicationDate",
             "expirationDate", "categoryERCs", "tags", "featured",
             "sortOrder", "publish"));
 
     List<ArticleImportRow> parse(byte[] bytes) throws ArticleImportException {
+        return parseWorkbook(bytes).articleRows;
+    }
+
+    ArticleWorkbookData parseWorkbook(byte[] bytes)
+        throws ArticleImportException {
+
         try (Workbook workbook = new XSSFWorkbook(
                 new ByteArrayInputStream(bytes))) {
 
@@ -51,11 +57,15 @@ class XlsxArticleParser {
             }
 
             Sheet sheet = workbook.getSheet("Articles");
+            Sheet assetsSheet = workbook.getSheet("Assets");
 
-            if (sheet == null) {
+            if ((sheet == null) || (assetsSheet == null)) {
                 throw new ArticleImportException(
-                    "MISSING_SHEET", "Sheet Articles is required");
+                    "MISSING_SHEET", "Sheets Articles and Assets are required");
             }
+
+            Map<String, ArticleAssetRow> assetsByKey = _readAssets(
+                assetsSheet);
 
             int headerRowIndex = _findHeaderRow(sheet);
             Map<String, Integer> indexes = _readHeaders(
@@ -76,7 +86,7 @@ class XlsxArticleParser {
                 }
 
                 _rejectFormulas(row, indexes);
-                rows.add(_toArticleImportRow(row, indexes));
+                rows.add(_toArticleImportRow(row, indexes, assetsByKey));
             }
 
             if (rows.isEmpty()) {
@@ -84,7 +94,7 @@ class XlsxArticleParser {
                     "EMPTY_WORKBOOK", "Sheet Articles has no data rows");
             }
 
-            return rows;
+            return new ArticleWorkbookData(rows, assetsByKey);
         }
         catch (ArticleImportException articleImportException) {
             throw articleImportException;
@@ -93,6 +103,52 @@ class XlsxArticleParser {
             throw new ArticleImportException(
                 "INVALID_XLSX", "Workbook cannot be parsed", exception);
         }
+    }
+
+    private Map<String, ArticleAssetRow> _readAssets(Sheet sheet)
+        throws ArticleImportException {
+
+        List<String> headers = Arrays.asList(
+            "imageKey", "filePath", "documentERC", "title", "altText",
+            "folderERC");
+        int headerRowIndex = _findHeaderRow(sheet, "imageKey");
+        Map<String, Integer> indexes = _readHeaders(
+            sheet.getRow(headerRowIndex), headers, "Asset");
+        Map<String, ArticleAssetRow> assets = new HashMap<>();
+        Set<String> documentERCs = new HashSet<>();
+
+        for (int i = headerRowIndex + 1; i <= sheet.getLastRowNum(); i++) {
+            Row row = sheet.getRow(i);
+
+            if ((row == null) || _isEmpty(row, indexes)) {
+                continue;
+            }
+
+            _rejectFormulas(row, indexes);
+            ArticleAssetRow asset = new ArticleAssetRow(
+                row.getRowNum() + 1, _required(row, indexes, "imageKey"),
+                _required(row, indexes, "filePath"),
+                _required(row, indexes, "documentERC"),
+                _required(row, indexes, "title"),
+                _required(row, indexes, "altText"),
+                _required(row, indexes, "folderERC"));
+
+            if ((assets.put(asset.imageKey, asset) != null) ||
+                !documentERCs.add(asset.documentERC)) {
+
+                throw new ArticleImportException(
+                    "DUPLICATE_DOCUMENT_ERC",
+                    "Duplicate Asset key or document ERC at row " +
+                        asset.rowNumber);
+            }
+        }
+
+        if (assets.size() > 500) {
+            throw new ArticleImportException(
+                "PACKAGE_LIMIT_EXCEEDED", "Workbook has more than 500 assets");
+        }
+
+        return assets;
     }
 
     private boolean _boolean(
@@ -168,20 +224,28 @@ class XlsxArticleParser {
     }
 
     private int _findHeaderRow(Sheet sheet) throws ArticleImportException {
+        return _findHeaderRow(sheet, "operation");
+    }
+
+    private int _findHeaderRow(Sheet sheet, String firstHeader)
+        throws ArticleImportException {
+
         int last = Math.min(sheet.getLastRowNum(), _HEADER_SCAN_ROWS - 1);
 
         for (int i = 0; i <= last; i++) {
             Row row = sheet.getRow(i);
 
             if ((row != null) &&
-                "operation".equals(_formatter.formatCellValue(row.getCell(0)))) {
+                firstHeader.equals(
+                    _formatter.formatCellValue(row.getCell(0)))) {
 
                 return i;
             }
         }
 
         throw new ArticleImportException(
-            "INVALID_HEADER", "Could not find the Article header row");
+            "INVALID_HEADER", "Could not find header row beginning with " +
+                firstHeader);
     }
 
     private int _integer(
@@ -239,6 +303,13 @@ class XlsxArticleParser {
     private Map<String, Integer> _readHeaders(Row row)
         throws ArticleImportException {
 
+        return _readHeaders(row, HEADERS, "Article");
+    }
+
+    private Map<String, Integer> _readHeaders(
+            Row row, List<String> expectedHeaders, String contractName)
+        throws ArticleImportException {
+
         Map<String, Integer> indexes = new HashMap<>();
         Set<String> duplicates = new HashSet<>();
 
@@ -255,11 +326,11 @@ class XlsxArticleParser {
         }
 
         if (!duplicates.isEmpty() || !indexes.keySet().equals(
-                new HashSet<>(HEADERS))) {
+                new HashSet<>(expectedHeaders))) {
 
             throw new ArticleImportException(
-                "INVALID_HEADER", "Headers must match the Article contract: " +
-                    String.join(",", HEADERS));
+                "INVALID_HEADER", "Headers must match the " + contractName +
+                    " contract: " + String.join(",", expectedHeaders));
         }
 
         return indexes;
@@ -297,7 +368,8 @@ class XlsxArticleParser {
     }
 
     private ArticleImportRow _toArticleImportRow(
-            Row row, Map<String, Integer> indexes)
+            Row row, Map<String, Integer> indexes,
+            Map<String, ArticleAssetRow> assetsByKey)
         throws ArticleImportException {
 
         String operation = _required(row, indexes, "operation").toUpperCase(
@@ -308,6 +380,11 @@ class XlsxArticleParser {
             throw new ArticleImportException(
                 "INVALID_OPERATION", _message(row, "operation", operation));
         }
+
+        String coverImageKey = archive ?
+            _value(row, indexes, "coverImageKey") :
+                _required(row, indexes, "coverImageKey");
+        ArticleAssetRow asset = assetsByKey.get(coverImageKey);
 
         return new ArticleImportRow(
             row.getRowNum() + 1, operation,
@@ -321,8 +398,7 @@ class XlsxArticleParser {
                 _required(row, indexes, "summary"),
             archive ? _value(row, indexes, "bodyHtml") :
                 _required(row, indexes, "bodyHtml"),
-            archive ? _value(row, indexes, "coverImageERC") :
-                _required(row, indexes, "coverImageERC"),
+            coverImageKey, (asset == null) ? null : asset.documentERC,
             archive ? _value(row, indexes, "coverImageAlt") :
                 _required(row, indexes, "coverImageAlt"),
             archive ? _value(row, indexes, "authorName") :

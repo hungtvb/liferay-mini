@@ -29,6 +29,8 @@
         <column name="fileEntryId" type="long" />
         <column name="fileName" type="String" />
         <column name="sha256" type="String" />
+        <column name="importProfileKey" type="String" />
+        <column name="packageSchemaVersion" type="String" />
         <column name="structureERC" type="String" />
         <column name="status" type="String" />
         <column name="totalRows" type="int" />
@@ -70,7 +72,9 @@
 
         <column name="importJobId" type="long" />
         <column name="rowNumber" type="int" />
-        <column name="articleERC" type="String" />
+        <column name="targetType" type="String" />
+        <column name="targetERC" type="String" />
+        <column name="sheetName" type="String" />
         <column name="locale" type="String" />
         <column name="operation" type="String" />
         <column name="result" type="String" />
@@ -86,8 +90,9 @@
         <finder name="J" return-type="Collection">
             <finder-column name="importJobId" />
         </finder>
-        <finder name="J_R" return-type="ImportJobItem" unique="true">
+        <finder name="J_S_R" return-type="ImportJobItem" unique="true">
             <finder-column name="importJobId" />
+            <finder-column name="sheetName" />
             <finder-column name="rowNumber" />
         </finder>
     </entity>

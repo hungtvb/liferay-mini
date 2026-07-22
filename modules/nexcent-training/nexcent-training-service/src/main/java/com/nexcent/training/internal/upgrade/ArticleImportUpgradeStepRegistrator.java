@@ -12,5 +12,7 @@ public class ArticleImportUpgradeStepRegistrator
     public void register(Registry registry) {
         registry.register(
             "1.0.0", "2.0.0", new ArticleImportUpgradeProcess());
+        registry.register(
+            "2.0.0", "3.0.0", new ContentImportUpgradeProcess());
     }
 }

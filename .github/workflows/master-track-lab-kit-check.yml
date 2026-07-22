@@ -80,6 +80,7 @@ jobs:
                     :modules:nexcent-training:nexcent-training-article-importer:build \
                     :modules:nexcent-training:nexcent-training-rest-api:build \
                     :modules:nexcent-training:nexcent-training-rest-impl:build \
+                    :modules:nexcent-training:nexcent-training-web:build \
                     --stacktrace > diagnostics/application-build.log 2>&1
                   code=$?
                   cat diagnostics/application-build.log

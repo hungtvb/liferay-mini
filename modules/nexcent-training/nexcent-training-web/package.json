@@ -1,0 +1,12 @@
+{
+    "dependencies": {
+        "react": "*",
+        "react-dom": "*"
+    },
+    "main": "js/index.js",
+    "name": "nexcent-training-web",
+    "scripts": {
+        "build": "node-scripts build"
+    },
+    "version": "1.0.0"
+}

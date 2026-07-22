@@ -12,9 +12,9 @@ public class ImportJobItemLocalServiceImpl
 
     public ImportJobItem addImportJobItem(
         long companyId, long groupId, long importJobId, int rowNumber,
-        String articleERC, String locale, String operation, String result,
-        String severity, String messageCode, String message,
-        String payloadHash) {
+        String targetType, String targetERC, String sheetName, String locale,
+        String operation, String result, String severity, String messageCode,
+        String message, String payloadHash) {
 
         long importJobItemId = counterLocalService.increment(
             ImportJobItem.class.getName());
@@ -28,7 +28,9 @@ public class ImportJobItemLocalServiceImpl
         item.setModifiedDate(now);
         item.setImportJobId(importJobId);
         item.setRowNumber(rowNumber);
-        item.setArticleERC(articleERC);
+        item.setTargetType(targetType);
+        item.setTargetERC(targetERC);
+        item.setSheetName(sheetName);
         item.setLocale(locale);
         item.setOperation(operation);
         item.setResult(result);

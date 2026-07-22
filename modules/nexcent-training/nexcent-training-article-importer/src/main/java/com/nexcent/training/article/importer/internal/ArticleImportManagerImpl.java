@@ -5,6 +5,7 @@ import com.liferay.asset.kernel.service.AssetCategoryLocalService;
 import com.liferay.document.library.kernel.model.DLVersionNumberIncrease;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.repository.model.FileEntry;
+import com.liferay.portal.kernel.repository.model.Folder;
 import com.liferay.document.library.kernel.service.DLAppLocalService;
 import com.liferay.dynamic.data.mapping.model.DDMStructure;
 import com.liferay.dynamic.data.mapping.service.DDMStructureLocalService;
@@ -61,6 +62,40 @@ import org.osgi.service.component.annotations.Reference;
 public class ArticleImportManagerImpl implements ArticleImportManager {
 
     @Override
+    public ImportJob createFromPackage(
+            long userId, long groupId, String externalReferenceCode,
+            long packageFileEntryId, ServiceContext serviceContext)
+        throws PortalException {
+
+        FileEntry fileEntry = _dlAppLocalService.getFileEntry(
+            packageFileEntryId);
+
+        if (fileEntry.getGroupId() != groupId) {
+            throw new ArticleImportException(
+                "INVALID_PACKAGE_SCOPE", "Package belongs to another site");
+        }
+
+        ArticleImportPackage articleImportPackage = _readPackage(fileEntry);
+        Group group = _groupLocalService.getGroup(groupId);
+
+        if (!"NXC_ARTICLE_V1".equals(
+                articleImportPackage.importProfileKey) ||
+            !"1.0".equals(articleImportPackage.schemaVersion) ||
+            !group.getExternalReferenceCode().equals(
+                articleImportPackage.siteExternalReferenceCode)) {
+
+            throw new ArticleImportException(
+                "INVALID_PROFILE", "Manifest, profile, schema, and site must agree");
+        }
+
+        return _importJobLocalService.addOrResetImportJob(
+            userId, groupId, externalReferenceCode, packageFileEntryId,
+            fileEntry.getFileName(), _sha256(_readFileEntry(fileEntry)),
+            "NXC_ARTICLE_V1", articleImportPackage.schemaVersion,
+            "NXC-STRUCTURE-ARTICLE", serviceContext);
+    }
+
+    @Override
     public ImportJob execute(
             long userId, long groupId, String externalReferenceCode)
         throws PortalException {
@@ -78,8 +113,10 @@ public class ArticleImportManagerImpl implements ArticleImportManager {
         int failedRows = 0;
 
         try {
-            List<ArticleImportRow> rows = _parser.parse(
-                _readWorkbook(importJob));
+            ArticleWorkbookData workbookData = _readWorkbookData(importJob);
+            List<ArticleImportRow> rows = workbookData.articleRows;
+
+            _importAssets(userId, importJob, workbookData.assetsByKey);
             Map<Integer, ImportJobItem> items = _getItems(importJob);
 
             for (ArticleImportRow row : rows) {
@@ -191,7 +228,7 @@ public class ArticleImportManagerImpl implements ArticleImportManager {
         return _importJobLocalService.addOrResetImportJob(
             userId, groupId, externalReferenceCode,
             fileEntry.getFileEntryId(), fileName, _sha256(bytes),
-            structureERC, serviceContext);
+            "NXC_ARTICLE_V1", "0.9", structureERC, serviceContext);
     }
 
     @Override
@@ -217,13 +254,41 @@ public class ArticleImportManagerImpl implements ArticleImportManager {
             importJob.getImportJobId());
 
         try {
-            List<ArticleImportRow> rows = _parser.parse(
-                _readWorkbook(importJob));
-            ValidationContext context = _validationContext(importJob);
+            ArticleWorkbookData workbookData = _readWorkbookData(importJob);
+            List<ArticleImportRow> rows = workbookData.articleRows;
+            ValidationContext context = _validationContext(
+                importJob, workbookData.assetsByKey);
             Set<String> identities = new HashSet<>();
             Set<String> slugs = new HashSet<>();
             int failedRows = 0;
             int skippedRows = 0;
+
+            if ("1.0".equals(importJob.getPackageSchemaVersion())) {
+                ArticleImportPackage articleImportPackage = _readPackage(
+                    _dlAppLocalService.getFileEntry(
+                        importJob.getFileEntryId()));
+
+                for (ArticleAssetRow asset :
+                        workbookData.assetsByKey.values()) {
+
+                    List<ValidationError> errors = _validateAsset(
+                        groupId, articleImportPackage, asset);
+
+                    if (!errors.isEmpty()) {
+                        failedRows++;
+                    }
+
+                    _importJobItemLocalService.addImportJobItem(
+                        importJob.getCompanyId(), groupId,
+                        importJob.getImportJobId(), asset.rowNumber,
+                        "DOCUMENT", asset.documentERC, "Assets",
+                        StringPool.BLANK, "UPSERT",
+                        errors.isEmpty() ? "READY" : "ERROR",
+                        errors.isEmpty() ? "INFO" : "ERROR", _codes(errors),
+                        _messages(errors), _assetPayloadHash(
+                            articleImportPackage, asset));
+                }
+            }
 
             for (ArticleImportRow row : rows) {
                 List<ValidationError> errors = _validateRow(
@@ -241,16 +306,18 @@ public class ArticleImportManagerImpl implements ArticleImportManager {
                 _importJobItemLocalService.addImportJobItem(
                     importJob.getCompanyId(), groupId,
                     importJob.getImportJobId(), row.rowNumber,
-                    row.externalReferenceCode, row.locale, row.operation,
-                    result, errors.isEmpty() ? "INFO" : "ERROR",
-                    _codes(errors), _messages(errors), payloadHash);
+                    "STRUCTURED_CONTENT", row.externalReferenceCode,
+                    "Articles", row.locale, row.operation, result,
+                    errors.isEmpty() ? "INFO" : "ERROR", _codes(errors),
+                    _messages(errors), payloadHash);
             }
 
             String newStatus = (failedRows == 0) ?
                 ArticleImportStatus.VALIDATED : ArticleImportStatus.INVALID;
 
             return _importJobLocalService.updateImportJobResult(
-                importJob.getImportJobId(), newStatus, rows.size(), 0, 0,
+                importJob.getImportJobId(), newStatus,
+                rows.size() + workbookData.assetsByKey.size(), 0, 0,
                 skippedRows, failedRows, StringPool.BLANK, false);
         }
         catch (Exception exception) {
@@ -288,6 +355,18 @@ public class ArticleImportManagerImpl implements ArticleImportManager {
 
         _journalArticleLocalService.expireArticle(
             userId, groupId, article.getArticleId(), null, serviceContext);
+    }
+
+    private String _assetPayloadHash(
+        ArticleImportPackage articleImportPackage, ArticleAssetRow asset) {
+
+        byte[] bytes = articleImportPackage.entries.get(asset.filePath);
+
+        if (bytes == null) {
+            return StringPool.BLANK;
+        }
+
+        return _sha256(bytes);
     }
 
     private String _classify(
@@ -366,7 +445,9 @@ public class ArticleImportManagerImpl implements ArticleImportManager {
                 _importJobItemLocalService.getImportJobItems(
                     importJob.getImportJobId(), 0, Integer.MAX_VALUE)) {
 
-            items.put(item.getRowNumber(), item);
+            if ("Articles".equals(item.getSheetName())) {
+                items.put(item.getRowNumber(), item);
+            }
         }
 
         return items;
@@ -396,6 +477,125 @@ public class ArticleImportManagerImpl implements ArticleImportManager {
         contentField.setName(name);
 
         return contentField;
+    }
+
+    private void _importAssets(
+            long userId, ImportJob importJob,
+            Map<String, ArticleAssetRow> assetsByKey)
+        throws Exception {
+
+        if (!"1.0".equals(importJob.getPackageSchemaVersion())) {
+            return;
+        }
+
+        ArticleImportPackage articleImportPackage = _readPackage(
+            _dlAppLocalService.getFileEntry(importJob.getFileEntryId()));
+        Map<String, ImportJobItem> itemsByERC = new HashMap<>();
+
+        for (ImportJobItem item :
+                _importJobItemLocalService.getImportJobItems(
+                    importJob.getImportJobId(), 0, Integer.MAX_VALUE)) {
+
+            if ("Assets".equals(item.getSheetName())) {
+                itemsByERC.put(item.getTargetERC(), item);
+            }
+        }
+
+        for (ArticleAssetRow asset : assetsByKey.values()) {
+            byte[] bytes = articleImportPackage.entries.get(asset.filePath);
+            String mimeType = _imageMimeType(asset.filePath, bytes);
+            Folder folder = _dlAppLocalService.fetchFolderByExternalReferenceCode(
+                asset.folderERC, importJob.getGroupId());
+
+            if (folder == null) {
+                throw new ArticleImportException(
+                    "ASSET_FOLDER_NOT_FOUND", asset.folderERC);
+            }
+
+            String fileName = asset.filePath.substring(
+                asset.filePath.lastIndexOf('/') + 1);
+            FileEntry existing =
+                _dlAppLocalService.fetchFileEntryByExternalReferenceCode(
+                    importJob.getGroupId(), asset.documentERC);
+            ImportJobItem item = itemsByERC.get(asset.documentERC);
+            ServiceContext serviceContext = new ServiceContext();
+
+            serviceContext.setAddGuestPermissions(false);
+            serviceContext.setAddGroupPermissions(false);
+            serviceContext.setCompanyId(importJob.getCompanyId());
+            serviceContext.setScopeGroupId(importJob.getGroupId());
+            serviceContext.setUserId(userId);
+
+            if (existing == null) {
+                _dlAppLocalService.addFileEntry(
+                    asset.documentERC, userId, importJob.getGroupId(),
+                    folder.getFolderId(), fileName, mimeType, bytes, null,
+                    null, null, serviceContext);
+
+                if (item != null) {
+                    _markItem(
+                        item, "CREATE", "INFO", StringPool.BLANK,
+                        "Document imported");
+                }
+            }
+            else if (!_sha256(bytes).equals(
+                        _sha256(_readFileEntry(existing)))) {
+
+                _dlAppLocalService.updateFileEntry(
+                    userId, existing.getFileEntryId(), fileName, mimeType,
+                    asset.title, asset.altText,
+                    "Imported by " + importJob.getJobKey(),
+                    "Content import asset update",
+                    DLVersionNumberIncrease.MAJOR, bytes, null, null, null,
+                    serviceContext);
+
+                if (item != null) {
+                    _markItem(
+                        item, "UPDATE", "INFO", StringPool.BLANK,
+                        "Document updated");
+                }
+            }
+            else if (item != null) {
+                _markItem(
+                    item, "NO_CHANGE", "INFO", StringPool.BLANK,
+                    "Document unchanged");
+            }
+        }
+    }
+
+    private String _imageMimeType(String path, byte[] bytes)
+        throws ArticleImportException {
+
+        if ((bytes == null) || (bytes.length < 12) ||
+            !path.startsWith("assets/")) {
+
+            throw new ArticleImportException(
+                "IMAGE_FILE_NOT_FOUND", path);
+        }
+
+        String lowerPath = path.toLowerCase(Locale.ROOT);
+
+        if (lowerPath.endsWith(".png") && (bytes[0] == (byte)0x89) &&
+            (bytes[1] == 'P') && (bytes[2] == 'N') && (bytes[3] == 'G')) {
+
+            return "image/png";
+        }
+
+        if ((lowerPath.endsWith(".jpg") || lowerPath.endsWith(".jpeg")) &&
+            (bytes[0] == (byte)0xff) && (bytes[1] == (byte)0xd8)) {
+
+            return "image/jpeg";
+        }
+
+        if (lowerPath.endsWith(".webp") && (bytes[0] == 'R') &&
+            (bytes[1] == 'I') && (bytes[2] == 'F') && (bytes[3] == 'F') &&
+            (bytes[8] == 'W') && (bytes[9] == 'E') && (bytes[10] == 'B') &&
+            (bytes[11] == 'P')) {
+
+            return "image/webp";
+        }
+
+        throw new ArticleImportException("INVALID_IMAGE_TYPE", path);
     }
 
     private void _markItem(
@@ -448,13 +648,41 @@ public class ArticleImportManagerImpl implements ArticleImportManager {
             FileEntry fileEntry = _dlAppLocalService.getFileEntry(
                 importJob.getFileEntryId());
 
-            try (InputStream inputStream = fileEntry.getContentStream()) {
-                return inputStream.readAllBytes();
+            if ("NXC_ARTICLE_V1".equals(importJob.getImportProfileKey()) &&
+                "1.0".equals(importJob.getPackageSchemaVersion())) {
+
+                return _readPackage(fileEntry).workbook;
             }
+
+            return _readFileEntry(fileEntry);
         }
         catch (Exception exception) {
             throw new ArticleImportException(
                 "WORKBOOK_NOT_FOUND", importJob.getFileName(), exception);
+        }
+    }
+
+    private ArticleWorkbookData _readWorkbookData(ImportJob importJob)
+        throws ArticleImportException {
+
+        return _parser.parseWorkbook(_readWorkbook(importJob));
+    }
+
+    private byte[] _readFileEntry(FileEntry fileEntry) throws Exception {
+        try (InputStream inputStream = fileEntry.getContentStream()) {
+            return inputStream.readAllBytes();
+        }
+    }
+
+    private ArticleImportPackage _readPackage(FileEntry fileEntry)
+        throws ArticleImportException {
+
+        try {
+            return _packageReader.read(_readFileEntry(fileEntry));
+        }
+        catch (Exception exception) {
+            throw new ArticleImportException(
+                "INVALID_PACKAGE_LAYOUT", fileEntry.getFileName(), exception);
         }
     }
 
@@ -559,6 +787,14 @@ public class ArticleImportManagerImpl implements ArticleImportManager {
     private ValidationContext _validationContext(ImportJob importJob)
         throws ArticleImportException {
 
+        return _validationContext(importJob, Collections.emptyMap());
+    }
+
+    private ValidationContext _validationContext(
+            ImportJob importJob,
+            Map<String, ArticleAssetRow> packagedAssetsByKey)
+        throws ArticleImportException {
+
         long classNameId = _portal.getClassNameId(
             JournalArticle.class.getName());
         DDMStructure structure =
@@ -571,7 +807,14 @@ public class ArticleImportManagerImpl implements ArticleImportManager {
                 "STRUCTURE_ERC_NOT_FOUND", importJob.getStructureERC());
         }
 
-        return new ValidationContext(importJob.getGroupId(), structure);
+        Set<String> packagedDocumentERCs = new HashSet<>();
+
+        for (ArticleAssetRow asset : packagedAssetsByKey.values()) {
+            packagedDocumentERCs.add(asset.documentERC);
+        }
+
+        return new ValidationContext(
+            importJob.getGroupId(), structure, packagedDocumentERCs);
     }
 
     private List<ValidationError> _validateRow(
@@ -640,17 +883,23 @@ public class ArticleImportManagerImpl implements ArticleImportManager {
                 "INVALID_SORT_ORDER", String.valueOf(row.sortOrder)));
         }
 
-        try {
-            if (_dlAppLocalService.fetchFileEntryByExternalReferenceCode(
-                    context.groupId, row.coverImageERC) == null) {
+        if (row.coverImageERC == null) {
+            errors.add(new ValidationError(
+                "IMAGE_KEY_NOT_FOUND", row.coverImageKey));
+        }
+        else if (!context.packagedDocumentERCs.contains(row.coverImageERC)) {
+            try {
+                if (_dlAppLocalService.fetchFileEntryByExternalReferenceCode(
+                        context.groupId, row.coverImageERC) == null) {
 
+                    errors.add(new ValidationError(
+                        "IMAGE_ERC_NOT_FOUND", row.coverImageERC));
+                }
+            }
+            catch (PortalException portalException) {
                 errors.add(new ValidationError(
                     "IMAGE_ERC_NOT_FOUND", row.coverImageERC));
             }
-        }
-        catch (PortalException portalException) {
-            errors.add(new ValidationError(
-                "IMAGE_ERC_NOT_FOUND", row.coverImageERC));
         }
 
         for (String categoryERC : row.categoryERCs) {
@@ -661,6 +910,40 @@ public class ArticleImportManagerImpl implements ArticleImportManager {
                 errors.add(new ValidationError(
                     "CATEGORY_ERC_NOT_FOUND", categoryERC));
             }
+        }
+
+        return errors;
+    }
+
+    private List<ValidationError> _validateAsset(
+        long groupId, ArticleImportPackage articleImportPackage,
+        ArticleAssetRow asset) {
+
+        List<ValidationError> errors = new ArrayList<>();
+        byte[] bytes = articleImportPackage.entries.get(asset.filePath);
+
+        try {
+            _imageMimeType(asset.filePath, bytes);
+        }
+        catch (ArticleImportException articleImportException) {
+            errors.add(new ValidationError(
+                articleImportException.getMessage().contains(
+                    "IMAGE_FILE_NOT_FOUND") ? "IMAGE_FILE_NOT_FOUND" :
+                        "INVALID_IMAGE_TYPE",
+                asset.filePath));
+        }
+
+        try {
+            if (_dlAppLocalService.fetchFolderByExternalReferenceCode(
+                    asset.folderERC, groupId) == null) {
+
+                errors.add(new ValidationError(
+                    "ASSET_FOLDER_NOT_FOUND", asset.folderERC));
+            }
+        }
+        catch (PortalException portalException) {
+            errors.add(new ValidationError(
+                "ASSET_FOLDER_NOT_FOUND", asset.folderERC));
         }
 
         return errors;
@@ -776,15 +1059,22 @@ public class ArticleImportManagerImpl implements ArticleImportManager {
     private UserLocalService _userLocalService;
 
     private final XlsxArticleParser _parser = new XlsxArticleParser();
+    private final SafeZipPackageReader _packageReader =
+        new SafeZipPackageReader();
 
     private static class ValidationContext {
 
-        private ValidationContext(long groupId, DDMStructure structure) {
+        private ValidationContext(
+            long groupId, DDMStructure structure,
+            Set<String> packagedDocumentERCs) {
+
             this.groupId = groupId;
             this.structure = structure;
+            this.packagedDocumentERCs = packagedDocumentERCs;
         }
 
         private final long groupId;
+        private final Set<String> packagedDocumentERCs;
         private final DDMStructure structure;
     }
 

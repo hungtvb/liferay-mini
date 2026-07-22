@@ -99,10 +99,12 @@ const requiredFiles = [
     'modules/nexcent-training/nexcent-training-article-importer/build.gradle',
     'modules/nexcent-training/nexcent-training-rest-impl/rest-config.yaml',
     'modules/nexcent-training/nexcent-training-rest-impl/rest-openapi.yaml',
+    'modules/nexcent-training/nexcent-training-web/build.gradle',
     'training/master-track-code-labs/sample-data/nexcent-landing.mock.json',
     'training/master-track-code-labs/sample-data/community-articles.csv',
     'training/master-track-code-labs/sample-data/article-import-template.csv',
     'training/master-track-code-labs/sample-data/nxc-article-import-template.xlsx',
+    'training/master-track-code-labs/sample-data/nexcent-article-import.zip',
     'training/master-track-code-labs/scripts/validate-lab-kit.mjs',
     'training/master-track-code-labs/scripts/package-batch-export.mjs',
     'scripts/batch/prepare-structured-content-export.mjs',
@@ -234,6 +236,8 @@ await requireText(
         'name="ImportJobItem"',
         'name="ArticleImportState"',
         'name="jobKey"',
+        'name="importProfileKey"',
+        'name="targetERC"',
         'name="JK_G"',
         'name="G_A_L"',
     ]
@@ -241,11 +245,13 @@ await requireText(
 await requireText(
     'modules/nexcent-training/nexcent-training-rest-impl/rest-openapi.yaml',
     [
-        'postSiteArticleImportJob',
-        'postSiteArticleImportJobValidate',
-        'postSiteArticleImportJobExecute',
-        'getSiteArticleImportJobItemsPage',
-        'multipart/form-data',
+        'getSiteContentImportProfilesPage',
+        'postSiteContentImportJob',
+        'postSiteContentImportJobValidate',
+        'postSiteContentImportJobExecute',
+        'postSiteContentImportJobRetry',
+        'getSiteContentImportJobItemsPage',
+        'ContentImportJobRequest',
     ]
 );
 

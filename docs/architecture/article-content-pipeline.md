@@ -1,12 +1,12 @@
 # Article Content Pipeline — Solution and Detailed Design
 
-Status: **DESIGN READY / IMPLEMENTATION AND RUNTIME QA PENDING**  
+Status: **SOURCE READY / RUNTIME QA PENDING**  
 Target: **Liferay DXP 2026.Q1.1**  
 Decision owner: Nexcent training project
 
 Framework contract: [`content-import-framework.md`](content-import-framework.md). This document defines the `NXC_ARTICLE_V1` profile inside that framework.
 
-> **Implementation delta at this commit:** the branch already contains the Service Builder job/row foundation and a transitional REST endpoint that accepts multipart XLSX directly. It does not yet implement the ZIP package contract, media-first import, standard Documents API handoff, or `nexcent-training-web` Site Administration App defined below. Treat this document as the normative target; runtime verification remains pending.
+> **Implementation status:** the branch contains the generic ZIP-based import handler, durable Service Builder jobs/items, REST Builder orchestration, Site Administration UI, and the Headless Article Custom Element. Clean-runtime deployment, permissions, data setup, and responsive screenshots remain the merge gate.
 
 ## 1. Decision
 

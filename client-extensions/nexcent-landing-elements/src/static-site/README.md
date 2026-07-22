@@ -45,13 +45,67 @@ Liferay runtime:       http://localhost:8080
   and component selectors from leaking into Liferay.
 - The original `rem` scale is converted to pixels inside the Shadow DOM because
   the static source was authored against a 62.5% root font size.
-- Business copy is read from `prototypes/nexcent-static/content.json`; it is not
-  embedded in JSX.
+- Static preview copy is read from `prototypes/nexcent-static/content.json`; it
+  is not embedded in JSX.
 - The hero carousel is implemented with React state and timers, so Swiper and
   AOS CDNs are no longer runtime dependencies.
 
 Attach **Nexcent React Runtime** as Global JavaScript to the Master Page before
 using the Fragment shells.
+
+## Fragment source and packaging
+
+The production Fragment Set source is colocated with the React runtime:
+
+```text
+client-extensions/nexcent-landing-elements/fragments/
+├── collection.json
+├── nexcent-react-header/
+├── nexcent-react-hero/
+├── ...
+└── nexcent-react-footer/
+```
+
+This directory is the single source of truth for React Fragment shells. Files
+under `training/master-track-code-labs/fragments` are training examples and must
+not be used to package the production React Fragment Set.
+
+Build the importable Fragment Set ZIP with:
+
+```bash
+cd client-extensions/nexcent-landing-elements
+npm run package:fragments
+```
+
+Output:
+
+```text
+build/fragments/collections-nexcent-components.zip
+```
+
+The legacy PowerShell helper under `training/master-track-code-labs/scripts`
+delegates to this command for backwards compatibility.
+
+## Body content strategy
+
+Production body sections intentionally use two data paths:
+
+```text
+Fragment Settings → custom-element attributes → React props
+├── Clients
+├── Feature
+├── Statistics
+├── Testimonial
+└── CTA
+
+Headless Delivery API
+├── Hero
+├── Community / Services
+└── Marketing / Articles
+```
+
+`content.json` remains the visual-test fixture and development fallback; it is
+not the intended production source for body copy.
 
 ## Production Site Shell
 

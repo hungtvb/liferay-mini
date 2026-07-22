@@ -3,6 +3,41 @@
 This package converts the markup and behaviour from `prototypes/nexcent-static`
 into React components while keeping that prototype as the visual baseline.
 
+## Standalone static preview
+
+The complete React page can run without Liferay and without the Site Shell API.
+It reads the bundled mock content from:
+
+```text
+prototypes/nexcent-static/content.json
+```
+
+Run:
+
+```bash
+cd client-extensions/nexcent-landing-elements
+npm ci
+npm run preview:static
+```
+
+Open:
+
+```text
+http://localhost:4173
+```
+
+This preview renders `nexcent-react-page`, including the React Header, all body
+sections, and the React Footer. Header and Footer intentionally use the bundled
+fallback Site Shell generated from `content.json`; no request is sent to
+Liferay.
+
+The intended side-by-side workflow is:
+
+```text
+Static React preview: http://localhost:4173
+Liferay runtime:       http://localhost:8080
+```
+
 ## Runtime contract
 
 - One Vite bundle registers all `nexcent-react-*` custom elements.

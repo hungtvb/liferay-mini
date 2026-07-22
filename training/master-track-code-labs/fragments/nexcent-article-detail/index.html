@@ -1,0 +1,101 @@
+<article
+    class="nxc-article-detail nxc-article-detail--${configuration.background!'default'} nxc-article-detail--body-${configuration.bodyWidth!'default'}"
+    data-nxc-article-detail
+>
+    <div class="nxc-container nxc-article-detail__container">
+        [#if configuration.showBackLink!true]
+            <nav aria-label="Article navigation" class="nxc-article-detail__navigation">
+                <a
+                    class="nxc-article-detail__back-link nxc-focusable"
+                    data-lfr-editable-id="backLink"
+                    data-lfr-editable-type="link"
+                    href="/#articles"
+                >
+                    <span aria-hidden="true" class="nxc-article-detail__back-icon">←</span>
+                    <span>Back to insights</span>
+                </a>
+            </nav>
+        [/#if]
+
+        <header class="nxc-article-detail__header">
+            <div class="nxc-article-detail__meta">
+                <span
+                    class="nxc-article-detail__eyebrow"
+                    data-lfr-editable-id="eyebrow"
+                    data-lfr-editable-type="text"
+                >
+                    Insights
+                </span>
+                <span aria-hidden="true" class="nxc-article-detail__separator">•</span>
+                <time
+                    class="nxc-article-detail__date"
+                    data-lfr-editable-id="publishedDate"
+                    data-lfr-editable-type="text"
+                >
+                    Published date
+                </time>
+            </div>
+
+            <h1
+                class="nxc-article-detail__title"
+                data-lfr-editable-id="title"
+                data-lfr-editable-type="text"
+            >
+                Article title
+            </h1>
+
+            <div
+                class="nxc-article-detail__summary"
+                data-lfr-editable-id="summary"
+                data-lfr-editable-type="rich-text"
+            >
+                <p>Add a concise introduction that explains what readers will learn.</p>
+            </div>
+
+            <p class="nxc-article-detail__byline">
+                <span>By </span>
+                <span
+                    class="nxc-article-detail__author"
+                    data-lfr-editable-id="authorName"
+                    data-lfr-editable-type="text"
+                >
+                    Nexcent Editorial Team
+                </span>
+            </p>
+        </header>
+
+        <figure class="nxc-article-detail__media">
+            <img
+                alt="Article cover"
+                class="nxc-article-detail__cover"
+                data-lfr-editable-id="coverImage"
+                data-lfr-editable-type="image"
+                loading="eager"
+                src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1600' height='900' viewBox='0 0 1600 900'%3E%3Crect width='1600' height='900' fill='%23f5f7fa'/%3E%3Cpath d='M0 720 400 360l260 240 180-160 760 460H0Z' fill='%23d7e8d8'/%3E%3Ccircle cx='1210' cy='250' r='110' fill='%234caf4f' opacity='.24'/%3E%3C/svg%3E"
+            />
+        </figure>
+
+        <div class="nxc-article-detail__content-layout">
+            <div
+                class="nxc-article-detail__body"
+                data-lfr-editable-id="body"
+                data-lfr-editable-type="rich-text"
+            >
+                <p>Map this area to the Article body field in the Display Page Template.</p>
+            </div>
+
+            [#if configuration.showTopics!true]
+                <aside aria-label="Article topics" class="nxc-article-detail__topics">
+                    <h2
+                        class="nxc-article-detail__topics-title"
+                        data-lfr-editable-id="topicsHeading"
+                        data-lfr-editable-type="text"
+                    >
+                        Topics
+                    </h2>
+                    <lfr-drop-zone id="article-topics"></lfr-drop-zone>
+                </aside>
+            [/#if]
+        </div>
+    </div>
+</article>

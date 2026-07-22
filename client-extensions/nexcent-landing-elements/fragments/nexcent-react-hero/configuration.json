@@ -4,7 +4,7 @@
             "fields": [
                 {
                     "dataType": "string",
-                    "defaultValue": "Nexcent Hero",
+                    "defaultValue": "NXC Landing Hero",
                     "label": "Content Structure identifier",
                     "name": "structureIdentifier",
                     "type": "text"

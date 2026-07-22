@@ -1,6 +1,6 @@
 # Application Developer Code Labs
 
-> **Article importer target:** Service Builder owns durable job/row state and REST Builder owns orchestration. The package binary is uploaded through the standard Documents API; ZIP/Excel/image processing remains in `ArticleImportManager`. The current Article-specific multipart-XLSX endpoint is transitional and must be refactored to generic profile discovery and content-job endpoints. Complete the Site Administration App and runtime flow in [Article Pipeline Code Labs](06-article-pipeline-code-labs.md).
+> **Article importer target:** Service Builder owns durable job/row state and REST Builder owns orchestration. The package binary is uploaded through the standard Documents API; ZIP/Excel/image orchestration remains in `ContentImportJobManager`, which delegates Article rules to `ArticleContentImportHandler`. The current Article-specific multipart-XLSX endpoint is transitional and must be refactored to generic profile discovery and content-job endpoints. Complete the Site Administration App and runtime flow in [Article Pipeline Code Labs](06-article-pipeline-code-labs.md).
 
 > **Source status:** CI VERIFIED / RUNTIME PENDING
 >

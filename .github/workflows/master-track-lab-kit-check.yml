@@ -4,12 +4,16 @@ on:
     pull_request:
         paths:
             - '.github/workflows/master-track-lab-kit-check.yml'
+            - 'README.md'
+            - 'scripts/verify-course.mjs'
+            - 'client-extensions/nexcent-training-batch-lab/**'
+            - 'docs/master-track/**'
             - 'modules/nexcent-training/**'
-            - 'remote-apps/nexcent-articles/**'
+            - 'training/master-track-code-labs/**'
     workflow_dispatch:
 
 permissions:
-    contents: write
+    contents: read
 
 jobs:
     validate-lab-kit:
@@ -17,30 +21,8 @@ jobs:
         timeout-minutes: 30
 
         steps:
-            - name: Checkout branch
+            - name: Checkout
               uses: actions/checkout@v4
-              with:
-                  ref: feat/article-content-pipeline
-                  fetch-depth: 0
-
-            - name: Apply remaining reviewed fixes
-              run: python3 modules/nexcent-training/review-fix-driver.py
-
-            - name: Set up Node.js 22
-              uses: actions/setup-node@v4
-              with:
-                  node-version: '22'
-
-            - name: Generate deterministic lockfiles
-              run: |
-                  npm install --package-lock-only --ignore-scripts --prefix modules/nexcent-training/nexcent-training-web
-                  npm install --package-lock-only --ignore-scripts --prefix remote-apps/nexcent-articles
-
-            - name: Build Article Custom Element
-              working-directory: remote-apps/nexcent-articles
-              run: |
-                  npm install
-                  npm run build
 
             - name: Set up Java 21
               uses: actions/setup-java@v4
@@ -48,27 +30,107 @@ jobs:
                   distribution: temurin
                   java-version: '21'
 
+            - name: Set up Node.js 22
+              uses: actions/setup-node@v4
+              with:
+                  node-version: '22'
+
             - name: Set up Gradle
               uses: gradle/actions/setup-gradle@v4
 
-            - name: Verify importer and admin module
-              run: |
-                  ./gradlew \
-                    :modules:nexcent-training:nexcent-training-article-importer:test \
-                    :modules:nexcent-training:nexcent-training-web:build \
-                    --stacktrace
+            - name: Create diagnostics directory
+              run: mkdir -p diagnostics
 
-            - name: Commit validated source fixes
+            - name: Validate repository and lab contracts
               run: |
-                  git diff --check
-                  git config user.name "github-actions[bot]"
-                  git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-                  git add \
-                    modules/nexcent-training/nexcent-training-article-importer/src/main/java/com/nexcent/training/article/importer/internal/ArticleImportManagerImpl.java \
-                    modules/nexcent-training/nexcent-training-web/src/main/resources/META-INF/resources/js/index.js \
-                    modules/nexcent-training/nexcent-training-web/package.json \
-                    modules/nexcent-training/nexcent-training-web/package-lock.json \
-                    remote-apps/nexcent-articles/src/index.tsx \
-                    remote-apps/nexcent-articles/package-lock.json
-                  git commit -m "fix(content): complete PR 28 review fixes"
-                  git push origin HEAD:feat/article-content-pipeline
+                  node scripts/verify-course.mjs
+                  node training/master-track-code-labs/scripts/validate-lab-kit.mjs
+
+            - name: Build OSGi component lab
+              run: ./gradlew :modules:nexcent-training:nexcent-training-osgi:build
+
+            - name: Verify Service Builder regeneration
+              run: ./gradlew :modules:nexcent-training:nexcent-training-service:buildService
+
+            - name: Generate REST Builder source
+              run: ./gradlew :modules:nexcent-training:nexcent-training-rest-impl:buildREST
+
+            - name: Capture generated source changes
+              run: |
+                  git add -N modules/nexcent-training
+                  git diff --binary > diagnostics/generated-sources.patch
+
+            - name: Verify generated sources are checked in
+              run: |
+                  if [ -s diagnostics/generated-sources.patch ]; then
+                    cat diagnostics/generated-sources.patch
+                    echo "Generated Service Builder or REST Builder sources are stale."
+                    exit 1
+                  fi
+
+            - name: Verify content import upgrade chain
+              run: |
+                  grep -q "drop index IX_NXC_IJI_JR on NXC_ImportJobItem" modules/nexcent-training/nexcent-training-service/src/main/java/com/nexcent/training/internal/upgrade/ContentImportUpgradeProcess.java
+                  ! grep -q "drop index IX_B5D8A8BB on NXC_ImportJobItem" modules/nexcent-training/nexcent-training-service/src/main/java/com/nexcent/training/internal/upgrade/ContentImportUpgradeProcess.java
+
+            - name: Test Article importer
+              run: ./gradlew :modules:nexcent-training:nexcent-training-article-importer:test
+
+            - name: Build application modules
+              run: |
+                  set +e
+                  ./gradlew \
+                    :modules:nexcent-training:nexcent-training-api:build \
+                    :modules:nexcent-training:nexcent-training-service:build \
+                    :modules:nexcent-training:nexcent-training-article-importer:build \
+                    :modules:nexcent-training:nexcent-training-rest-api:build \
+                    :modules:nexcent-training:nexcent-training-rest-impl:build \
+                    :modules:nexcent-training:nexcent-training-web:build \
+                    --stacktrace > diagnostics/application-build.log 2>&1
+                  code=$?
+                  cat diagnostics/application-build.log
+                  echo "$code" > diagnostics/application-build.exit
+                  exit 0
+
+            - name: Build Batch Client Extension lab
+              run: |
+                  set +e
+                  (
+                    cd client-extensions/nexcent-training-batch-lab
+                    ../../gradlew build --stacktrace
+                  ) > diagnostics/batch-build.log 2>&1
+                  code=$?
+                  cat diagnostics/batch-build.log
+                  echo "$code" > diagnostics/batch-build.exit
+                  exit 0
+
+            - name: Upload application diagnostics
+              if: always()
+              uses: actions/upload-artifact@v4
+              with:
+                  name: master-track-application-diagnostics
+                  path: diagnostics
+                  if-no-files-found: error
+
+            - name: Report build summary
+              if: always()
+              run: |
+                  failed=0
+                  shopt -s nullglob
+                  statuses=(diagnostics/*.exit)
+
+                  for status in "${statuses[@]}"; do
+                    name=$(basename "$status" .exit)
+                    code=$(cat "$status")
+                    echo "$name: exit $code"
+
+                    if [ "$code" -ne 0 ]; then
+                      failed=1
+                    fi
+                  done
+
+                  if [ "${#statuses[@]}" -eq 0 ]; then
+                    failed=1
+                  fi
+
+                  exit "$failed"

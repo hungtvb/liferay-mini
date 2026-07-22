@@ -144,6 +144,7 @@ public class ArticleImportManagerImpl implements ArticleImportManager {
                 try {
                     if ("ARCHIVE".equals(row.operation)) {
                         _archive(userId, groupId, row);
+                        updatedRows++;
                         _markItem(item, "ARCHIVE", "INFO", StringPool.BLANK,
                             "Article expired");
                     }

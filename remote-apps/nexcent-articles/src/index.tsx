@@ -23,6 +23,7 @@ type StructuredContent = {
 
 type CollectionResponse<T> = {
     items?: T[];
+    totalCount?: number;
 };
 
 type ContentStructure = {
@@ -188,11 +189,30 @@ async function getStructuredContents(
     portalURL: string,
     structureId: number
 ): Promise<StructuredContent[]> {
-    const response = await getJson<CollectionResponse<StructuredContent>>(
-        `${portalURL}/o/headless-delivery/v1.0/content-structures/${structureId}/structured-contents?flatten=true&page=1&pageSize=100&sort=datePublished:desc`
-    );
+    const items: StructuredContent[] = [];
+    let page = 1;
 
-    return response.items ?? [];
+    while (true) {
+        const response = await getJson<CollectionResponse<StructuredContent>>(
+            `${portalURL}/o/headless-delivery/v1.0/content-structures/${structureId}/structured-contents?flatten=true&page=${page}&pageSize=100&sort=datePublished:desc`
+        );
+        const batch = response.items ?? [];
+        const totalCount = response.totalCount;
+
+        items.push(...batch);
+
+        if (
+            !batch.length ||
+            (typeof totalCount === 'number' && items.length >= totalCount) ||
+            batch.length < 100
+        ) {
+            break;
+        }
+
+        page += 1;
+    }
+
+    return items;
 }
 
 async function loadArticleData(

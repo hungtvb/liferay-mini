@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from 'react';
-import ReactDOM from 'react-dom';
+import {createRoot} from 'react-dom/client';
 
 const API_BASE = '/o/nexcent-training/v1.0';
 const HEADLESS_BASE = '/o/headless-delivery/v1.0';
@@ -146,12 +146,32 @@ function ContentImportApp({siteId}) {
         setItems([]);
 
         try {
-            const data = await api(
-                `/sites/${siteId}/content-import-jobs/` +
-                    `${job.externalReferenceCode}/items?page=1&pageSize=200`
-            );
+            const values = [];
+            let page = 1;
 
-            setItems(data.items || []);
+            while (true) {
+                const data = await api(
+                    `/sites/${siteId}/content-import-jobs/` +
+                        `${job.externalReferenceCode}/items?page=${page}&pageSize=200`
+                );
+                const batch = data.items || [];
+                const totalCount = Number(data.totalCount);
+
+                values.push(...batch);
+
+                if (
+                    !batch.length ||
+                    (Number.isFinite(totalCount) &&
+                        values.length >= totalCount) ||
+                    batch.length < 200
+                ) {
+                    break;
+                }
+
+                page += 1;
+            }
+
+            setItems(values);
         }
         catch (error) {
             setNotice({message: error.message, tone: 'danger'});
@@ -568,8 +588,11 @@ function ContentImportApp({siteId}) {
 }
 
 export default function main({rootId, siteId}) {
-    ReactDOM.render(
-        <ContentImportApp siteId={siteId} />,
-        document.getElementById(rootId)
-    );
+    const rootElement = document.getElementById(rootId);
+
+    if (!rootElement) {
+        throw new Error(`Content Import root not found: ${rootId}`);
+    }
+
+    createRoot(rootElement).render(<ContentImportApp siteId={siteId} />);
 }

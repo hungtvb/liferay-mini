@@ -9,7 +9,7 @@ export type Page<T> = {
 
 export type ContentStructure = {
     externalReferenceCode?: string;
-    id: number | string;
+    id: number;
     key?: string;
     name: string;
 };
@@ -17,7 +17,7 @@ export type ContentStructure = {
 export type ImageValue = {
     contentUrl?: string;
     description?: string;
-    id?: number | string;
+    id?: number;
     title?: string;
 };
 
@@ -35,11 +35,11 @@ export type ContentField = {
 
 export type StructuredContent = {
     contentFields: ContentField[];
-    contentStructureId: number | string;
+    contentStructureId: number;
     datePublished?: string;
     externalReferenceCode: string;
     friendlyUrlPath?: string;
-    id: number | string;
+    id: number;
     title: string;
 };
 
@@ -92,7 +92,7 @@ export async function resolveContentStructure(
 
     if (/^\d+$/.test(normalizedIdentifier)) {
         return {
-            id: normalizedIdentifier,
+            id: Number(normalizedIdentifier),
             name: identifier,
         };
     }
@@ -114,7 +114,7 @@ export async function resolveContentStructure(
 }
 
 export async function listStructuredContents(
-    contentStructureId: number | string,
+    contentStructureId: number,
     locale = ''
 ): Promise<StructuredContent[]> {
     const page = await cachedPortalFetch<Page<StructuredContent>>(

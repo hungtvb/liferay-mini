@@ -68,7 +68,7 @@ export type ArticleDetail = ArticleCard & {
 1. Resolve `NXC Article` from the site content-structure collection using a stable ERC/key.
 2. Read its Structured Contents with `flatten=true`, pagination, and supported server-side sort/filter options.
 3. Map content fields by field `name`, not array index.
-4. Link cards to the default Display Page Template using the canonical `/w/{friendlyUrlPath}` URL.
+4. Link cards with the Headless Delivery `contentUrl`; after the default Display Page Template is configured, Liferay returns its canonical detail URL.
 5. Display only content returned to the current user by Liferay permissions and workflow.
 
 The list component supports `loading`, `ready`, `empty`, and `error`. Missing content never falls back to hard-coded Article data.
@@ -158,7 +158,7 @@ Clients branch on the code and show the human-readable message. They do not pars
 
 The final UI is the generic React `nexcent-training-web` MVC Portlet registered through `PanelApp` under the current site's **Content & Data** menu. It populates the content-type/profile selector from `GET /content-import-profiles`; Article is not hard-coded.
 
-It derives site context from Liferay, downloads the selected profile template, uploads packages through Documents and Media, and calls the generic REST Builder workflow. Required views are upload/validate, paged job history, and job detail with asset and Article row results. A dedicated `Nexcent Content Importer` site role controls access; Publish is granted separately.
+It derives site context from Liferay, uploads packages through Documents and Media, and calls the generic REST Builder workflow. Required views are upload/validate, job history, and job detail with asset and Article row results, retry, and error CSV download. A dedicated `Nexcent Content Importer` site role controls access; Publish is granted separately.
 
 A private page Custom Element is PoC-only. A separately hosted application is out of the current baseline.
 
@@ -166,7 +166,7 @@ A private page Custom Element is PoC-only. A separately hosted application is ou
 
 - Re-importing identical data creates no duplicate and no unnecessary Web Content version.
 - Editing a published Article updates the list/detail after the normal cache lifecycle without rebuilding frontend assets.
-- An Article detail works at `/w/{friendlyUrlPath}` without a dedicated site page.
+- An Article detail opens through the Headless `contentUrl` and default Display Page Template without a dedicated site page.
 - Missing image key/file/category references and unsafe ZIP entries fail validation before execution.
 - Media is upserted by D&M ERC before dependent Article rows.
 - Guest cannot upload or execute imports.

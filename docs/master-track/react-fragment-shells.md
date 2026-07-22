@@ -132,6 +132,8 @@ Master Page to avoid duplicated navigation, spacing, and mobile overlays.
 - Authenticated users receive portrait, display name, My Account, and Sign out.
 - The endpoint is read-only and guest accessible; each navigation item still
   passes its Liferay permission check.
+- The REST response uses flat navigation items for REST Builder compatibility;
+  React reconstructs nested trees using `parentExternalReferenceCode`.
 - If the REST module is unavailable, React renders the bundled static fallback
   and marks the custom element with `data-site-shell-state="fallback"` plus an
   error detail attribute for runtime diagnostics.

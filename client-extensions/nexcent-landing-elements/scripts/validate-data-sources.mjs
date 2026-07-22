@@ -8,11 +8,12 @@ const projectDirectory = path.resolve(
 );
 const fragmentDirectory = path.join(projectDirectory, 'fragments');
 
-const headlessFragments = [
-    'nexcent-react-hero',
-    'nexcent-react-community',
-    'nexcent-react-marketing',
-];
+const headlessFragmentDefaults = {
+    'nexcent-react-community': 'NXC Service Item',
+    'nexcent-react-hero': 'NXC Landing Hero',
+    'nexcent-react-marketing': 'NXC Community Card',
+};
+const headlessFragments = Object.keys(headlessFragmentDefaults);
 const settingsFragments = [
     'nexcent-react-clients',
     'nexcent-react-feature-primary',
@@ -44,6 +45,20 @@ for (const fragmentName of [...headlessFragments, ...settingsFragments]) {
 
     if (!html.includes(`<${fragmentName}`)) {
         throw new Error(`${fragmentName} index.html must render its matching custom element.`);
+    }
+
+    if (fragmentName in headlessFragmentDefaults) {
+        const fields = configuration.fieldSets.flatMap((fieldSet) => fieldSet.fields ?? []);
+        const structureField = fields.find(
+            (field) => field.name === 'structureIdentifier'
+        );
+        const expectedDefault = headlessFragmentDefaults[fragmentName];
+
+        if (structureField?.defaultValue !== expectedDefault) {
+            throw new Error(
+                `${fragmentName} must default to importer Structure "${expectedDefault}".`
+            );
+        }
     }
 }
 

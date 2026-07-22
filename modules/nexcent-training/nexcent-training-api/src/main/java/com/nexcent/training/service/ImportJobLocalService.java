@@ -70,14 +70,11 @@ public interface ImportJobLocalService
 	@Indexable(type = IndexableType.REINDEX)
 	public ImportJob addImportJob(ImportJob importJob);
 
-	public ImportJob addImportJob(
+	public ImportJob addOrResetImportJob(
 			long userId, long groupId, String externalReferenceCode,
-			String fileName, int totalRows, ServiceContext serviceContext)
-		throws PortalException;
-
-	public ImportJob completeImportJob(
-			long importJobId, int successRows, int failedRows,
-			String errorMessage)
+			long fileEntryId, String fileName, String sha256,
+			String importProfileKey, String packageSchemaVersion,
+			String structureERC, ServiceContext serviceContext)
 		throws PortalException;
 
 	/**
@@ -261,7 +258,7 @@ public interface ImportJobLocalService
 	public List<ImportJob> getImportJobs(int start, int end);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
-	public List<ImportJob> getImportJobs(long groupId);
+	public List<ImportJob> getImportJobs(long groupId, int start, int end);
 
 	/**
 	 * Returns all the import jobs matching the UUID and company.
@@ -298,6 +295,9 @@ public interface ImportJobLocalService
 	public int getImportJobsCount();
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public int getImportJobsCount(long groupId);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public IndexableActionableDynamicQuery getIndexableActionableDynamicQuery();
 
 	/**
@@ -315,6 +315,10 @@ public interface ImportJobLocalService
 	public PersistedModel getPersistedModel(Serializable primaryKeyObj)
 		throws PortalException;
 
+	public ImportJob transitionImportJob(
+			long importJobId, String expectedStatus, String newStatus)
+		throws PortalException;
+
 	/**
 	 * Updates the import job in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
 	 *
@@ -328,5 +332,11 @@ public interface ImportJobLocalService
 	@Indexable(type = IndexableType.REINDEX)
 	public ImportJob updateImportJob(ImportJob importJob);
 
+	public ImportJob updateImportJobResult(
+			long importJobId, String status, int totalRows, int createdRows,
+			int updatedRows, int skippedRows, int failedRows,
+			String errorMessage, boolean completed)
+		throws PortalException;
+
 }
-// LIFERAY-SERVICE-BUILDER-HASH:1728884713
+// LIFERAY-SERVICE-BUILDER-HASH:-946682899

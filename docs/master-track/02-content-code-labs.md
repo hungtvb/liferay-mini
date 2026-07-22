@@ -1,5 +1,7 @@
 # Content Modeling and Template Code Labs
 
+> **Article track:** `NXC Community Card` below remains a landing-page exercise. For the production Article model, Excel import, Headless list, and Display Page detail, use [Article Pipeline Code Labs](06-article-pipeline-code-labs.md).
+
 # Lab C-01 — Create `NXC Landing Hero`
 
 ## Step 1 — Create the Structure

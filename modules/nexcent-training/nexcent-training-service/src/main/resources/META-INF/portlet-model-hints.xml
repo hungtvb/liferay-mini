@@ -1,6 +1,17 @@
 <?xml version="1.0"?>
 
 <model-hints>
+	<model name="com.nexcent.training.model.ArticleImportState">
+		<field name="articleImportStateId" type="long" />
+		<field name="groupId" type="long" />
+		<field name="companyId" type="long" />
+		<field name="createDate" type="Date" />
+		<field name="modifiedDate" type="Date" />
+		<field name="articleERC" type="String" />
+		<field name="locale" type="String" />
+		<field name="payloadHash" type="String" />
+		<field name="lastImportJobId" type="long" />
+	</model>
 	<model name="com.nexcent.training.model.ImportJob">
 		<field name="uuid" type="String" />
 		<field name="importJobId" type="long" />
@@ -11,11 +22,39 @@
 		<field name="createDate" type="Date" />
 		<field name="modifiedDate" type="Date" />
 		<field name="jobKey" type="String" />
+		<field name="fileEntryId" type="long" />
 		<field name="fileName" type="String" />
+		<field name="sha256" type="String" />
+		<field name="importProfileKey" type="String" />
+		<field name="packageSchemaVersion" type="String" />
+		<field name="structureERC" type="String" />
 		<field name="status" type="String" />
 		<field name="totalRows" type="int" />
-		<field name="successRows" type="int" />
+		<field name="createdRows" type="int" />
+		<field name="updatedRows" type="int" />
+		<field name="skippedRows" type="int" />
 		<field name="failedRows" type="int" />
+		<field name="startedDate" type="Date" />
+		<field name="completedDate" type="Date" />
 		<field name="errorMessage" type="String" />
+	</model>
+	<model name="com.nexcent.training.model.ImportJobItem">
+		<field name="importJobItemId" type="long" />
+		<field name="groupId" type="long" />
+		<field name="companyId" type="long" />
+		<field name="createDate" type="Date" />
+		<field name="modifiedDate" type="Date" />
+		<field name="importJobId" type="long" />
+		<field name="rowNumber" type="int" />
+		<field name="targetType" type="String" />
+		<field name="targetERC" type="String" />
+		<field name="sheetName" type="String" />
+		<field name="locale" type="String" />
+		<field name="operation" type="String" />
+		<field name="result" type="String" />
+		<field name="severity" type="String" />
+		<field name="messageCode" type="String" />
+		<field name="message" type="String" />
+		<field name="payloadHash" type="String" />
 	</model>
 </model-hints>

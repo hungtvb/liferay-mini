@@ -52,6 +52,20 @@ public class ImportJobLocalServiceUtil {
 		return getService().addImportJob(importJob);
 	}
 
+	public static ImportJob addOrResetImportJob(
+			long userId, long groupId, String externalReferenceCode,
+			long fileEntryId, String fileName, String sha256,
+			String importProfileKey, String packageSchemaVersion,
+			String structureERC,
+			com.liferay.portal.kernel.service.ServiceContext serviceContext)
+		throws PortalException {
+
+		return getService().addOrResetImportJob(
+			userId, groupId, externalReferenceCode, fileEntryId, fileName,
+			sha256, importProfileKey, packageSchemaVersion, structureERC,
+			serviceContext);
+	}
+
 	/**
 	 * Creates a new import job with the primary key. Does not add the import job to the database.
 	 *
@@ -202,6 +216,12 @@ public class ImportJobLocalServiceUtil {
 		return getService().fetchImportJob(importJobId);
 	}
 
+	public static ImportJob fetchImportJob(
+		long groupId, String externalReferenceCode) {
+
+		return getService().fetchImportJob(groupId, externalReferenceCode);
+	}
+
 	/**
 	 * Returns the import job matching the UUID and group.
 	 *
@@ -272,6 +292,12 @@ public class ImportJobLocalServiceUtil {
 		return getService().getImportJobs(start, end);
 	}
 
+	public static List<ImportJob> getImportJobs(
+		long groupId, int start, int end) {
+
+		return getService().getImportJobs(groupId, start, end);
+	}
+
 	/**
 	 * Returns all the import jobs matching the UUID and company.
 	 *
@@ -312,6 +338,10 @@ public class ImportJobLocalServiceUtil {
 		return getService().getImportJobsCount();
 	}
 
+	public static int getImportJobsCount(long groupId) {
+		return getService().getImportJobsCount(groupId);
+	}
+
 	public static
 		com.liferay.portal.kernel.dao.orm.IndexableActionableDynamicQuery
 			getIndexableActionableDynamicQuery() {
@@ -337,6 +367,14 @@ public class ImportJobLocalServiceUtil {
 		return getService().getPersistedModel(primaryKeyObj);
 	}
 
+	public static ImportJob transitionImportJob(
+			long importJobId, String expectedStatus, String newStatus)
+		throws PortalException {
+
+		return getService().transitionImportJob(
+			importJobId, expectedStatus, newStatus);
+	}
+
 	/**
 	 * Updates the import job in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
 	 *
@@ -351,6 +389,17 @@ public class ImportJobLocalServiceUtil {
 		return getService().updateImportJob(importJob);
 	}
 
+	public static ImportJob updateImportJobResult(
+			long importJobId, String status, int totalRows, int createdRows,
+			int updatedRows, int skippedRows, int failedRows,
+			String errorMessage, boolean completed)
+		throws PortalException {
+
+		return getService().updateImportJobResult(
+			importJobId, status, totalRows, createdRows, updatedRows,
+			skippedRows, failedRows, errorMessage, completed);
+	}
+
 	public static ImportJobLocalService getService() {
 		return _serviceSnapshot.get();
 	}
@@ -360,4 +409,4 @@ public class ImportJobLocalServiceUtil {
 			ImportJobLocalServiceUtil.class, ImportJobLocalService.class);
 
 }
-// LIFERAY-SERVICE-BUILDER-HASH:-1973930806
+// LIFERAY-SERVICE-BUILDER-HASH:978266069

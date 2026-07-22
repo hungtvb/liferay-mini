@@ -45,6 +45,21 @@ public class ImportJobLocalServiceWrapper
 		return _importJobLocalService.addImportJob(importJob);
 	}
 
+	@Override
+	public com.nexcent.training.model.ImportJob addOrResetImportJob(
+			long userId, long groupId, String externalReferenceCode,
+			long fileEntryId, String fileName, String sha256,
+			String importProfileKey, String packageSchemaVersion,
+			String structureERC,
+			com.liferay.portal.kernel.service.ServiceContext serviceContext)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _importJobLocalService.addOrResetImportJob(
+			userId, groupId, externalReferenceCode, fileEntryId, fileName,
+			sha256, importProfileKey, packageSchemaVersion, structureERC,
+			serviceContext);
+	}
+
 	/**
 	 * Creates a new import job with the primary key. Does not add the import job to the database.
 	 *
@@ -225,6 +240,14 @@ public class ImportJobLocalServiceWrapper
 		return _importJobLocalService.fetchImportJob(importJobId);
 	}
 
+	@Override
+	public com.nexcent.training.model.ImportJob fetchImportJob(
+		long groupId, String externalReferenceCode) {
+
+		return _importJobLocalService.fetchImportJob(
+			groupId, externalReferenceCode);
+	}
+
 	/**
 	 * Returns the import job matching the UUID and group.
 	 *
@@ -306,6 +329,13 @@ public class ImportJobLocalServiceWrapper
 		return _importJobLocalService.getImportJobs(start, end);
 	}
 
+	@Override
+	public java.util.List<com.nexcent.training.model.ImportJob> getImportJobs(
+		long groupId, int start, int end) {
+
+		return _importJobLocalService.getImportJobs(groupId, start, end);
+	}
+
 	/**
 	 * Returns all the import jobs matching the UUID and company.
 	 *
@@ -353,6 +383,11 @@ public class ImportJobLocalServiceWrapper
 	}
 
 	@Override
+	public int getImportJobsCount(long groupId) {
+		return _importJobLocalService.getImportJobsCount(groupId);
+	}
+
+	@Override
 	public com.liferay.portal.kernel.dao.orm.IndexableActionableDynamicQuery
 		getIndexableActionableDynamicQuery() {
 
@@ -380,6 +415,15 @@ public class ImportJobLocalServiceWrapper
 		return _importJobLocalService.getPersistedModel(primaryKeyObj);
 	}
 
+	@Override
+	public com.nexcent.training.model.ImportJob transitionImportJob(
+			long importJobId, String expectedStatus, String newStatus)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _importJobLocalService.transitionImportJob(
+			importJobId, expectedStatus, newStatus);
+	}
+
 	/**
 	 * Updates the import job in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
 	 *
@@ -395,6 +439,18 @@ public class ImportJobLocalServiceWrapper
 		com.nexcent.training.model.ImportJob importJob) {
 
 		return _importJobLocalService.updateImportJob(importJob);
+	}
+
+	@Override
+	public com.nexcent.training.model.ImportJob updateImportJobResult(
+			long importJobId, String status, int totalRows, int createdRows,
+			int updatedRows, int skippedRows, int failedRows,
+			String errorMessage, boolean completed)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _importJobLocalService.updateImportJobResult(
+			importJobId, status, totalRows, createdRows, updatedRows,
+			skippedRows, failedRows, errorMessage, completed);
 	}
 
 	@Override
@@ -415,4 +471,4 @@ public class ImportJobLocalServiceWrapper
 	private ImportJobLocalService _importJobLocalService;
 
 }
-// LIFERAY-SERVICE-BUILDER-HASH:-1298389577
+// LIFERAY-SERVICE-BUILDER-HASH:-1608561234

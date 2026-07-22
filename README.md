@@ -24,6 +24,9 @@ Public frontend preview: `https://nexcent-liferay-static.vercel.app`
 - Application lab source: [`modules/nexcent-training`](modules/nexcent-training)
 - Copyable training assets: [`training/master-track-code-labs`](training/master-track-code-labs)
 - 2026.Q1 architecture audit: [`docs/architecture/liferay-2026-q1-audit.md`](docs/architecture/liferay-2026-q1-audit.md)
+- Extensible Content Import Framework: [`docs/architecture/content-import-framework.md`](docs/architecture/content-import-framework.md)
+- Full Article feature runbook: [`docs/guides/article-feature-liferay-runbook.md`](docs/guides/article-feature-liferay-runbook.md)
+- Article FE–BE contract: [`docs/contracts/article-contract.md`](docs/contracts/article-contract.md)
 - Previous delivery-oriented course: [`archive/course-v1`](https://github.com/hungtvb/liferay-mini/tree/archive/course-v1)
 
 ## Scope alignment
@@ -45,8 +48,9 @@ Current required scope includes:
 - Sites, pages, navigation, Master Pages, Fragments, assets, Asset Library, taxonomy, Forms, roles, and permissions required by the Nexcent flow.
 - Theme CSS, Style Books, Global CSS/JS, favicon, Custom Elements, and Remote App.
 - Web Content Structures, Templates, ERCs, Documents and Media, and Headless Delivery.
-- OSGi, Gogo Shell, Service Builder, and REST Builder BFF for the `ImportJob` business flow.
-- Excel import, Batch Client Extension, integration QA, and final runtime evidence.
+- OSGi, Gogo Shell, Service Builder, and REST Builder for the `ImportJob` business flow.
+- A site-scoped Content Import administration app with server-discovered import profiles under Content & Data.
+- ZIP-packaged Excel + image import, Batch Client Extension, integration QA, and final runtime evidence.
 
 Collections, Search Blueprints, Publications, advanced workflow, Objects dashboards, personalization, Commerce, Analytics Cloud, and performance labs are optional future upgrades. They do not block the current course or the `final` submission.
 
@@ -78,11 +82,17 @@ Web Content + Documents and Media + Service Builder
       ↓
 Database
 
-Excel / Batch Engine export
+ZIP package: manifest + Excel + images
       ↓
-Importer + Batch Client Extension
+Generic Site Administration App + profile discovery + REST Builder
       ↓
-Assets + Web Content + ImportJob status
+Selected handler: D&M assets first, then target content
+      ↓
+Service Builder ImportJob status
+
+Version-generated Batch Engine export
+      ↓
+Batch Client Extension for repeatable migration
 ```
 
 ## Repository structure
@@ -92,7 +102,7 @@ liferay-mini/
 ├── client-extensions/
 │   ├── nexcent-content-batch/
 │   ├── nexcent-landing-elements/
-│   ├── nexcent-remote-app-registration/
+│   ├── nexcent-articles-client-extension/
 │   ├── nexcent-theme/
 │   └── nexcent-training-batch-lab/
 ├── modules/
@@ -101,9 +111,10 @@ liferay-mini/
 │       ├── nexcent-training-service/
 │       ├── nexcent-training-osgi/
 │       ├── nexcent-training-rest-api/
-│       └── nexcent-training-rest-impl/
+│       ├── nexcent-training-rest-impl/
+│       └── nexcent-training-web/
 ├── remote-apps/
-│   └── nexcent-community-app/
+│   └── nexcent-articles/
 ├── prototypes/
 │   └── nexcent-static/
 ├── training/
@@ -187,11 +198,11 @@ node training/master-track-code-labs/scripts/validate-lab-kit.mjs
 4. Fragments and configurable wrappers.
 5. Hero, Services, and Features Custom Elements with mock data.
 6. Web Content Structures, Templates, assets, permissions, and live Headless integration.
-7. Community Remote App.
+7. Nexcent Articles Custom Element backed by Headless Delivery.
 8. OSGi and Gogo Shell.
 9. Service Builder.
 10. REST Builder BFF.
-11. Excel importer and Batch Client Extension.
+11. Generic Content Import Framework, `NXC_ARTICLE_V1`, Site Administration App, and Batch Client Extension.
 12. Integration QA and final demonstration.
 
 ## Evidence labels

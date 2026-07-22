@@ -1,37 +1,146 @@
 components:
     schemas:
-        ImportJob:
+        ContentImportProfile:
             properties:
+                disabledReasonCode:
+                    readOnly: true
+                    type: string
+                enabled:
+                    readOnly: true
+                    type: boolean
+                key:
+                    readOnly: true
+                    type: string
+                name:
+                    readOnly: true
+                    type: string
+                schemaVersion:
+                    readOnly: true
+                    type: string
+                targetExternalReferenceCode:
+                    readOnly: true
+                    type: string
+                targetType:
+                    readOnly: true
+                    type: string
+            type: object
+        ContentImportJobRequest:
+            properties:
+                externalReferenceCode:
+                    type: string
+                importProfileKey:
+                    type: string
+                packageFileEntryId:
+                    format: int64
+                    type: integer
+            required:
+                - externalReferenceCode
+                - importProfileKey
+                - packageFileEntryId
+            type: object
+        ContentImportJob:
+            properties:
+                completedDate:
+                    format: date-time
+                    readOnly: true
+                    type: string
+                createdRows:
+                    format: int32
+                    readOnly: true
+                    type: integer
                 errorMessage:
+                    readOnly: true
                     type: string
                 externalReferenceCode:
+                    readOnly: true
                     type: string
                 failedRows:
                     format: int32
+                    readOnly: true
+                    type: integer
+                fileEntryId:
+                    format: int64
+                    readOnly: true
                     type: integer
                 fileName:
+                    readOnly: true
                     type: string
                 id:
                     format: int64
                     readOnly: true
                     type: integer
+                importProfileKey:
+                    readOnly: true
+                    type: string
+                packageSchemaVersion:
+                    readOnly: true
+                    type: string
+                sha256:
+                    readOnly: true
+                    type: string
+                skippedRows:
+                    format: int32
+                    readOnly: true
+                    type: integer
+                startedDate:
+                    format: date-time
+                    readOnly: true
+                    type: string
                 status:
                     readOnly: true
                     type: string
-                successRows:
+                totalRows:
                     format: int32
                     readOnly: true
                     type: integer
-                totalRows:
+                updatedRows:
                     format: int32
+                    readOnly: true
                     type: integer
-            required:
-                - externalReferenceCode
-                - fileName
-                - totalRows
+            type: object
+        ContentImportJobItem:
+            properties:
+                id:
+                    format: int64
+                    readOnly: true
+                    type: integer
+                locale:
+                    readOnly: true
+                    type: string
+                message:
+                    readOnly: true
+                    type: string
+                messageCode:
+                    readOnly: true
+                    type: string
+                operation:
+                    readOnly: true
+                    type: string
+                payloadHash:
+                    readOnly: true
+                    type: string
+                result:
+                    readOnly: true
+                    type: string
+                rowNumber:
+                    format: int32
+                    readOnly: true
+                    type: integer
+                severity:
+                    readOnly: true
+                    type: string
+                sheetName:
+                    readOnly: true
+                    type: string
+                targetExternalReferenceCode:
+                    readOnly: true
+                    type: string
+                targetType:
+                    readOnly: true
+                    type: string
             type: object
 info:
-    description: "Training API for creating and reading Nexcent import jobs."
+    description: "Profile-driven package import workflow for Nexcent content."
     license:
         name: "Apache 2.0"
         url: "http://www.apache.org/licenses/LICENSE-2.0.html"
@@ -39,9 +148,66 @@ info:
     version: v1.0
 openapi: 3.0.1
 paths:
-    "/sites/{siteId}/import-jobs":
+    "/sites/{siteId}/content-import-profiles":
+        get:
+            operationId: getSiteContentImportProfilesPage
+            parameters:
+                - in: path
+                  name: siteId
+                  required: true
+                  schema:
+                      format: int64
+                      type: integer
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/ContentImportProfile"
+                                type: array
+                        application/xml:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/ContentImportProfile"
+                                type: array
+                    description: "Registered enabled and planned disabled import profiles."
+            tags: ["ContentImportProfile"]
+    "/sites/{siteId}/content-import-jobs":
+        get:
+            operationId: getSiteContentImportJobsPage
+            parameters:
+                - in: path
+                  name: siteId
+                  required: true
+                  schema:
+                      format: int64
+                      type: integer
+                - in: query
+                  name: page
+                  schema:
+                      type: integer
+                - in: query
+                  name: pageSize
+                  schema:
+                      type: integer
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/ContentImportJob"
+                                type: array
+                        application/xml:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/ContentImportJob"
+                                type: array
+                    description: "Paged content import job history."
+            tags: ["ContentImportJob"]
         post:
-            operationId: postSiteImportJob
+            operationId: postSiteContentImportJob
             parameters:
                 - in: path
                   name: siteId
@@ -53,45 +219,163 @@ paths:
                 content:
                     application/json:
                         schema:
-                            $ref: "#/components/schemas/ImportJob"
+                            $ref: "#/components/schemas/ContentImportJobRequest"
                     application/xml:
                         schema:
-                            $ref: "#/components/schemas/ImportJob"
+                            $ref: "#/components/schemas/ContentImportJobRequest"
                 required: true
             responses:
-                200:
+                202:
                     content:
                         application/json:
                             schema:
-                                $ref: "#/components/schemas/ImportJob"
+                                $ref: "#/components/schemas/ContentImportJob"
                         application/xml:
                             schema:
-                                $ref: "#/components/schemas/ImportJob"
-                    description: "Import job created or reset by ERC."
-            tags: ["ImportJob"]
-    "/sites/{siteId}/import-jobs/{externalReferenceCode}":
+                                $ref: "#/components/schemas/ContentImportJob"
+                    description: "Durable job created from a package already uploaded to Documents and Media."
+            tags: ["ContentImportJob"]
+    "/sites/{siteId}/content-import-jobs/{jobExternalReferenceCode}":
         get:
-            operationId: getSiteImportJob
+            operationId: getSiteContentImportJob
             parameters:
                 - in: path
                   name: siteId
                   required: true
-                  schema:
-                      format: int64
-                      type: integer
+                  schema: {format: int64, type: integer}
                 - in: path
-                  name: externalReferenceCode
+                  name: jobExternalReferenceCode
                   required: true
-                  schema:
-                      type: string
+                  schema: {type: string}
             responses:
                 200:
                     content:
                         application/json:
                             schema:
-                                $ref: "#/components/schemas/ImportJob"
+                                $ref: "#/components/schemas/ContentImportJob"
                         application/xml:
                             schema:
-                                $ref: "#/components/schemas/ImportJob"
-                    description: "Import job matching the site and ERC."
-            tags: ["ImportJob"]
+                                $ref: "#/components/schemas/ContentImportJob"
+                    description: "Content import job."
+            tags: ["ContentImportJob"]
+    "/sites/{siteId}/content-import-jobs/{jobExternalReferenceCode}/validate":
+        post:
+            operationId: postSiteContentImportJobValidate
+            parameters:
+                - in: path
+                  name: siteId
+                  required: true
+                  schema: {format: int64, type: integer}
+                - in: path
+                  name: jobExternalReferenceCode
+                  required: true
+                  schema: {type: string}
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/ContentImportJob"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/ContentImportJob"
+                    description: "Validated job and persisted row results."
+            tags: ["ContentImportJob"]
+    "/sites/{siteId}/content-import-jobs/{jobExternalReferenceCode}/execute":
+        post:
+            operationId: postSiteContentImportJobExecute
+            parameters:
+                - in: path
+                  name: siteId
+                  required: true
+                  schema: {format: int64, type: integer}
+                - in: path
+                  name: jobExternalReferenceCode
+                  required: true
+                  schema: {type: string}
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/ContentImportJob"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/ContentImportJob"
+                    description: "Executed the bounded import synchronously and returned its final status."
+            tags: ["ContentImportJob"]
+    "/sites/{siteId}/content-import-jobs/{jobExternalReferenceCode}/retry":
+        post:
+            operationId: postSiteContentImportJobRetry
+            parameters:
+                - in: path
+                  name: siteId
+                  required: true
+                  schema: {format: int64, type: integer}
+                - in: path
+                  name: jobExternalReferenceCode
+                  required: true
+                  schema: {type: string}
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/ContentImportJob"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/ContentImportJob"
+                    description: "Retried an eligible job synchronously and returned its final status."
+            tags: ["ContentImportJob"]
+    "/sites/{siteId}/content-import-jobs/{jobExternalReferenceCode}/items":
+        get:
+            operationId: getSiteContentImportJobItemsPage
+            parameters:
+                - in: path
+                  name: siteId
+                  required: true
+                  schema: {format: int64, type: integer}
+                - in: path
+                  name: jobExternalReferenceCode
+                  required: true
+                  schema: {type: string}
+                - in: query
+                  name: page
+                  schema: {type: integer}
+                - in: query
+                  name: pageSize
+                  schema: {type: integer}
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/ContentImportJobItem"
+                                type: array
+                        application/xml:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/ContentImportJobItem"
+                                type: array
+                    description: "Paged package, asset, and content row results."
+            tags: ["ContentImportJobItem"]
+    "/sites/{siteId}/content-import-jobs/{jobExternalReferenceCode}/error-report":
+        get:
+            operationId: getSiteContentImportJobErrorReport
+            parameters:
+                - in: path
+                  name: siteId
+                  required: true
+                  schema: {format: int64, type: integer}
+                - in: path
+                  name: jobExternalReferenceCode
+                  required: true
+                  schema: {type: string}
+            responses:
+                200:
+                    content:
+                        text/csv:
+                            schema: {type: string}
+                    description: "CSV error report."
+            tags: ["ContentImportJob"]

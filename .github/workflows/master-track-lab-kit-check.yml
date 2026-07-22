@@ -45,6 +45,7 @@ jobs:
               run: |
                   node scripts/verify-course.mjs
                   node training/master-track-code-labs/scripts/validate-lab-kit.mjs
+                  node training/master-track-code-labs/scripts/validate-article-detail-fragment.mjs
 
             - name: Build OSGi component lab
               run: ./gradlew :modules:nexcent-training:nexcent-training-osgi:build
@@ -55,14 +56,37 @@ jobs:
             - name: Generate REST Builder source
               run: ./gradlew :modules:nexcent-training:nexcent-training-rest-impl:buildREST
 
+            - name: Capture generated source changes
+              run: |
+                  git add -N modules/nexcent-training
+                  git diff --binary > diagnostics/generated-sources.patch
+
+            - name: Verify generated sources are checked in
+              run: |
+                  if [ -s diagnostics/generated-sources.patch ]; then
+                    cat diagnostics/generated-sources.patch
+                    echo "Generated Service Builder or REST Builder sources are stale."
+                    exit 1
+                  fi
+
+            - name: Verify content import upgrade chain
+              run: |
+                  grep -q "drop index IX_NXC_IJI_JR on NXC_ImportJobItem" modules/nexcent-training/nexcent-training-service/src/main/java/com/nexcent/training/internal/upgrade/ContentImportUpgradeProcess.java
+                  ! grep -q "drop index IX_B5D8A8BB on NXC_ImportJobItem" modules/nexcent-training/nexcent-training-service/src/main/java/com/nexcent/training/internal/upgrade/ContentImportUpgradeProcess.java
+
+            - name: Test Article importer
+              run: ./gradlew :modules:nexcent-training:nexcent-training-article-importer:test
+
             - name: Build application modules
               run: |
                   set +e
                   ./gradlew \
                     :modules:nexcent-training:nexcent-training-api:build \
                     :modules:nexcent-training:nexcent-training-service:build \
+                    :modules:nexcent-training:nexcent-training-article-importer:build \
                     :modules:nexcent-training:nexcent-training-rest-api:build \
                     :modules:nexcent-training:nexcent-training-rest-impl:build \
+                    :modules:nexcent-training:nexcent-training-web:build \
                     --stacktrace > diagnostics/application-build.log 2>&1
                   code=$?
                   cat diagnostics/application-build.log
@@ -93,8 +117,10 @@ jobs:
               if: always()
               run: |
                   failed=0
+                  shopt -s nullglob
+                  statuses=(diagnostics/*.exit)
 
-                  for status in diagnostics/*.exit; do
+                  for status in "${statuses[@]}"; do
                     name=$(basename "$status" .exit)
                     code=$(cat "$status")
                     echo "$name: exit $code"
@@ -103,5 +129,9 @@ jobs:
                       failed=1
                     fi
                   done
+
+                  if [ "${#statuses[@]}" -eq 0 ]; then
+                    failed=1
+                  fi
 
                   exit "$failed"

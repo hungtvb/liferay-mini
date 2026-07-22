@@ -41,16 +41,36 @@ public class ImportJobTable extends BaseTable<ImportJobTable> {
 		"modifiedDate", Date.class, Types.TIMESTAMP, Column.FLAG_DEFAULT);
 	public final Column<ImportJobTable, String> jobKey = createColumn(
 		"jobKey", String.class, Types.VARCHAR, Column.FLAG_DEFAULT);
+	public final Column<ImportJobTable, Long> fileEntryId = createColumn(
+		"fileEntryId", Long.class, Types.BIGINT, Column.FLAG_DEFAULT);
 	public final Column<ImportJobTable, String> fileName = createColumn(
 		"fileName", String.class, Types.VARCHAR, Column.FLAG_DEFAULT);
+	public final Column<ImportJobTable, String> sha256 = createColumn(
+		"sha256", String.class, Types.VARCHAR, Column.FLAG_DEFAULT);
+	public final Column<ImportJobTable, String> importProfileKey = createColumn(
+		"importProfileKey", String.class, Types.VARCHAR, Column.FLAG_DEFAULT);
+	public final Column<ImportJobTable, String> packageSchemaVersion =
+		createColumn(
+			"packageSchemaVersion", String.class, Types.VARCHAR,
+			Column.FLAG_DEFAULT);
+	public final Column<ImportJobTable, String> structureERC = createColumn(
+		"structureERC", String.class, Types.VARCHAR, Column.FLAG_DEFAULT);
 	public final Column<ImportJobTable, String> status = createColumn(
 		"status", String.class, Types.VARCHAR, Column.FLAG_DEFAULT);
 	public final Column<ImportJobTable, Integer> totalRows = createColumn(
 		"totalRows", Integer.class, Types.INTEGER, Column.FLAG_DEFAULT);
-	public final Column<ImportJobTable, Integer> successRows = createColumn(
-		"successRows", Integer.class, Types.INTEGER, Column.FLAG_DEFAULT);
+	public final Column<ImportJobTable, Integer> createdRows = createColumn(
+		"createdRows", Integer.class, Types.INTEGER, Column.FLAG_DEFAULT);
+	public final Column<ImportJobTable, Integer> updatedRows = createColumn(
+		"updatedRows", Integer.class, Types.INTEGER, Column.FLAG_DEFAULT);
+	public final Column<ImportJobTable, Integer> skippedRows = createColumn(
+		"skippedRows", Integer.class, Types.INTEGER, Column.FLAG_DEFAULT);
 	public final Column<ImportJobTable, Integer> failedRows = createColumn(
 		"failedRows", Integer.class, Types.INTEGER, Column.FLAG_DEFAULT);
+	public final Column<ImportJobTable, Date> startedDate = createColumn(
+		"startedDate", Date.class, Types.TIMESTAMP, Column.FLAG_DEFAULT);
+	public final Column<ImportJobTable, Date> completedDate = createColumn(
+		"completedDate", Date.class, Types.TIMESTAMP, Column.FLAG_DEFAULT);
 	public final Column<ImportJobTable, String> errorMessage = createColumn(
 		"errorMessage", String.class, Types.VARCHAR, Column.FLAG_DEFAULT);
 
@@ -59,4 +79,4 @@ public class ImportJobTable extends BaseTable<ImportJobTable> {
 	}
 
 }
-// LIFERAY-SERVICE-BUILDER-HASH:1695553221
+// LIFERAY-SERVICE-BUILDER-HASH:-262126759

@@ -1,0 +1,6 @@
+Bundle-Name: Nexcent Training Article Importer
+Bundle-SymbolicName: com.nexcent.training.article.importer
+Bundle-Version: 1.0.0
+Export-Package: \
+    com.nexcent.training.article.importer
+-fixupmessages "Classes found in the wrong directory"; restrict:=error; is:=warning

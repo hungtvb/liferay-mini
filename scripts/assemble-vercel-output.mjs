@@ -14,14 +14,14 @@ const prototypeDirectory = path.join(
 );
 const remoteAppDirectory = path.join(
     repositoryRoot,
-    'remote-apps/nexcent-community-app/dist'
+    'remote-apps/nexcent-articles/dist'
 );
 
 await rm(outputDirectory, {force: true, recursive: true});
 await mkdir(outputDirectory, {recursive: true});
 await cp(prototypeDirectory, outputDirectory, {recursive: true});
-await cp(remoteAppDirectory, path.join(outputDirectory, 'remote-app'), {
+await cp(remoteAppDirectory, path.join(outputDirectory, 'articles'), {
     recursive: true,
 });
 
-console.log('Assembled Nexcent landing page and Remote App for Vercel.');
+console.log('Assembled Nexcent landing page and Nexcent Articles for Vercel.');

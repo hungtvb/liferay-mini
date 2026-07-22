@@ -72,6 +72,9 @@ const requiredFiles = [
     'docs/master-track/02-content-code-labs.md',
     'docs/master-track/03-application-code-labs.md',
     'docs/master-track/04-migration-code-labs.md',
+    'docs/master-track/06-article-pipeline-code-labs.md',
+    'docs/architecture/article-content-pipeline.md',
+    'docs/contracts/article-contract.md',
     'client-extensions/nexcent-theme/client-extension.yaml',
     'client-extensions/nexcent-theme/package.json',
     'client-extensions/nexcent-theme/assets/favicon.svg',
@@ -84,19 +87,24 @@ const requiredFiles = [
     'client-extensions/nexcent-landing-elements/package.json',
     'client-extensions/nexcent-landing-elements/package-lock.json',
     'client-extensions/nexcent-landing-elements/src/index.tsx',
-    'client-extensions/nexcent-remote-app-registration/client-extension.yaml',
-    'remote-apps/nexcent-community-app/package.json',
-    'remote-apps/nexcent-community-app/package-lock.json',
-    'remote-apps/nexcent-community-app/src/index.tsx',
-    'remote-apps/nexcent-community-app/src/styles.css',
+    'client-extensions/nexcent-articles-client-extension/client-extension.yaml',
+    'remote-apps/nexcent-articles/package.json',
+    'remote-apps/nexcent-articles/package-lock.json',
+    'remote-apps/nexcent-articles/src/index.tsx',
+    'remote-apps/nexcent-articles/src/styles.css',
     'client-extensions/nexcent-content-batch/client-extension.yaml',
     'client-extensions/nexcent-training-batch-lab/client-extension.yaml',
     'modules/nexcent-training/nexcent-training-osgi/build.gradle',
     'modules/nexcent-training/nexcent-training-service/service.xml',
+    'modules/nexcent-training/nexcent-training-article-importer/build.gradle',
     'modules/nexcent-training/nexcent-training-rest-impl/rest-config.yaml',
     'modules/nexcent-training/nexcent-training-rest-impl/rest-openapi.yaml',
+    'modules/nexcent-training/nexcent-training-web/build.gradle',
     'training/master-track-code-labs/sample-data/nexcent-landing.mock.json',
     'training/master-track-code-labs/sample-data/community-articles.csv',
+    'training/master-track-code-labs/sample-data/article-import-template.csv',
+    'training/master-track-code-labs/sample-data/nxc-article-import-template.xlsx',
+    'training/master-track-code-labs/sample-data/nexcent-article-import.zip',
     'training/master-track-code-labs/scripts/validate-lab-kit.mjs',
     'training/master-track-code-labs/scripts/package-batch-export.mjs',
     'scripts/batch/prepare-structured-content-export.mjs',
@@ -182,19 +190,21 @@ await requireText(`${themeRoot}/assets/global.js`, [
 ]);
 
 await requireText(
-    'client-extensions/nexcent-remote-app-registration/client-extension.yaml',
+    'client-extensions/nexcent-articles-client-extension/client-extension.yaml',
     [
-        'baseURL: https://nexcent-liferay-static.vercel.app/remote-app',
-        'htmlElementName: nexcent-community-app',
+        'baseURL: https://nexcent-liferay-static.vercel.app/articles',
+        'htmlElementName: nexcent-articles',
         'type: customElement',
         'useESM: true',
     ]
 );
 
-await requireText('remote-apps/nexcent-community-app/src/index.tsx', [
-    "const ELEMENT_NAME = 'nexcent-community-app'",
-    'NXC Community Intro',
-    'NXC Community Card',
+await requireText('remote-apps/nexcent-articles/src/index.tsx', [
+    "const ELEMENT_NAME = 'nexcent-articles'",
+    'NXC-STRUCTURE-ARTICLE',
+    'Caring is the new marketing',
+    'coverImage',
+    'contentUrl',
     "status: 'loading'",
     "status: 'empty'",
     "status: 'error'",
@@ -223,11 +233,28 @@ await requireText(
 );
 await requireText(
     'modules/nexcent-training/nexcent-training-service/service.xml',
-    ['name="ImportJob"', 'name="jobKey"', 'name="JK_G"', 'name="G"']
+    [
+        'name="ImportJob"',
+        'name="ImportJobItem"',
+        'name="ArticleImportState"',
+        'name="jobKey"',
+        'name="importProfileKey"',
+        'name="targetERC"',
+        'name="JK_G"',
+        'name="G_A_L"',
+    ]
 );
 await requireText(
     'modules/nexcent-training/nexcent-training-rest-impl/rest-openapi.yaml',
-    ['postSiteImportJob', 'getSiteImportJob']
+    [
+        'getSiteContentImportProfilesPage',
+        'postSiteContentImportJob',
+        'postSiteContentImportJobValidate',
+        'postSiteContentImportJobExecute',
+        'postSiteContentImportJobRetry',
+        'getSiteContentImportJobItemsPage',
+        'ContentImportJobRequest',
+    ]
 );
 
 const tokenDefinitionPath = `${themeRoot}/src/frontend-token-definition.json`;
@@ -338,7 +365,7 @@ async function scanFrontendDirectory(relativeDirectory) {
 }
 
 await scanFrontendDirectory('client-extensions/nexcent-landing-elements/src');
-await scanFrontendDirectory('remote-apps/nexcent-community-app/src');
+await scanFrontendDirectory('remote-apps/nexcent-articles/src');
 
 if (await exists('docs/lab-guide')) {
     const legacyLessons = (

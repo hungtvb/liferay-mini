@@ -68,10 +68,15 @@ public class ImportJobModelImpl
 		{"groupId", Types.BIGINT}, {"companyId", Types.BIGINT},
 		{"userId", Types.BIGINT}, {"userName", Types.VARCHAR},
 		{"createDate", Types.TIMESTAMP}, {"modifiedDate", Types.TIMESTAMP},
-		{"jobKey", Types.VARCHAR}, {"fileName", Types.VARCHAR},
-		{"status", Types.VARCHAR}, {"totalRows", Types.INTEGER},
-		{"successRows", Types.INTEGER}, {"failedRows", Types.INTEGER},
-		{"errorMessage", Types.VARCHAR}
+		{"jobKey", Types.VARCHAR}, {"fileEntryId", Types.BIGINT},
+		{"fileName", Types.VARCHAR}, {"sha256", Types.VARCHAR},
+		{"importProfileKey", Types.VARCHAR},
+		{"packageSchemaVersion", Types.VARCHAR},
+		{"structureERC", Types.VARCHAR}, {"status", Types.VARCHAR},
+		{"totalRows", Types.INTEGER}, {"createdRows", Types.INTEGER},
+		{"updatedRows", Types.INTEGER}, {"skippedRows", Types.INTEGER},
+		{"failedRows", Types.INTEGER}, {"startedDate", Types.TIMESTAMP},
+		{"completedDate", Types.TIMESTAMP}, {"errorMessage", Types.VARCHAR}
 	};
 
 	public static final Map<String, Integer> TABLE_COLUMNS_MAP =
@@ -87,16 +92,25 @@ public class ImportJobModelImpl
 		TABLE_COLUMNS_MAP.put("createDate", Types.TIMESTAMP);
 		TABLE_COLUMNS_MAP.put("modifiedDate", Types.TIMESTAMP);
 		TABLE_COLUMNS_MAP.put("jobKey", Types.VARCHAR);
+		TABLE_COLUMNS_MAP.put("fileEntryId", Types.BIGINT);
 		TABLE_COLUMNS_MAP.put("fileName", Types.VARCHAR);
+		TABLE_COLUMNS_MAP.put("sha256", Types.VARCHAR);
+		TABLE_COLUMNS_MAP.put("importProfileKey", Types.VARCHAR);
+		TABLE_COLUMNS_MAP.put("packageSchemaVersion", Types.VARCHAR);
+		TABLE_COLUMNS_MAP.put("structureERC", Types.VARCHAR);
 		TABLE_COLUMNS_MAP.put("status", Types.VARCHAR);
 		TABLE_COLUMNS_MAP.put("totalRows", Types.INTEGER);
-		TABLE_COLUMNS_MAP.put("successRows", Types.INTEGER);
+		TABLE_COLUMNS_MAP.put("createdRows", Types.INTEGER);
+		TABLE_COLUMNS_MAP.put("updatedRows", Types.INTEGER);
+		TABLE_COLUMNS_MAP.put("skippedRows", Types.INTEGER);
 		TABLE_COLUMNS_MAP.put("failedRows", Types.INTEGER);
+		TABLE_COLUMNS_MAP.put("startedDate", Types.TIMESTAMP);
+		TABLE_COLUMNS_MAP.put("completedDate", Types.TIMESTAMP);
 		TABLE_COLUMNS_MAP.put("errorMessage", Types.VARCHAR);
 	}
 
 	public static final String TABLE_SQL_CREATE =
-		"create table NXC_ImportJob (uuid_ VARCHAR(75) null,importJobId LONG not null primary key,groupId LONG,companyId LONG,userId LONG,userName VARCHAR(75) null,createDate DATE null,modifiedDate DATE null,jobKey VARCHAR(75) null,fileName VARCHAR(75) null,status VARCHAR(75) null,totalRows INTEGER,successRows INTEGER,failedRows INTEGER,errorMessage VARCHAR(75) null)";
+		"create table NXC_ImportJob (uuid_ VARCHAR(75) null,importJobId LONG not null primary key,groupId LONG,companyId LONG,userId LONG,userName VARCHAR(75) null,createDate DATE null,modifiedDate DATE null,jobKey VARCHAR(75) null,fileEntryId LONG,fileName VARCHAR(75) null,sha256 VARCHAR(75) null,importProfileKey VARCHAR(75) null,packageSchemaVersion VARCHAR(75) null,structureERC VARCHAR(75) null,status VARCHAR(75) null,totalRows INTEGER,createdRows INTEGER,updatedRows INTEGER,skippedRows INTEGER,failedRows INTEGER,startedDate DATE null,completedDate DATE null,errorMessage VARCHAR(75) null)";
 
 	public static final String TABLE_SQL_DROP = "drop table NXC_ImportJob";
 
@@ -134,14 +148,20 @@ public class ImportJobModelImpl
 	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
-	public static final long UUID_COLUMN_BITMASK = 8L;
+	public static final long STATUS_COLUMN_BITMASK = 8L;
+
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
+	 */
+	@Deprecated
+	public static final long UUID_COLUMN_BITMASK = 16L;
 
 	/**
 	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
 	 *		#getColumnBitmask(String)}
 	 */
 	@Deprecated
-	public static final long CREATEDATE_COLUMN_BITMASK = 16L;
+	public static final long CREATEDATE_COLUMN_BITMASK = 32L;
 
 	/**
 	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
@@ -262,13 +282,30 @@ public class ImportJobModelImpl
 			attributeGetterFunctions.put(
 				"modifiedDate", ImportJob::getModifiedDate);
 			attributeGetterFunctions.put("jobKey", ImportJob::getJobKey);
+			attributeGetterFunctions.put(
+				"fileEntryId", ImportJob::getFileEntryId);
 			attributeGetterFunctions.put("fileName", ImportJob::getFileName);
+			attributeGetterFunctions.put("sha256", ImportJob::getSha256);
+			attributeGetterFunctions.put(
+				"importProfileKey", ImportJob::getImportProfileKey);
+			attributeGetterFunctions.put(
+				"packageSchemaVersion", ImportJob::getPackageSchemaVersion);
+			attributeGetterFunctions.put(
+				"structureERC", ImportJob::getStructureERC);
 			attributeGetterFunctions.put("status", ImportJob::getStatus);
 			attributeGetterFunctions.put("totalRows", ImportJob::getTotalRows);
 			attributeGetterFunctions.put(
-				"successRows", ImportJob::getSuccessRows);
+				"createdRows", ImportJob::getCreatedRows);
+			attributeGetterFunctions.put(
+				"updatedRows", ImportJob::getUpdatedRows);
+			attributeGetterFunctions.put(
+				"skippedRows", ImportJob::getSkippedRows);
 			attributeGetterFunctions.put(
 				"failedRows", ImportJob::getFailedRows);
+			attributeGetterFunctions.put(
+				"startedDate", ImportJob::getStartedDate);
+			attributeGetterFunctions.put(
+				"completedDate", ImportJob::getCompletedDate);
 			attributeGetterFunctions.put(
 				"errorMessage", ImportJob::getErrorMessage);
 
@@ -311,19 +348,46 @@ public class ImportJobModelImpl
 			attributeSetterBiConsumers.put(
 				"jobKey", (BiConsumer<ImportJob, String>)ImportJob::setJobKey);
 			attributeSetterBiConsumers.put(
+				"fileEntryId",
+				(BiConsumer<ImportJob, Long>)ImportJob::setFileEntryId);
+			attributeSetterBiConsumers.put(
 				"fileName",
 				(BiConsumer<ImportJob, String>)ImportJob::setFileName);
+			attributeSetterBiConsumers.put(
+				"sha256", (BiConsumer<ImportJob, String>)ImportJob::setSha256);
+			attributeSetterBiConsumers.put(
+				"importProfileKey",
+				(BiConsumer<ImportJob, String>)ImportJob::setImportProfileKey);
+			attributeSetterBiConsumers.put(
+				"packageSchemaVersion",
+				(BiConsumer<ImportJob, String>)
+					ImportJob::setPackageSchemaVersion);
+			attributeSetterBiConsumers.put(
+				"structureERC",
+				(BiConsumer<ImportJob, String>)ImportJob::setStructureERC);
 			attributeSetterBiConsumers.put(
 				"status", (BiConsumer<ImportJob, String>)ImportJob::setStatus);
 			attributeSetterBiConsumers.put(
 				"totalRows",
 				(BiConsumer<ImportJob, Integer>)ImportJob::setTotalRows);
 			attributeSetterBiConsumers.put(
-				"successRows",
-				(BiConsumer<ImportJob, Integer>)ImportJob::setSuccessRows);
+				"createdRows",
+				(BiConsumer<ImportJob, Integer>)ImportJob::setCreatedRows);
+			attributeSetterBiConsumers.put(
+				"updatedRows",
+				(BiConsumer<ImportJob, Integer>)ImportJob::setUpdatedRows);
+			attributeSetterBiConsumers.put(
+				"skippedRows",
+				(BiConsumer<ImportJob, Integer>)ImportJob::setSkippedRows);
 			attributeSetterBiConsumers.put(
 				"failedRows",
 				(BiConsumer<ImportJob, Integer>)ImportJob::setFailedRows);
+			attributeSetterBiConsumers.put(
+				"startedDate",
+				(BiConsumer<ImportJob, Date>)ImportJob::setStartedDate);
+			attributeSetterBiConsumers.put(
+				"completedDate",
+				(BiConsumer<ImportJob, Date>)ImportJob::setCompletedDate);
 			attributeSetterBiConsumers.put(
 				"errorMessage",
 				(BiConsumer<ImportJob, String>)ImportJob::setErrorMessage);
@@ -535,6 +599,20 @@ public class ImportJobModelImpl
 	}
 
 	@Override
+	public long getFileEntryId() {
+		return _fileEntryId;
+	}
+
+	@Override
+	public void setFileEntryId(long fileEntryId) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
+		_fileEntryId = fileEntryId;
+	}
+
+	@Override
 	public String getFileName() {
 		if (_fileName == null) {
 			return "";
@@ -551,6 +629,82 @@ public class ImportJobModelImpl
 		}
 
 		_fileName = fileName;
+	}
+
+	@Override
+	public String getSha256() {
+		if (_sha256 == null) {
+			return "";
+		}
+		else {
+			return _sha256;
+		}
+	}
+
+	@Override
+	public void setSha256(String sha256) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
+		_sha256 = sha256;
+	}
+
+	@Override
+	public String getImportProfileKey() {
+		if (_importProfileKey == null) {
+			return "";
+		}
+		else {
+			return _importProfileKey;
+		}
+	}
+
+	@Override
+	public void setImportProfileKey(String importProfileKey) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
+		_importProfileKey = importProfileKey;
+	}
+
+	@Override
+	public String getPackageSchemaVersion() {
+		if (_packageSchemaVersion == null) {
+			return "";
+		}
+		else {
+			return _packageSchemaVersion;
+		}
+	}
+
+	@Override
+	public void setPackageSchemaVersion(String packageSchemaVersion) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
+		_packageSchemaVersion = packageSchemaVersion;
+	}
+
+	@Override
+	public String getStructureERC() {
+		if (_structureERC == null) {
+			return "";
+		}
+		else {
+			return _structureERC;
+		}
+	}
+
+	@Override
+	public void setStructureERC(String structureERC) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
+		_structureERC = structureERC;
 	}
 
 	@Override
@@ -572,6 +726,15 @@ public class ImportJobModelImpl
 		_status = status;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getColumnOriginalValue(String)}
+	 */
+	@Deprecated
+	public String getOriginalStatus() {
+		return getColumnOriginalValue("status");
+	}
+
 	@Override
 	public int getTotalRows() {
 		return _totalRows;
@@ -587,17 +750,45 @@ public class ImportJobModelImpl
 	}
 
 	@Override
-	public int getSuccessRows() {
-		return _successRows;
+	public int getCreatedRows() {
+		return _createdRows;
 	}
 
 	@Override
-	public void setSuccessRows(int successRows) {
+	public void setCreatedRows(int createdRows) {
 		if (_columnOriginalValues == Collections.EMPTY_MAP) {
 			_setColumnOriginalValues();
 		}
 
-		_successRows = successRows;
+		_createdRows = createdRows;
+	}
+
+	@Override
+	public int getUpdatedRows() {
+		return _updatedRows;
+	}
+
+	@Override
+	public void setUpdatedRows(int updatedRows) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
+		_updatedRows = updatedRows;
+	}
+
+	@Override
+	public int getSkippedRows() {
+		return _skippedRows;
+	}
+
+	@Override
+	public void setSkippedRows(int skippedRows) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
+		_skippedRows = skippedRows;
 	}
 
 	@Override
@@ -612,6 +803,34 @@ public class ImportJobModelImpl
 		}
 
 		_failedRows = failedRows;
+	}
+
+	@Override
+	public Date getStartedDate() {
+		return _startedDate;
+	}
+
+	@Override
+	public void setStartedDate(Date startedDate) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
+		_startedDate = startedDate;
+	}
+
+	@Override
+	public Date getCompletedDate() {
+		return _completedDate;
+	}
+
+	@Override
+	public void setCompletedDate(Date completedDate) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
+		_completedDate = completedDate;
 	}
 
 	@Override
@@ -704,11 +923,20 @@ public class ImportJobModelImpl
 		importJobImpl.setCreateDate(getCreateDate());
 		importJobImpl.setModifiedDate(getModifiedDate());
 		importJobImpl.setJobKey(getJobKey());
+		importJobImpl.setFileEntryId(getFileEntryId());
 		importJobImpl.setFileName(getFileName());
+		importJobImpl.setSha256(getSha256());
+		importJobImpl.setImportProfileKey(getImportProfileKey());
+		importJobImpl.setPackageSchemaVersion(getPackageSchemaVersion());
+		importJobImpl.setStructureERC(getStructureERC());
 		importJobImpl.setStatus(getStatus());
 		importJobImpl.setTotalRows(getTotalRows());
-		importJobImpl.setSuccessRows(getSuccessRows());
+		importJobImpl.setCreatedRows(getCreatedRows());
+		importJobImpl.setUpdatedRows(getUpdatedRows());
+		importJobImpl.setSkippedRows(getSkippedRows());
 		importJobImpl.setFailedRows(getFailedRows());
+		importJobImpl.setStartedDate(getStartedDate());
+		importJobImpl.setCompletedDate(getCompletedDate());
 		importJobImpl.setErrorMessage(getErrorMessage());
 
 		importJobImpl.resetOriginalValues();
@@ -734,15 +962,32 @@ public class ImportJobModelImpl
 		importJobImpl.setModifiedDate(
 			this.<Date>getColumnOriginalValue("modifiedDate"));
 		importJobImpl.setJobKey(this.<String>getColumnOriginalValue("jobKey"));
+		importJobImpl.setFileEntryId(
+			this.<Long>getColumnOriginalValue("fileEntryId"));
 		importJobImpl.setFileName(
 			this.<String>getColumnOriginalValue("fileName"));
+		importJobImpl.setSha256(this.<String>getColumnOriginalValue("sha256"));
+		importJobImpl.setImportProfileKey(
+			this.<String>getColumnOriginalValue("importProfileKey"));
+		importJobImpl.setPackageSchemaVersion(
+			this.<String>getColumnOriginalValue("packageSchemaVersion"));
+		importJobImpl.setStructureERC(
+			this.<String>getColumnOriginalValue("structureERC"));
 		importJobImpl.setStatus(this.<String>getColumnOriginalValue("status"));
 		importJobImpl.setTotalRows(
 			this.<Integer>getColumnOriginalValue("totalRows"));
-		importJobImpl.setSuccessRows(
-			this.<Integer>getColumnOriginalValue("successRows"));
+		importJobImpl.setCreatedRows(
+			this.<Integer>getColumnOriginalValue("createdRows"));
+		importJobImpl.setUpdatedRows(
+			this.<Integer>getColumnOriginalValue("updatedRows"));
+		importJobImpl.setSkippedRows(
+			this.<Integer>getColumnOriginalValue("skippedRows"));
 		importJobImpl.setFailedRows(
 			this.<Integer>getColumnOriginalValue("failedRows"));
+		importJobImpl.setStartedDate(
+			this.<Date>getColumnOriginalValue("startedDate"));
+		importJobImpl.setCompletedDate(
+			this.<Date>getColumnOriginalValue("completedDate"));
 		importJobImpl.setErrorMessage(
 			this.<String>getColumnOriginalValue("errorMessage"));
 
@@ -872,12 +1117,48 @@ public class ImportJobModelImpl
 			importJobCacheModel.jobKey = null;
 		}
 
+		importJobCacheModel.fileEntryId = getFileEntryId();
+
 		importJobCacheModel.fileName = getFileName();
 
 		String fileName = importJobCacheModel.fileName;
 
 		if ((fileName != null) && (fileName.length() == 0)) {
 			importJobCacheModel.fileName = null;
+		}
+
+		importJobCacheModel.sha256 = getSha256();
+
+		String sha256 = importJobCacheModel.sha256;
+
+		if ((sha256 != null) && (sha256.length() == 0)) {
+			importJobCacheModel.sha256 = null;
+		}
+
+		importJobCacheModel.importProfileKey = getImportProfileKey();
+
+		String importProfileKey = importJobCacheModel.importProfileKey;
+
+		if ((importProfileKey != null) && (importProfileKey.length() == 0)) {
+			importJobCacheModel.importProfileKey = null;
+		}
+
+		importJobCacheModel.packageSchemaVersion = getPackageSchemaVersion();
+
+		String packageSchemaVersion = importJobCacheModel.packageSchemaVersion;
+
+		if ((packageSchemaVersion != null) &&
+			(packageSchemaVersion.length() == 0)) {
+
+			importJobCacheModel.packageSchemaVersion = null;
+		}
+
+		importJobCacheModel.structureERC = getStructureERC();
+
+		String structureERC = importJobCacheModel.structureERC;
+
+		if ((structureERC != null) && (structureERC.length() == 0)) {
+			importJobCacheModel.structureERC = null;
 		}
 
 		importJobCacheModel.status = getStatus();
@@ -890,9 +1171,31 @@ public class ImportJobModelImpl
 
 		importJobCacheModel.totalRows = getTotalRows();
 
-		importJobCacheModel.successRows = getSuccessRows();
+		importJobCacheModel.createdRows = getCreatedRows();
+
+		importJobCacheModel.updatedRows = getUpdatedRows();
+
+		importJobCacheModel.skippedRows = getSkippedRows();
 
 		importJobCacheModel.failedRows = getFailedRows();
+
+		Date startedDate = getStartedDate();
+
+		if (startedDate != null) {
+			importJobCacheModel.startedDate = startedDate.getTime();
+		}
+		else {
+			importJobCacheModel.startedDate = Long.MIN_VALUE;
+		}
+
+		Date completedDate = getCompletedDate();
+
+		if (completedDate != null) {
+			importJobCacheModel.completedDate = completedDate.getTime();
+		}
+		else {
+			importJobCacheModel.completedDate = Long.MIN_VALUE;
+		}
 
 		importJobCacheModel.errorMessage = getErrorMessage();
 
@@ -973,11 +1276,20 @@ public class ImportJobModelImpl
 	private Date _modifiedDate;
 	private boolean _setModifiedDate;
 	private String _jobKey;
+	private long _fileEntryId;
 	private String _fileName;
+	private String _sha256;
+	private String _importProfileKey;
+	private String _packageSchemaVersion;
+	private String _structureERC;
 	private String _status;
 	private int _totalRows;
-	private int _successRows;
+	private int _createdRows;
+	private int _updatedRows;
+	private int _skippedRows;
 	private int _failedRows;
+	private Date _startedDate;
+	private Date _completedDate;
 	private String _errorMessage;
 
 	public <T> T getColumnValue(String columnName) {
@@ -1019,11 +1331,21 @@ public class ImportJobModelImpl
 		_columnOriginalValues.put("createDate", _createDate);
 		_columnOriginalValues.put("modifiedDate", _modifiedDate);
 		_columnOriginalValues.put("jobKey", _jobKey);
+		_columnOriginalValues.put("fileEntryId", _fileEntryId);
 		_columnOriginalValues.put("fileName", _fileName);
+		_columnOriginalValues.put("sha256", _sha256);
+		_columnOriginalValues.put("importProfileKey", _importProfileKey);
+		_columnOriginalValues.put(
+			"packageSchemaVersion", _packageSchemaVersion);
+		_columnOriginalValues.put("structureERC", _structureERC);
 		_columnOriginalValues.put("status", _status);
 		_columnOriginalValues.put("totalRows", _totalRows);
-		_columnOriginalValues.put("successRows", _successRows);
+		_columnOriginalValues.put("createdRows", _createdRows);
+		_columnOriginalValues.put("updatedRows", _updatedRows);
+		_columnOriginalValues.put("skippedRows", _skippedRows);
 		_columnOriginalValues.put("failedRows", _failedRows);
+		_columnOriginalValues.put("startedDate", _startedDate);
+		_columnOriginalValues.put("completedDate", _completedDate);
 		_columnOriginalValues.put("errorMessage", _errorMessage);
 	}
 
@@ -1066,17 +1388,35 @@ public class ImportJobModelImpl
 
 		columnBitmasks.put("jobKey", 256L);
 
-		columnBitmasks.put("fileName", 512L);
+		columnBitmasks.put("fileEntryId", 512L);
 
-		columnBitmasks.put("status", 1024L);
+		columnBitmasks.put("fileName", 1024L);
 
-		columnBitmasks.put("totalRows", 2048L);
+		columnBitmasks.put("sha256", 2048L);
 
-		columnBitmasks.put("successRows", 4096L);
+		columnBitmasks.put("importProfileKey", 4096L);
 
-		columnBitmasks.put("failedRows", 8192L);
+		columnBitmasks.put("packageSchemaVersion", 8192L);
 
-		columnBitmasks.put("errorMessage", 16384L);
+		columnBitmasks.put("structureERC", 16384L);
+
+		columnBitmasks.put("status", 32768L);
+
+		columnBitmasks.put("totalRows", 65536L);
+
+		columnBitmasks.put("createdRows", 131072L);
+
+		columnBitmasks.put("updatedRows", 262144L);
+
+		columnBitmasks.put("skippedRows", 524288L);
+
+		columnBitmasks.put("failedRows", 1048576L);
+
+		columnBitmasks.put("startedDate", 2097152L);
+
+		columnBitmasks.put("completedDate", 4194304L);
+
+		columnBitmasks.put("errorMessage", 8388608L);
 
 		_columnBitmasks = Collections.unmodifiableMap(columnBitmasks);
 	}
@@ -1085,4 +1425,4 @@ public class ImportJobModelImpl
 	private ImportJob _escapedModel;
 
 }
-// LIFERAY-SERVICE-BUILDER-HASH:-888047885
+// LIFERAY-SERVICE-BUILDER-HASH:1706286437

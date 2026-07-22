@@ -64,7 +64,7 @@ jobs:
           test -x gradlew
           test -s gradlew.bat
           test -s gradle/wrapper/gradle-wrapper.jar
-          grep -q "gradle-8.5-bin.zip" gradle/wrapper/gradle-wrapper.properties
+          grep -q "gradle-8.9-bin.zip" gradle/wrapper/gradle-wrapper.properties
 
       - name: Test static Headless adapter
         run: node --test prototypes/nexcent-static/headless-adapter.test.mjs

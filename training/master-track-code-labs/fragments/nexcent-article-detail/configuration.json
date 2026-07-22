@@ -1,0 +1,48 @@
+{
+    "fieldSets": [
+        {
+            "fields": [
+                {
+                    "defaultValue": true,
+                    "label": "Show Back Link",
+                    "name": "showBackLink",
+                    "type": "checkbox"
+                },
+                {
+                    "dataType": "string",
+                    "defaultValue": "default",
+                    "label": "Background",
+                    "name": "background",
+                    "type": "select",
+                    "typeOptions": {
+                        "validValues": [
+                            {"label": "Default", "value": "default"},
+                            {"label": "Surface", "value": "surface"}
+                        ]
+                    }
+                },
+                {
+                    "dataType": "string",
+                    "defaultValue": "default",
+                    "label": "Body Width",
+                    "name": "bodyWidth",
+                    "type": "select",
+                    "typeOptions": {
+                        "validValues": [
+                            {"label": "Narrow (720px)", "value": "narrow"},
+                            {"label": "Default (800px)", "value": "default"},
+                            {"label": "Wide (920px)", "value": "wide"}
+                        ]
+                    }
+                },
+                {
+                    "defaultValue": true,
+                    "label": "Show Topics Slot",
+                    "name": "showTopics",
+                    "type": "checkbox"
+                }
+            ],
+            "label": "Article Detail Settings"
+        }
+    ]
+}

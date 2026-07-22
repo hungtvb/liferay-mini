@@ -53,7 +53,7 @@ public class ImportJobCacheModel
 
 	@Override
 	public String toString() {
-		StringBundler sb = new StringBundler(31);
+		StringBundler sb = new StringBundler(49);
 
 		sb.append("{uuid=");
 		sb.append(uuid);
@@ -73,16 +73,34 @@ public class ImportJobCacheModel
 		sb.append(modifiedDate);
 		sb.append(", jobKey=");
 		sb.append(jobKey);
+		sb.append(", fileEntryId=");
+		sb.append(fileEntryId);
 		sb.append(", fileName=");
 		sb.append(fileName);
+		sb.append(", sha256=");
+		sb.append(sha256);
+		sb.append(", importProfileKey=");
+		sb.append(importProfileKey);
+		sb.append(", packageSchemaVersion=");
+		sb.append(packageSchemaVersion);
+		sb.append(", structureERC=");
+		sb.append(structureERC);
 		sb.append(", status=");
 		sb.append(status);
 		sb.append(", totalRows=");
 		sb.append(totalRows);
-		sb.append(", successRows=");
-		sb.append(successRows);
+		sb.append(", createdRows=");
+		sb.append(createdRows);
+		sb.append(", updatedRows=");
+		sb.append(updatedRows);
+		sb.append(", skippedRows=");
+		sb.append(skippedRows);
 		sb.append(", failedRows=");
 		sb.append(failedRows);
+		sb.append(", startedDate=");
+		sb.append(startedDate);
+		sb.append(", completedDate=");
+		sb.append(completedDate);
 		sb.append(", errorMessage=");
 		sb.append(errorMessage);
 		sb.append("}");
@@ -134,11 +152,41 @@ public class ImportJobCacheModel
 			importJobImpl.setJobKey(jobKey);
 		}
 
+		importJobImpl.setFileEntryId(fileEntryId);
+
 		if (fileName == null) {
 			importJobImpl.setFileName("");
 		}
 		else {
 			importJobImpl.setFileName(fileName);
+		}
+
+		if (sha256 == null) {
+			importJobImpl.setSha256("");
+		}
+		else {
+			importJobImpl.setSha256(sha256);
+		}
+
+		if (importProfileKey == null) {
+			importJobImpl.setImportProfileKey("");
+		}
+		else {
+			importJobImpl.setImportProfileKey(importProfileKey);
+		}
+
+		if (packageSchemaVersion == null) {
+			importJobImpl.setPackageSchemaVersion("");
+		}
+		else {
+			importJobImpl.setPackageSchemaVersion(packageSchemaVersion);
+		}
+
+		if (structureERC == null) {
+			importJobImpl.setStructureERC("");
+		}
+		else {
+			importJobImpl.setStructureERC(structureERC);
 		}
 
 		if (status == null) {
@@ -149,8 +197,24 @@ public class ImportJobCacheModel
 		}
 
 		importJobImpl.setTotalRows(totalRows);
-		importJobImpl.setSuccessRows(successRows);
+		importJobImpl.setCreatedRows(createdRows);
+		importJobImpl.setUpdatedRows(updatedRows);
+		importJobImpl.setSkippedRows(skippedRows);
 		importJobImpl.setFailedRows(failedRows);
+
+		if (startedDate == Long.MIN_VALUE) {
+			importJobImpl.setStartedDate(null);
+		}
+		else {
+			importJobImpl.setStartedDate(new Date(startedDate));
+		}
+
+		if (completedDate == Long.MIN_VALUE) {
+			importJobImpl.setCompletedDate(null);
+		}
+		else {
+			importJobImpl.setCompletedDate(new Date(completedDate));
+		}
 
 		if (errorMessage == null) {
 			importJobImpl.setErrorMessage("");
@@ -179,14 +243,26 @@ public class ImportJobCacheModel
 		createDate = objectInput.readLong();
 		modifiedDate = objectInput.readLong();
 		jobKey = objectInput.readUTF();
+
+		fileEntryId = objectInput.readLong();
 		fileName = objectInput.readUTF();
+		sha256 = objectInput.readUTF();
+		importProfileKey = objectInput.readUTF();
+		packageSchemaVersion = objectInput.readUTF();
+		structureERC = objectInput.readUTF();
 		status = objectInput.readUTF();
 
 		totalRows = objectInput.readInt();
 
-		successRows = objectInput.readInt();
+		createdRows = objectInput.readInt();
+
+		updatedRows = objectInput.readInt();
+
+		skippedRows = objectInput.readInt();
 
 		failedRows = objectInput.readInt();
+		startedDate = objectInput.readLong();
+		completedDate = objectInput.readLong();
 		errorMessage = objectInput.readUTF();
 	}
 
@@ -224,11 +300,41 @@ public class ImportJobCacheModel
 			objectOutput.writeUTF(jobKey);
 		}
 
+		objectOutput.writeLong(fileEntryId);
+
 		if (fileName == null) {
 			objectOutput.writeUTF("");
 		}
 		else {
 			objectOutput.writeUTF(fileName);
+		}
+
+		if (sha256 == null) {
+			objectOutput.writeUTF("");
+		}
+		else {
+			objectOutput.writeUTF(sha256);
+		}
+
+		if (importProfileKey == null) {
+			objectOutput.writeUTF("");
+		}
+		else {
+			objectOutput.writeUTF(importProfileKey);
+		}
+
+		if (packageSchemaVersion == null) {
+			objectOutput.writeUTF("");
+		}
+		else {
+			objectOutput.writeUTF(packageSchemaVersion);
+		}
+
+		if (structureERC == null) {
+			objectOutput.writeUTF("");
+		}
+		else {
+			objectOutput.writeUTF(structureERC);
 		}
 
 		if (status == null) {
@@ -240,9 +346,15 @@ public class ImportJobCacheModel
 
 		objectOutput.writeInt(totalRows);
 
-		objectOutput.writeInt(successRows);
+		objectOutput.writeInt(createdRows);
+
+		objectOutput.writeInt(updatedRows);
+
+		objectOutput.writeInt(skippedRows);
 
 		objectOutput.writeInt(failedRows);
+		objectOutput.writeLong(startedDate);
+		objectOutput.writeLong(completedDate);
 
 		if (errorMessage == null) {
 			objectOutput.writeUTF("");
@@ -261,12 +373,21 @@ public class ImportJobCacheModel
 	public long createDate;
 	public long modifiedDate;
 	public String jobKey;
+	public long fileEntryId;
 	public String fileName;
+	public String sha256;
+	public String importProfileKey;
+	public String packageSchemaVersion;
+	public String structureERC;
 	public String status;
 	public int totalRows;
-	public int successRows;
+	public int createdRows;
+	public int updatedRows;
+	public int skippedRows;
 	public int failedRows;
+	public long startedDate;
+	public long completedDate;
 	public String errorMessage;
 
 }
-// LIFERAY-SERVICE-BUILDER-HASH:-1213158327
+// LIFERAY-SERVICE-BUILDER-HASH:-1201274199

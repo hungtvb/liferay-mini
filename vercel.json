@@ -1,5 +1,5 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "buildCommand": "npm ci --prefix remote-apps/nexcent-community-app --no-audit --no-fund && npm run build --prefix remote-apps/nexcent-community-app && node scripts/assemble-vercel-output.mjs",
+  "buildCommand": "npm ci --prefix remote-apps/nexcent-articles --no-audit --no-fund && npm run build --prefix remote-apps/nexcent-articles && node scripts/assemble-vercel-output.mjs",
   "outputDirectory": ".vercel-static"
 }

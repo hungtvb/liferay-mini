@@ -9,9 +9,9 @@ const projectDirectory = path.resolve(
 const fragmentDirectory = path.join(projectDirectory, 'fragments');
 
 const headlessFragmentDefaults = {
-    'nexcent-react-community': 'NXC Service Item',
-    'nexcent-react-hero': 'NXC Landing Hero',
-    'nexcent-react-marketing': 'NXC Community Card',
+    'nexcent-react-community': 'NXC_SERVICE_ITEM',
+    'nexcent-react-hero': 'NXC_LANDING_HERO',
+    'nexcent-react-marketing': 'NXC_COMMUNITY_CARD',
 };
 const headlessFragments = Object.keys(headlessFragmentDefaults);
 const settingsFragments = [
@@ -56,7 +56,7 @@ for (const fragmentName of [...headlessFragments, ...settingsFragments]) {
 
         if (structureField?.defaultValue !== expectedDefault) {
             throw new Error(
-                `${fragmentName} must default to importer Structure "${expectedDefault}".`
+                `${fragmentName} must default to Structure key "${expectedDefault}".`
             );
         }
     }
@@ -140,6 +140,10 @@ for (const sharedFunction of [
             `Pixel-perfect Headless adapter must reuse ${sharedFunction}.`
         );
     }
+}
+
+if (sharedHeadlessApi.includes('item.name, item.id')) {
+    throw new Error('Structure resolution must not use the editable display name.');
 }
 
 console.log(

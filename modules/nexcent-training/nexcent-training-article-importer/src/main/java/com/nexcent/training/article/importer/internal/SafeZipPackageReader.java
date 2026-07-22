@@ -125,10 +125,9 @@ class SafeZipPackageReader {
         catch (ContentImportException contentImportException) {
             throw contentImportException;
         }
-        catch (RuntimeException runtimeException) {
+        catch (Exception exception) {
             throw new ContentImportException(
-                "INVALID_MANIFEST", "manifest.json is invalid",
-                runtimeException);
+                "INVALID_MANIFEST", "manifest.json is invalid", exception);
         }
     }
 

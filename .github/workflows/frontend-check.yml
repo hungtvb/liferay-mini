@@ -60,10 +60,17 @@ jobs:
       - name: Build React Client Extension
         run: npm run build
 
-      - name: Verify deterministic output
+      - name: Package Nexcent Fragment Set
+        run: npm run package:fragments
+
+      - name: Verify deterministic frontend output
         run: |
           test -f build/index.js
           test -f build/style.css
+          test -s build/fragments/collections-nexcent-components.zip
+          jar --list --file build/fragments/collections-nexcent-components.zip | grep -q 'nexcent-components/collection.json'
+          jar --list --file build/fragments/collections-nexcent-components.zip | grep -q 'nexcent-components/fragments/nexcent-react-header/configuration.json'
+          jar --list --file build/fragments/collections-nexcent-components.zip | grep -q 'nexcent-components/fragments/nexcent-react-footer/configuration.json'
 
       - name: Build Nexcent Theme Client Extension
         working-directory: client-extensions/nexcent-theme

@@ -420,7 +420,7 @@ class XlsxArticleParser {
     }
 
     private static final int _HEADER_SCAN_ROWS = 20;
-    private static final int _MAX_ROWS = 5000;
+    private static final int _MAX_ROWS = 500;
     private static final int _MAX_SHEETS = 10;
 
     private final DataFormatter _formatter = new DataFormatter(Locale.ROOT);

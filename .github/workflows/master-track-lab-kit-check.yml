@@ -6,6 +6,8 @@ on:
             - '.github/workflows/master-track-lab-kit-check.yml'
             - 'README.md'
             - 'scripts/verify-course.mjs'
+            - 'client-extensions/nexcent-landing-elements/src/static-site/**'
+            - 'client-extensions/nexcent-theme/**'
             - 'client-extensions/nexcent-training-batch-lab/**'
             - 'docs/master-track/**'
             - 'modules/nexcent-site-shell/**'

@@ -40,7 +40,9 @@ public class ImportJobItemWrapper
 		attributes.put("modifiedDate", getModifiedDate());
 		attributes.put("importJobId", getImportJobId());
 		attributes.put("rowNumber", getRowNumber());
-		attributes.put("articleERC", getArticleERC());
+		attributes.put("targetType", getTargetType());
+		attributes.put("targetERC", getTargetERC());
+		attributes.put("sheetName", getSheetName());
 		attributes.put("locale", getLocale());
 		attributes.put("operation", getOperation());
 		attributes.put("result", getResult());
@@ -96,10 +98,22 @@ public class ImportJobItemWrapper
 			setRowNumber(rowNumber);
 		}
 
-		String articleERC = (String)attributes.get("articleERC");
+		String targetType = (String)attributes.get("targetType");
 
-		if (articleERC != null) {
-			setArticleERC(articleERC);
+		if (targetType != null) {
+			setTargetType(targetType);
+		}
+
+		String targetERC = (String)attributes.get("targetERC");
+
+		if (targetERC != null) {
+			setTargetERC(targetERC);
+		}
+
+		String sheetName = (String)attributes.get("sheetName");
+
+		if (sheetName != null) {
+			setSheetName(sheetName);
 		}
 
 		String locale = (String)attributes.get("locale");
@@ -148,16 +162,6 @@ public class ImportJobItemWrapper
 	@Override
 	public ImportJobItem cloneWithOriginalValues() {
 		return wrap(model.cloneWithOriginalValues());
-	}
-
-	/**
-	 * Returns the article erc of this import job item.
-	 *
-	 * @return the article erc of this import job item
-	 */
-	@Override
-	public String getArticleERC() {
-		return model.getArticleERC();
 	}
 
 	/**
@@ -310,19 +314,39 @@ public class ImportJobItemWrapper
 		return model.getSeverity();
 	}
 
+	/**
+	 * Returns the sheet name of this import job item.
+	 *
+	 * @return the sheet name of this import job item
+	 */
 	@Override
-	public void persist() {
-		model.persist();
+	public String getSheetName() {
+		return model.getSheetName();
 	}
 
 	/**
-	 * Sets the article erc of this import job item.
+	 * Returns the target erc of this import job item.
 	 *
-	 * @param articleERC the article erc of this import job item
+	 * @return the target erc of this import job item
 	 */
 	@Override
-	public void setArticleERC(String articleERC) {
-		model.setArticleERC(articleERC);
+	public String getTargetERC() {
+		return model.getTargetERC();
+	}
+
+	/**
+	 * Returns the target type of this import job item.
+	 *
+	 * @return the target type of this import job item
+	 */
+	@Override
+	public String getTargetType() {
+		return model.getTargetType();
+	}
+
+	@Override
+	public void persist() {
+		model.persist();
 	}
 
 	/**
@@ -475,6 +499,36 @@ public class ImportJobItemWrapper
 		model.setSeverity(severity);
 	}
 
+	/**
+	 * Sets the sheet name of this import job item.
+	 *
+	 * @param sheetName the sheet name of this import job item
+	 */
+	@Override
+	public void setSheetName(String sheetName) {
+		model.setSheetName(sheetName);
+	}
+
+	/**
+	 * Sets the target erc of this import job item.
+	 *
+	 * @param targetERC the target erc of this import job item
+	 */
+	@Override
+	public void setTargetERC(String targetERC) {
+		model.setTargetERC(targetERC);
+	}
+
+	/**
+	 * Sets the target type of this import job item.
+	 *
+	 * @param targetType the target type of this import job item
+	 */
+	@Override
+	public void setTargetType(String targetType) {
+		model.setTargetType(targetType);
+	}
+
 	@Override
 	public String toXmlString() {
 		return model.toXmlString();
@@ -486,4 +540,4 @@ public class ImportJobItemWrapper
 	}
 
 }
-// LIFERAY-SERVICE-BUILDER-HASH:712450552
+// LIFERAY-SERVICE-BUILDER-HASH:1201990920

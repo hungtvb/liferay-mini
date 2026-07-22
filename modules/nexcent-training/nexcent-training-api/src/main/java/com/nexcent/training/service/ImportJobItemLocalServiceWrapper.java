@@ -49,13 +49,14 @@ public class ImportJobItemLocalServiceWrapper
 	@Override
 	public com.nexcent.training.model.ImportJobItem addImportJobItem(
 		long companyId, long groupId, long importJobId, int rowNumber,
-		String articleERC, String locale, String operation, String result,
-		String severity, String messageCode, String message,
-		String payloadHash) {
+		String targetType, String targetERC, String sheetName, String locale,
+		String operation, String result, String severity, String messageCode,
+		String message, String payloadHash) {
 
 		return _importJobItemLocalService.addImportJobItem(
-			companyId, groupId, importJobId, rowNumber, articleERC, locale,
-			operation, result, severity, messageCode, message, payloadHash);
+			companyId, groupId, importJobId, rowNumber, targetType, targetERC,
+			sheetName, locale, operation, result, severity, messageCode,
+			message, payloadHash);
 	}
 
 	/**
@@ -382,4 +383,4 @@ public class ImportJobItemLocalServiceWrapper
 	private ImportJobItemLocalService _importJobItemLocalService;
 
 }
-// LIFERAY-SERVICE-BUILDER-HASH:1668799263
+// LIFERAY-SERVICE-BUILDER-HASH:-116445173

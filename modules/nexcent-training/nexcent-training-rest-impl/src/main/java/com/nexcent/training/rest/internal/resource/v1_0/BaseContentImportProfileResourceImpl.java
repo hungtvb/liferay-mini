@@ -18,7 +18,6 @@ import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.kernel.servlet.ServletContextPool;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.SetUtil;
-import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.odata.entity.EntityModel;
@@ -31,15 +30,14 @@ import com.liferay.portal.odata.sort.SortParserProvider;
 import com.liferay.portal.vulcan.accept.language.AcceptLanguage;
 import com.liferay.portal.vulcan.batch.engine.VulcanBatchEngineTaskItemDelegate;
 import com.liferay.portal.vulcan.batch.engine.resource.VulcanBatchEngineImportTaskResource;
-import com.liferay.portal.vulcan.multipart.MultipartBody;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 import com.liferay.portal.vulcan.util.ActionUtil;
 import com.liferay.portal.vulcan.util.TransformUtil;
 
-import com.nexcent.training.rest.dto.v1_0.ArticleImportJob;
-import com.nexcent.training.rest.resource.v1_0.ArticleImportJobResource;
+import com.nexcent.training.rest.dto.v1_0.ContentImportProfile;
+import com.nexcent.training.rest.resource.v1_0.ContentImportProfileResource;
 
 import jakarta.annotation.Generated;
 
@@ -49,7 +47,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.ws.rs.NotSupportedException;
 import jakarta.ws.rs.core.MultivaluedHashMap;
 import jakarta.ws.rs.core.MultivaluedMap;
-import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.UriInfo;
 
 import java.io.Serializable;
@@ -69,319 +66,58 @@ import java.util.Set;
  */
 @Generated("")
 @jakarta.ws.rs.Path("/v1.0")
-public abstract class BaseArticleImportJobResourceImpl
-	implements ArticleImportJobResource, EntityModelResource,
-			   VulcanBatchEngineTaskItemDelegate<ArticleImportJob> {
+public abstract class BaseContentImportProfileResourceImpl
+	implements ContentImportProfileResource, EntityModelResource,
+			   VulcanBatchEngineTaskItemDelegate<ContentImportProfile> {
 
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -X 'GET' 'http://localhost:8080/o/nexcent-training/v1.0/sites/{siteId}/article-import-jobs/{externalReferenceCode}'  -u 'test@liferay.com:test'
+	 * curl -X 'GET' 'http://localhost:8080/o/nexcent-training/v1.0/sites/{siteId}/content-import-profiles'  -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
 			@io.swagger.v3.oas.annotations.Parameter(
 				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
 				name = "siteId"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
-				name = "externalReferenceCode"
 			)
 		}
 	)
 	@io.swagger.v3.oas.annotations.tags.Tags(
 		value = {
-			@io.swagger.v3.oas.annotations.tags.Tag(name = "ArticleImportJob")
-		}
-	)
-	@jakarta.ws.rs.GET
-	@jakarta.ws.rs.Path(
-		"/sites/{siteId}/article-import-jobs/{externalReferenceCode}"
-	)
-	@jakarta.ws.rs.Produces({"application/json", "application/xml"})
-	@Override
-	public ArticleImportJob getSiteArticleImportJob(
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@jakarta.validation.constraints.NotNull
-			@jakarta.ws.rs.PathParam("siteId")
-			Long siteId,
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@jakarta.validation.constraints.NotNull
-			@jakarta.ws.rs.PathParam("externalReferenceCode")
-			String externalReferenceCode)
-		throws Exception {
-
-		return new ArticleImportJob();
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
-	 * curl -X 'GET' 'http://localhost:8080/o/nexcent-training/v1.0/sites/{siteId}/article-import-jobs'  -u 'test@liferay.com:test'
-	 */
-	@io.swagger.v3.oas.annotations.Parameters(
-		value = {
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
-				name = "siteId"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "page"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "pageSize"
+			@io.swagger.v3.oas.annotations.tags.Tag(
+				name = "ContentImportProfile"
 			)
 		}
 	)
-	@io.swagger.v3.oas.annotations.tags.Tags(
-		value = {
-			@io.swagger.v3.oas.annotations.tags.Tag(name = "ArticleImportJob")
-		}
-	)
 	@jakarta.ws.rs.GET
-	@jakarta.ws.rs.Path("/sites/{siteId}/article-import-jobs")
+	@jakarta.ws.rs.Path("/sites/{siteId}/content-import-profiles")
 	@jakarta.ws.rs.Produces({"application/json", "application/xml"})
 	@Override
-	public Page<ArticleImportJob> getSiteArticleImportJobsPage(
+	public Page<ContentImportProfile> getSiteContentImportProfilesPage(
 			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
 			@jakarta.validation.constraints.NotNull
 			@jakarta.ws.rs.PathParam("siteId")
-			Long siteId,
-			@jakarta.ws.rs.core.Context Pagination pagination)
+			Long siteId)
 		throws Exception {
 
 		return Page.of(Collections.emptyList());
 	}
 
-	/**
-	 * Invoke this method with the command line:
-	 *
-	 * curl -X 'POST' 'http://localhost:8080/o/nexcent-training/v1.0/sites/{siteId}/article-import-jobs'  -u 'test@liferay.com:test'
-	 */
-	@io.swagger.v3.oas.annotations.Operation(
-		description = "Uploads an XLSX workbook. Multipart fields are file, externalReferenceCode, and optional structureExternalReferenceCode.",
-		requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(content = @io.swagger.v3.oas.annotations.media.Content(mediaType = "multipart/form-data", schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = PostSiteArticleImportJobRequestBody.class)))
-	)
-	@io.swagger.v3.oas.annotations.Parameters(
-		value = {
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
-				name = "siteId"
-			)
-		}
-	)
-	@io.swagger.v3.oas.annotations.tags.Tags(
-		value = {
-			@io.swagger.v3.oas.annotations.tags.Tag(name = "ArticleImportJob")
-		}
-	)
-	@jakarta.ws.rs.Consumes("multipart/form-data")
-	@jakarta.ws.rs.Path("/sites/{siteId}/article-import-jobs")
-	@jakarta.ws.rs.POST
-	@jakarta.ws.rs.Produces({"application/json", "application/xml"})
-	@Override
-	public ArticleImportJob postSiteArticleImportJob(
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@jakarta.validation.constraints.NotNull
-			@jakarta.ws.rs.PathParam("siteId")
-			Long siteId,
-			MultipartBody multipartBody)
-		throws Exception {
-
-		return new ArticleImportJob();
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
-	 * curl -X 'POST' 'http://localhost:8080/o/nexcent-training/v1.0/sites/{siteId}/article-import-jobs/batch'  -u 'test@liferay.com:test'
-	 */
-	@io.swagger.v3.oas.annotations.Parameters(
-		value = {
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
-				name = "siteId"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "callbackURL"
-			)
-		}
-	)
-	@io.swagger.v3.oas.annotations.tags.Tags(
-		value = {
-			@io.swagger.v3.oas.annotations.tags.Tag(name = "ArticleImportJob")
-		}
-	)
-	@jakarta.ws.rs.Consumes("application/json")
-	@jakarta.ws.rs.Path("/sites/{siteId}/article-import-jobs/batch")
-	@jakarta.ws.rs.POST
-	@jakarta.ws.rs.Produces("application/json")
-	@Override
-	public Response postSiteArticleImportJobBatch(
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@jakarta.validation.constraints.NotNull
-			@jakarta.ws.rs.PathParam("siteId")
-			Long siteId,
-			MultipartBody multipartBody,
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@jakarta.ws.rs.QueryParam("callbackURL")
-			String callbackURL,
-			Object object)
-		throws Exception {
-
-		vulcanBatchEngineImportTaskResource.setContextAcceptLanguage(
-			contextAcceptLanguage);
-		vulcanBatchEngineImportTaskResource.setContextCompany(contextCompany);
-		vulcanBatchEngineImportTaskResource.setContextHttpServletRequest(
-			contextHttpServletRequest);
-		vulcanBatchEngineImportTaskResource.setContextUriInfo(contextUriInfo);
-		vulcanBatchEngineImportTaskResource.setContextUser(contextUser);
-
-		Response.ResponseBuilder responseBuilder = Response.accepted();
-
-		return responseBuilder.entity(
-			vulcanBatchEngineImportTaskResource.postImportTask(
-				ArticleImportJob.class.getName(), callbackURL, null, object)
-		).build();
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
-	 * curl -X 'POST' 'http://localhost:8080/o/nexcent-training/v1.0/sites/{siteId}/article-import-jobs/{externalReferenceCode}/execute'  -u 'test@liferay.com:test'
-	 */
-	@io.swagger.v3.oas.annotations.Parameters(
-		value = {
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
-				name = "siteId"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
-				name = "externalReferenceCode"
-			)
-		}
-	)
-	@io.swagger.v3.oas.annotations.tags.Tags(
-		value = {
-			@io.swagger.v3.oas.annotations.tags.Tag(name = "ArticleImportJob")
-		}
-	)
-	@jakarta.ws.rs.Path(
-		"/sites/{siteId}/article-import-jobs/{externalReferenceCode}/execute"
-	)
-	@jakarta.ws.rs.POST
-	@jakarta.ws.rs.Produces({"application/json", "application/xml"})
-	@Override
-	public ArticleImportJob postSiteArticleImportJobExecute(
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@jakarta.validation.constraints.NotNull
-			@jakarta.ws.rs.PathParam("siteId")
-			Long siteId,
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@jakarta.validation.constraints.NotNull
-			@jakarta.ws.rs.PathParam("externalReferenceCode")
-			String externalReferenceCode)
-		throws Exception {
-
-		return new ArticleImportJob();
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
-	 * curl -X 'POST' 'http://localhost:8080/o/nexcent-training/v1.0/sites/{siteId}/article-import-jobs/{externalReferenceCode}/validate'  -u 'test@liferay.com:test'
-	 */
-	@io.swagger.v3.oas.annotations.Parameters(
-		value = {
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
-				name = "siteId"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
-				name = "externalReferenceCode"
-			)
-		}
-	)
-	@io.swagger.v3.oas.annotations.tags.Tags(
-		value = {
-			@io.swagger.v3.oas.annotations.tags.Tag(name = "ArticleImportJob")
-		}
-	)
-	@jakarta.ws.rs.Path(
-		"/sites/{siteId}/article-import-jobs/{externalReferenceCode}/validate"
-	)
-	@jakarta.ws.rs.POST
-	@jakarta.ws.rs.Produces({"application/json", "application/xml"})
-	@Override
-	public ArticleImportJob postSiteArticleImportJobValidate(
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@jakarta.validation.constraints.NotNull
-			@jakarta.ws.rs.PathParam("siteId")
-			Long siteId,
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@jakarta.validation.constraints.NotNull
-			@jakarta.ws.rs.PathParam("externalReferenceCode")
-			String externalReferenceCode)
-		throws Exception {
-
-		return new ArticleImportJob();
-	}
-
 	@Override
 	@SuppressWarnings("PMD.UnusedLocalVariable")
 	public void create(
-			Collection<ArticleImportJob> articleImportJobs,
+			Collection<ContentImportProfile> contentImportProfiles,
 			Map<String, Serializable> parameters)
 		throws Exception {
 
-		UnsafeFunction<ArticleImportJob, ArticleImportJob, Exception>
-			articleImportJobUnsafeFunction = null;
-
-		String createStrategy = (String)parameters.getOrDefault(
-			"createStrategy", "INSERT");
-
-		if (StringUtil.equalsIgnoreCase(createStrategy, "INSERT")) {
-			if (parameters.containsKey("siteId")) {
-				articleImportJobUnsafeFunction =
-					articleImportJob -> postSiteArticleImportJob(
-						(Long)parameters.get("siteId"), (MultipartBody)null);
-			}
-			else {
-				throw new NotSupportedException(
-					"One of the following parameters must be specified: [siteId]");
-			}
-		}
-
-		if (articleImportJobUnsafeFunction == null) {
-			throw new NotSupportedException(
-				"Create strategy \"" + createStrategy +
-					"\" is not supported for ArticleImportJob");
-		}
-
-		if (contextBatchUnsafeBiConsumer != null) {
-			contextBatchUnsafeBiConsumer.accept(
-				articleImportJobs, articleImportJobUnsafeFunction);
-		}
-		else if (contextBatchUnsafeConsumer != null) {
-			contextBatchUnsafeConsumer.accept(
-				articleImportJobs, articleImportJobUnsafeFunction::apply);
-		}
-		else {
-			for (ArticleImportJob articleImportJob : articleImportJobs) {
-				articleImportJobUnsafeFunction.apply(articleImportJob);
-			}
-		}
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
 	}
 
 	@Override
 	public void delete(
-			Collection<ArticleImportJob> articleImportJobs,
+			Collection<ContentImportProfile> contentImportProfiles,
 			Map<String, Serializable> parameters)
 		throws Exception {
 
@@ -390,7 +126,7 @@ public abstract class BaseArticleImportJobResourceImpl
 	}
 
 	public Set<String> getAvailableCreateStrategies() {
-		return SetUtil.fromArray("INSERT");
+		return SetUtil.fromArray();
 	}
 
 	public Set<String> getAvailableUpdateStrategies() {
@@ -406,7 +142,7 @@ public abstract class BaseArticleImportJobResourceImpl
 	}
 
 	public String getResourceName() {
-		return "ArticleImportJob";
+		return "ContentImportProfile";
 	}
 
 	public String getVersion() {
@@ -414,7 +150,7 @@ public abstract class BaseArticleImportJobResourceImpl
 	}
 
 	@Override
-	public Page<ArticleImportJob> read(
+	public Page<ContentImportProfile> read(
 			com.liferay.portal.kernel.search.filter.Filter filter,
 			Pagination pagination,
 			com.liferay.portal.kernel.search.Sort[] sorts,
@@ -422,8 +158,8 @@ public abstract class BaseArticleImportJobResourceImpl
 		throws Exception {
 
 		if (parameters.containsKey("siteId")) {
-			return getSiteArticleImportJobsPage(
-				(Long)parameters.get("siteId"), pagination);
+			return getSiteContentImportProfilesPage(
+				(Long)parameters.get("siteId"));
 		}
 		else {
 			throw new NotSupportedException(
@@ -455,7 +191,7 @@ public abstract class BaseArticleImportJobResourceImpl
 
 	@Override
 	public void update(
-			Collection<ArticleImportJob> articleImportJobs,
+			Collection<ContentImportProfile> contentImportProfiles,
 			Map<String, Serializable> parameters)
 		throws Exception {
 
@@ -476,8 +212,9 @@ public abstract class BaseArticleImportJobResourceImpl
 
 	public void setContextBatchUnsafeBiConsumer(
 		UnsafeBiConsumer
-			<Collection<ArticleImportJob>,
-			 UnsafeFunction<ArticleImportJob, ArticleImportJob, Exception>,
+			<Collection<ContentImportProfile>,
+			 UnsafeFunction
+				 <ContentImportProfile, ContentImportProfile, Exception>,
 			 Exception> contextBatchUnsafeBiConsumer) {
 
 		this.contextBatchUnsafeBiConsumer = contextBatchUnsafeBiConsumer;
@@ -485,8 +222,8 @@ public abstract class BaseArticleImportJobResourceImpl
 
 	public void setContextBatchUnsafeConsumer(
 		UnsafeBiConsumer
-			<Collection<ArticleImportJob>,
-			 UnsafeConsumer<ArticleImportJob, Exception>, Exception>
+			<Collection<ContentImportProfile>,
+			 UnsafeConsumer<ContentImportProfile, Exception>, Exception>
 				contextBatchUnsafeConsumer) {
 
 		this.contextBatchUnsafeConsumer = contextBatchUnsafeConsumer;
@@ -752,12 +489,12 @@ public abstract class BaseArticleImportJobResourceImpl
 
 	protected AcceptLanguage contextAcceptLanguage;
 	protected UnsafeBiConsumer
-		<Collection<ArticleImportJob>,
-		 UnsafeFunction<ArticleImportJob, ArticleImportJob, Exception>,
+		<Collection<ContentImportProfile>,
+		 UnsafeFunction<ContentImportProfile, ContentImportProfile, Exception>,
 		 Exception> contextBatchUnsafeBiConsumer;
 	protected UnsafeBiConsumer
-		<Collection<ArticleImportJob>,
-		 UnsafeConsumer<ArticleImportJob, Exception>, Exception>
+		<Collection<ContentImportProfile>,
+		 UnsafeConsumer<ContentImportProfile, Exception>, Exception>
 			contextBatchUnsafeConsumer;
 	protected com.liferay.portal.kernel.model.Company contextCompany;
 	protected HttpServletRequest contextHttpServletRequest;
@@ -794,20 +531,7 @@ public abstract class BaseArticleImportJobResourceImpl
 	}
 
 	private static final com.liferay.portal.kernel.log.Log _log =
-		LogFactoryUtil.getLog(BaseArticleImportJobResourceImpl.class);
-
-	private class PostSiteArticleImportJobRequestBody {
-
-		public String externalReferenceCode;
-
-		@io.swagger.v3.oas.annotations.media.Schema(
-			description = "File", format = "binary", type = "string"
-		)
-		public String file;
-
-		public String structureExternalReferenceCode;
-
-	}
+		LogFactoryUtil.getLog(BaseContentImportProfileResourceImpl.class);
 
 }
-// LIFERAY-REST-BUILDER-HASH:-865998488
+// LIFERAY-REST-BUILDER-HASH:-1746774680

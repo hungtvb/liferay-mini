@@ -17,10 +17,12 @@ import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 
-import com.nexcent.training.rest.dto.v1_0.ArticleImportJob;
-import com.nexcent.training.rest.dto.v1_0.ArticleImportJobItem;
-import com.nexcent.training.rest.resource.v1_0.ArticleImportJobItemResource;
-import com.nexcent.training.rest.resource.v1_0.ArticleImportJobResource;
+import com.nexcent.training.rest.dto.v1_0.ContentImportJob;
+import com.nexcent.training.rest.dto.v1_0.ContentImportJobItem;
+import com.nexcent.training.rest.dto.v1_0.ContentImportProfile;
+import com.nexcent.training.rest.resource.v1_0.ContentImportJobItemResource;
+import com.nexcent.training.rest.resource.v1_0.ContentImportJobResource;
+import com.nexcent.training.rest.resource.v1_0.ContentImportProfileResource;
 
 import jakarta.annotation.Generated;
 
@@ -43,101 +45,149 @@ import org.osgi.service.component.ComponentServiceObjects;
 @Generated("")
 public class Query {
 
-	public static void setArticleImportJobResourceComponentServiceObjects(
-		ComponentServiceObjects<ArticleImportJobResource>
-			articleImportJobResourceComponentServiceObjects) {
+	public static void setContentImportJobResourceComponentServiceObjects(
+		ComponentServiceObjects<ContentImportJobResource>
+			contentImportJobResourceComponentServiceObjects) {
 
-		_articleImportJobResourceComponentServiceObjects =
-			articleImportJobResourceComponentServiceObjects;
+		_contentImportJobResourceComponentServiceObjects =
+			contentImportJobResourceComponentServiceObjects;
 	}
 
-	public static void setArticleImportJobItemResourceComponentServiceObjects(
-		ComponentServiceObjects<ArticleImportJobItemResource>
-			articleImportJobItemResourceComponentServiceObjects) {
+	public static void setContentImportJobItemResourceComponentServiceObjects(
+		ComponentServiceObjects<ContentImportJobItemResource>
+			contentImportJobItemResourceComponentServiceObjects) {
 
-		_articleImportJobItemResourceComponentServiceObjects =
-			articleImportJobItemResourceComponentServiceObjects;
+		_contentImportJobItemResourceComponentServiceObjects =
+			contentImportJobItemResourceComponentServiceObjects;
+	}
+
+	public static void setContentImportProfileResourceComponentServiceObjects(
+		ComponentServiceObjects<ContentImportProfileResource>
+			contentImportProfileResourceComponentServiceObjects) {
+
+		_contentImportProfileResourceComponentServiceObjects =
+			contentImportProfileResourceComponentServiceObjects;
 	}
 
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {articleImportJob(externalReferenceCode: ___, siteKey: ___){completedDate, createdRows, errorMessage, externalReferenceCode, failedRows, fileEntryId, fileName, id, sha256, skippedRows, startedDate, status, structureExternalReferenceCode, totalRows, updatedRows}}"}' -u 'test@liferay.com:test'
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {contentImportJob(jobExternalReferenceCode: ___, siteKey: ___){completedDate, createdRows, errorMessage, externalReferenceCode, failedRows, fileEntryId, fileName, id, importProfileKey, packageSchemaVersion, sha256, skippedRows, startedDate, status, totalRows, updatedRows}}"}' -u 'test@liferay.com:test'
 	 */
 	@GraphQLField
-	public ArticleImportJob articleImportJob(
+	public ContentImportJob contentImportJob(
 			@GraphQLName("siteKey") @NotEmpty String siteKey,
-			@GraphQLName("externalReferenceCode") String externalReferenceCode)
+			@GraphQLName("jobExternalReferenceCode") String
+				jobExternalReferenceCode)
 		throws Exception {
 
 		return _applyComponentServiceObjects(
-			_articleImportJobResourceComponentServiceObjects,
+			_contentImportJobResourceComponentServiceObjects,
 			this::_populateResourceContext,
-			articleImportJobResource ->
-				articleImportJobResource.getSiteArticleImportJob(
-					Long.valueOf(siteKey), externalReferenceCode));
+			contentImportJobResource ->
+				contentImportJobResource.getSiteContentImportJob(
+					Long.valueOf(siteKey), jobExternalReferenceCode));
 	}
 
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {articleImportJobs(page: ___, pageSize: ___, siteKey: ___){items {__}, page, pageSize, totalCount}}"}' -u 'test@liferay.com:test'
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {contentImportJobErrorReport(jobExternalReferenceCode: ___, siteKey: ___){}}"}' -u 'test@liferay.com:test'
 	 */
 	@GraphQLField
-	public ArticleImportJobPage articleImportJobs(
+	public String contentImportJobErrorReport(
+			@GraphQLName("siteKey") @NotEmpty String siteKey,
+			@GraphQLName("jobExternalReferenceCode") String
+				jobExternalReferenceCode)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_contentImportJobResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			contentImportJobResource ->
+				contentImportJobResource.getSiteContentImportJobErrorReport(
+					Long.valueOf(siteKey), jobExternalReferenceCode));
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {contentImportJobs(page: ___, pageSize: ___, siteKey: ___){items {__}, page, pageSize, totalCount}}"}' -u 'test@liferay.com:test'
+	 */
+	@GraphQLField
+	public ContentImportJobPage contentImportJobs(
 			@GraphQLName("siteKey") @NotEmpty String siteKey,
 			@GraphQLName("pageSize") int pageSize,
 			@GraphQLName("page") int page)
 		throws Exception {
 
 		return _applyComponentServiceObjects(
-			_articleImportJobResourceComponentServiceObjects,
+			_contentImportJobResourceComponentServiceObjects,
 			this::_populateResourceContext,
-			articleImportJobResource -> new ArticleImportJobPage(
-				articleImportJobResource.getSiteArticleImportJobsPage(
+			contentImportJobResource -> new ContentImportJobPage(
+				contentImportJobResource.getSiteContentImportJobsPage(
 					Long.valueOf(siteKey), Pagination.of(page, pageSize))));
 	}
 
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {articleImportJobItems(externalReferenceCode: ___, page: ___, pageSize: ___, siteKey: ___){items {__}, page, pageSize, totalCount}}"}' -u 'test@liferay.com:test'
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {contentImportJobItems(jobExternalReferenceCode: ___, page: ___, pageSize: ___, siteKey: ___){items {__}, page, pageSize, totalCount}}"}' -u 'test@liferay.com:test'
 	 */
 	@GraphQLField
-	public ArticleImportJobItemPage articleImportJobItems(
+	public ContentImportJobItemPage contentImportJobItems(
 			@GraphQLName("siteKey") @NotEmpty String siteKey,
-			@GraphQLName("externalReferenceCode") String externalReferenceCode,
+			@GraphQLName("jobExternalReferenceCode") String
+				jobExternalReferenceCode,
 			@GraphQLName("pageSize") int pageSize,
 			@GraphQLName("page") int page)
 		throws Exception {
 
 		return _applyComponentServiceObjects(
-			_articleImportJobItemResourceComponentServiceObjects,
+			_contentImportJobItemResourceComponentServiceObjects,
 			this::_populateResourceContext,
-			articleImportJobItemResource -> new ArticleImportJobItemPage(
-				articleImportJobItemResource.getSiteArticleImportJobItemsPage(
-					Long.valueOf(siteKey), externalReferenceCode,
+			contentImportJobItemResource -> new ContentImportJobItemPage(
+				contentImportJobItemResource.getSiteContentImportJobItemsPage(
+					Long.valueOf(siteKey), jobExternalReferenceCode,
 					Pagination.of(page, pageSize))));
 	}
 
-	@GraphQLName("ArticleImportJobPage")
-	public class ArticleImportJobPage {
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {contentImportProfiles(siteKey: ___){items {__}, page, pageSize, totalCount}}"}' -u 'test@liferay.com:test'
+	 */
+	@GraphQLField
+	public ContentImportProfilePage contentImportProfiles(
+			@GraphQLName("siteKey") @NotEmpty String siteKey)
+		throws Exception {
 
-		public ArticleImportJobPage(Page articleImportJobPage) {
-			actions = articleImportJobPage.getActions();
+		return _applyComponentServiceObjects(
+			_contentImportProfileResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			contentImportProfileResource -> new ContentImportProfilePage(
+				contentImportProfileResource.getSiteContentImportProfilesPage(
+					Long.valueOf(siteKey))));
+	}
 
-			items = articleImportJobPage.getItems();
-			lastPage = articleImportJobPage.getLastPage();
-			page = articleImportJobPage.getPage();
-			pageSize = articleImportJobPage.getPageSize();
-			totalCount = articleImportJobPage.getTotalCount();
+	@GraphQLName("ContentImportJobPage")
+	public class ContentImportJobPage {
+
+		public ContentImportJobPage(Page contentImportJobPage) {
+			actions = contentImportJobPage.getActions();
+
+			items = contentImportJobPage.getItems();
+			lastPage = contentImportJobPage.getLastPage();
+			page = contentImportJobPage.getPage();
+			pageSize = contentImportJobPage.getPageSize();
+			totalCount = contentImportJobPage.getTotalCount();
 		}
 
 		@GraphQLField
 		protected Map<String, Map<String, String>> actions;
 
 		@GraphQLField
-		protected java.util.Collection<ArticleImportJob> items;
+		protected java.util.Collection<ContentImportJob> items;
 
 		@GraphQLField
 		protected long lastPage;
@@ -153,24 +203,57 @@ public class Query {
 
 	}
 
-	@GraphQLName("ArticleImportJobItemPage")
-	public class ArticleImportJobItemPage {
+	@GraphQLName("ContentImportJobItemPage")
+	public class ContentImportJobItemPage {
 
-		public ArticleImportJobItemPage(Page articleImportJobItemPage) {
-			actions = articleImportJobItemPage.getActions();
+		public ContentImportJobItemPage(Page contentImportJobItemPage) {
+			actions = contentImportJobItemPage.getActions();
 
-			items = articleImportJobItemPage.getItems();
-			lastPage = articleImportJobItemPage.getLastPage();
-			page = articleImportJobItemPage.getPage();
-			pageSize = articleImportJobItemPage.getPageSize();
-			totalCount = articleImportJobItemPage.getTotalCount();
+			items = contentImportJobItemPage.getItems();
+			lastPage = contentImportJobItemPage.getLastPage();
+			page = contentImportJobItemPage.getPage();
+			pageSize = contentImportJobItemPage.getPageSize();
+			totalCount = contentImportJobItemPage.getTotalCount();
 		}
 
 		@GraphQLField
 		protected Map<String, Map<String, String>> actions;
 
 		@GraphQLField
-		protected java.util.Collection<ArticleImportJobItem> items;
+		protected java.util.Collection<ContentImportJobItem> items;
+
+		@GraphQLField
+		protected long lastPage;
+
+		@GraphQLField
+		protected long page;
+
+		@GraphQLField
+		protected long pageSize;
+
+		@GraphQLField
+		protected long totalCount;
+
+	}
+
+	@GraphQLName("ContentImportProfilePage")
+	public class ContentImportProfilePage {
+
+		public ContentImportProfilePage(Page contentImportProfilePage) {
+			actions = contentImportProfilePage.getActions();
+
+			items = contentImportProfilePage.getItems();
+			lastPage = contentImportProfilePage.getLastPage();
+			page = contentImportProfilePage.getPage();
+			pageSize = contentImportProfilePage.getPageSize();
+			totalCount = contentImportProfilePage.getTotalCount();
+		}
+
+		@GraphQLField
+		protected Map<String, Map<String, String>> actions;
+
+		@GraphQLField
+		protected java.util.Collection<ContentImportProfile> items;
 
 		@GraphQLField
 		protected long lastPage;
@@ -206,49 +289,71 @@ public class Query {
 	}
 
 	private void _populateResourceContext(
-			ArticleImportJobResource articleImportJobResource)
+			ContentImportJobResource contentImportJobResource)
 		throws Exception {
 
-		articleImportJobResource.setContextAcceptLanguage(_acceptLanguage);
-		articleImportJobResource.setContextCompany(_company);
-		articleImportJobResource.setContextHttpServletRequest(
+		contentImportJobResource.setContextAcceptLanguage(_acceptLanguage);
+		contentImportJobResource.setContextCompany(_company);
+		contentImportJobResource.setContextHttpServletRequest(
 			_httpServletRequest);
-		articleImportJobResource.setContextHttpServletResponse(
+		contentImportJobResource.setContextHttpServletResponse(
 			_httpServletResponse);
-		articleImportJobResource.setContextUriInfo(_uriInfo);
-		articleImportJobResource.setContextUser(_user);
-		articleImportJobResource.setGroupLocalService(_groupLocalService);
-		articleImportJobResource.setResourceActionLocalService(
+		contentImportJobResource.setContextUriInfo(_uriInfo);
+		contentImportJobResource.setContextUser(_user);
+		contentImportJobResource.setGroupLocalService(_groupLocalService);
+		contentImportJobResource.setResourceActionLocalService(
 			_resourceActionLocalService);
-		articleImportJobResource.setResourcePermissionLocalService(
+		contentImportJobResource.setResourcePermissionLocalService(
 			_resourcePermissionLocalService);
-		articleImportJobResource.setRoleLocalService(_roleLocalService);
+		contentImportJobResource.setRoleLocalService(_roleLocalService);
 	}
 
 	private void _populateResourceContext(
-			ArticleImportJobItemResource articleImportJobItemResource)
+			ContentImportJobItemResource contentImportJobItemResource)
 		throws Exception {
 
-		articleImportJobItemResource.setContextAcceptLanguage(_acceptLanguage);
-		articleImportJobItemResource.setContextCompany(_company);
-		articleImportJobItemResource.setContextHttpServletRequest(
+		contentImportJobItemResource.setContextAcceptLanguage(_acceptLanguage);
+		contentImportJobItemResource.setContextCompany(_company);
+		contentImportJobItemResource.setContextHttpServletRequest(
 			_httpServletRequest);
-		articleImportJobItemResource.setContextHttpServletResponse(
+		contentImportJobItemResource.setContextHttpServletResponse(
 			_httpServletResponse);
-		articleImportJobItemResource.setContextUriInfo(_uriInfo);
-		articleImportJobItemResource.setContextUser(_user);
-		articleImportJobItemResource.setGroupLocalService(_groupLocalService);
-		articleImportJobItemResource.setResourceActionLocalService(
+		contentImportJobItemResource.setContextUriInfo(_uriInfo);
+		contentImportJobItemResource.setContextUser(_user);
+		contentImportJobItemResource.setGroupLocalService(_groupLocalService);
+		contentImportJobItemResource.setResourceActionLocalService(
 			_resourceActionLocalService);
-		articleImportJobItemResource.setResourcePermissionLocalService(
+		contentImportJobItemResource.setResourcePermissionLocalService(
 			_resourcePermissionLocalService);
-		articleImportJobItemResource.setRoleLocalService(_roleLocalService);
+		contentImportJobItemResource.setRoleLocalService(_roleLocalService);
 	}
 
-	private static ComponentServiceObjects<ArticleImportJobResource>
-		_articleImportJobResourceComponentServiceObjects;
-	private static ComponentServiceObjects<ArticleImportJobItemResource>
-		_articleImportJobItemResourceComponentServiceObjects;
+	private void _populateResourceContext(
+			ContentImportProfileResource contentImportProfileResource)
+		throws Exception {
+
+		contentImportProfileResource.setContextAcceptLanguage(_acceptLanguage);
+		contentImportProfileResource.setContextCompany(_company);
+		contentImportProfileResource.setContextHttpServletRequest(
+			_httpServletRequest);
+		contentImportProfileResource.setContextHttpServletResponse(
+			_httpServletResponse);
+		contentImportProfileResource.setContextUriInfo(_uriInfo);
+		contentImportProfileResource.setContextUser(_user);
+		contentImportProfileResource.setGroupLocalService(_groupLocalService);
+		contentImportProfileResource.setResourceActionLocalService(
+			_resourceActionLocalService);
+		contentImportProfileResource.setResourcePermissionLocalService(
+			_resourcePermissionLocalService);
+		contentImportProfileResource.setRoleLocalService(_roleLocalService);
+	}
+
+	private static ComponentServiceObjects<ContentImportJobResource>
+		_contentImportJobResourceComponentServiceObjects;
+	private static ComponentServiceObjects<ContentImportJobItemResource>
+		_contentImportJobItemResourceComponentServiceObjects;
+	private static ComponentServiceObjects<ContentImportProfileResource>
+		_contentImportProfileResourceComponentServiceObjects;
 
 	private AcceptLanguage _acceptLanguage;
 	private com.liferay.portal.kernel.model.Company _company;
@@ -267,4 +372,4 @@ public class Query {
 	private com.liferay.portal.kernel.model.User _user;
 
 }
-// LIFERAY-REST-BUILDER-HASH:624089182
+// LIFERAY-REST-BUILDER-HASH:854573288

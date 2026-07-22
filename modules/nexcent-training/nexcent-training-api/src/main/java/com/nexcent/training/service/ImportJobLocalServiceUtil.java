@@ -55,13 +55,15 @@ public class ImportJobLocalServiceUtil {
 	public static ImportJob addOrResetImportJob(
 			long userId, long groupId, String externalReferenceCode,
 			long fileEntryId, String fileName, String sha256,
+			String importProfileKey, String packageSchemaVersion,
 			String structureERC,
 			com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws PortalException {
 
 		return getService().addOrResetImportJob(
 			userId, groupId, externalReferenceCode, fileEntryId, fileName,
-			sha256, structureERC, serviceContext);
+			sha256, importProfileKey, packageSchemaVersion, structureERC,
+			serviceContext);
 	}
 
 	/**
@@ -407,4 +409,4 @@ public class ImportJobLocalServiceUtil {
 			ImportJobLocalServiceUtil.class, ImportJobLocalService.class);
 
 }
-// LIFERAY-SERVICE-BUILDER-HASH:-1754960033
+// LIFERAY-SERVICE-BUILDER-HASH:978266069

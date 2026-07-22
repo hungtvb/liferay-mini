@@ -45,7 +45,7 @@ public interface ImportJobItemPersistence
 	 * Returns a range of all the import job items where importJobId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>ImportJobItemModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.nexcent.training.model.impl.ImportJobItemModelImpl</code>.
 	 * </p>
 	 *
 	 * @param importJobId the import job ID
@@ -60,7 +60,7 @@ public interface ImportJobItemPersistence
 	 * Returns an ordered range of all the import job items where importJobId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>ImportJobItemModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.nexcent.training.model.impl.ImportJobItemModelImpl</code>.
 	 * </p>
 	 *
 	 * @param importJobId the import job ID
@@ -78,7 +78,7 @@ public interface ImportJobItemPersistence
 	 * Returns an ordered range of all the import job items where importJobId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>ImportJobItemModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.nexcent.training.model.impl.ImportJobItemModelImpl</code>.
 	 * </p>
 	 *
 	 * @param importJobId the import job ID
@@ -136,54 +136,63 @@ public interface ImportJobItemPersistence
 	public int countByJ(long importJobId);
 
 	/**
-	 * Returns the import job item where importJobId = &#63; and rowNumber = &#63; or throws a <code>NoSuchImportJobItemException</code> if it could not be found.
+	 * Returns the import job item where importJobId = &#63; and sheetName = &#63; and rowNumber = &#63; or throws a <code>NoSuchImportJobItemException</code> if it could not be found.
 	 *
 	 * @param importJobId the import job ID
+	 * @param sheetName the sheet name
 	 * @param rowNumber the row number
 	 * @return the matching import job item
 	 * @throws NoSuchImportJobItemException if a matching import job item could not be found
 	 */
-	public ImportJobItem findByJ_R(long importJobId, int rowNumber)
+	public ImportJobItem findByJ_S_R(
+			long importJobId, String sheetName, int rowNumber)
 		throws NoSuchImportJobItemException;
 
 	/**
-	 * Returns the import job item where importJobId = &#63; and rowNumber = &#63; or returns <code>null</code> if it could not be found. Uses the finder cache.
+	 * Returns the import job item where importJobId = &#63; and sheetName = &#63; and rowNumber = &#63; or returns <code>null</code> if it could not be found. Uses the finder cache.
 	 *
 	 * @param importJobId the import job ID
+	 * @param sheetName the sheet name
 	 * @param rowNumber the row number
 	 * @return the matching import job item, or <code>null</code> if a matching import job item could not be found
 	 */
-	public ImportJobItem fetchByJ_R(long importJobId, int rowNumber);
+	public ImportJobItem fetchByJ_S_R(
+		long importJobId, String sheetName, int rowNumber);
 
 	/**
-	 * Returns the import job item where importJobId = &#63; and rowNumber = &#63; or returns <code>null</code> if it could not be found, optionally using the finder cache.
+	 * Returns the import job item where importJobId = &#63; and sheetName = &#63; and rowNumber = &#63; or returns <code>null</code> if it could not be found, optionally using the finder cache.
 	 *
 	 * @param importJobId the import job ID
+	 * @param sheetName the sheet name
 	 * @param rowNumber the row number
 	 * @param useFinderCache whether to use the finder cache
 	 * @return the matching import job item, or <code>null</code> if a matching import job item could not be found
 	 */
-	public ImportJobItem fetchByJ_R(
-		long importJobId, int rowNumber, boolean useFinderCache);
+	public ImportJobItem fetchByJ_S_R(
+		long importJobId, String sheetName, int rowNumber,
+		boolean useFinderCache);
 
 	/**
-	 * Removes the import job item where importJobId = &#63; and rowNumber = &#63; from the database.
+	 * Removes the import job item where importJobId = &#63; and sheetName = &#63; and rowNumber = &#63; from the database.
 	 *
 	 * @param importJobId the import job ID
+	 * @param sheetName the sheet name
 	 * @param rowNumber the row number
 	 * @return the import job item that was removed
 	 */
-	public ImportJobItem removeByJ_R(long importJobId, int rowNumber)
+	public ImportJobItem removeByJ_S_R(
+			long importJobId, String sheetName, int rowNumber)
 		throws NoSuchImportJobItemException;
 
 	/**
-	 * Returns the number of import job items where importJobId = &#63; and rowNumber = &#63;.
+	 * Returns the number of import job items where importJobId = &#63; and sheetName = &#63; and rowNumber = &#63;.
 	 *
 	 * @param importJobId the import job ID
+	 * @param sheetName the sheet name
 	 * @param rowNumber the row number
 	 * @return the number of matching import job items
 	 */
-	public int countByJ_R(long importJobId, int rowNumber);
+	public int countByJ_S_R(long importJobId, String sheetName, int rowNumber);
 
 	/**
 	 * Caches the import job item in the entity cache if it is enabled.
@@ -248,7 +257,7 @@ public interface ImportJobItemPersistence
 	 * Returns a range of all the import job items.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>ImportJobItemModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.nexcent.training.model.impl.ImportJobItemModelImpl</code>.
 	 * </p>
 	 *
 	 * @param start the lower bound of the range of import job items
@@ -261,7 +270,7 @@ public interface ImportJobItemPersistence
 	 * Returns an ordered range of all the import job items.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>ImportJobItemModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.nexcent.training.model.impl.ImportJobItemModelImpl</code>.
 	 * </p>
 	 *
 	 * @param start the lower bound of the range of import job items
@@ -278,7 +287,7 @@ public interface ImportJobItemPersistence
 	 * Returns an ordered range of all the import job items.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>ImportJobItemModelImpl</code>.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.nexcent.training.model.impl.ImportJobItemModelImpl</code>.
 	 * </p>
 	 *
 	 * @param start the lower bound of the range of import job items
@@ -306,4 +315,4 @@ public interface ImportJobItemPersistence
 	public int countAll();
 
 }
-// LIFERAY-SERVICE-BUILDER-HASH:-852345786
+// LIFERAY-SERVICE-BUILDER-HASH:-1728233788

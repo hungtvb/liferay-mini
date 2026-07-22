@@ -13,10 +13,10 @@ import com.liferay.portal.vulcan.accept.language.AcceptLanguage;
 import com.liferay.portal.vulcan.batch.engine.resource.VulcanBatchEngineImportTaskResource;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
-import com.liferay.portal.vulcan.multipart.MultipartBody;
 
-import com.nexcent.training.rest.dto.v1_0.ArticleImportJob;
-import com.nexcent.training.rest.resource.v1_0.ArticleImportJobResource;
+import com.nexcent.training.rest.dto.v1_0.ContentImportJob;
+import com.nexcent.training.rest.dto.v1_0.ContentImportJobRequest;
+import com.nexcent.training.rest.resource.v1_0.ContentImportJobResource;
 
 import jakarta.annotation.Generated;
 
@@ -39,76 +39,90 @@ import org.osgi.service.component.ComponentServiceObjects;
 @Generated("")
 public class Mutation {
 
-	public static void setArticleImportJobResourceComponentServiceObjects(
-		ComponentServiceObjects<ArticleImportJobResource>
-			articleImportJobResourceComponentServiceObjects) {
+	public static void setContentImportJobResourceComponentServiceObjects(
+		ComponentServiceObjects<ContentImportJobResource>
+			contentImportJobResourceComponentServiceObjects) {
 
-		_articleImportJobResourceComponentServiceObjects =
-			articleImportJobResourceComponentServiceObjects;
-	}
-
-	@GraphQLField(
-		description = "Uploads an XLSX workbook. Multipart fields are file, externalReferenceCode, and optional structureExternalReferenceCode."
-	)
-	@GraphQLName(
-		description = "Uploads an XLSX workbook. Multipart fields are file, externalReferenceCode, and optional structureExternalReferenceCode.",
-		value = "postSiteArticleImportJobSiteIdMultipartBody"
-	)
-	public ArticleImportJob createSiteArticleImportJob(
-			@GraphQLName("siteKey") @NotEmpty String siteKey,
-			@GraphQLName("multipartBody") MultipartBody multipartBody)
-		throws Exception {
-
-		return _applyComponentServiceObjects(
-			_articleImportJobResourceComponentServiceObjects,
-			this::_populateResourceContext,
-			articleImportJobResource ->
-				articleImportJobResource.postSiteArticleImportJob(
-					Long.valueOf(siteKey), multipartBody));
+		_contentImportJobResourceComponentServiceObjects =
+			contentImportJobResourceComponentServiceObjects;
 	}
 
 	@GraphQLField
-	public Response createSiteArticleImportJobBatch(
+	public ContentImportJob createSiteContentImportJob(
 			@GraphQLName("siteKey") @NotEmpty String siteKey,
-			@GraphQLName("multipartBody") MultipartBody multipartBody,
+			@GraphQLName("contentImportJobRequest") ContentImportJobRequest
+				contentImportJobRequest)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_contentImportJobResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			contentImportJobResource ->
+				contentImportJobResource.postSiteContentImportJob(
+					Long.valueOf(siteKey), contentImportJobRequest));
+	}
+
+	@GraphQLField
+	public Response createSiteContentImportJobBatch(
+			@GraphQLName("siteKey") @NotEmpty String siteKey,
+			@GraphQLName("contentImportJobRequest") ContentImportJobRequest
+				contentImportJobRequest,
 			@GraphQLName("callbackURL") String callbackURL,
 			@GraphQLName("object") Object object)
 		throws Exception {
 
 		return _applyComponentServiceObjects(
-			_articleImportJobResourceComponentServiceObjects,
+			_contentImportJobResourceComponentServiceObjects,
 			this::_populateResourceContext,
-			articleImportJobResource ->
-				articleImportJobResource.postSiteArticleImportJobBatch(
-					Long.valueOf(siteKey), multipartBody, callbackURL, object));
+			contentImportJobResource ->
+				contentImportJobResource.postSiteContentImportJobBatch(
+					Long.valueOf(siteKey), contentImportJobRequest, callbackURL,
+					object));
 	}
 
 	@GraphQLField
-	public ArticleImportJob createSiteArticleImportJobExecute(
+	public ContentImportJob createSiteContentImportJobExecute(
 			@GraphQLName("siteKey") @NotEmpty String siteKey,
-			@GraphQLName("externalReferenceCode") String externalReferenceCode)
+			@GraphQLName("jobExternalReferenceCode") String
+				jobExternalReferenceCode)
 		throws Exception {
 
 		return _applyComponentServiceObjects(
-			_articleImportJobResourceComponentServiceObjects,
+			_contentImportJobResourceComponentServiceObjects,
 			this::_populateResourceContext,
-			articleImportJobResource ->
-				articleImportJobResource.postSiteArticleImportJobExecute(
-					Long.valueOf(siteKey), externalReferenceCode));
+			contentImportJobResource ->
+				contentImportJobResource.postSiteContentImportJobExecute(
+					Long.valueOf(siteKey), jobExternalReferenceCode));
 	}
 
 	@GraphQLField
-	public ArticleImportJob createSiteArticleImportJobValidate(
+	public ContentImportJob createSiteContentImportJobRetry(
 			@GraphQLName("siteKey") @NotEmpty String siteKey,
-			@GraphQLName("externalReferenceCode") String externalReferenceCode)
+			@GraphQLName("jobExternalReferenceCode") String
+				jobExternalReferenceCode)
 		throws Exception {
 
 		return _applyComponentServiceObjects(
-			_articleImportJobResourceComponentServiceObjects,
+			_contentImportJobResourceComponentServiceObjects,
 			this::_populateResourceContext,
-			articleImportJobResource ->
-				articleImportJobResource.postSiteArticleImportJobValidate(
-					Long.valueOf(siteKey), externalReferenceCode));
+			contentImportJobResource ->
+				contentImportJobResource.postSiteContentImportJobRetry(
+					Long.valueOf(siteKey), jobExternalReferenceCode));
+	}
+
+	@GraphQLField
+	public ContentImportJob createSiteContentImportJobValidate(
+			@GraphQLName("siteKey") @NotEmpty String siteKey,
+			@GraphQLName("jobExternalReferenceCode") String
+				jobExternalReferenceCode)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_contentImportJobResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			contentImportJobResource ->
+				contentImportJobResource.postSiteContentImportJobValidate(
+					Long.valueOf(siteKey), jobExternalReferenceCode));
 	}
 
 	private <T, R, E1 extends Throwable, E2 extends Throwable> R
@@ -150,26 +164,26 @@ public class Mutation {
 	}
 
 	private void _populateResourceContext(
-			ArticleImportJobResource articleImportJobResource)
+			ContentImportJobResource contentImportJobResource)
 		throws Exception {
 
-		articleImportJobResource.setContextAcceptLanguage(_acceptLanguage);
-		articleImportJobResource.setContextCompany(_company);
-		articleImportJobResource.setContextHttpServletRequest(
+		contentImportJobResource.setContextAcceptLanguage(_acceptLanguage);
+		contentImportJobResource.setContextCompany(_company);
+		contentImportJobResource.setContextHttpServletRequest(
 			_httpServletRequest);
-		articleImportJobResource.setContextHttpServletResponse(
+		contentImportJobResource.setContextHttpServletResponse(
 			_httpServletResponse);
-		articleImportJobResource.setContextUriInfo(_uriInfo);
-		articleImportJobResource.setContextUser(_user);
-		articleImportJobResource.setGroupLocalService(_groupLocalService);
-		articleImportJobResource.setRoleLocalService(_roleLocalService);
+		contentImportJobResource.setContextUriInfo(_uriInfo);
+		contentImportJobResource.setContextUser(_user);
+		contentImportJobResource.setGroupLocalService(_groupLocalService);
+		contentImportJobResource.setRoleLocalService(_roleLocalService);
 
-		articleImportJobResource.setVulcanBatchEngineImportTaskResource(
+		contentImportJobResource.setVulcanBatchEngineImportTaskResource(
 			_vulcanBatchEngineImportTaskResource);
 	}
 
-	private static ComponentServiceObjects<ArticleImportJobResource>
-		_articleImportJobResourceComponentServiceObjects;
+	private static ComponentServiceObjects<ContentImportJobResource>
+		_contentImportJobResourceComponentServiceObjects;
 
 	private AcceptLanguage _acceptLanguage;
 	private com.liferay.portal.kernel.model.Company _company;
@@ -185,4 +199,4 @@ public class Mutation {
 		_vulcanBatchEngineImportTaskResource;
 
 }
-// LIFERAY-REST-BUILDER-HASH:660357735
+// LIFERAY-REST-BUILDER-HASH:-1673565435

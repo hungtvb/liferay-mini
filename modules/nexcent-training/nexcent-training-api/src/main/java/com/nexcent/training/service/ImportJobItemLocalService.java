@@ -69,9 +69,9 @@ public interface ImportJobItemLocalService
 
 	public ImportJobItem addImportJobItem(
 		long companyId, long groupId, long importJobId, int rowNumber,
-		String articleERC, String locale, String operation, String result,
-		String severity, String messageCode, String message,
-		String payloadHash);
+		String targetType, String targetERC, String sheetName, String locale,
+		String operation, String result, String severity, String messageCode,
+		String message, String payloadHash);
 
 	/**
 	 * Creates a new import job item with the primary key. Does not add the import job item to the database.
@@ -280,4 +280,4 @@ public interface ImportJobItemLocalService
 		throws PortalException;
 
 }
-// LIFERAY-SERVICE-BUILDER-HASH:-920302272
+// LIFERAY-SERVICE-BUILDER-HASH:-29218992

@@ -61,7 +61,8 @@ public class ImportJobItemModelImpl
 		{"importJobItemId", Types.BIGINT}, {"groupId", Types.BIGINT},
 		{"companyId", Types.BIGINT}, {"createDate", Types.TIMESTAMP},
 		{"modifiedDate", Types.TIMESTAMP}, {"importJobId", Types.BIGINT},
-		{"rowNumber", Types.INTEGER}, {"articleERC", Types.VARCHAR},
+		{"rowNumber", Types.INTEGER}, {"targetType", Types.VARCHAR},
+		{"targetERC", Types.VARCHAR}, {"sheetName", Types.VARCHAR},
 		{"locale", Types.VARCHAR}, {"operation", Types.VARCHAR},
 		{"result", Types.VARCHAR}, {"severity", Types.VARCHAR},
 		{"messageCode", Types.VARCHAR}, {"message", Types.VARCHAR},
@@ -79,7 +80,9 @@ public class ImportJobItemModelImpl
 		TABLE_COLUMNS_MAP.put("modifiedDate", Types.TIMESTAMP);
 		TABLE_COLUMNS_MAP.put("importJobId", Types.BIGINT);
 		TABLE_COLUMNS_MAP.put("rowNumber", Types.INTEGER);
-		TABLE_COLUMNS_MAP.put("articleERC", Types.VARCHAR);
+		TABLE_COLUMNS_MAP.put("targetType", Types.VARCHAR);
+		TABLE_COLUMNS_MAP.put("targetERC", Types.VARCHAR);
+		TABLE_COLUMNS_MAP.put("sheetName", Types.VARCHAR);
 		TABLE_COLUMNS_MAP.put("locale", Types.VARCHAR);
 		TABLE_COLUMNS_MAP.put("operation", Types.VARCHAR);
 		TABLE_COLUMNS_MAP.put("result", Types.VARCHAR);
@@ -90,7 +93,7 @@ public class ImportJobItemModelImpl
 	}
 
 	public static final String TABLE_SQL_CREATE =
-		"create table NXC_ImportJobItem (importJobItemId LONG not null primary key,groupId LONG,companyId LONG,createDate DATE null,modifiedDate DATE null,importJobId LONG,rowNumber INTEGER,articleERC VARCHAR(75) null,locale VARCHAR(75) null,operation VARCHAR(75) null,result VARCHAR(75) null,severity VARCHAR(75) null,messageCode VARCHAR(75) null,message VARCHAR(75) null,payloadHash VARCHAR(75) null)";
+		"create table NXC_ImportJobItem (importJobItemId LONG not null primary key,groupId LONG,companyId LONG,createDate DATE null,modifiedDate DATE null,importJobId LONG,rowNumber INTEGER,targetType VARCHAR(75) null,targetERC VARCHAR(75) null,sheetName VARCHAR(75) null,locale VARCHAR(75) null,operation VARCHAR(75) null,result VARCHAR(75) null,severity VARCHAR(75) null,messageCode VARCHAR(75) null,message VARCHAR(75) null,payloadHash VARCHAR(75) null)";
 
 	public static final String TABLE_SQL_DROP = "drop table NXC_ImportJobItem";
 
@@ -117,6 +120,12 @@ public class ImportJobItemModelImpl
 	 */
 	@Deprecated
 	public static final long ROWNUMBER_COLUMN_BITMASK = 2L;
+
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
+	 */
+	@Deprecated
+	public static final long SHEETNAME_COLUMN_BITMASK = 4L;
 
 	/**
 	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
@@ -242,7 +251,11 @@ public class ImportJobItemModelImpl
 			attributeGetterFunctions.put(
 				"rowNumber", ImportJobItem::getRowNumber);
 			attributeGetterFunctions.put(
-				"articleERC", ImportJobItem::getArticleERC);
+				"targetType", ImportJobItem::getTargetType);
+			attributeGetterFunctions.put(
+				"targetERC", ImportJobItem::getTargetERC);
+			attributeGetterFunctions.put(
+				"sheetName", ImportJobItem::getSheetName);
 			attributeGetterFunctions.put("locale", ImportJobItem::getLocale);
 			attributeGetterFunctions.put(
 				"operation", ImportJobItem::getOperation);
@@ -296,9 +309,15 @@ public class ImportJobItemModelImpl
 				(BiConsumer<ImportJobItem, Integer>)
 					ImportJobItem::setRowNumber);
 			attributeSetterBiConsumers.put(
-				"articleERC",
+				"targetType",
 				(BiConsumer<ImportJobItem, String>)
-					ImportJobItem::setArticleERC);
+					ImportJobItem::setTargetType);
+			attributeSetterBiConsumers.put(
+				"targetERC",
+				(BiConsumer<ImportJobItem, String>)ImportJobItem::setTargetERC);
+			attributeSetterBiConsumers.put(
+				"sheetName",
+				(BiConsumer<ImportJobItem, String>)ImportJobItem::setSheetName);
 			attributeSetterBiConsumers.put(
 				"locale",
 				(BiConsumer<ImportJobItem, String>)ImportJobItem::setLocale);
@@ -454,22 +473,69 @@ public class ImportJobItemModelImpl
 	}
 
 	@Override
-	public String getArticleERC() {
-		if (_articleERC == null) {
+	public String getTargetType() {
+		if (_targetType == null) {
 			return "";
 		}
 		else {
-			return _articleERC;
+			return _targetType;
 		}
 	}
 
 	@Override
-	public void setArticleERC(String articleERC) {
+	public void setTargetType(String targetType) {
 		if (_columnOriginalValues == Collections.EMPTY_MAP) {
 			_setColumnOriginalValues();
 		}
 
-		_articleERC = articleERC;
+		_targetType = targetType;
+	}
+
+	@Override
+	public String getTargetERC() {
+		if (_targetERC == null) {
+			return "";
+		}
+		else {
+			return _targetERC;
+		}
+	}
+
+	@Override
+	public void setTargetERC(String targetERC) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
+		_targetERC = targetERC;
+	}
+
+	@Override
+	public String getSheetName() {
+		if (_sheetName == null) {
+			return "";
+		}
+		else {
+			return _sheetName;
+		}
+	}
+
+	@Override
+	public void setSheetName(String sheetName) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
+		_sheetName = sheetName;
+	}
+
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getColumnOriginalValue(String)}
+	 */
+	@Deprecated
+	public String getOriginalSheetName() {
+		return getColumnOriginalValue("sheetName");
 	}
 
 	@Override
@@ -668,7 +734,9 @@ public class ImportJobItemModelImpl
 		importJobItemImpl.setModifiedDate(getModifiedDate());
 		importJobItemImpl.setImportJobId(getImportJobId());
 		importJobItemImpl.setRowNumber(getRowNumber());
-		importJobItemImpl.setArticleERC(getArticleERC());
+		importJobItemImpl.setTargetType(getTargetType());
+		importJobItemImpl.setTargetERC(getTargetERC());
+		importJobItemImpl.setSheetName(getSheetName());
 		importJobItemImpl.setLocale(getLocale());
 		importJobItemImpl.setOperation(getOperation());
 		importJobItemImpl.setResult(getResult());
@@ -700,8 +768,12 @@ public class ImportJobItemModelImpl
 			this.<Long>getColumnOriginalValue("importJobId"));
 		importJobItemImpl.setRowNumber(
 			this.<Integer>getColumnOriginalValue("rowNumber"));
-		importJobItemImpl.setArticleERC(
-			this.<String>getColumnOriginalValue("articleERC"));
+		importJobItemImpl.setTargetType(
+			this.<String>getColumnOriginalValue("targetType"));
+		importJobItemImpl.setTargetERC(
+			this.<String>getColumnOriginalValue("targetERC"));
+		importJobItemImpl.setSheetName(
+			this.<String>getColumnOriginalValue("sheetName"));
 		importJobItemImpl.setLocale(
 			this.<String>getColumnOriginalValue("locale"));
 		importJobItemImpl.setOperation(
@@ -828,12 +900,28 @@ public class ImportJobItemModelImpl
 
 		importJobItemCacheModel.rowNumber = getRowNumber();
 
-		importJobItemCacheModel.articleERC = getArticleERC();
+		importJobItemCacheModel.targetType = getTargetType();
 
-		String articleERC = importJobItemCacheModel.articleERC;
+		String targetType = importJobItemCacheModel.targetType;
 
-		if ((articleERC != null) && (articleERC.length() == 0)) {
-			importJobItemCacheModel.articleERC = null;
+		if ((targetType != null) && (targetType.length() == 0)) {
+			importJobItemCacheModel.targetType = null;
+		}
+
+		importJobItemCacheModel.targetERC = getTargetERC();
+
+		String targetERC = importJobItemCacheModel.targetERC;
+
+		if ((targetERC != null) && (targetERC.length() == 0)) {
+			importJobItemCacheModel.targetERC = null;
+		}
+
+		importJobItemCacheModel.sheetName = getSheetName();
+
+		String sheetName = importJobItemCacheModel.sheetName;
+
+		if ((sheetName != null) && (sheetName.length() == 0)) {
+			importJobItemCacheModel.sheetName = null;
 		}
 
 		importJobItemCacheModel.locale = getLocale();
@@ -961,7 +1049,9 @@ public class ImportJobItemModelImpl
 	private boolean _setModifiedDate;
 	private long _importJobId;
 	private int _rowNumber;
-	private String _articleERC;
+	private String _targetType;
+	private String _targetERC;
+	private String _sheetName;
 	private String _locale;
 	private String _operation;
 	private String _result;
@@ -1005,7 +1095,9 @@ public class ImportJobItemModelImpl
 		_columnOriginalValues.put("modifiedDate", _modifiedDate);
 		_columnOriginalValues.put("importJobId", _importJobId);
 		_columnOriginalValues.put("rowNumber", _rowNumber);
-		_columnOriginalValues.put("articleERC", _articleERC);
+		_columnOriginalValues.put("targetType", _targetType);
+		_columnOriginalValues.put("targetERC", _targetERC);
+		_columnOriginalValues.put("sheetName", _sheetName);
 		_columnOriginalValues.put("locale", _locale);
 		_columnOriginalValues.put("operation", _operation);
 		_columnOriginalValues.put("result", _result);
@@ -1040,21 +1132,25 @@ public class ImportJobItemModelImpl
 
 		columnBitmasks.put("rowNumber", 64L);
 
-		columnBitmasks.put("articleERC", 128L);
+		columnBitmasks.put("targetType", 128L);
 
-		columnBitmasks.put("locale", 256L);
+		columnBitmasks.put("targetERC", 256L);
 
-		columnBitmasks.put("operation", 512L);
+		columnBitmasks.put("sheetName", 512L);
 
-		columnBitmasks.put("result", 1024L);
+		columnBitmasks.put("locale", 1024L);
 
-		columnBitmasks.put("severity", 2048L);
+		columnBitmasks.put("operation", 2048L);
 
-		columnBitmasks.put("messageCode", 4096L);
+		columnBitmasks.put("result", 4096L);
 
-		columnBitmasks.put("message", 8192L);
+		columnBitmasks.put("severity", 8192L);
 
-		columnBitmasks.put("payloadHash", 16384L);
+		columnBitmasks.put("messageCode", 16384L);
+
+		columnBitmasks.put("message", 32768L);
+
+		columnBitmasks.put("payloadHash", 65536L);
 
 		_columnBitmasks = Collections.unmodifiableMap(columnBitmasks);
 	}
@@ -1063,4 +1159,4 @@ public class ImportJobItemModelImpl
 	private ImportJobItem _escapedModel;
 
 }
-// LIFERAY-SERVICE-BUILDER-HASH:-2147099061
+// LIFERAY-SERVICE-BUILDER-HASH:502616238

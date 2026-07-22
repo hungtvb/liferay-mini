@@ -36,8 +36,8 @@ import com.liferay.portal.vulcan.resource.EntityModelResource;
 import com.liferay.portal.vulcan.util.ActionUtil;
 import com.liferay.portal.vulcan.util.TransformUtil;
 
-import com.nexcent.training.rest.dto.v1_0.ArticleImportJobItem;
-import com.nexcent.training.rest.resource.v1_0.ArticleImportJobItemResource;
+import com.nexcent.training.rest.dto.v1_0.ContentImportJobItem;
+import com.nexcent.training.rest.resource.v1_0.ContentImportJobItemResource;
 
 import jakarta.annotation.Generated;
 
@@ -66,14 +66,14 @@ import java.util.Set;
  */
 @Generated("")
 @jakarta.ws.rs.Path("/v1.0")
-public abstract class BaseArticleImportJobItemResourceImpl
-	implements ArticleImportJobItemResource, EntityModelResource,
-			   VulcanBatchEngineTaskItemDelegate<ArticleImportJobItem> {
+public abstract class BaseContentImportJobItemResourceImpl
+	implements ContentImportJobItemResource, EntityModelResource,
+			   VulcanBatchEngineTaskItemDelegate<ContentImportJobItem> {
 
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -X 'GET' 'http://localhost:8080/o/nexcent-training/v1.0/sites/{siteId}/article-import-jobs/{externalReferenceCode}/items'  -u 'test@liferay.com:test'
+	 * curl -X 'GET' 'http://localhost:8080/o/nexcent-training/v1.0/sites/{siteId}/content-import-jobs/{jobExternalReferenceCode}/items'  -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
@@ -83,7 +83,7 @@ public abstract class BaseArticleImportJobItemResourceImpl
 			),
 			@io.swagger.v3.oas.annotations.Parameter(
 				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
-				name = "externalReferenceCode"
+				name = "jobExternalReferenceCode"
 			),
 			@io.swagger.v3.oas.annotations.Parameter(
 				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
@@ -98,25 +98,25 @@ public abstract class BaseArticleImportJobItemResourceImpl
 	@io.swagger.v3.oas.annotations.tags.Tags(
 		value = {
 			@io.swagger.v3.oas.annotations.tags.Tag(
-				name = "ArticleImportJobItem"
+				name = "ContentImportJobItem"
 			)
 		}
 	)
 	@jakarta.ws.rs.GET
 	@jakarta.ws.rs.Path(
-		"/sites/{siteId}/article-import-jobs/{externalReferenceCode}/items"
+		"/sites/{siteId}/content-import-jobs/{jobExternalReferenceCode}/items"
 	)
 	@jakarta.ws.rs.Produces({"application/json", "application/xml"})
 	@Override
-	public Page<ArticleImportJobItem> getSiteArticleImportJobItemsPage(
+	public Page<ContentImportJobItem> getSiteContentImportJobItemsPage(
 			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
 			@jakarta.validation.constraints.NotNull
 			@jakarta.ws.rs.PathParam("siteId")
 			Long siteId,
 			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
 			@jakarta.validation.constraints.NotNull
-			@jakarta.ws.rs.PathParam("externalReferenceCode")
-			String externalReferenceCode,
+			@jakarta.ws.rs.PathParam("jobExternalReferenceCode")
+			String jobExternalReferenceCode,
 			@jakarta.ws.rs.core.Context Pagination pagination)
 		throws Exception {
 
@@ -126,7 +126,7 @@ public abstract class BaseArticleImportJobItemResourceImpl
 	@Override
 	@SuppressWarnings("PMD.UnusedLocalVariable")
 	public void create(
-			Collection<ArticleImportJobItem> articleImportJobItems,
+			Collection<ContentImportJobItem> contentImportJobItems,
 			Map<String, Serializable> parameters)
 		throws Exception {
 
@@ -136,7 +136,7 @@ public abstract class BaseArticleImportJobItemResourceImpl
 
 	@Override
 	public void delete(
-			Collection<ArticleImportJobItem> articleImportJobItems,
+			Collection<ContentImportJobItem> contentImportJobItems,
 			Map<String, Serializable> parameters)
 		throws Exception {
 
@@ -161,7 +161,7 @@ public abstract class BaseArticleImportJobItemResourceImpl
 	}
 
 	public String getResourceName() {
-		return "ArticleImportJobItem";
+		return "ContentImportJobItem";
 	}
 
 	public String getVersion() {
@@ -169,7 +169,7 @@ public abstract class BaseArticleImportJobItemResourceImpl
 	}
 
 	@Override
-	public Page<ArticleImportJobItem> read(
+	public Page<ContentImportJobItem> read(
 			com.liferay.portal.kernel.search.filter.Filter filter,
 			Pagination pagination,
 			com.liferay.portal.kernel.search.Sort[] sorts,
@@ -177,9 +177,9 @@ public abstract class BaseArticleImportJobItemResourceImpl
 		throws Exception {
 
 		if (parameters.containsKey("siteId")) {
-			return getSiteArticleImportJobItemsPage(
+			return getSiteContentImportJobItemsPage(
 				(Long)parameters.get("siteId"),
-				(String)parameters.get("externalReferenceCode"), pagination);
+				(String)parameters.get("jobExternalReferenceCode"), pagination);
 		}
 		else {
 			throw new NotSupportedException(
@@ -211,7 +211,7 @@ public abstract class BaseArticleImportJobItemResourceImpl
 
 	@Override
 	public void update(
-			Collection<ArticleImportJobItem> articleImportJobItems,
+			Collection<ContentImportJobItem> contentImportJobItems,
 			Map<String, Serializable> parameters)
 		throws Exception {
 
@@ -232,9 +232,9 @@ public abstract class BaseArticleImportJobItemResourceImpl
 
 	public void setContextBatchUnsafeBiConsumer(
 		UnsafeBiConsumer
-			<Collection<ArticleImportJobItem>,
+			<Collection<ContentImportJobItem>,
 			 UnsafeFunction
-				 <ArticleImportJobItem, ArticleImportJobItem, Exception>,
+				 <ContentImportJobItem, ContentImportJobItem, Exception>,
 			 Exception> contextBatchUnsafeBiConsumer) {
 
 		this.contextBatchUnsafeBiConsumer = contextBatchUnsafeBiConsumer;
@@ -242,8 +242,8 @@ public abstract class BaseArticleImportJobItemResourceImpl
 
 	public void setContextBatchUnsafeConsumer(
 		UnsafeBiConsumer
-			<Collection<ArticleImportJobItem>,
-			 UnsafeConsumer<ArticleImportJobItem, Exception>, Exception>
+			<Collection<ContentImportJobItem>,
+			 UnsafeConsumer<ContentImportJobItem, Exception>, Exception>
 				contextBatchUnsafeConsumer) {
 
 		this.contextBatchUnsafeConsumer = contextBatchUnsafeConsumer;
@@ -509,12 +509,12 @@ public abstract class BaseArticleImportJobItemResourceImpl
 
 	protected AcceptLanguage contextAcceptLanguage;
 	protected UnsafeBiConsumer
-		<Collection<ArticleImportJobItem>,
-		 UnsafeFunction<ArticleImportJobItem, ArticleImportJobItem, Exception>,
+		<Collection<ContentImportJobItem>,
+		 UnsafeFunction<ContentImportJobItem, ContentImportJobItem, Exception>,
 		 Exception> contextBatchUnsafeBiConsumer;
 	protected UnsafeBiConsumer
-		<Collection<ArticleImportJobItem>,
-		 UnsafeConsumer<ArticleImportJobItem, Exception>, Exception>
+		<Collection<ContentImportJobItem>,
+		 UnsafeConsumer<ContentImportJobItem, Exception>, Exception>
 			contextBatchUnsafeConsumer;
 	protected com.liferay.portal.kernel.model.Company contextCompany;
 	protected HttpServletRequest contextHttpServletRequest;
@@ -551,7 +551,7 @@ public abstract class BaseArticleImportJobItemResourceImpl
 	}
 
 	private static final com.liferay.portal.kernel.log.Log _log =
-		LogFactoryUtil.getLog(BaseArticleImportJobItemResourceImpl.class);
+		LogFactoryUtil.getLog(BaseContentImportJobItemResourceImpl.class);
 
 }
-// LIFERAY-REST-BUILDER-HASH:674007299
+// LIFERAY-REST-BUILDER-HASH:817060613

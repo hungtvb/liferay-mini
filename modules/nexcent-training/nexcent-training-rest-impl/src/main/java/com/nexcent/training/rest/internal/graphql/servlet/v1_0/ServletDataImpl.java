@@ -10,10 +10,12 @@ import com.liferay.portal.vulcan.graphql.servlet.ServletData;
 
 import com.nexcent.training.rest.internal.graphql.mutation.v1_0.Mutation;
 import com.nexcent.training.rest.internal.graphql.query.v1_0.Query;
-import com.nexcent.training.rest.internal.resource.v1_0.ArticleImportJobItemResourceImpl;
-import com.nexcent.training.rest.internal.resource.v1_0.ArticleImportJobResourceImpl;
-import com.nexcent.training.rest.resource.v1_0.ArticleImportJobItemResource;
-import com.nexcent.training.rest.resource.v1_0.ArticleImportJobResource;
+import com.nexcent.training.rest.internal.resource.v1_0.ContentImportJobItemResourceImpl;
+import com.nexcent.training.rest.internal.resource.v1_0.ContentImportJobResourceImpl;
+import com.nexcent.training.rest.internal.resource.v1_0.ContentImportProfileResourceImpl;
+import com.nexcent.training.rest.resource.v1_0.ContentImportJobItemResource;
+import com.nexcent.training.rest.resource.v1_0.ContentImportJobResource;
+import com.nexcent.training.rest.resource.v1_0.ContentImportProfileResource;
 
 import jakarta.annotation.Generated;
 
@@ -37,13 +39,15 @@ public class ServletDataImpl implements ServletData {
 
 	@Activate
 	public void activate(BundleContext bundleContext) {
-		Mutation.setArticleImportJobResourceComponentServiceObjects(
-			_articleImportJobResourceComponentServiceObjects);
+		Mutation.setContentImportJobResourceComponentServiceObjects(
+			_contentImportJobResourceComponentServiceObjects);
 
-		Query.setArticleImportJobResourceComponentServiceObjects(
-			_articleImportJobResourceComponentServiceObjects);
-		Query.setArticleImportJobItemResourceComponentServiceObjects(
-			_articleImportJobItemResourceComponentServiceObjects);
+		Query.setContentImportJobResourceComponentServiceObjects(
+			_contentImportJobResourceComponentServiceObjects);
+		Query.setContentImportJobItemResourceComponentServiceObjects(
+			_contentImportJobItemResourceComponentServiceObjects);
+		Query.setContentImportProfileResourceComponentServiceObjects(
+			_contentImportProfileResourceComponentServiceObjects);
 	}
 
 	public String getApplicationName() {
@@ -81,51 +85,70 @@ public class ServletDataImpl implements ServletData {
 			new HashMap<String, ObjectValuePair<Class<?>, String>>() {
 				{
 					put(
-						"mutation#createSiteArticleImportJob",
+						"mutation#createSiteContentImportJob",
 						new ObjectValuePair<>(
-							ArticleImportJobResourceImpl.class,
-							"postSiteArticleImportJob"));
+							ContentImportJobResourceImpl.class,
+							"postSiteContentImportJob"));
 					put(
-						"mutation#createSiteArticleImportJobBatch",
+						"mutation#createSiteContentImportJobBatch",
 						new ObjectValuePair<>(
-							ArticleImportJobResourceImpl.class,
-							"postSiteArticleImportJobBatch"));
+							ContentImportJobResourceImpl.class,
+							"postSiteContentImportJobBatch"));
 					put(
-						"mutation#createSiteArticleImportJobExecute",
+						"mutation#createSiteContentImportJobExecute",
 						new ObjectValuePair<>(
-							ArticleImportJobResourceImpl.class,
-							"postSiteArticleImportJobExecute"));
+							ContentImportJobResourceImpl.class,
+							"postSiteContentImportJobExecute"));
 					put(
-						"mutation#createSiteArticleImportJobValidate",
+						"mutation#createSiteContentImportJobRetry",
 						new ObjectValuePair<>(
-							ArticleImportJobResourceImpl.class,
-							"postSiteArticleImportJobValidate"));
+							ContentImportJobResourceImpl.class,
+							"postSiteContentImportJobRetry"));
+					put(
+						"mutation#createSiteContentImportJobValidate",
+						new ObjectValuePair<>(
+							ContentImportJobResourceImpl.class,
+							"postSiteContentImportJobValidate"));
 
 					put(
-						"query#articleImportJob",
+						"query#contentImportJob",
 						new ObjectValuePair<>(
-							ArticleImportJobResourceImpl.class,
-							"getSiteArticleImportJob"));
+							ContentImportJobResourceImpl.class,
+							"getSiteContentImportJob"));
 					put(
-						"query#articleImportJobs",
+						"query#contentImportJobErrorReport",
 						new ObjectValuePair<>(
-							ArticleImportJobResourceImpl.class,
-							"getSiteArticleImportJobsPage"));
+							ContentImportJobResourceImpl.class,
+							"getSiteContentImportJobErrorReport"));
 					put(
-						"query#articleImportJobItems",
+						"query#contentImportJobs",
 						new ObjectValuePair<>(
-							ArticleImportJobItemResourceImpl.class,
-							"getSiteArticleImportJobItemsPage"));
+							ContentImportJobResourceImpl.class,
+							"getSiteContentImportJobsPage"));
+					put(
+						"query#contentImportJobItems",
+						new ObjectValuePair<>(
+							ContentImportJobItemResourceImpl.class,
+							"getSiteContentImportJobItemsPage"));
+					put(
+						"query#contentImportProfiles",
+						new ObjectValuePair<>(
+							ContentImportProfileResourceImpl.class,
+							"getSiteContentImportProfilesPage"));
 				}
 			};
 
 	@Reference(scope = ReferenceScope.PROTOTYPE_REQUIRED)
-	private ComponentServiceObjects<ArticleImportJobResource>
-		_articleImportJobResourceComponentServiceObjects;
+	private ComponentServiceObjects<ContentImportJobResource>
+		_contentImportJobResourceComponentServiceObjects;
 
 	@Reference(scope = ReferenceScope.PROTOTYPE_REQUIRED)
-	private ComponentServiceObjects<ArticleImportJobItemResource>
-		_articleImportJobItemResourceComponentServiceObjects;
+	private ComponentServiceObjects<ContentImportJobItemResource>
+		_contentImportJobItemResourceComponentServiceObjects;
+
+	@Reference(scope = ReferenceScope.PROTOTYPE_REQUIRED)
+	private ComponentServiceObjects<ContentImportProfileResource>
+		_contentImportProfileResourceComponentServiceObjects;
 
 }
-// LIFERAY-REST-BUILDER-HASH:1766419112
+// LIFERAY-REST-BUILDER-HASH:73269794

@@ -14,18 +14,15 @@ import com.liferay.portal.odata.filter.FilterParserProvider;
 import com.liferay.portal.odata.sort.SortParserProvider;
 import com.liferay.portal.vulcan.accept.language.AcceptLanguage;
 import com.liferay.portal.vulcan.batch.engine.resource.VulcanBatchEngineImportTaskResource;
-import com.liferay.portal.vulcan.multipart.MultipartBody;
 import com.liferay.portal.vulcan.pagination.Page;
-import com.liferay.portal.vulcan.pagination.Pagination;
 
-import com.nexcent.training.rest.dto.v1_0.ArticleImportJob;
+import com.nexcent.training.rest.dto.v1_0.ContentImportProfile;
 
 import jakarta.annotation.Generated;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
-import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.UriInfo;
 
 import java.util.Collections;
@@ -45,31 +42,10 @@ import org.osgi.annotation.versioning.ProviderType;
  */
 @Generated("")
 @ProviderType
-public interface ArticleImportJobResource {
+public interface ContentImportProfileResource {
 
-	public ArticleImportJob getSiteArticleImportJob(
-			Long siteId, String externalReferenceCode)
-		throws Exception;
-
-	public Page<ArticleImportJob> getSiteArticleImportJobsPage(
-			Long siteId, Pagination pagination)
-		throws Exception;
-
-	public ArticleImportJob postSiteArticleImportJob(
-			Long siteId, MultipartBody multipartBody)
-		throws Exception;
-
-	public Response postSiteArticleImportJobBatch(
-			Long siteId, MultipartBody multipartBody, String callbackURL,
-			Object object)
-		throws Exception;
-
-	public ArticleImportJob postSiteArticleImportJobExecute(
-			Long siteId, String externalReferenceCode)
-		throws Exception;
-
-	public ArticleImportJob postSiteArticleImportJobValidate(
-			Long siteId, String externalReferenceCode)
+	public Page<ContentImportProfile> getSiteContentImportProfilesPage(
+			Long siteId)
 		throws Exception;
 
 	public default void setContextAcceptLanguage(
@@ -138,7 +114,7 @@ public interface ArticleImportJobResource {
 	@ProviderType
 	public interface Builder {
 
-		public ArticleImportJobResource build();
+		public ContentImportProfileResource build();
 
 		public Builder checkPermissions(boolean checkPermissions);
 
@@ -164,4 +140,4 @@ public interface ArticleImportJobResource {
 	}
 
 }
-// LIFERAY-REST-BUILDER-HASH:2142790199
+// LIFERAY-REST-BUILDER-HASH:-561084953

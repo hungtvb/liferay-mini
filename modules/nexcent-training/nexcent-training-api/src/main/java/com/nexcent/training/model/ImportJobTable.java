@@ -47,6 +47,12 @@ public class ImportJobTable extends BaseTable<ImportJobTable> {
 		"fileName", String.class, Types.VARCHAR, Column.FLAG_DEFAULT);
 	public final Column<ImportJobTable, String> sha256 = createColumn(
 		"sha256", String.class, Types.VARCHAR, Column.FLAG_DEFAULT);
+	public final Column<ImportJobTable, String> importProfileKey = createColumn(
+		"importProfileKey", String.class, Types.VARCHAR, Column.FLAG_DEFAULT);
+	public final Column<ImportJobTable, String> packageSchemaVersion =
+		createColumn(
+			"packageSchemaVersion", String.class, Types.VARCHAR,
+			Column.FLAG_DEFAULT);
 	public final Column<ImportJobTable, String> structureERC = createColumn(
 		"structureERC", String.class, Types.VARCHAR, Column.FLAG_DEFAULT);
 	public final Column<ImportJobTable, String> status = createColumn(
@@ -73,4 +79,4 @@ public class ImportJobTable extends BaseTable<ImportJobTable> {
 	}
 
 }
-// LIFERAY-SERVICE-BUILDER-HASH:-72986407
+// LIFERAY-SERVICE-BUILDER-HASH:-262126759

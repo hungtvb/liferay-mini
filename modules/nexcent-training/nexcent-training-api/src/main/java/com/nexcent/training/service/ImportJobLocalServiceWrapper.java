@@ -49,13 +49,15 @@ public class ImportJobLocalServiceWrapper
 	public com.nexcent.training.model.ImportJob addOrResetImportJob(
 			long userId, long groupId, String externalReferenceCode,
 			long fileEntryId, String fileName, String sha256,
+			String importProfileKey, String packageSchemaVersion,
 			String structureERC,
 			com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _importJobLocalService.addOrResetImportJob(
 			userId, groupId, externalReferenceCode, fileEntryId, fileName,
-			sha256, structureERC, serviceContext);
+			sha256, importProfileKey, packageSchemaVersion, structureERC,
+			serviceContext);
 	}
 
 	/**
@@ -469,4 +471,4 @@ public class ImportJobLocalServiceWrapper
 	private ImportJobLocalService _importJobLocalService;
 
 }
-// LIFERAY-SERVICE-BUILDER-HASH:-1485743624
+// LIFERAY-SERVICE-BUILDER-HASH:-1608561234

@@ -166,6 +166,11 @@ paths:
                                 items:
                                     $ref: "#/components/schemas/ContentImportProfile"
                                 type: array
+                        application/xml:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/ContentImportProfile"
+                                type: array
                     description: "Registered enabled and planned disabled import profiles."
             tags: ["ContentImportProfile"]
     "/sites/{siteId}/content-import-jobs":
@@ -194,6 +199,11 @@ paths:
                                 items:
                                     $ref: "#/components/schemas/ContentImportJob"
                                 type: array
+                        application/xml:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/ContentImportJob"
+                                type: array
                     description: "Paged content import job history."
             tags: ["ContentImportJob"]
         post:
@@ -210,11 +220,17 @@ paths:
                     application/json:
                         schema:
                             $ref: "#/components/schemas/ContentImportJobRequest"
+                    application/xml:
+                        schema:
+                            $ref: "#/components/schemas/ContentImportJobRequest"
                 required: true
             responses:
                 202:
                     content:
                         application/json:
+                            schema:
+                                $ref: "#/components/schemas/ContentImportJob"
+                        application/xml:
                             schema:
                                 $ref: "#/components/schemas/ContentImportJob"
                     description: "Durable job created from a package already uploaded to Documents and Media."
@@ -237,6 +253,9 @@ paths:
                         application/json:
                             schema:
                                 $ref: "#/components/schemas/ContentImportJob"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/ContentImportJob"
                     description: "Content import job."
             tags: ["ContentImportJob"]
     "/sites/{siteId}/content-import-jobs/{jobExternalReferenceCode}/validate":
@@ -255,6 +274,9 @@ paths:
                 200:
                     content:
                         application/json:
+                            schema:
+                                $ref: "#/components/schemas/ContentImportJob"
+                        application/xml:
                             schema:
                                 $ref: "#/components/schemas/ContentImportJob"
                     description: "Validated job and persisted row results."
@@ -277,6 +299,9 @@ paths:
                         application/json:
                             schema:
                                 $ref: "#/components/schemas/ContentImportJob"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/ContentImportJob"
                     description: "Executed profile handler."
             tags: ["ContentImportJob"]
     "/sites/{siteId}/content-import-jobs/{jobExternalReferenceCode}/retry":
@@ -295,6 +320,9 @@ paths:
                 202:
                     content:
                         application/json:
+                            schema:
+                                $ref: "#/components/schemas/ContentImportJob"
+                        application/xml:
                             schema:
                                 $ref: "#/components/schemas/ContentImportJob"
                     description: "Retried an eligible failed or invalid job."
@@ -321,6 +349,11 @@ paths:
                 200:
                     content:
                         application/json:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/ContentImportJobItem"
+                                type: array
+                        application/xml:
                             schema:
                                 items:
                                     $ref: "#/components/schemas/ContentImportJobItem"

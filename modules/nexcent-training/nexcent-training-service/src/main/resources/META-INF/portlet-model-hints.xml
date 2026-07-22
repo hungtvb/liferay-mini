@@ -25,6 +25,8 @@
 		<field name="fileEntryId" type="long" />
 		<field name="fileName" type="String" />
 		<field name="sha256" type="String" />
+		<field name="importProfileKey" type="String" />
+		<field name="packageSchemaVersion" type="String" />
 		<field name="structureERC" type="String" />
 		<field name="status" type="String" />
 		<field name="totalRows" type="int" />
@@ -44,7 +46,9 @@
 		<field name="modifiedDate" type="Date" />
 		<field name="importJobId" type="long" />
 		<field name="rowNumber" type="int" />
-		<field name="articleERC" type="String" />
+		<field name="targetType" type="String" />
+		<field name="targetERC" type="String" />
+		<field name="sheetName" type="String" />
 		<field name="locale" type="String" />
 		<field name="operation" type="String" />
 		<field name="result" type="String" />

@@ -54,7 +54,7 @@ public class ImportJobItemCacheModel
 
 	@Override
 	public String toString() {
-		StringBundler sb = new StringBundler(31);
+		StringBundler sb = new StringBundler(35);
 
 		sb.append("{importJobItemId=");
 		sb.append(importJobItemId);
@@ -70,8 +70,12 @@ public class ImportJobItemCacheModel
 		sb.append(importJobId);
 		sb.append(", rowNumber=");
 		sb.append(rowNumber);
-		sb.append(", articleERC=");
-		sb.append(articleERC);
+		sb.append(", targetType=");
+		sb.append(targetType);
+		sb.append(", targetERC=");
+		sb.append(targetERC);
+		sb.append(", sheetName=");
+		sb.append(sheetName);
 		sb.append(", locale=");
 		sb.append(locale);
 		sb.append(", operation=");
@@ -116,11 +120,25 @@ public class ImportJobItemCacheModel
 		importJobItemImpl.setImportJobId(importJobId);
 		importJobItemImpl.setRowNumber(rowNumber);
 
-		if (articleERC == null) {
-			importJobItemImpl.setArticleERC("");
+		if (targetType == null) {
+			importJobItemImpl.setTargetType("");
 		}
 		else {
-			importJobItemImpl.setArticleERC(articleERC);
+			importJobItemImpl.setTargetType(targetType);
+		}
+
+		if (targetERC == null) {
+			importJobItemImpl.setTargetERC("");
+		}
+		else {
+			importJobItemImpl.setTargetERC(targetERC);
+		}
+
+		if (sheetName == null) {
+			importJobItemImpl.setSheetName("");
+		}
+		else {
+			importJobItemImpl.setSheetName(sheetName);
 		}
 
 		if (locale == null) {
@@ -190,7 +208,9 @@ public class ImportJobItemCacheModel
 		importJobId = objectInput.readLong();
 
 		rowNumber = objectInput.readInt();
-		articleERC = objectInput.readUTF();
+		targetType = objectInput.readUTF();
+		targetERC = objectInput.readUTF();
+		sheetName = objectInput.readUTF();
 		locale = objectInput.readUTF();
 		operation = objectInput.readUTF();
 		result = objectInput.readUTF();
@@ -214,11 +234,25 @@ public class ImportJobItemCacheModel
 
 		objectOutput.writeInt(rowNumber);
 
-		if (articleERC == null) {
+		if (targetType == null) {
 			objectOutput.writeUTF("");
 		}
 		else {
-			objectOutput.writeUTF(articleERC);
+			objectOutput.writeUTF(targetType);
+		}
+
+		if (targetERC == null) {
+			objectOutput.writeUTF("");
+		}
+		else {
+			objectOutput.writeUTF(targetERC);
+		}
+
+		if (sheetName == null) {
+			objectOutput.writeUTF("");
+		}
+		else {
+			objectOutput.writeUTF(sheetName);
 		}
 
 		if (locale == null) {
@@ -278,7 +312,9 @@ public class ImportJobItemCacheModel
 	public long modifiedDate;
 	public long importJobId;
 	public int rowNumber;
-	public String articleERC;
+	public String targetType;
+	public String targetERC;
+	public String sheetName;
 	public String locale;
 	public String operation;
 	public String result;
@@ -288,4 +324,4 @@ public class ImportJobItemCacheModel
 	public String payloadHash;
 
 }
-// LIFERAY-SERVICE-BUILDER-HASH:-568214226
+// LIFERAY-SERVICE-BUILDER-HASH:-241544224

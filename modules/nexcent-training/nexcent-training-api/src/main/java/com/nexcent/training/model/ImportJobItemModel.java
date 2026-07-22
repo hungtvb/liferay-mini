@@ -149,19 +149,49 @@ public interface ImportJobItemModel
 	public void setRowNumber(int rowNumber);
 
 	/**
-	 * Returns the article erc of this import job item.
+	 * Returns the target type of this import job item.
 	 *
-	 * @return the article erc of this import job item
+	 * @return the target type of this import job item
 	 */
 	@AutoEscape
-	public String getArticleERC();
+	public String getTargetType();
 
 	/**
-	 * Sets the article erc of this import job item.
+	 * Sets the target type of this import job item.
 	 *
-	 * @param articleERC the article erc of this import job item
+	 * @param targetType the target type of this import job item
 	 */
-	public void setArticleERC(String articleERC);
+	public void setTargetType(String targetType);
+
+	/**
+	 * Returns the target erc of this import job item.
+	 *
+	 * @return the target erc of this import job item
+	 */
+	@AutoEscape
+	public String getTargetERC();
+
+	/**
+	 * Sets the target erc of this import job item.
+	 *
+	 * @param targetERC the target erc of this import job item
+	 */
+	public void setTargetERC(String targetERC);
+
+	/**
+	 * Returns the sheet name of this import job item.
+	 *
+	 * @return the sheet name of this import job item
+	 */
+	@AutoEscape
+	public String getSheetName();
+
+	/**
+	 * Sets the sheet name of this import job item.
+	 *
+	 * @param sheetName the sheet name of this import job item
+	 */
+	public void setSheetName(String sheetName);
 
 	/**
 	 * Returns the locale of this import job item.
@@ -276,4 +306,4 @@ public interface ImportJobItemModel
 	}
 
 }
-// LIFERAY-SERVICE-BUILDER-HASH:-1045828315
+// LIFERAY-SERVICE-BUILDER-HASH:1305653723

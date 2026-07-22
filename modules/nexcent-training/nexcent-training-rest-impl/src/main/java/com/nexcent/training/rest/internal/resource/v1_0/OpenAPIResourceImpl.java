@@ -42,7 +42,7 @@ import org.osgi.service.component.annotations.Reference;
 )
 @Generated("")
 @OpenAPIDefinition(
-	info = @Info(description = "Validated Excel import workflow for Nexcent Articles.", license = @License(name = "Apache 2.0", url = "http://www.apache.org/licenses/LICENSE-2.0.html"), title = "Nexcent Training", version = "v1.0")
+	info = @Info(description = "Profile-driven package import workflow for Nexcent content.", license = @License(name = "Apache 2.0", url = "http://www.apache.org/licenses/LICENSE-2.0.html"), title = "Nexcent Training", version = "v1.0")
 )
 @Path("/v1.0")
 public class OpenAPIResourceImpl {
@@ -85,13 +85,15 @@ public class OpenAPIResourceImpl {
 
 	private final Set<Class<?>> _resourceClasses = new HashSet<Class<?>>() {
 		{
-			add(ArticleImportJobResourceImpl.class);
+			add(ContentImportJobResourceImpl.class);
 
-			add(ArticleImportJobItemResourceImpl.class);
+			add(ContentImportJobItemResourceImpl.class);
+
+			add(ContentImportProfileResourceImpl.class);
 
 			add(OpenAPIResourceImpl.class);
 		}
 	};
 
 }
-// LIFERAY-REST-BUILDER-HASH:1395293801
+// LIFERAY-REST-BUILDER-HASH:-1435406841

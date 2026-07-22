@@ -38,8 +38,12 @@ public class ImportJobItemTable extends BaseTable<ImportJobItemTable> {
 		"importJobId", Long.class, Types.BIGINT, Column.FLAG_DEFAULT);
 	public final Column<ImportJobItemTable, Integer> rowNumber = createColumn(
 		"rowNumber", Integer.class, Types.INTEGER, Column.FLAG_DEFAULT);
-	public final Column<ImportJobItemTable, String> articleERC = createColumn(
-		"articleERC", String.class, Types.VARCHAR, Column.FLAG_DEFAULT);
+	public final Column<ImportJobItemTable, String> targetType = createColumn(
+		"targetType", String.class, Types.VARCHAR, Column.FLAG_DEFAULT);
+	public final Column<ImportJobItemTable, String> targetERC = createColumn(
+		"targetERC", String.class, Types.VARCHAR, Column.FLAG_DEFAULT);
+	public final Column<ImportJobItemTable, String> sheetName = createColumn(
+		"sheetName", String.class, Types.VARCHAR, Column.FLAG_DEFAULT);
 	public final Column<ImportJobItemTable, String> locale = createColumn(
 		"locale", String.class, Types.VARCHAR, Column.FLAG_DEFAULT);
 	public final Column<ImportJobItemTable, String> operation = createColumn(
@@ -60,4 +64,4 @@ public class ImportJobItemTable extends BaseTable<ImportJobItemTable> {
 	}
 
 }
-// LIFERAY-SERVICE-BUILDER-HASH:406859066
+// LIFERAY-SERVICE-BUILDER-HASH:-344274812

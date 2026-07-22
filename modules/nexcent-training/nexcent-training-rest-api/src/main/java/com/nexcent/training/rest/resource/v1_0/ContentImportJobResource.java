@@ -17,13 +17,15 @@ import com.liferay.portal.vulcan.batch.engine.resource.VulcanBatchEngineImportTa
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 
-import com.nexcent.training.rest.dto.v1_0.ArticleImportJobItem;
+import com.nexcent.training.rest.dto.v1_0.ContentImportJob;
+import com.nexcent.training.rest.dto.v1_0.ContentImportJobRequest;
 
 import jakarta.annotation.Generated;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
+import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.UriInfo;
 
 import java.util.Collections;
@@ -43,10 +45,39 @@ import org.osgi.annotation.versioning.ProviderType;
  */
 @Generated("")
 @ProviderType
-public interface ArticleImportJobItemResource {
+public interface ContentImportJobResource {
 
-	public Page<ArticleImportJobItem> getSiteArticleImportJobItemsPage(
-			Long siteId, String externalReferenceCode, Pagination pagination)
+	public ContentImportJob getSiteContentImportJob(
+			Long siteId, String jobExternalReferenceCode)
+		throws Exception;
+
+	public String getSiteContentImportJobErrorReport(
+			Long siteId, String jobExternalReferenceCode)
+		throws Exception;
+
+	public Page<ContentImportJob> getSiteContentImportJobsPage(
+			Long siteId, Pagination pagination)
+		throws Exception;
+
+	public ContentImportJob postSiteContentImportJob(
+			Long siteId, ContentImportJobRequest contentImportJobRequest)
+		throws Exception;
+
+	public Response postSiteContentImportJobBatch(
+			Long siteId, ContentImportJobRequest contentImportJobRequest,
+			String callbackURL, Object object)
+		throws Exception;
+
+	public ContentImportJob postSiteContentImportJobExecute(
+			Long siteId, String jobExternalReferenceCode)
+		throws Exception;
+
+	public ContentImportJob postSiteContentImportJobRetry(
+			Long siteId, String jobExternalReferenceCode)
+		throws Exception;
+
+	public ContentImportJob postSiteContentImportJobValidate(
+			Long siteId, String jobExternalReferenceCode)
 		throws Exception;
 
 	public default void setContextAcceptLanguage(
@@ -115,7 +146,7 @@ public interface ArticleImportJobItemResource {
 	@ProviderType
 	public interface Builder {
 
-		public ArticleImportJobItemResource build();
+		public ContentImportJobResource build();
 
 		public Builder checkPermissions(boolean checkPermissions);
 
@@ -141,4 +172,4 @@ public interface ArticleImportJobItemResource {
 	}
 
 }
-// LIFERAY-REST-BUILDER-HASH:-1363918426
+// LIFERAY-REST-BUILDER-HASH:1015728107

@@ -255,6 +255,36 @@ public interface ImportJobModel
 	public void setSha256(String sha256);
 
 	/**
+	 * Returns the import profile key of this import job.
+	 *
+	 * @return the import profile key of this import job
+	 */
+	@AutoEscape
+	public String getImportProfileKey();
+
+	/**
+	 * Sets the import profile key of this import job.
+	 *
+	 * @param importProfileKey the import profile key of this import job
+	 */
+	public void setImportProfileKey(String importProfileKey);
+
+	/**
+	 * Returns the package schema version of this import job.
+	 *
+	 * @return the package schema version of this import job
+	 */
+	@AutoEscape
+	public String getPackageSchemaVersion();
+
+	/**
+	 * Sets the package schema version of this import job.
+	 *
+	 * @param packageSchemaVersion the package schema version of this import job
+	 */
+	public void setPackageSchemaVersion(String packageSchemaVersion);
+
+	/**
 	 * Returns the structure erc of this import job.
 	 *
 	 * @return the structure erc of this import job
@@ -405,4 +435,4 @@ public interface ImportJobModel
 	}
 
 }
-// LIFERAY-SERVICE-BUILDER-HASH:-84020913
+// LIFERAY-SERVICE-BUILDER-HASH:-766024709

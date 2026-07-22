@@ -27,7 +27,7 @@ import com.liferay.portal.odata.sort.SortParserProvider;
 import com.liferay.portal.vulcan.accept.language.AcceptLanguage;
 
 import com.nexcent.training.rest.internal.security.permission.LiberalPermissionChecker;
-import com.nexcent.training.rest.resource.v1_0.ArticleImportJobItemResource;
+import com.nexcent.training.rest.resource.v1_0.ContentImportJobItemResource;
 
 import jakarta.annotation.Generated;
 
@@ -56,29 +56,29 @@ import org.osgi.service.component.annotations.ReferenceScope;
  * @generated
  */
 @Component(
-	property = "resource.locator.key=/nexcent-training/v1.0/ArticleImportJobItem",
-	service = ArticleImportJobItemResource.Factory.class
+	property = "resource.locator.key=/nexcent-training/v1.0/ContentImportJobItem",
+	service = ContentImportJobItemResource.Factory.class
 )
 @Generated("")
-public class ArticleImportJobItemResourceFactoryImpl
-	implements ArticleImportJobItemResource.Factory {
+public class ContentImportJobItemResourceFactoryImpl
+	implements ContentImportJobItemResource.Factory {
 
 	@Override
-	public ArticleImportJobItemResource.Builder create() {
-		return new ArticleImportJobItemResource.Builder() {
+	public ContentImportJobItemResource.Builder create() {
+		return new ContentImportJobItemResource.Builder() {
 
 			@Override
-			public ArticleImportJobItemResource build() {
+			public ContentImportJobItemResource build() {
 				if (_user == null) {
 					throw new IllegalArgumentException("User is not set");
 				}
 
-				Function<InvocationHandler, ArticleImportJobItemResource>
-					articleImportJobItemResourceProxyProviderFunction =
+				Function<InvocationHandler, ContentImportJobItemResource>
+					contentImportJobItemResourceProxyProviderFunction =
 						ResourceProxyProviderFunctionHolder.
-							_articleImportJobItemResourceProxyProviderFunction;
+							_contentImportJobItemResourceProxyProviderFunction;
 
-				return articleImportJobItemResourceProxyProviderFunction.apply(
+				return contentImportJobItemResourceProxyProviderFunction.apply(
 					(proxy, method, arguments) -> _invoke(
 						method, arguments, _checkPermissions,
 						_httpServletRequest, _httpServletResponse,
@@ -86,7 +86,7 @@ public class ArticleImportJobItemResourceFactoryImpl
 			}
 
 			@Override
-			public ArticleImportJobItemResource.Builder checkPermissions(
+			public ContentImportJobItemResource.Builder checkPermissions(
 				boolean checkPermissions) {
 
 				_checkPermissions = checkPermissions;
@@ -95,7 +95,7 @@ public class ArticleImportJobItemResourceFactoryImpl
 			}
 
 			@Override
-			public ArticleImportJobItemResource.Builder httpServletRequest(
+			public ContentImportJobItemResource.Builder httpServletRequest(
 				HttpServletRequest httpServletRequest) {
 
 				_httpServletRequest = httpServletRequest;
@@ -104,7 +104,7 @@ public class ArticleImportJobItemResourceFactoryImpl
 			}
 
 			@Override
-			public ArticleImportJobItemResource.Builder httpServletResponse(
+			public ContentImportJobItemResource.Builder httpServletResponse(
 				HttpServletResponse httpServletResponse) {
 
 				_httpServletResponse = httpServletResponse;
@@ -113,7 +113,7 @@ public class ArticleImportJobItemResourceFactoryImpl
 			}
 
 			@Override
-			public ArticleImportJobItemResource.Builder preferredLocale(
+			public ContentImportJobItemResource.Builder preferredLocale(
 				Locale preferredLocale) {
 
 				_preferredLocale = preferredLocale;
@@ -122,7 +122,7 @@ public class ArticleImportJobItemResourceFactoryImpl
 			}
 
 			@Override
-			public ArticleImportJobItemResource.Builder uriInfo(
+			public ContentImportJobItemResource.Builder uriInfo(
 				UriInfo uriInfo) {
 
 				_uriInfo = uriInfo;
@@ -131,7 +131,7 @@ public class ArticleImportJobItemResourceFactoryImpl
 			}
 
 			@Override
-			public ArticleImportJobItemResource.Builder user(User user) {
+			public ContentImportJobItemResource.Builder user(User user) {
 				_user = user;
 
 				return this;
@@ -147,16 +147,16 @@ public class ArticleImportJobItemResourceFactoryImpl
 		};
 	}
 
-	private static Function<InvocationHandler, ArticleImportJobItemResource>
+	private static Function<InvocationHandler, ContentImportJobItemResource>
 		_getProxyProviderFunction() {
 
 		Class<?> proxyClass = ProxyUtil.getProxyClass(
-			ArticleImportJobItemResource.class.getClassLoader(),
-			ArticleImportJobItemResource.class);
+			ContentImportJobItemResource.class.getClassLoader(),
+			ContentImportJobItemResource.class);
 
 		try {
-			Constructor<ArticleImportJobItemResource> constructor =
-				(Constructor<ArticleImportJobItemResource>)
+			Constructor<ContentImportJobItemResource> constructor =
+				(Constructor<ContentImportJobItemResource>)
 					proxyClass.getConstructor(InvocationHandler.class);
 
 			return invocationHandler -> {
@@ -198,41 +198,41 @@ public class ArticleImportJobItemResourceFactoryImpl
 				new LiberalPermissionChecker(user));
 		}
 
-		ArticleImportJobItemResource articleImportJobItemResource =
+		ContentImportJobItemResource contentImportJobItemResource =
 			_componentServiceObjects.getService();
 
-		articleImportJobItemResource.setContextAcceptLanguage(
+		contentImportJobItemResource.setContextAcceptLanguage(
 			new AcceptLanguageImpl(httpServletRequest, preferredLocale, user));
 
 		Company company = _companyLocalService.getCompany(user.getCompanyId());
 
-		articleImportJobItemResource.setContextCompany(company);
+		contentImportJobItemResource.setContextCompany(company);
 
-		articleImportJobItemResource.setContextHttpServletRequest(
+		contentImportJobItemResource.setContextHttpServletRequest(
 			httpServletRequest);
-		articleImportJobItemResource.setContextHttpServletResponse(
+		contentImportJobItemResource.setContextHttpServletResponse(
 			httpServletResponse);
-		articleImportJobItemResource.setContextUriInfo(uriInfo);
-		articleImportJobItemResource.setContextUser(user);
-		articleImportJobItemResource.setExpressionConvert(_expressionConvert);
-		articleImportJobItemResource.setFilterParserProvider(
+		contentImportJobItemResource.setContextUriInfo(uriInfo);
+		contentImportJobItemResource.setContextUser(user);
+		contentImportJobItemResource.setExpressionConvert(_expressionConvert);
+		contentImportJobItemResource.setFilterParserProvider(
 			_filterParserProvider);
-		articleImportJobItemResource.setGroupLocalService(_groupLocalService);
-		articleImportJobItemResource.setResourceActionLocalService(
+		contentImportJobItemResource.setGroupLocalService(_groupLocalService);
+		contentImportJobItemResource.setResourceActionLocalService(
 			_resourceActionLocalService);
-		articleImportJobItemResource.setResourcePermissionLocalService(
+		contentImportJobItemResource.setResourcePermissionLocalService(
 			_resourcePermissionLocalService);
-		articleImportJobItemResource.setRoleLocalService(_roleLocalService);
-		articleImportJobItemResource.setSortParserProvider(_sortParserProvider);
+		contentImportJobItemResource.setRoleLocalService(_roleLocalService);
+		contentImportJobItemResource.setSortParserProvider(_sortParserProvider);
 
 		try {
-			return method.invoke(articleImportJobItemResource, arguments);
+			return method.invoke(contentImportJobItemResource, arguments);
 		}
 		catch (InvocationTargetException invocationTargetException) {
 			throw invocationTargetException.getTargetException();
 		}
 		finally {
-			_componentServiceObjects.ungetService(articleImportJobItemResource);
+			_componentServiceObjects.ungetService(contentImportJobItemResource);
 
 			PrincipalThreadLocal.setName(name);
 
@@ -244,7 +244,7 @@ public class ArticleImportJobItemResourceFactoryImpl
 	private CompanyLocalService _companyLocalService;
 
 	@Reference(scope = ReferenceScope.PROTOTYPE_REQUIRED)
-	private ComponentServiceObjects<ArticleImportJobItemResource>
+	private ComponentServiceObjects<ContentImportJobItemResource>
 		_componentServiceObjects;
 
 	@Reference
@@ -279,8 +279,8 @@ public class ArticleImportJobItemResourceFactoryImpl
 	private static class ResourceProxyProviderFunctionHolder {
 
 		private static final Function
-			<InvocationHandler, ArticleImportJobItemResource>
-				_articleImportJobItemResourceProxyProviderFunction =
+			<InvocationHandler, ContentImportJobItemResource>
+				_contentImportJobItemResourceProxyProviderFunction =
 					_getProxyProviderFunction();
 
 	}
@@ -336,4 +336,4 @@ public class ArticleImportJobItemResourceFactoryImpl
 	}
 
 }
-// LIFERAY-REST-BUILDER-HASH:1574051712
+// LIFERAY-REST-BUILDER-HASH:-186500113

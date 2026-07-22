@@ -70,6 +70,8 @@ public class ImportJobModelImpl
 		{"createDate", Types.TIMESTAMP}, {"modifiedDate", Types.TIMESTAMP},
 		{"jobKey", Types.VARCHAR}, {"fileEntryId", Types.BIGINT},
 		{"fileName", Types.VARCHAR}, {"sha256", Types.VARCHAR},
+		{"importProfileKey", Types.VARCHAR},
+		{"packageSchemaVersion", Types.VARCHAR},
 		{"structureERC", Types.VARCHAR}, {"status", Types.VARCHAR},
 		{"totalRows", Types.INTEGER}, {"createdRows", Types.INTEGER},
 		{"updatedRows", Types.INTEGER}, {"skippedRows", Types.INTEGER},
@@ -93,6 +95,8 @@ public class ImportJobModelImpl
 		TABLE_COLUMNS_MAP.put("fileEntryId", Types.BIGINT);
 		TABLE_COLUMNS_MAP.put("fileName", Types.VARCHAR);
 		TABLE_COLUMNS_MAP.put("sha256", Types.VARCHAR);
+		TABLE_COLUMNS_MAP.put("importProfileKey", Types.VARCHAR);
+		TABLE_COLUMNS_MAP.put("packageSchemaVersion", Types.VARCHAR);
 		TABLE_COLUMNS_MAP.put("structureERC", Types.VARCHAR);
 		TABLE_COLUMNS_MAP.put("status", Types.VARCHAR);
 		TABLE_COLUMNS_MAP.put("totalRows", Types.INTEGER);
@@ -106,7 +110,7 @@ public class ImportJobModelImpl
 	}
 
 	public static final String TABLE_SQL_CREATE =
-		"create table NXC_ImportJob (uuid_ VARCHAR(75) null,importJobId LONG not null primary key,groupId LONG,companyId LONG,userId LONG,userName VARCHAR(75) null,createDate DATE null,modifiedDate DATE null,jobKey VARCHAR(75) null,fileEntryId LONG,fileName VARCHAR(75) null,sha256 VARCHAR(75) null,structureERC VARCHAR(75) null,status VARCHAR(75) null,totalRows INTEGER,createdRows INTEGER,updatedRows INTEGER,skippedRows INTEGER,failedRows INTEGER,startedDate DATE null,completedDate DATE null,errorMessage VARCHAR(75) null)";
+		"create table NXC_ImportJob (uuid_ VARCHAR(75) null,importJobId LONG not null primary key,groupId LONG,companyId LONG,userId LONG,userName VARCHAR(75) null,createDate DATE null,modifiedDate DATE null,jobKey VARCHAR(75) null,fileEntryId LONG,fileName VARCHAR(75) null,sha256 VARCHAR(75) null,importProfileKey VARCHAR(75) null,packageSchemaVersion VARCHAR(75) null,structureERC VARCHAR(75) null,status VARCHAR(75) null,totalRows INTEGER,createdRows INTEGER,updatedRows INTEGER,skippedRows INTEGER,failedRows INTEGER,startedDate DATE null,completedDate DATE null,errorMessage VARCHAR(75) null)";
 
 	public static final String TABLE_SQL_DROP = "drop table NXC_ImportJob";
 
@@ -283,6 +287,10 @@ public class ImportJobModelImpl
 			attributeGetterFunctions.put("fileName", ImportJob::getFileName);
 			attributeGetterFunctions.put("sha256", ImportJob::getSha256);
 			attributeGetterFunctions.put(
+				"importProfileKey", ImportJob::getImportProfileKey);
+			attributeGetterFunctions.put(
+				"packageSchemaVersion", ImportJob::getPackageSchemaVersion);
+			attributeGetterFunctions.put(
 				"structureERC", ImportJob::getStructureERC);
 			attributeGetterFunctions.put("status", ImportJob::getStatus);
 			attributeGetterFunctions.put("totalRows", ImportJob::getTotalRows);
@@ -347,6 +355,13 @@ public class ImportJobModelImpl
 				(BiConsumer<ImportJob, String>)ImportJob::setFileName);
 			attributeSetterBiConsumers.put(
 				"sha256", (BiConsumer<ImportJob, String>)ImportJob::setSha256);
+			attributeSetterBiConsumers.put(
+				"importProfileKey",
+				(BiConsumer<ImportJob, String>)ImportJob::setImportProfileKey);
+			attributeSetterBiConsumers.put(
+				"packageSchemaVersion",
+				(BiConsumer<ImportJob, String>)
+					ImportJob::setPackageSchemaVersion);
 			attributeSetterBiConsumers.put(
 				"structureERC",
 				(BiConsumer<ImportJob, String>)ImportJob::setStructureERC);
@@ -636,6 +651,44 @@ public class ImportJobModelImpl
 	}
 
 	@Override
+	public String getImportProfileKey() {
+		if (_importProfileKey == null) {
+			return "";
+		}
+		else {
+			return _importProfileKey;
+		}
+	}
+
+	@Override
+	public void setImportProfileKey(String importProfileKey) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
+		_importProfileKey = importProfileKey;
+	}
+
+	@Override
+	public String getPackageSchemaVersion() {
+		if (_packageSchemaVersion == null) {
+			return "";
+		}
+		else {
+			return _packageSchemaVersion;
+		}
+	}
+
+	@Override
+	public void setPackageSchemaVersion(String packageSchemaVersion) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
+		_packageSchemaVersion = packageSchemaVersion;
+	}
+
+	@Override
 	public String getStructureERC() {
 		if (_structureERC == null) {
 			return "";
@@ -873,6 +926,8 @@ public class ImportJobModelImpl
 		importJobImpl.setFileEntryId(getFileEntryId());
 		importJobImpl.setFileName(getFileName());
 		importJobImpl.setSha256(getSha256());
+		importJobImpl.setImportProfileKey(getImportProfileKey());
+		importJobImpl.setPackageSchemaVersion(getPackageSchemaVersion());
 		importJobImpl.setStructureERC(getStructureERC());
 		importJobImpl.setStatus(getStatus());
 		importJobImpl.setTotalRows(getTotalRows());
@@ -912,6 +967,10 @@ public class ImportJobModelImpl
 		importJobImpl.setFileName(
 			this.<String>getColumnOriginalValue("fileName"));
 		importJobImpl.setSha256(this.<String>getColumnOriginalValue("sha256"));
+		importJobImpl.setImportProfileKey(
+			this.<String>getColumnOriginalValue("importProfileKey"));
+		importJobImpl.setPackageSchemaVersion(
+			this.<String>getColumnOriginalValue("packageSchemaVersion"));
 		importJobImpl.setStructureERC(
 			this.<String>getColumnOriginalValue("structureERC"));
 		importJobImpl.setStatus(this.<String>getColumnOriginalValue("status"));
@@ -1076,6 +1135,24 @@ public class ImportJobModelImpl
 			importJobCacheModel.sha256 = null;
 		}
 
+		importJobCacheModel.importProfileKey = getImportProfileKey();
+
+		String importProfileKey = importJobCacheModel.importProfileKey;
+
+		if ((importProfileKey != null) && (importProfileKey.length() == 0)) {
+			importJobCacheModel.importProfileKey = null;
+		}
+
+		importJobCacheModel.packageSchemaVersion = getPackageSchemaVersion();
+
+		String packageSchemaVersion = importJobCacheModel.packageSchemaVersion;
+
+		if ((packageSchemaVersion != null) &&
+			(packageSchemaVersion.length() == 0)) {
+
+			importJobCacheModel.packageSchemaVersion = null;
+		}
+
 		importJobCacheModel.structureERC = getStructureERC();
 
 		String structureERC = importJobCacheModel.structureERC;
@@ -1202,6 +1279,8 @@ public class ImportJobModelImpl
 	private long _fileEntryId;
 	private String _fileName;
 	private String _sha256;
+	private String _importProfileKey;
+	private String _packageSchemaVersion;
 	private String _structureERC;
 	private String _status;
 	private int _totalRows;
@@ -1255,6 +1334,9 @@ public class ImportJobModelImpl
 		_columnOriginalValues.put("fileEntryId", _fileEntryId);
 		_columnOriginalValues.put("fileName", _fileName);
 		_columnOriginalValues.put("sha256", _sha256);
+		_columnOriginalValues.put("importProfileKey", _importProfileKey);
+		_columnOriginalValues.put(
+			"packageSchemaVersion", _packageSchemaVersion);
 		_columnOriginalValues.put("structureERC", _structureERC);
 		_columnOriginalValues.put("status", _status);
 		_columnOriginalValues.put("totalRows", _totalRows);
@@ -1312,25 +1394,29 @@ public class ImportJobModelImpl
 
 		columnBitmasks.put("sha256", 2048L);
 
-		columnBitmasks.put("structureERC", 4096L);
+		columnBitmasks.put("importProfileKey", 4096L);
 
-		columnBitmasks.put("status", 8192L);
+		columnBitmasks.put("packageSchemaVersion", 8192L);
 
-		columnBitmasks.put("totalRows", 16384L);
+		columnBitmasks.put("structureERC", 16384L);
 
-		columnBitmasks.put("createdRows", 32768L);
+		columnBitmasks.put("status", 32768L);
 
-		columnBitmasks.put("updatedRows", 65536L);
+		columnBitmasks.put("totalRows", 65536L);
 
-		columnBitmasks.put("skippedRows", 131072L);
+		columnBitmasks.put("createdRows", 131072L);
 
-		columnBitmasks.put("failedRows", 262144L);
+		columnBitmasks.put("updatedRows", 262144L);
 
-		columnBitmasks.put("startedDate", 524288L);
+		columnBitmasks.put("skippedRows", 524288L);
 
-		columnBitmasks.put("completedDate", 1048576L);
+		columnBitmasks.put("failedRows", 1048576L);
 
-		columnBitmasks.put("errorMessage", 2097152L);
+		columnBitmasks.put("startedDate", 2097152L);
+
+		columnBitmasks.put("completedDate", 4194304L);
+
+		columnBitmasks.put("errorMessage", 8388608L);
 
 		_columnBitmasks = Collections.unmodifiableMap(columnBitmasks);
 	}
@@ -1339,4 +1425,4 @@ public class ImportJobModelImpl
 	private ImportJob _escapedModel;
 
 }
-// LIFERAY-SERVICE-BUILDER-HASH:1235718313
+// LIFERAY-SERVICE-BUILDER-HASH:1706286437

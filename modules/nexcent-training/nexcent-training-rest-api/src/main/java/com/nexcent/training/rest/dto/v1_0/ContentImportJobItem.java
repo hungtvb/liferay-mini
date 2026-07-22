@@ -33,64 +33,19 @@ import java.util.function.Supplier;
  * @generated
  */
 @Generated("")
-@GraphQLName("ArticleImportJobItem")
+@GraphQLName("ContentImportJobItem")
 @JsonFilter("Liferay.Vulcan")
-@XmlRootElement(name = "ArticleImportJobItem")
-public class ArticleImportJobItem implements Serializable {
+@XmlRootElement(name = "ContentImportJobItem")
+public class ContentImportJobItem implements Serializable {
 
-	public static ArticleImportJobItem toDTO(String json) {
-		return ObjectMapperUtil.readValue(ArticleImportJobItem.class, json);
+	public static ContentImportJobItem toDTO(String json) {
+		return ObjectMapperUtil.readValue(ContentImportJobItem.class, json);
 	}
 
-	public static ArticleImportJobItem unsafeToDTO(String json) {
+	public static ContentImportJobItem unsafeToDTO(String json) {
 		return ObjectMapperUtil.unsafeReadValue(
-			ArticleImportJobItem.class, json);
+			ContentImportJobItem.class, json);
 	}
-
-	@io.swagger.v3.oas.annotations.media.Schema
-	public String getArticleExternalReferenceCode() {
-		if (_articleExternalReferenceCodeSupplier != null) {
-			articleExternalReferenceCode =
-				_articleExternalReferenceCodeSupplier.get();
-
-			_articleExternalReferenceCodeSupplier = null;
-		}
-
-		return articleExternalReferenceCode;
-	}
-
-	public void setArticleExternalReferenceCode(
-		String articleExternalReferenceCode) {
-
-		this.articleExternalReferenceCode = articleExternalReferenceCode;
-
-		_articleExternalReferenceCodeSupplier = null;
-	}
-
-	@JsonIgnore
-	public void setArticleExternalReferenceCode(
-		UnsafeSupplier<String, Exception>
-			articleExternalReferenceCodeUnsafeSupplier) {
-
-		_articleExternalReferenceCodeSupplier = () -> {
-			try {
-				return articleExternalReferenceCodeUnsafeSupplier.get();
-			}
-			catch (RuntimeException runtimeException) {
-				throw runtimeException;
-			}
-			catch (Exception exception) {
-				throw new RuntimeException(exception);
-			}
-		};
-	}
-
-	@GraphQLField
-	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
-	protected String articleExternalReferenceCode;
-
-	@JsonIgnore
-	private Supplier<String> _articleExternalReferenceCodeSupplier;
 
 	@io.swagger.v3.oas.annotations.media.Schema
 	public Long getId() {
@@ -166,7 +121,7 @@ public class ArticleImportJobItem implements Serializable {
 	}
 
 	@GraphQLField
-	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected String locale;
 
 	@JsonIgnore
@@ -207,7 +162,7 @@ public class ArticleImportJobItem implements Serializable {
 	}
 
 	@GraphQLField
-	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected String message;
 
 	@JsonIgnore
@@ -248,7 +203,7 @@ public class ArticleImportJobItem implements Serializable {
 	}
 
 	@GraphQLField
-	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected String messageCode;
 
 	@JsonIgnore
@@ -289,7 +244,7 @@ public class ArticleImportJobItem implements Serializable {
 	}
 
 	@GraphQLField
-	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected String operation;
 
 	@JsonIgnore
@@ -330,7 +285,7 @@ public class ArticleImportJobItem implements Serializable {
 	}
 
 	@GraphQLField
-	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected String payloadHash;
 
 	@JsonIgnore
@@ -371,7 +326,7 @@ public class ArticleImportJobItem implements Serializable {
 	}
 
 	@GraphQLField
-	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected String result;
 
 	@JsonIgnore
@@ -412,7 +367,7 @@ public class ArticleImportJobItem implements Serializable {
 	}
 
 	@GraphQLField
-	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected Integer rowNumber;
 
 	@JsonIgnore
@@ -453,11 +408,138 @@ public class ArticleImportJobItem implements Serializable {
 	}
 
 	@GraphQLField
-	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected String severity;
 
 	@JsonIgnore
 	private Supplier<String> _severitySupplier;
+
+	@io.swagger.v3.oas.annotations.media.Schema
+	public String getSheetName() {
+		if (_sheetNameSupplier != null) {
+			sheetName = _sheetNameSupplier.get();
+
+			_sheetNameSupplier = null;
+		}
+
+		return sheetName;
+	}
+
+	public void setSheetName(String sheetName) {
+		this.sheetName = sheetName;
+
+		_sheetNameSupplier = null;
+	}
+
+	@JsonIgnore
+	public void setSheetName(
+		UnsafeSupplier<String, Exception> sheetNameUnsafeSupplier) {
+
+		_sheetNameSupplier = () -> {
+			try {
+				return sheetNameUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	protected String sheetName;
+
+	@JsonIgnore
+	private Supplier<String> _sheetNameSupplier;
+
+	@io.swagger.v3.oas.annotations.media.Schema
+	public String getTargetExternalReferenceCode() {
+		if (_targetExternalReferenceCodeSupplier != null) {
+			targetExternalReferenceCode =
+				_targetExternalReferenceCodeSupplier.get();
+
+			_targetExternalReferenceCodeSupplier = null;
+		}
+
+		return targetExternalReferenceCode;
+	}
+
+	public void setTargetExternalReferenceCode(
+		String targetExternalReferenceCode) {
+
+		this.targetExternalReferenceCode = targetExternalReferenceCode;
+
+		_targetExternalReferenceCodeSupplier = null;
+	}
+
+	@JsonIgnore
+	public void setTargetExternalReferenceCode(
+		UnsafeSupplier<String, Exception>
+			targetExternalReferenceCodeUnsafeSupplier) {
+
+		_targetExternalReferenceCodeSupplier = () -> {
+			try {
+				return targetExternalReferenceCodeUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	protected String targetExternalReferenceCode;
+
+	@JsonIgnore
+	private Supplier<String> _targetExternalReferenceCodeSupplier;
+
+	@io.swagger.v3.oas.annotations.media.Schema
+	public String getTargetType() {
+		if (_targetTypeSupplier != null) {
+			targetType = _targetTypeSupplier.get();
+
+			_targetTypeSupplier = null;
+		}
+
+		return targetType;
+	}
+
+	public void setTargetType(String targetType) {
+		this.targetType = targetType;
+
+		_targetTypeSupplier = null;
+	}
+
+	@JsonIgnore
+	public void setTargetType(
+		UnsafeSupplier<String, Exception> targetTypeUnsafeSupplier) {
+
+		_targetTypeSupplier = () -> {
+			try {
+				return targetTypeUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	protected String targetType;
+
+	@JsonIgnore
+	private Supplier<String> _targetTypeSupplier;
 
 	@Override
 	public boolean equals(Object object) {
@@ -465,14 +547,14 @@ public class ArticleImportJobItem implements Serializable {
 			return true;
 		}
 
-		if (!(object instanceof ArticleImportJobItem)) {
+		if (!(object instanceof ContentImportJobItem)) {
 			return false;
 		}
 
-		ArticleImportJobItem articleImportJobItem =
-			(ArticleImportJobItem)object;
+		ContentImportJobItem contentImportJobItem =
+			(ContentImportJobItem)object;
 
-		return Objects.equals(toString(), articleImportJobItem.toString());
+		return Objects.equals(toString(), contentImportJobItem.toString());
 	}
 
 	@Override
@@ -486,22 +568,6 @@ public class ArticleImportJobItem implements Serializable {
 		StringBundler sb = new StringBundler();
 
 		sb.append("{");
-
-		String articleExternalReferenceCode = getArticleExternalReferenceCode();
-
-		if (articleExternalReferenceCode != null) {
-			if (sb.length() > 1) {
-				sb.append(", ");
-			}
-
-			sb.append("\"articleExternalReferenceCode\": ");
-
-			sb.append("\"");
-
-			sb.append(_escape(articleExternalReferenceCode));
-
-			sb.append("\"");
-		}
 
 		Long id = getId();
 
@@ -639,6 +705,54 @@ public class ArticleImportJobItem implements Serializable {
 			sb.append("\"");
 		}
 
+		String sheetName = getSheetName();
+
+		if (sheetName != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"sheetName\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(sheetName));
+
+			sb.append("\"");
+		}
+
+		String targetExternalReferenceCode = getTargetExternalReferenceCode();
+
+		if (targetExternalReferenceCode != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"targetExternalReferenceCode\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(targetExternalReferenceCode));
+
+			sb.append("\"");
+		}
+
+		String targetType = getTargetType();
+
+		if (targetType != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"targetType\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(targetType));
+
+			sb.append("\"");
+		}
+
 		sb.append("}");
 
 		return sb.toString();
@@ -646,7 +760,7 @@ public class ArticleImportJobItem implements Serializable {
 
 	@io.swagger.v3.oas.annotations.media.Schema(
 		accessMode = io.swagger.v3.oas.annotations.media.Schema.AccessMode.READ_ONLY,
-		defaultValue = "com.nexcent.training.rest.dto.v1_0.ArticleImportJobItem",
+		defaultValue = "com.nexcent.training.rest.dto.v1_0.ContentImportJobItem",
 		name = "x-class-name"
 	)
 	public String xClassName;
@@ -740,4 +854,4 @@ public class ArticleImportJobItem implements Serializable {
 	private Map<String, Serializable> _extendedProperties;
 
 }
-// LIFERAY-REST-BUILDER-HASH:681632064
+// LIFERAY-REST-BUILDER-HASH:893604978

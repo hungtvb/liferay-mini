@@ -53,7 +53,7 @@ public class ImportJobCacheModel
 
 	@Override
 	public String toString() {
-		StringBundler sb = new StringBundler(45);
+		StringBundler sb = new StringBundler(49);
 
 		sb.append("{uuid=");
 		sb.append(uuid);
@@ -79,6 +79,10 @@ public class ImportJobCacheModel
 		sb.append(fileName);
 		sb.append(", sha256=");
 		sb.append(sha256);
+		sb.append(", importProfileKey=");
+		sb.append(importProfileKey);
+		sb.append(", packageSchemaVersion=");
+		sb.append(packageSchemaVersion);
 		sb.append(", structureERC=");
 		sb.append(structureERC);
 		sb.append(", status=");
@@ -164,6 +168,20 @@ public class ImportJobCacheModel
 			importJobImpl.setSha256(sha256);
 		}
 
+		if (importProfileKey == null) {
+			importJobImpl.setImportProfileKey("");
+		}
+		else {
+			importJobImpl.setImportProfileKey(importProfileKey);
+		}
+
+		if (packageSchemaVersion == null) {
+			importJobImpl.setPackageSchemaVersion("");
+		}
+		else {
+			importJobImpl.setPackageSchemaVersion(packageSchemaVersion);
+		}
+
 		if (structureERC == null) {
 			importJobImpl.setStructureERC("");
 		}
@@ -229,6 +247,8 @@ public class ImportJobCacheModel
 		fileEntryId = objectInput.readLong();
 		fileName = objectInput.readUTF();
 		sha256 = objectInput.readUTF();
+		importProfileKey = objectInput.readUTF();
+		packageSchemaVersion = objectInput.readUTF();
 		structureERC = objectInput.readUTF();
 		status = objectInput.readUTF();
 
@@ -296,6 +316,20 @@ public class ImportJobCacheModel
 			objectOutput.writeUTF(sha256);
 		}
 
+		if (importProfileKey == null) {
+			objectOutput.writeUTF("");
+		}
+		else {
+			objectOutput.writeUTF(importProfileKey);
+		}
+
+		if (packageSchemaVersion == null) {
+			objectOutput.writeUTF("");
+		}
+		else {
+			objectOutput.writeUTF(packageSchemaVersion);
+		}
+
 		if (structureERC == null) {
 			objectOutput.writeUTF("");
 		}
@@ -342,6 +376,8 @@ public class ImportJobCacheModel
 	public long fileEntryId;
 	public String fileName;
 	public String sha256;
+	public String importProfileKey;
+	public String packageSchemaVersion;
 	public String structureERC;
 	public String status;
 	public int totalRows;
@@ -354,4 +390,4 @@ public class ImportJobCacheModel
 	public String errorMessage;
 
 }
-// LIFERAY-SERVICE-BUILDER-HASH:-1704174739
+// LIFERAY-SERVICE-BUILDER-HASH:-1201274199

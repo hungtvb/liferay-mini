@@ -54,13 +54,14 @@ public class ImportJobItemLocalServiceUtil {
 
 	public static ImportJobItem addImportJobItem(
 		long companyId, long groupId, long importJobId, int rowNumber,
-		String articleERC, String locale, String operation, String result,
-		String severity, String messageCode, String message,
-		String payloadHash) {
+		String targetType, String targetERC, String sheetName, String locale,
+		String operation, String result, String severity, String messageCode,
+		String message, String payloadHash) {
 
 		return getService().addImportJobItem(
-			companyId, groupId, importJobId, rowNumber, articleERC, locale,
-			operation, result, severity, messageCode, message, payloadHash);
+			companyId, groupId, importJobId, rowNumber, targetType, targetERC,
+			sheetName, locale, operation, result, severity, messageCode,
+			message, payloadHash);
 	}
 
 	/**
@@ -332,4 +333,4 @@ public class ImportJobItemLocalServiceUtil {
 			ImportJobItemLocalService.class);
 
 }
-// LIFERAY-SERVICE-BUILDER-HASH:928877822
+// LIFERAY-SERVICE-BUILDER-HASH:866954602

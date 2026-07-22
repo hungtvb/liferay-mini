@@ -46,6 +46,8 @@ public class ImportJobWrapper
 		attributes.put("fileEntryId", getFileEntryId());
 		attributes.put("fileName", getFileName());
 		attributes.put("sha256", getSha256());
+		attributes.put("importProfileKey", getImportProfileKey());
+		attributes.put("packageSchemaVersion", getPackageSchemaVersion());
 		attributes.put("structureERC", getStructureERC());
 		attributes.put("status", getStatus());
 		attributes.put("totalRows", getTotalRows());
@@ -132,6 +134,19 @@ public class ImportJobWrapper
 
 		if (sha256 != null) {
 			setSha256(sha256);
+		}
+
+		String importProfileKey = (String)attributes.get("importProfileKey");
+
+		if (importProfileKey != null) {
+			setImportProfileKey(importProfileKey);
+		}
+
+		String packageSchemaVersion = (String)attributes.get(
+			"packageSchemaVersion");
+
+		if (packageSchemaVersion != null) {
+			setPackageSchemaVersion(packageSchemaVersion);
 		}
 
 		String structureERC = (String)attributes.get("structureERC");
@@ -301,6 +316,16 @@ public class ImportJobWrapper
 	}
 
 	/**
+	 * Returns the import profile key of this import job.
+	 *
+	 * @return the import profile key of this import job
+	 */
+	@Override
+	public String getImportProfileKey() {
+		return model.getImportProfileKey();
+	}
+
+	/**
 	 * Returns the job key of this import job.
 	 *
 	 * @return the job key of this import job
@@ -318,6 +343,16 @@ public class ImportJobWrapper
 	@Override
 	public Date getModifiedDate() {
 		return model.getModifiedDate();
+	}
+
+	/**
+	 * Returns the package schema version of this import job.
+	 *
+	 * @return the package schema version of this import job
+	 */
+	@Override
+	public String getPackageSchemaVersion() {
+		return model.getPackageSchemaVersion();
 	}
 
 	/**
@@ -546,6 +581,16 @@ public class ImportJobWrapper
 	}
 
 	/**
+	 * Sets the import profile key of this import job.
+	 *
+	 * @param importProfileKey the import profile key of this import job
+	 */
+	@Override
+	public void setImportProfileKey(String importProfileKey) {
+		model.setImportProfileKey(importProfileKey);
+	}
+
+	/**
 	 * Sets the job key of this import job.
 	 *
 	 * @param jobKey the job key of this import job
@@ -563,6 +608,16 @@ public class ImportJobWrapper
 	@Override
 	public void setModifiedDate(Date modifiedDate) {
 		model.setModifiedDate(modifiedDate);
+	}
+
+	/**
+	 * Sets the package schema version of this import job.
+	 *
+	 * @param packageSchemaVersion the package schema version of this import job
+	 */
+	@Override
+	public void setPackageSchemaVersion(String packageSchemaVersion) {
+		model.setPackageSchemaVersion(packageSchemaVersion);
 	}
 
 	/**
@@ -701,4 +756,4 @@ public class ImportJobWrapper
 	}
 
 }
-// LIFERAY-SERVICE-BUILDER-HASH:1663451534
+// LIFERAY-SERVICE-BUILDER-HASH:-1031610530

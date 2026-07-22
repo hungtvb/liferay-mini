@@ -43,6 +43,7 @@ import java.lang.reflect.InvocationHandler;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 import javax.sql.DataSource;
@@ -369,29 +370,35 @@ public class ImportJobItemPersistenceImpl
 	private static final String _FINDER_COLUMN_J_IMPORTJOBID_2 =
 		"importJobItem.importJobId = ?";
 
-	private FinderPath _finderPathFetchByJ_R;
+	private FinderPath _finderPathFetchByJ_S_R;
 
 	/**
-	 * Returns the import job item where importJobId = &#63; and rowNumber = &#63; or throws a <code>NoSuchImportJobItemException</code> if it could not be found.
+	 * Returns the import job item where importJobId = &#63; and sheetName = &#63; and rowNumber = &#63; or throws a <code>NoSuchImportJobItemException</code> if it could not be found.
 	 *
 	 * @param importJobId the import job ID
+	 * @param sheetName the sheet name
 	 * @param rowNumber the row number
 	 * @return the matching import job item
 	 * @throws NoSuchImportJobItemException if a matching import job item could not be found
 	 */
 	@Override
-	public ImportJobItem findByJ_R(long importJobId, int rowNumber)
+	public ImportJobItem findByJ_S_R(
+			long importJobId, String sheetName, int rowNumber)
 		throws NoSuchImportJobItemException {
 
-		ImportJobItem importJobItem = fetchByJ_R(importJobId, rowNumber);
+		ImportJobItem importJobItem = fetchByJ_S_R(
+			importJobId, sheetName, rowNumber);
 
 		if (importJobItem == null) {
-			StringBundler sb = new StringBundler(6);
+			StringBundler sb = new StringBundler(8);
 
 			sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
 			sb.append("importJobId=");
 			sb.append(importJobId);
+
+			sb.append(", sheetName=");
+			sb.append(sheetName);
 
 			sb.append(", rowNumber=");
 			sb.append(rowNumber);
@@ -409,46 +416,54 @@ public class ImportJobItemPersistenceImpl
 	}
 
 	/**
-	 * Returns the import job item where importJobId = &#63; and rowNumber = &#63; or returns <code>null</code> if it could not be found. Uses the finder cache.
+	 * Returns the import job item where importJobId = &#63; and sheetName = &#63; and rowNumber = &#63; or returns <code>null</code> if it could not be found. Uses the finder cache.
 	 *
 	 * @param importJobId the import job ID
+	 * @param sheetName the sheet name
 	 * @param rowNumber the row number
 	 * @return the matching import job item, or <code>null</code> if a matching import job item could not be found
 	 */
 	@Override
-	public ImportJobItem fetchByJ_R(long importJobId, int rowNumber) {
-		return fetchByJ_R(importJobId, rowNumber, true);
+	public ImportJobItem fetchByJ_S_R(
+		long importJobId, String sheetName, int rowNumber) {
+
+		return fetchByJ_S_R(importJobId, sheetName, rowNumber, true);
 	}
 
 	/**
-	 * Returns the import job item where importJobId = &#63; and rowNumber = &#63; or returns <code>null</code> if it could not be found, optionally using the finder cache.
+	 * Returns the import job item where importJobId = &#63; and sheetName = &#63; and rowNumber = &#63; or returns <code>null</code> if it could not be found, optionally using the finder cache.
 	 *
 	 * @param importJobId the import job ID
+	 * @param sheetName the sheet name
 	 * @param rowNumber the row number
 	 * @param useFinderCache whether to use the finder cache
 	 * @return the matching import job item, or <code>null</code> if a matching import job item could not be found
 	 */
 	@Override
-	public ImportJobItem fetchByJ_R(
-		long importJobId, int rowNumber, boolean useFinderCache) {
+	public ImportJobItem fetchByJ_S_R(
+		long importJobId, String sheetName, int rowNumber,
+		boolean useFinderCache) {
+
+		sheetName = Objects.toString(sheetName, "");
 
 		Object[] finderArgs = null;
 
 		if (useFinderCache) {
-			finderArgs = new Object[] {importJobId, rowNumber};
+			finderArgs = new Object[] {importJobId, sheetName, rowNumber};
 		}
 
 		Object result = null;
 
 		if (useFinderCache) {
 			result = finderCache.getResult(
-				_finderPathFetchByJ_R, finderArgs, this);
+				_finderPathFetchByJ_S_R, finderArgs, this);
 		}
 
 		if (result instanceof ImportJobItem) {
 			ImportJobItem importJobItem = (ImportJobItem)result;
 
 			if ((importJobId != importJobItem.getImportJobId()) ||
+				!Objects.equals(sheetName, importJobItem.getSheetName()) ||
 				(rowNumber != importJobItem.getRowNumber())) {
 
 				result = null;
@@ -456,13 +471,24 @@ public class ImportJobItemPersistenceImpl
 		}
 
 		if (result == null) {
-			StringBundler sb = new StringBundler(4);
+			StringBundler sb = new StringBundler(5);
 
 			sb.append(_SQL_SELECT_IMPORTJOBITEM_WHERE);
 
-			sb.append(_FINDER_COLUMN_J_R_IMPORTJOBID_2);
+			sb.append(_FINDER_COLUMN_J_S_R_IMPORTJOBID_2);
 
-			sb.append(_FINDER_COLUMN_J_R_ROWNUMBER_2);
+			boolean bindSheetName = false;
+
+			if (sheetName.isEmpty()) {
+				sb.append(_FINDER_COLUMN_J_S_R_SHEETNAME_3);
+			}
+			else {
+				bindSheetName = true;
+
+				sb.append(_FINDER_COLUMN_J_S_R_SHEETNAME_2);
+			}
+
+			sb.append(_FINDER_COLUMN_J_S_R_ROWNUMBER_2);
 
 			String sql = sb.toString();
 
@@ -477,6 +503,10 @@ public class ImportJobItemPersistenceImpl
 
 				queryPos.add(importJobId);
 
+				if (bindSheetName) {
+					queryPos.add(sheetName);
+				}
+
 				queryPos.add(rowNumber);
 
 				List<ImportJobItem> list = query.list();
@@ -484,7 +514,7 @@ public class ImportJobItemPersistenceImpl
 				if (list.isEmpty()) {
 					if (useFinderCache) {
 						finderCache.putResult(
-							_finderPathFetchByJ_R, finderArgs, list);
+							_finderPathFetchByJ_S_R, finderArgs, list);
 					}
 				}
 				else {
@@ -512,31 +542,36 @@ public class ImportJobItemPersistenceImpl
 	}
 
 	/**
-	 * Removes the import job item where importJobId = &#63; and rowNumber = &#63; from the database.
+	 * Removes the import job item where importJobId = &#63; and sheetName = &#63; and rowNumber = &#63; from the database.
 	 *
 	 * @param importJobId the import job ID
+	 * @param sheetName the sheet name
 	 * @param rowNumber the row number
 	 * @return the import job item that was removed
 	 */
 	@Override
-	public ImportJobItem removeByJ_R(long importJobId, int rowNumber)
+	public ImportJobItem removeByJ_S_R(
+			long importJobId, String sheetName, int rowNumber)
 		throws NoSuchImportJobItemException {
 
-		ImportJobItem importJobItem = findByJ_R(importJobId, rowNumber);
+		ImportJobItem importJobItem = findByJ_S_R(
+			importJobId, sheetName, rowNumber);
 
 		return remove(importJobItem);
 	}
 
 	/**
-	 * Returns the number of import job items where importJobId = &#63; and rowNumber = &#63;.
+	 * Returns the number of import job items where importJobId = &#63; and sheetName = &#63; and rowNumber = &#63;.
 	 *
 	 * @param importJobId the import job ID
+	 * @param sheetName the sheet name
 	 * @param rowNumber the row number
 	 * @return the number of matching import job items
 	 */
 	@Override
-	public int countByJ_R(long importJobId, int rowNumber) {
-		ImportJobItem importJobItem = fetchByJ_R(importJobId, rowNumber);
+	public int countByJ_S_R(long importJobId, String sheetName, int rowNumber) {
+		ImportJobItem importJobItem = fetchByJ_S_R(
+			importJobId, sheetName, rowNumber);
 
 		if (importJobItem == null) {
 			return 0;
@@ -545,10 +580,16 @@ public class ImportJobItemPersistenceImpl
 		return 1;
 	}
 
-	private static final String _FINDER_COLUMN_J_R_IMPORTJOBID_2 =
+	private static final String _FINDER_COLUMN_J_S_R_IMPORTJOBID_2 =
 		"importJobItem.importJobId = ? AND ";
 
-	private static final String _FINDER_COLUMN_J_R_ROWNUMBER_2 =
+	private static final String _FINDER_COLUMN_J_S_R_SHEETNAME_2 =
+		"importJobItem.sheetName = ? AND ";
+
+	private static final String _FINDER_COLUMN_J_S_R_SHEETNAME_3 =
+		"(importJobItem.sheetName IS NULL OR importJobItem.sheetName = '') AND ";
+
+	private static final String _FINDER_COLUMN_J_S_R_ROWNUMBER_2 =
 		"importJobItem.rowNumber = ?";
 
 	public ImportJobItemPersistenceImpl() {
@@ -572,9 +613,10 @@ public class ImportJobItemPersistenceImpl
 			importJobItem);
 
 		finderCache.putResult(
-			_finderPathFetchByJ_R,
+			_finderPathFetchByJ_S_R,
 			new Object[] {
-				importJobItem.getImportJobId(), importJobItem.getRowNumber()
+				importJobItem.getImportJobId(), importJobItem.getSheetName(),
+				importJobItem.getRowNumber()
 			},
 			importJobItem);
 	}
@@ -652,11 +694,12 @@ public class ImportJobItemPersistenceImpl
 
 		Object[] args = new Object[] {
 			importJobItemModelImpl.getImportJobId(),
+			importJobItemModelImpl.getSheetName(),
 			importJobItemModelImpl.getRowNumber()
 		};
 
 		finderCache.putResult(
-			_finderPathFetchByJ_R, args, importJobItemModelImpl);
+			_finderPathFetchByJ_S_R, args, importJobItemModelImpl);
 	}
 
 	/**
@@ -1131,10 +1174,13 @@ public class ImportJobItemPersistenceImpl
 			new String[] {Long.class.getName()}, new String[] {"importJobId"},
 			false);
 
-		_finderPathFetchByJ_R = new FinderPath(
-			FINDER_CLASS_NAME_ENTITY, "fetchByJ_R",
-			new String[] {Long.class.getName(), Integer.class.getName()},
-			new String[] {"importJobId", "rowNumber"}, true);
+		_finderPathFetchByJ_S_R = new FinderPath(
+			FINDER_CLASS_NAME_ENTITY, "fetchByJ_S_R",
+			new String[] {
+				Long.class.getName(), String.class.getName(),
+				Integer.class.getName()
+			},
+			new String[] {"importJobId", "sheetName", "rowNumber"}, true);
 
 		ImportJobItemUtil.setPersistence(this);
 	}
@@ -1207,4 +1253,4 @@ public class ImportJobItemPersistenceImpl
 	}
 
 }
-// LIFERAY-SERVICE-BUILDER-HASH:1840452310
+// LIFERAY-SERVICE-BUILDER-HASH:-1852476778

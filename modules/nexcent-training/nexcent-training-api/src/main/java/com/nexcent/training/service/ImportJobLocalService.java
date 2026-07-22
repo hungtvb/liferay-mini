@@ -73,6 +73,7 @@ public interface ImportJobLocalService
 	public ImportJob addOrResetImportJob(
 			long userId, long groupId, String externalReferenceCode,
 			long fileEntryId, String fileName, String sha256,
+			String importProfileKey, String packageSchemaVersion,
 			String structureERC, ServiceContext serviceContext)
 		throws PortalException;
 
@@ -338,4 +339,4 @@ public interface ImportJobLocalService
 		throws PortalException;
 
 }
-// LIFERAY-SERVICE-BUILDER-HASH:844284473
+// LIFERAY-SERVICE-BUILDER-HASH:-946682899

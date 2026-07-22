@@ -1,7 +1,8 @@
 package com.nexcent.training.article.importer.internal;
 
-import com.liferay.portal.kernel.json.JSONFactoryUtil;
-import com.liferay.portal.kernel.json.JSONObject;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.nexcent.training.content.importer.ContentImportException;
 
 import java.io.ByteArrayInputStream;
@@ -103,14 +104,17 @@ class SafeZipPackageReader {
         }
 
         try {
-            JSONObject manifest = JSONFactoryUtil.createJSONObject(
-                new String(manifestBytes, StandardCharsets.UTF_8));
-            String schemaVersion = manifest.getString("schemaVersion").trim();
-            String profileKey = manifest.getString("importProfileKey").trim();
-            String siteERC = manifest.getString(
-                "siteExternalReferenceCode").trim();
-            String mode = manifest.getString("mode").trim().toUpperCase(
-                Locale.ROOT);
+            JsonObject manifest = JsonParser.parseString(
+                new String(
+                    manifestBytes, StandardCharsets.UTF_8)).getAsJsonObject();
+            String schemaVersion = _jsonString(
+                manifest, "schemaVersion");
+            String profileKey = _jsonString(
+                manifest, "importProfileKey");
+            String siteERC = _jsonString(
+                manifest, "siteExternalReferenceCode");
+            String mode = _jsonString(
+                manifest, "mode").toUpperCase(Locale.ROOT);
 
             if (schemaVersion.isEmpty() || profileKey.isEmpty() ||
                 siteERC.isEmpty() || !"UPSERT".equals(mode)) {
@@ -129,6 +133,22 @@ class SafeZipPackageReader {
             throw new ContentImportException(
                 "INVALID_MANIFEST", "manifest.json is invalid", exception);
         }
+    }
+
+    private String _jsonString(JsonObject jsonObject, String name)
+        throws ContentImportException {
+
+        JsonElement jsonElement = jsonObject.get(name);
+
+        if ((jsonElement == null) || !jsonElement.isJsonPrimitive() ||
+            !jsonElement.getAsJsonPrimitive().isString()) {
+
+            throw new ContentImportException(
+                "INVALID_MANIFEST",
+                "Manifest field " + name + " must be a string");
+        }
+
+        return jsonElement.getAsString().trim();
     }
 
     private String _normalize(String name) throws ContentImportException {

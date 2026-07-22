@@ -1,0 +1,46 @@
+{
+    "fieldSets": [
+        {
+            "fields": [
+                {
+                    "dataType": "string",
+                    "defaultValue": "Our Clients",
+                    "label": "Title",
+                    "name": "title",
+                    "type": "text"
+                },
+                {
+                    "dataType": "string",
+                    "defaultValue": "We have been working with some Fortune 500+ clients",
+                    "label": "Description",
+                    "name": "description",
+                    "type": "text"
+                },
+                {
+                    "defaultValue": true,
+                    "label": "Enable logo ticker",
+                    "name": "showTicker",
+                    "type": "checkbox"
+                }
+            ],
+            "label": "Section"
+        },
+        {
+            "fields": [
+                {"dataType": "string", "defaultValue": "", "label": "Logo 1 URL", "name": "logo1URL", "type": "text"},
+                {"dataType": "string", "defaultValue": "Client 1", "label": "Logo 1 alt text", "name": "logo1Alt", "type": "text"},
+                {"dataType": "string", "defaultValue": "", "label": "Logo 2 URL", "name": "logo2URL", "type": "text"},
+                {"dataType": "string", "defaultValue": "Client 2", "label": "Logo 2 alt text", "name": "logo2Alt", "type": "text"},
+                {"dataType": "string", "defaultValue": "", "label": "Logo 3 URL", "name": "logo3URL", "type": "text"},
+                {"dataType": "string", "defaultValue": "Client 3", "label": "Logo 3 alt text", "name": "logo3Alt", "type": "text"},
+                {"dataType": "string", "defaultValue": "", "label": "Logo 4 URL", "name": "logo4URL", "type": "text"},
+                {"dataType": "string", "defaultValue": "Client 4", "label": "Logo 4 alt text", "name": "logo4Alt", "type": "text"},
+                {"dataType": "string", "defaultValue": "", "label": "Logo 5 URL", "name": "logo5URL", "type": "text"},
+                {"dataType": "string", "defaultValue": "Client 5", "label": "Logo 5 alt text", "name": "logo5Alt", "type": "text"},
+                {"dataType": "string", "defaultValue": "", "label": "Logo 6 URL", "name": "logo6URL", "type": "text"},
+                {"dataType": "string", "defaultValue": "Client 6", "label": "Logo 6 alt text", "name": "logo6Alt", "type": "text"}
+            ],
+            "label": "Logos"
+        }
+    ]
+}

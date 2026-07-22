@@ -1,6 +1,6 @@
 # Batch and Data Migration Code Labs
 
-> The operational Article import path is a native Site Administration App. It accepts one ZIP containing Excel plus images. The browser-only Content Importer and separate asset picker are retired from the final baseline.
+> The operational path is the profile-driven Nexcent Content Import Site Administration App; Article uses `NXC_ARTICLE_V1`. It accepts one ZIP containing Excel plus images. The browser-only Content Importer and separate asset picker are retired from the final baseline.
 
 # Lab MIG-01 — Build the Article Import Package
 
@@ -80,7 +80,7 @@ Rules:
 ## Runtime flow
 
 1. Sign in with the `Nexcent Content Importer` site role.
-2. Open Site Menu → Content & Data → Nexcent Article Import.
+2. Open Site Menu → Content & Data → Nexcent Content Import.
 3. Upload the ZIP. The UI stores it in the restricted D&M package folder.
 4. Run Validate before any mutation.
 5. Review package, image, taxonomy, permission, and Article row results.
@@ -104,7 +104,7 @@ Rules:
 The UI first uploads the ZIP through the standard Documents API and receives `packageFileEntryId`. It then calls REST Builder:
 
 ```text
-POST /o/nexcent-training/v1.0/sites/{siteId}/article-import-jobs
+POST /o/nexcent-training/v1.0/sites/{siteId}/content-import-jobs
 ```
 
 Request:
@@ -113,20 +113,21 @@ Request:
 {
   "externalReferenceCode": "NXC-ARTICLE-IMPORT-20260722-001",
   "packageFileEntryId": 38201,
-  "structureExternalReferenceCode": "NXC-STRUCTURE-ARTICLE"
+  "importProfileKey": "NXC_ARTICLE_V1"
 }
 ```
 
 Then run:
 
 ```text
-POST /sites/{siteId}/article-import-jobs/{jobERC}/validate
-POST /sites/{siteId}/article-import-jobs/{jobERC}/execute
-GET  /sites/{siteId}/article-import-jobs/{jobERC}
-GET  /sites/{siteId}/article-import-jobs/{jobERC}/items
+GET  /sites/{siteId}/content-import-profiles
+POST /sites/{siteId}/content-import-jobs/{jobERC}/validate
+POST /sites/{siteId}/content-import-jobs/{jobERC}/execute
+GET  /sites/{siteId}/content-import-jobs/{jobERC}
+GET  /sites/{siteId}/content-import-jobs/{jobERC}/items
 ```
 
-The service must verify that the package belongs to the current site and approved restricted folder. Editorial content stays in Web Content, images stay in Documents and Media, and operational status stays in Service Builder.
+The service must verify that `NXC_ARTICLE_V1` is registered, the request matches the manifest, and the package belongs to the current site and approved restricted folder. Editorial content stays in Web Content, images stay in Documents and Media, and operational status stays in Service Builder.
 
 ## Checkpoint
 

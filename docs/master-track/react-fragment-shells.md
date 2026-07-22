@@ -17,17 +17,15 @@ matching custom-element tag plus attributes generated from Fragment Settings.
 
 ```text
 Nexcent Master Page
-├── Nexcent React Header
+├── Nexcent React Header + Fragment Settings
 ├── Main Content drop zone
-└── Nexcent React Footer
+└── Nexcent React Footer + Fragment Settings
         │
-        ├── Fragment Settings
-        │   └── static branding, labels, newsletter, and social URLs
-        │
-        ▼
-Nexcent React Runtime Global JavaScript
-        │
-        ▼
+        ├── Nexcent React Runtime Global JavaScript
+        ├── Nexcent Theme CSS / Style Book tokens
+        └── Nexcent Global CSS React host bridge
+                │
+                ▼
 GET /o/nexcent-site-shell/v1.0/sites/{siteId}/site-shell
         ├── Header Navigation Menu
         ├── Footer Company Navigation Menu
@@ -54,6 +52,46 @@ Footer Support:
 NXC-FOOTER-SUPPORT | NEXCENT-FOOTER-SUPPORT
 Nexcent Footer Support | Footer Support
 ```
+
+## Theme and Style Book contract
+
+The React custom elements render in Shadow DOM, but CSS custom properties still
+inherit from each custom-element host. The runtime converts the static prototype
+brand colors to active Nexcent Style Book variables.
+
+The theme project now loads:
+
+```text
+client-extensions/nexcent-theme/assets/global-entry.css
+├── global.css
+└── react-shell.css
+```
+
+`global.css` keeps the existing Nexcent and legacy Master Page rules.
+`react-shell.css` is limited to:
+
+- React custom-element host defaults.
+- Style Book token propagation.
+- Liferay Fragment wrapper margin/padding normalization.
+- Header stacking and mobile sticky behavior.
+
+Component-level visual CSS remains inside the React Shadow DOM. Do not duplicate
+Header/Footer component rules in Theme CSS.
+
+Style precedence:
+
+```text
+Style Book frontend tokens
+    ↓
+Nexcent Global CSS aliases
+    ↓
+React custom-element host
+    ↓
+Shadow DOM component CSS
+```
+
+Keep old `.nxc-site-*` rules temporarily for the legacy Master Page until React
+runtime screenshots pass. They do not penetrate the React Shadow DOM.
 
 ## Build and deploy
 
@@ -82,6 +120,25 @@ npm run build
 ../../gradlew clean build
 cp dist/*.zip ../../bundles/osgi/client-extensions/
 ```
+
+Build and redeploy the updated theme project:
+
+```bash
+cd ../nexcent-theme
+../../gradlew clean build
+cp dist/*.zip ../../bundles/osgi/client-extensions/
+```
+
+The client-extension key and UI name remain unchanged:
+
+```text
+nexcent-global-css
+Nexcent Global CSS
+```
+
+Only its resource URL changed from `global.css` to `global-entry.css`. After
+redeploying, confirm the existing **Nexcent Global CSS** entry is still applied
+to the Master Page.
 
 Add **Nexcent React Runtime** as Global JavaScript to the Master Page. A
 Fragment custom tag does not load the JavaScript bundle by itself.
@@ -237,13 +294,17 @@ the Footer Fragment Settings.
 - Static demo copy remains in `prototypes/nexcent-static/content.json`.
 - Images and icons reuse the original prototype assets.
 - React elements use Shadow DOM so the static reset cannot leak into Clay.
-- Style Book CSS variables remain available through the custom-element host.
+- Prototype colors are mapped to the active Style Book variables at build time.
+- Container width, gutter, font family, focus color, surfaces, primary colors,
+  navigation colors, and footer colors inherit from the custom-element host.
 - Hero carousel behavior is React-owned; Swiper and AOS CDN scripts are not
   required.
 
 ## Runtime gates
 
-Capture the complete Master Page at `1440px`, `768px`, and `375px`. Do not merge
-while typography, navigation dropdowns, authenticated/guest states, mobile
-menu, article overlays, newsletter states, Header, or Footer still diverge or
-produce console/network errors.
+Capture the complete Master Page at `1440px`, `768px`, and `375px`. Also change
+the Style Book primary color to a temporary non-default value and verify Header,
+buttons, links, selected navigation, and focus states update inside Shadow DOM.
+Do not merge while typography, navigation dropdowns, authenticated/guest states,
+mobile menu, article overlays, newsletter states, Header, Footer, Style Book
+token propagation, wrapper spacing, or console/network checks still fail.

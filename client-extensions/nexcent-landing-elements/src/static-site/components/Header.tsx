@@ -5,12 +5,21 @@ import {
     useState,
 } from 'react';
 
+import content from '../../../../../prototypes/nexcent-static/content.json';
 import {resolveStaticAsset} from '../assets';
-import type {NavigationItem} from '../site-shell/types';
-import {useSiteShell} from '../site-shell/useSiteShell';
+import type {AccountContext, NavigationItem} from '../site-shell/types';
 
 type HeaderProps = {
     host?: HTMLElement;
+};
+
+type HeaderRuntimeContext = {
+    account: AccountContext;
+    navigation: NavigationItem[];
+    site: {
+        homeURL: string;
+        name: string;
+    };
 };
 
 type NavigationListProps = {
@@ -20,6 +29,12 @@ type NavigationListProps = {
         navigationItem: NavigationItem
     ) => void;
     root?: boolean;
+};
+
+type RuntimeState = {
+    context: HeaderRuntimeContext;
+    error?: Error;
+    status: 'fallback' | 'preview' | 'ready';
 };
 
 function readSetting(
@@ -44,6 +59,165 @@ function readBooleanSetting(
     return value !== 'false';
 }
 
+function normalizeTarget(value: unknown): string {
+    if (typeof value !== 'string') {
+        return '';
+    }
+
+    if (value.includes('_blank')) {
+        return '_blank';
+    }
+
+    if (value.includes('_parent')) {
+        return '_parent';
+    }
+
+    if (value.includes('_top')) {
+        return '_top';
+    }
+
+    return value.includes('_self') ? '_self' : '';
+}
+
+function normalizeNavigation(value: unknown, prefix = 'NXC-NAV'): NavigationItem[] {
+    if (!Array.isArray(value)) {
+        return [];
+    }
+
+    return value
+        .filter(
+            (item): item is Record<string, unknown> =>
+                Boolean(item && typeof item === 'object')
+        )
+        .map((item, index) => ({
+            children: normalizeNavigation(item.children, `${prefix}-${index + 1}`),
+            externalReferenceCode:
+                typeof item.externalReferenceCode === 'string' &&
+                item.externalReferenceCode
+                    ? item.externalReferenceCode
+                    : `${prefix}-${index + 1}`,
+            label: typeof item.label === 'string' ? item.label : '',
+            selected: item.selected === true,
+            target: normalizeTarget(item.target),
+            url: typeof item.url === 'string' && item.url ? item.url : '#',
+        }))
+        .filter((item) => Boolean(item.label));
+}
+
+function createFallbackContext(): HeaderRuntimeContext {
+    return {
+        account: {
+            accountURL: '/group/control_panel/manage',
+            createAccountURL: '/web/guest/create-account',
+            displayName: '',
+            emailAddress: '',
+            loginURL: '/c/portal/login',
+            logoutURL: '/c/portal/logout',
+            portraitURL: '',
+            signedIn: false,
+        },
+        navigation: content.navigation.map((item, index) => ({
+            children: [],
+            externalReferenceCode: `NXC-PREVIEW-${index + 1}`,
+            label: item.label,
+            selected: false,
+            target: '',
+            url: item.href,
+        })),
+        site: {
+            homeURL: '#home',
+            name: 'Nexcent',
+        },
+    };
+}
+
+function readRuntimeContext(host?: HTMLElement): RuntimeState {
+    const fallback = createFallbackContext();
+
+    if (!host) {
+        return {context: fallback, status: 'preview'};
+    }
+
+    const script = host.querySelector<HTMLScriptElement>(
+        'script[data-nexcent-header-props]'
+    );
+
+    if (!script?.textContent?.trim()) {
+        return {
+            context: fallback,
+            error: new Error('Missing embedded Header Fragment props.'),
+            status: 'fallback',
+        };
+    }
+
+    try {
+        const value = JSON.parse(script.textContent) as Record<string, unknown>;
+        const account =
+            value.account && typeof value.account === 'object'
+                ? (value.account as Record<string, unknown>)
+                : {};
+        const site =
+            value.site && typeof value.site === 'object'
+                ? (value.site as Record<string, unknown>)
+                : {};
+
+        return {
+            context: {
+                account: {
+                    accountURL:
+                        typeof account.accountURL === 'string'
+                            ? account.accountURL
+                            : fallback.account.accountURL,
+                    createAccountURL:
+                        typeof account.createAccountURL === 'string'
+                            ? account.createAccountURL
+                            : fallback.account.createAccountURL,
+                    displayName:
+                        typeof account.displayName === 'string'
+                            ? account.displayName
+                            : '',
+                    emailAddress: '',
+                    loginURL:
+                        typeof account.loginURL === 'string'
+                            ? account.loginURL
+                            : fallback.account.loginURL,
+                    logoutURL:
+                        typeof account.logoutURL === 'string'
+                            ? account.logoutURL
+                            : fallback.account.logoutURL,
+                    portraitURL:
+                        typeof account.portraitURL === 'string'
+                            ? account.portraitURL
+                            : '',
+                    signedIn: account.signedIn === true,
+                },
+                navigation: normalizeNavigation(value.navigation),
+                site: {
+                    homeURL:
+                        typeof site.homeURL === 'string' && site.homeURL
+                            ? site.homeURL
+                            : fallback.site.homeURL,
+                    name:
+                        typeof site.name === 'string' && site.name
+                            ? site.name
+                            : fallback.site.name,
+                },
+            },
+            status: 'ready',
+        };
+    }
+    catch (cause: unknown) {
+        return {
+            context: fallback,
+            error:
+                cause instanceof Error
+                    ? cause
+                    : new Error('Invalid embedded Header Fragment props.'),
+            status: 'fallback',
+        };
+    }
+}
+
 function NavigationList({items, onNavigate, root = false}: NavigationListProps) {
     return (
         <ul className={root ? 'header__navigation-list' : 'header__submenu'}>
@@ -56,6 +230,7 @@ function NavigationList({items, onNavigate, root = false}: NavigationListProps) 
                         aria-current={item.selected ? 'page' : undefined}
                         href={item.url}
                         onClick={(event) => onNavigate(event, item)}
+                        rel={item.target === '_blank' ? 'noopener noreferrer' : undefined}
                         target={item.target || undefined}
                     >
                         {item.label}
@@ -74,29 +249,21 @@ function NavigationList({items, onNavigate, root = false}: NavigationListProps) 
 }
 
 export function StaticHeader({host}: HeaderProps) {
-    const {error, shell, status} = useSiteShell(host);
+    const {context, error, status} = readRuntimeContext(host);
     const [accountOpen, setAccountOpen] = useState(false);
     const [menuOpen, setMenuOpen] = useState(false);
     const initials = useMemo(
         () =>
-            shell.account.displayName
+            context.account.displayName
                 .split(/\s+/)
                 .filter(Boolean)
                 .slice(0, 2)
                 .map((part) => part[0]?.toUpperCase())
                 .join('') || 'U',
-        [shell.account.displayName]
+        [context.account.displayName]
     );
-    const logoURL = readSetting(
-        host,
-        'logo-url',
-        shell.site.logoURL || resolveStaticAsset('logo')
-    );
-    const logoAlt = readSetting(
-        host,
-        'logo-alt',
-        shell.site.name || 'Nexcent'
-    );
+    const logoURL = readSetting(host, 'logo-url', resolveStaticAsset('logo'));
+    const logoAlt = readSetting(host, 'logo-alt', context.site.name);
     const loginLabel = readSetting(host, 'login-label', 'Login');
     const signUpLabel = readSetting(host, 'sign-up-label', 'Sign up');
     const myAccountLabel = readSetting(
@@ -164,15 +331,15 @@ export function StaticHeader({host}: HeaderProps) {
             <div className="header__container">
                 <a
                     className="header__logo"
-                    href={shell.site.homeURL}
+                    href={context.site.homeURL}
                     onClick={(event) =>
                         handleNavigation(event, {
                             children: [],
                             externalReferenceCode: 'NXC-HOME',
-                            label: shell.site.name,
+                            label: context.site.name,
                             selected: false,
                             target: '',
-                            url: shell.site.homeURL,
+                            url: context.site.homeURL,
                         })
                     }
                 >
@@ -198,7 +365,7 @@ export function StaticHeader({host}: HeaderProps) {
                 >
                     <nav aria-label="Primary navigation">
                         <NavigationList
-                            items={shell.headerNavigation}
+                            items={context.navigation}
                             onNavigate={handleNavigation}
                             root
                         />
@@ -206,7 +373,7 @@ export function StaticHeader({host}: HeaderProps) {
 
                     {showAccountActions ? (
                         <div className="header__btns">
-                            {shell.account.signedIn ? (
+                            {context.account.signedIn ? (
                                 <div className="header__account">
                                     <button
                                         aria-expanded={accountOpen}
@@ -216,10 +383,10 @@ export function StaticHeader({host}: HeaderProps) {
                                         }
                                         type="button"
                                     >
-                                        {shell.account.portraitURL ? (
+                                        {context.account.portraitURL ? (
                                             <img
                                                 className="header__account-avatar"
-                                                src={shell.account.portraitURL}
+                                                src={context.account.portraitURL}
                                                 alt=""
                                             />
                                         ) : (
@@ -231,7 +398,7 @@ export function StaticHeader({host}: HeaderProps) {
                                             </span>
                                         )}
                                         <span className="header__account-name">
-                                            {shell.account.displayName}
+                                            {context.account.displayName}
                                         </span>
                                         <span aria-hidden="true">▾</span>
                                     </button>
@@ -242,13 +409,13 @@ export function StaticHeader({host}: HeaderProps) {
                                         }`}
                                     >
                                         <a
-                                            href={shell.account.accountURL}
+                                            href={context.account.accountURL}
                                             onClick={closeNavigation}
                                         >
                                             {myAccountLabel}
                                         </a>
                                         <a
-                                            href={shell.account.logoutURL}
+                                            href={context.account.logoutURL}
                                             onClick={closeNavigation}
                                         >
                                             {signOutLabel}
@@ -259,14 +426,14 @@ export function StaticHeader({host}: HeaderProps) {
                                 <>
                                     <a
                                         className="btn btn-light"
-                                        href={shell.account.loginURL}
+                                        href={context.account.loginURL}
                                         onClick={closeNavigation}
                                     >
                                         {loginLabel}
                                     </a>
                                     <a
                                         className="btn"
-                                        href={shell.account.createAccountURL}
+                                        href={context.account.createAccountURL}
                                         onClick={closeNavigation}
                                     >
                                         {signUpLabel}
@@ -279,7 +446,7 @@ export function StaticHeader({host}: HeaderProps) {
 
                 {error ? (
                     <span className="sr-only" role="status">
-                        Site navigation is using fallback data: {error.message}
+                        Header is using preview fallback data: {error.message}
                     </span>
                 ) : null}
             </div>

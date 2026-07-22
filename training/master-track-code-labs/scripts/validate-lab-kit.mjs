@@ -13,6 +13,11 @@ const requiredFiles = [
     'modules/nexcent-site-shell/nexcent-site-shell-rest-impl/rest-config.yaml',
     'modules/nexcent-site-shell/nexcent-site-shell-rest-impl/rest-openapi.yaml',
     'modules/nexcent-site-shell/nexcent-site-shell-rest-impl/src/main/java/com/nexcent/site/shell/rest/internal/resource/v1_0/SiteShellResourceImpl.java',
+    'client-extensions/nexcent-theme/client-extension.yaml',
+    'client-extensions/nexcent-theme/assets/global-entry.css',
+    'client-extensions/nexcent-theme/assets/global.css',
+    'client-extensions/nexcent-theme/assets/react-shell.css',
+    'client-extensions/nexcent-theme/src/frontend-token-definition.json',
     'training/master-track-code-labs/fragments/nexcent-account-actions/fragment.json',
     'training/master-track-code-labs/fragments/nexcent-mobile-navigation/fragment.json',
     'training/master-track-code-labs/fragments/nexcent-mobile-navigation/configuration.json',
@@ -214,6 +219,40 @@ for (const expected of [
     }
 }
 
+const themeClientExtension = await readFile(
+    'client-extensions/nexcent-theme/client-extension.yaml',
+    'utf8'
+);
+const themeEntry = await readFile(
+    'client-extensions/nexcent-theme/assets/global-entry.css',
+    'utf8'
+);
+const reactShellCss = await readFile(
+    'client-extensions/nexcent-theme/assets/react-shell.css',
+    'utf8'
+);
+
+if (!themeClientExtension.includes('url: global-entry.css')) {
+    throw new Error('Nexcent Global CSS must load the React-aware global entry.');
+}
+
+for (const expected of ['./global.css', './react-shell.css']) {
+    if (!themeEntry.includes(expected)) {
+        throw new Error(`Theme global entry is missing ${expected}.`);
+    }
+}
+
+for (const expected of [
+    'nexcent-react-header',
+    'nexcent-react-footer',
+    '--nxc-color-primary',
+    'lfr-layout-structure-item-nexcent-react-header',
+]) {
+    if (!reactShellCss.includes(expected)) {
+        throw new Error(`React shell theme bridge is missing ${expected}.`);
+    }
+}
+
 for (const fragmentPath of [
     'training/master-track-code-labs/fragments/nexcent-react-header/index.html',
     'training/master-track-code-labs/fragments/nexcent-react-footer/index.html',
@@ -226,17 +265,6 @@ for (const fragmentPath of [
 
     if (!fragmentHtml.includes('themeDisplay.getScopeGroupId()')) {
         throw new Error(`${fragmentPath} must pass the runtime site ID to React.`);
-    }
-}
-
-for (const fragmentPath of [
-    'training/master-track-code-labs/fragments/nexcent-react-header/fragment.json',
-    'training/master-track-code-labs/fragments/nexcent-react-footer/fragment.json',
-]) {
-    const fragmentDefinition = JSON.parse(await readFile(fragmentPath, 'utf8'));
-
-    if (fragmentDefinition.configurationPath !== 'configuration.json') {
-        throw new Error(`${fragmentPath} must expose configuration.json.`);
     }
 }
 

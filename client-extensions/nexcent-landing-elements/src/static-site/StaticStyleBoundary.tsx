@@ -2,14 +2,40 @@ import type {ReactNode} from 'react';
 
 import staticCss from '../../../../prototypes/nexcent-static/css/style.css?inline';
 
+const THEME_COLOR_REPLACEMENTS: Array<[RegExp, string]> = [
+    [/#4caf4f(?![0-9a-f])/gi, 'var(--nxc-color-primary, #4caf4f)'],
+    [/#388e3b(?![0-9a-f])/gi, 'var(--nxc-color-primary-hover, #388e3b)'],
+    [/#237d31(?![0-9a-f])/gi, 'var(--nxc-color-primary-active, #237d31)'],
+    [/#263238(?![0-9a-f])/gi, 'var(--nxc-color-secondary, #263238)'],
+    [/#4d4d4d(?![0-9a-f])/gi, 'var(--nxc-color-heading, #4d4d4d)'],
+    [/#717171(?![0-9a-f])/gi, 'var(--nxc-color-text, #717171)'],
+    [/#89939e(?![0-9a-f])/gi, 'var(--nxc-color-muted, #89939e)'],
+    [/#18191f(?![0-9a-f])/gi, 'var(--nxc-color-navigation, #18191f)'],
+    [/#abbed1(?![0-9a-f])/gi, 'var(--nxc-color-border, #abbed1)'],
+    [/#f5f7fa(?![0-9a-f])/gi, 'var(--nxc-color-surface, #f5f7fa)'],
+    [/#e8f5e9(?![0-9a-f])/gi, 'var(--nxc-color-accent-surface, #e8f5e9)'],
+    [/#d9dbe1(?![0-9a-f])/gi, 'var(--nxc-color-footer-placeholder, #d9dbe1)'],
+    [/#ffffff(?![0-9a-f])/gi, 'var(--nxc-color-white, #ffffff)'],
+    [/#fff(?![0-9a-f])/gi, 'var(--nxc-color-white, #fff)'],
+];
+
 const LOCAL_OVERRIDES = `
 :host {
-    color: #18191f;
+    color: var(--nxc-color-navigation, #18191f);
     display: block;
-    font-family: Inter, Arial, sans-serif;
+    font-family: var(
+        --nxc-font-family,
+        Inter,
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif
+    );
     line-height: 1.5;
     min-width: 0;
-    scroll-margin-top: 80px;
+    scroll-margin-top: var(--nxc-react-header-height, 80px);
+    width: 100%;
 }
 
 :host *, :host *::before, :host *::after {
@@ -19,7 +45,7 @@ const LOCAL_OVERRIDES = `
 :host a:focus-visible,
 :host button:focus-visible,
 :host input:focus-visible {
-    outline: 2px solid #4caf4f;
+    outline: 2px solid var(--nxc-color-primary, #4caf4f);
     outline-offset: 3px;
 }
 
@@ -29,6 +55,28 @@ const LOCAL_OVERRIDES = `
 
 :host([data-site-shell-state='ready']) {
     --nxc-site-shell-runtime-state: ready;
+}
+
+.container {
+    max-width: var(
+        --nxc-react-container-width,
+        var(--nxc-container-width, 1182px)
+    );
+    padding-inline: var(
+        --nxc-react-page-gutter,
+        var(--nxc-page-gutter, 15px)
+    );
+}
+
+.header__container {
+    max-width: var(
+        --nxc-react-wide-container-width,
+        var(--nxc-wide-container-width, 1330px)
+    );
+    padding-inline: var(
+        --nxc-react-page-gutter,
+        var(--nxc-page-gutter, 15px)
+    );
 }
 
 .sr-only {
@@ -88,9 +136,12 @@ const LOCAL_OVERRIDES = `
 }
 
 .header__submenu {
-    background: #fff;
-    border-radius: 8px;
-    box-shadow: 0 8px 24px rgba(38, 50, 56, 0.14);
+    background: var(--nxc-color-white, #fff);
+    border-radius: var(--nxc-radius-md, 8px);
+    box-shadow: var(
+        --nxc-shadow-raised,
+        0 8px 24px rgba(38, 50, 56, 0.14)
+    );
     display: flex !important;
     flex-direction: column;
     gap: 4px;
@@ -126,13 +177,13 @@ const LOCAL_OVERRIDES = `
 }
 
 .header__submenu a {
-    border-radius: 4px;
+    border-radius: var(--nxc-radius-sm, 4px);
     display: block !important;
     width: 100%;
 }
 
 .header__navigation-list .is-selected > a {
-    color: #4caf4f;
+    color: var(--nxc-color-primary, #4caf4f);
     font-weight: 600;
 }
 
@@ -142,10 +193,10 @@ const LOCAL_OVERRIDES = `
 
 .header__account-trigger {
     align-items: center;
-    background: #f5f7fa;
+    background: var(--nxc-color-surface, #f5f7fa);
     border: 1px solid transparent;
     border-radius: 6px;
-    color: #18191f;
+    color: var(--nxc-color-navigation, #18191f);
     display: flex;
     gap: 8px;
     min-height: 42px;
@@ -154,15 +205,15 @@ const LOCAL_OVERRIDES = `
 }
 
 .header__account-trigger:hover {
-    border-color: #4caf4f;
+    border-color: var(--nxc-color-primary, #4caf4f);
 }
 
 .header__account-avatar,
 .header__account-initials {
     align-items: center;
-    background: #4caf4f;
+    background: var(--nxc-color-primary, #4caf4f);
     border-radius: 50%;
-    color: #fff;
+    color: var(--nxc-color-white, #fff);
     display: flex;
     height: 30px;
     justify-content: center;
@@ -182,9 +233,12 @@ const LOCAL_OVERRIDES = `
 }
 
 .header__account-menu {
-    background: #fff;
-    border-radius: 8px;
-    box-shadow: 0 8px 24px rgba(38, 50, 56, 0.14);
+    background: var(--nxc-color-white, #fff);
+    border-radius: var(--nxc-radius-md, 8px);
+    box-shadow: var(
+        --nxc-shadow-raised,
+        0 8px 24px rgba(38, 50, 56, 0.14)
+    );
     display: none;
     min-width: 180px;
     padding: 8px;
@@ -200,8 +254,8 @@ const LOCAL_OVERRIDES = `
 }
 
 .header__btns .header__account-menu a {
-    border-radius: 4px;
-    color: #18191f;
+    border-radius: var(--nxc-radius-sm, 4px);
+    color: var(--nxc-color-navigation, #18191f);
     font-size: 14px;
     margin: 0;
     padding: 9px 10px;
@@ -209,8 +263,8 @@ const LOCAL_OVERRIDES = `
 }
 
 .header__btns .header__account-menu a:hover {
-    background: #f5f7fa;
-    color: #4caf4f;
+    background: var(--nxc-color-surface, #f5f7fa);
+    color: var(--nxc-color-primary, #4caf4f);
 }
 
 .footer__navigation {
@@ -237,7 +291,7 @@ const LOCAL_OVERRIDES = `
 }
 
 .footer__form-status {
-    color: #d9dbe1;
+    color: var(--nxc-color-footer-placeholder, #d9dbe1);
     font-size: 12px;
     line-height: 1.4;
     margin-top: 8px;
@@ -245,11 +299,11 @@ const LOCAL_OVERRIDES = `
 }
 
 .footer__form-status--success {
-    color: #a5d6a7;
+    color: var(--nxc-style-success, #a5d6a7);
 }
 
 .footer__form-status--error {
-    color: #ffb4ab;
+    color: var(--nxc-style-error, #ffb4ab);
 }
 
 .nxc-react-fade {
@@ -286,7 +340,7 @@ const LOCAL_OVERRIDES = `
 
     .header__submenu,
     .header__submenu .header__submenu {
-        background: #f5f7fa;
+        background: var(--nxc-color-surface, #f5f7fa);
         box-shadow: none;
         display: flex !important;
         left: auto;
@@ -346,13 +400,19 @@ const LOCAL_OVERRIDES = `
 `;
 
 export function normalizeStaticCss(css: string): string {
-    return css
+    let normalizedCss = css
         .replace(/\/\*# sourceMappingURL=.*?\*\//g, '')
         .replace(/(-?\d*\.?\d+)rem\b/g, (_, value: string) => {
             const pixels = Number(value) * 10;
 
             return `${Number.isInteger(pixels) ? pixels : Number(pixels.toFixed(3))}px`;
         });
+
+    for (const [pattern, replacement] of THEME_COLOR_REPLACEMENTS) {
+        normalizedCss = normalizedCss.replace(pattern, replacement);
+    }
+
+    return normalizedCss;
 }
 
 export const staticShadowCss = `${normalizeStaticCss(staticCss)}\n${LOCAL_OVERRIDES}`;

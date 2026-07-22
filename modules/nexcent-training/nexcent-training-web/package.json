@@ -4,12 +4,16 @@
         "react-dom": "*"
     },
     "devDependencies": {
-        "liferay-npm-scripts": "32.7.0"
+        "@babel/cli": "7.28.3",
+        "@babel/core": "7.28.4",
+        "@babel/preset-env": "7.28.3",
+        "@babel/preset-react": "7.27.1",
+        "liferay-npm-bundler": "2.32.2"
     },
     "main": "js/index.js",
     "name": "nexcent-training-web",
     "scripts": {
-        "build": "liferay-npm-scripts build"
+        "build": "babel --source-maps -d build/resources/main/META-INF/resources src/main/resources/META-INF/resources && liferay-npm-bundler"
     },
     "version": "1.0.0"
 }

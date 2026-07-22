@@ -294,7 +294,7 @@ paths:
                   required: true
                   schema: {type: string}
             responses:
-                202:
+                200:
                     content:
                         application/json:
                             schema:
@@ -302,7 +302,7 @@ paths:
                         application/xml:
                             schema:
                                 $ref: "#/components/schemas/ContentImportJob"
-                    description: "Executed profile handler."
+                    description: "Executed the bounded import synchronously and returned its final status."
             tags: ["ContentImportJob"]
     "/sites/{siteId}/content-import-jobs/{jobExternalReferenceCode}/retry":
         post:
@@ -317,7 +317,7 @@ paths:
                   required: true
                   schema: {type: string}
             responses:
-                202:
+                200:
                     content:
                         application/json:
                             schema:
@@ -325,7 +325,7 @@ paths:
                         application/xml:
                             schema:
                                 $ref: "#/components/schemas/ContentImportJob"
-                    description: "Retried an eligible failed or invalid job."
+                    description: "Retried an eligible job synchronously and returned its final status."
             tags: ["ContentImportJob"]
     "/sites/{siteId}/content-import-jobs/{jobExternalReferenceCode}/items":
         get:

@@ -201,8 +201,10 @@ await requireText(
 
 await requireText('remote-apps/nexcent-community-app/src/index.tsx', [
     "const ELEMENT_NAME = 'nexcent-community-app'",
-    'NXC Community Intro',
-    'NXC Community Card',
+    'NXC-STRUCTURE-ARTICLE',
+    'Caring is the new marketing',
+    'coverImage',
+    'contentUrl',
     "status: 'loading'",
     "status: 'empty'",
     "status: 'error'",

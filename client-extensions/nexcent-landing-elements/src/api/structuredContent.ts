@@ -25,7 +25,6 @@ export type ContentFieldValue = {
     data?: unknown;
     document?: ImageValue;
     image?: ImageValue;
-    value?: unknown;
 };
 
 export type ContentField = {
@@ -188,21 +187,6 @@ export function readText(
     const value = fields.get(name)?.data;
 
     return typeof value === 'string' ? value : fallback;
-}
-
-export function readValue(
-    fields: Map<string, ContentFieldValue>,
-    name: string,
-    fallback = ''
-): string {
-    const fieldValue = fields.get(name);
-    const value = fieldValue?.value ?? fieldValue?.data;
-
-    if (value === null || value === undefined) {
-        return fallback;
-    }
-
-    return String(value).trim() || fallback;
 }
 
 export function readNumber(

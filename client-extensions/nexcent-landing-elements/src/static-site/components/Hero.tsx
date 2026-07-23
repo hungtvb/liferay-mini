@@ -6,7 +6,6 @@ import {
     type HeadlessStructuredContent,
     readContentImage,
     readContentText,
-    readContentValue,
 } from '../headless/headlessContentClient';
 import {useStructuredContentCollection} from '../headless/useStructuredContentCollection';
 import {
@@ -88,7 +87,7 @@ export function mapHeroContent(
             'linkLabel',
         ]),
         buttonTarget: normalizeLinkTarget(
-            readContentValue(
+            readContentText(
                 structuredContent,
                 ['ctaTarget', 'buttonTarget', 'linkTarget'],
                 '_self'

@@ -23,6 +23,14 @@ const settingsFragments = [
     'nexcent-react-cta',
 ];
 
+async function readJson(filePath) {
+    return JSON.parse(await readFile(filePath, 'utf8'));
+}
+
+function configurationFields(configuration) {
+    return configuration.fieldSets.flatMap((fieldSet) => fieldSet.fields ?? []);
+}
+
 for (const fragmentName of [...headlessFragments, ...settingsFragments]) {
     const directory = path.join(fragmentDirectory, fragmentName);
     const definitionPath = path.join(directory, 'fragment.json');
@@ -31,8 +39,8 @@ for (const fragmentName of [...headlessFragments, ...settingsFragments]) {
 
     await access(configurationPath);
 
-    const definition = JSON.parse(await readFile(definitionPath, 'utf8'));
-    const configuration = JSON.parse(await readFile(configurationPath, 'utf8'));
+    const definition = await readJson(definitionPath);
+    const configuration = await readJson(configurationPath);
     const html = await readFile(htmlPath, 'utf8');
 
     if (definition.configurationPath !== 'configuration.json') {
@@ -48,8 +56,7 @@ for (const fragmentName of [...headlessFragments, ...settingsFragments]) {
     }
 
     if (fragmentName in headlessFragmentDefaults) {
-        const fields = configuration.fieldSets.flatMap((fieldSet) => fieldSet.fields ?? []);
-        const structureField = fields.find(
+        const structureField = configurationFields(configuration).find(
             (field) => field.name === 'structureIdentifier'
         );
         const expectedDefault = headlessFragmentDefaults[fragmentName];
@@ -105,13 +112,11 @@ const shellContracts = {
 
 for (const [fragmentName, contract] of Object.entries(shellContracts)) {
     const directory = path.join(fragmentDirectory, fragmentName);
-    const configuration = JSON.parse(
-        await readFile(path.join(directory, 'configuration.json'), 'utf8')
+    const configuration = await readJson(
+        path.join(directory, 'configuration.json')
     );
     const html = await readFile(path.join(directory, 'index.html'), 'utf8');
-    const fields = configuration.fieldSets.flatMap(
-        (fieldSet) => fieldSet.fields ?? []
-    );
+    const fields = configurationFields(configuration);
 
     for (const selectorName of contract.selectors) {
         const selector = fields.find((field) => field.name === selectorName);
@@ -130,19 +135,14 @@ for (const [fragmentName, contract] of Object.entries(shellContracts)) {
     }
 }
 
-const footerConfiguration = JSON.parse(
-    await readFile(
-        path.join(
-            fragmentDirectory,
-            'nexcent-react-footer',
-            'configuration.json'
-        ),
-        'utf8'
+const footerConfiguration = await readJson(
+    path.join(
+        fragmentDirectory,
+        'nexcent-react-footer',
+        'configuration.json'
     )
 );
-const footerFields = footerConfiguration.fieldSets.flatMap(
-    (fieldSet) => fieldSet.fields ?? []
-);
+const footerFields = configurationFields(footerConfiguration);
 
 for (const obsoleteSocialField of [
     'instagramURL',
@@ -196,26 +196,32 @@ const headlessAdapter = await readFile(
     ),
     'utf8'
 );
+const headlessHook = await readFile(
+    path.join(
+        projectDirectory,
+        'src/static-site/headless/useStructuredContentCollection.ts'
+    ),
+    'utf8'
+);
 
 if (!heroSource.includes('useStructuredContentCollection')) {
     throw new Error('Hero must load Structured Content through the shared hook.');
 }
 
 for (const componentName of ['StaticCommunity', 'StaticMarketing']) {
-    const componentStart = sectionSource.indexOf(`function ${componentName}`);
-    const exportStart = sectionSource.indexOf(`export function ${componentName}`);
-
-    if (componentStart < 0 && exportStart < 0) {
+    if (!sectionSource.includes(`function ${componentName}`)) {
         throw new Error(`Missing ${componentName}.`);
     }
 }
 
-for (const endpoint of [
+for (const expected of [
     '/content-structures?pageSize=200',
-    '/structured-contents?flatten=true&pageSize=100',
+    'new URLSearchParams',
+    "query.set('sort'",
+    'options.pageSize',
 ]) {
-    if (!sharedHeadlessApi.includes(endpoint)) {
-        throw new Error(`Shared Structured Content API is missing ${endpoint}.`);
+    if (!sharedHeadlessApi.includes(expected)) {
+        throw new Error(`Shared Structured Content API is missing ${expected}.`);
     }
 }
 
@@ -229,6 +235,14 @@ for (const sharedFunction of [
             `Pixel-perfect Headless adapter must reuse ${sharedFunction}.`
         );
     }
+}
+
+if (!headlessAdapter.includes("sort: 'contentFields/sortOrder:asc'")) {
+    throw new Error('Structured Content must be sorted by sortOrder on the server.');
+}
+
+if (!headlessHook.includes('pageSize: maxItems')) {
+    throw new Error('Fragment maximum items must be passed to the Headless API page size.');
 }
 
 if (sharedHeadlessApi.includes('item.name, item.id')) {

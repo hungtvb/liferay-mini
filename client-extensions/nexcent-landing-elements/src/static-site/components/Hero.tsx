@@ -1,6 +1,6 @@
 import {useEffect, useMemo, useState} from 'react';
 
-import content from '../../../../../prototypes/nexcent-static/content.json';
+import content from '../fallback/content.json';
 import {resolveStaticAsset} from '../assets';
 import {
     type HeadlessStructuredContent,

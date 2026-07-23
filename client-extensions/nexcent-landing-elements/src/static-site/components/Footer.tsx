@@ -4,7 +4,7 @@ import {
     useState,
 } from 'react';
 
-import content from '../../../../../prototypes/nexcent-static/content.json';
+import content from '../fallback/content.json';
 import {resolveStaticAsset, type StaticAssetKey} from '../assets';
 import type {NavigationItem} from '../site-shell/types';
 

@@ -29,6 +29,7 @@ export type ContentFieldValue = {
 
 export type ContentField = {
     contentFieldValue?: ContentFieldValue;
+    fieldReference?: string;
     name: string;
     nestedContentFields?: ContentField[];
 };
@@ -140,6 +141,10 @@ export function flattenContentFields(
         for (const field of items) {
             if (field.contentFieldValue) {
                 result.set(field.name, field.contentFieldValue);
+
+                if (field.fieldReference) {
+                    result.set(field.fieldReference, field.contentFieldValue);
+                }
             }
 
             if (field.nestedContentFields?.length) {

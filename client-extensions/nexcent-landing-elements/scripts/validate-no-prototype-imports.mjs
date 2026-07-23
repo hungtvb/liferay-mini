@@ -8,6 +8,10 @@ const projectRoot = path.resolve(
     '..'
 );
 const sourceRoot = path.join(projectRoot, 'src');
+const fallbackCssPath = path.join(
+    sourceRoot,
+    'static-site/fallback/assets/css/style.css'
+);
 const supportedExtensions = /\.(?:js|jsx|ts|tsx)$/;
 
 async function collectSourceFiles(directory) {
@@ -44,4 +48,14 @@ if (violations.length) {
     );
 }
 
-console.log('Production source is isolated from prototypes/nexcent-static.');
+const fallbackCss = await readFile(fallbackCssPath, 'utf8');
+
+if (/sourceMappingURL\s*=/.test(fallbackCss)) {
+    throw new Error(
+        'Fallback CSS must not reference a source map that is not packaged with the Client Extension.'
+    );
+}
+
+console.log(
+    'Production source is isolated from prototypes/nexcent-static and fallback CSS has no stale source map reference.'
+);

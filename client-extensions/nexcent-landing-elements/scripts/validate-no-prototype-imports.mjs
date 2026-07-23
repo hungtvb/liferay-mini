@@ -1,3 +1,4 @@
+// Keep production bundles independent from the visual-reference prototype.
 import {readdir, readFile} from 'node:fs/promises';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';

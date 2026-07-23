@@ -17,7 +17,7 @@ afterEach(() => {
 });
 
 describe('Headless content client', () => {
-    it('resolves a structure identifier and shares cached requests', async () => {
+    it('uses server pagination and Structure-field sorting with cached requests', async () => {
         const fetchMock = vi.fn().mockImplementation(async (input: RequestInfo | URL) => {
             const url = String(input);
 
@@ -89,6 +89,7 @@ describe('Headless content client', () => {
 
         const options = {
             locale: 'en-US',
+            pageSize: 1,
             siteId: '20123',
             structureIdentifier: 'NXC-SERVICE',
         };
@@ -99,7 +100,16 @@ describe('Headless content client', () => {
 
         expect(fetchMock).toHaveBeenCalledTimes(2);
         expect(first).toEqual(second);
+        expect(first).toHaveLength(1);
         expect(readContentText(first[0], ['title'])).toBe('Service A');
+
+        const structuredContentRequest = String(fetchMock.mock.calls[1]?.[0]);
+
+        expect(structuredContentRequest).toContain('pageSize=1');
+        expect(structuredContentRequest).toContain(
+            'sort=contentFields%2FsortOrder%3Aasc'
+        );
+        expect(structuredContentRequest).not.toContain('pageSize=100');
     });
 
     it('reads nested text, booleans, numbers, and image values', () => {

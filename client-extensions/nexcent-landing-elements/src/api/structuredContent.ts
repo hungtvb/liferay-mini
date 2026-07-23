@@ -44,6 +44,12 @@ export type StructuredContent = {
     title: string;
 };
 
+export type ListStructuredContentsOptions = {
+    filter?: string;
+    pageSize?: number;
+    sort?: string;
+};
+
 const requestCache = new Map<string, Promise<unknown>>();
 
 function normalizeIdentifier(value: string | number | undefined): string {
@@ -116,12 +122,27 @@ export async function resolveContentStructure(
 
 export async function listStructuredContents(
     contentStructureId: number,
-    locale = ''
+    locale = '',
+    options: ListStructuredContentsOptions = {}
 ): Promise<StructuredContent[]> {
+    const pageSize = Math.min(
+        100,
+        Math.max(1, Math.trunc(options.pageSize ?? 100))
+    );
+    const query = new URLSearchParams({pageSize: String(pageSize)});
+
+    if (options.filter?.trim()) {
+        query.set('filter', options.filter.trim());
+    }
+
+    if (options.sort?.trim()) {
+        query.set('sort', options.sort.trim());
+    }
+
     const page = await cachedPortalFetch<Page<StructuredContent>>(
         `/o/headless-delivery/v1.0/content-structures/${encodeURIComponent(
             String(contentStructureId)
-        )}/structured-contents?flatten=true&pageSize=100`,
+        )}/structured-contents?${query.toString()}`,
         locale
     );
 

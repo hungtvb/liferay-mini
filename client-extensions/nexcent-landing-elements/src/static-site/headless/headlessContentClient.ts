@@ -36,7 +36,9 @@ function findField(
     const normalizedNames = names.map(normalizeIdentifier);
 
     return flattenFields(content.contentFields).find((field) =>
-        normalizedNames.includes(normalizeIdentifier(field.name))
+        [field.fieldReference, field.name].some((candidate) =>
+            normalizedNames.includes(normalizeIdentifier(candidate))
+        )
     );
 }
 

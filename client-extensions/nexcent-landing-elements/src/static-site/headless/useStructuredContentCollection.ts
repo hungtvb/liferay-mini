@@ -88,6 +88,7 @@ export function useStructuredContentCollection<T>({
 
         loadStructuredContents({
             locale,
+            pageSize: maxItems,
             siteId,
             structureIdentifier,
         })
@@ -96,9 +97,9 @@ export function useStructuredContentCollection<T>({
                     return;
                 }
 
-                const items = contents
-                    .slice(0, maxItems)
-                    .map((content, index) => mapContent(content, index));
+                const items = contents.map((content, index) =>
+                    mapContent(content, index)
+                );
 
                 if (items.length === 0) {
                     throw new Error(

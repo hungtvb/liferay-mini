@@ -202,7 +202,16 @@ jobs:
 
             - name: Build React Client Extension
               working-directory: client-extensions/nexcent-landing-elements
-              run: npm run build
+              run: npm run build 2>&1 | tee /tmp/refactor-build.log
+
+            - name: Upload build diagnostics
+              if: failure()
+              uses: actions/upload-artifact@v4
+              with:
+                  name: prototype-refactor-build-log
+                  path: /tmp/refactor-build.log
+                  if-no-files-found: error
+                  retention-days: 1
 
             - name: Record existing typecheck state
               continue-on-error: true

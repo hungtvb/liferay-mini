@@ -2,9 +2,7 @@
 name: One-shot Prototype Dependency Refactor
 
 on:
-    push:
-        branches:
-            - feat/react-fragment-shells
+    pull_request:
         paths:
             - .github/workflows/refactor-prototype-dependency.yml
 
@@ -190,4 +188,4 @@ jobs:
                   fi
 
                   git commit -m "refactor(frontend): isolate fallback assets from prototype"
-                  git push origin "HEAD:${GITHUB_REF_NAME}"
+                  git push origin "HEAD:${GITHUB_HEAD_REF}"

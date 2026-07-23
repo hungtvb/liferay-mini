@@ -40,6 +40,32 @@ const FALLBACK_HERO_SLIDES: HeroSlide[] = content.hero.slides.map((slide) => ({
     title: slide.title,
 }));
 
+function normalizeLinkTarget(value: string): string {
+    const normalized = value.trim().toLowerCase();
+
+    if (
+        normalized === '_blank' ||
+        normalized === 'blank' ||
+        normalized === 'new window' ||
+        normalized === 'new-window' ||
+        normalized.includes('_blank')
+    ) {
+        return '_blank';
+    }
+
+    if (
+        normalized === '_self' ||
+        normalized === 'self' ||
+        normalized === 'same window' ||
+        normalized === 'same-window' ||
+        normalized.includes('_self')
+    ) {
+        return '_self';
+    }
+
+    return '';
+}
+
 function mapHeroContent(
     structuredContent: HeadlessStructuredContent,
     index: number
@@ -64,10 +90,12 @@ function mapHeroContent(
             ['ctaLabel', 'buttonLabel', 'linkLabel'],
             fallback.buttonLabel
         ),
-        buttonTarget: readContentText(
-            structuredContent,
-            ['ctaTarget', 'buttonTarget', 'linkTarget'],
-            '_self'
+        buttonTarget: normalizeLinkTarget(
+            readContentText(
+                structuredContent,
+                ['ctaTarget', 'buttonTarget', 'linkTarget'],
+                '_self'
+            )
         ),
         description: readContentText(
             structuredContent,
@@ -97,7 +125,7 @@ export function StaticHero({host}: HeroProps) {
     const structureIdentifier = readStringSetting(
         host,
         'structure-identifier',
-        'NXC Landing Hero'
+        'NXC_LANDING_HERO'
     );
     const maxSlides = readNumberSetting(host, 'max-slides', 3, {
         max: 10,
@@ -168,6 +196,11 @@ export function StaticHero({host}: HeroProps) {
                                     <a
                                         className="home__btn btn block__box"
                                         href={slide.buttonHref}
+                                        rel={
+                                            slide.buttonTarget === '_blank'
+                                                ? 'noreferrer'
+                                                : undefined
+                                        }
                                         target={slide.buttonTarget || undefined}
                                     >
                                         {slide.buttonLabel}

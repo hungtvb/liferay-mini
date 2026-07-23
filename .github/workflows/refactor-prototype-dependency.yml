@@ -185,22 +185,22 @@ jobs:
               working-directory: client-extensions/nexcent-landing-elements
               run: npm ci --no-audit --no-fund
 
-            - name: Validate refactor
+            - name: Validate data-source isolation
               working-directory: client-extensions/nexcent-landing-elements
-              run: |
-                  set -euo pipefail
-                  npm run validate:data-sources
-                  npm test
-                  npm run build
+              run: npm run validate:data-sources
 
-                  set +e
-                  npm run typecheck
-                  typecheck_code=$?
-                  set -e
+            - name: Run frontend tests
+              working-directory: client-extensions/nexcent-landing-elements
+              run: npm test
 
-                  if [ "$typecheck_code" -ne 0 ]; then
-                      echo "::warning::Typecheck was already failing before this refactor; the standard CI run remains the source of truth."
-                  fi
+            - name: Build React Client Extension
+              working-directory: client-extensions/nexcent-landing-elements
+              run: npm run build
+
+            - name: Record existing typecheck state
+              continue-on-error: true
+              working-directory: client-extensions/nexcent-landing-elements
+              run: npm run typecheck
 
             - name: Commit refactor
               run: |

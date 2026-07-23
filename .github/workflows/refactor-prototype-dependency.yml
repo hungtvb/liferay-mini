@@ -1,3 +1,4 @@
+# Triggered once to refactor production fallback dependencies.
 name: One-shot Prototype Dependency Refactor
 
 on:

@@ -56,21 +56,6 @@ export function readContentText(
     return String(data).trim() || fallback;
 }
 
-export function readContentValue(
-    content: HeadlessStructuredContent,
-    names: string[],
-    fallback = ''
-): string {
-    const fieldValue = findField(content, names)?.contentFieldValue;
-    const value = fieldValue?.value ?? fieldValue?.data;
-
-    if (value === null || value === undefined) {
-        return fallback;
-    }
-
-    return String(value).trim() || fallback;
-}
-
 export function readContentBoolean(
     content: HeadlessStructuredContent,
     names: string[],

@@ -1,0 +1,192 @@
+name: One-shot Prototype Dependency Refactor
+
+on:
+    push:
+        branches:
+            - feat/react-fragment-shells
+        paths:
+            - .github/workflows/refactor-prototype-dependency.yml
+
+permissions:
+    contents: write
+
+jobs:
+    refactor:
+        if: github.actor != 'github-actions[bot]'
+        runs-on: ubuntu-latest
+        timeout-minutes: 20
+
+        steps:
+            - name: Check out branch
+              uses: actions/checkout@v4
+              with:
+                  fetch-depth: 0
+
+            - name: Set up Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: 22
+
+            - name: Isolate fallback content and assets
+              run: |
+                  set -euo pipefail
+
+                  root="$GITHUB_WORKSPACE"
+                  extension="$root/client-extensions/nexcent-landing-elements"
+                  fallback="$extension/src/static-site/fallback"
+                  prototype="$root/prototypes/nexcent-static"
+
+                  mkdir -p "$fallback/assets"
+                  cp "$prototype/content.json" "$fallback/content.json"
+                  rm -rf "$fallback/assets/icons" "$fallback/assets/img"
+                  cp -R "$prototype/icons" "$fallback/assets/icons"
+                  cp -R "$prototype/img" "$fallback/assets/img"
+
+                  node <<'NODE'
+                  const {readFileSync, writeFileSync} = require('node:fs');
+                  const path = require('node:path');
+
+                  const root = process.env.GITHUB_WORKSPACE;
+                  const extension = path.join(
+                      root,
+                      'client-extensions/nexcent-landing-elements'
+                  );
+                  const componentFiles = [
+                      'StaticFooter.tsx',
+                      'StaticHeader.tsx',
+                      'StaticHero.tsx',
+                      'StaticSections.tsx',
+                  ];
+
+                  for (const fileName of componentFiles) {
+                      const filePath = path.join(
+                          extension,
+                          'src/static-site/components',
+                          fileName
+                      );
+                      const source = readFileSync(filePath, 'utf8');
+                      const updated = source.replace(
+                          "../../../../../prototypes/nexcent-static/content.json",
+                          '../fallback/content.json'
+                      );
+
+                      if (updated === source) {
+                          throw new Error(`Prototype content import not found in ${fileName}`);
+                      }
+
+                      writeFileSync(filePath, updated);
+                  }
+
+                  const assetsPath = path.join(
+                      extension,
+                      'src/static-site/assets.ts'
+                  );
+                  const assetsSource = readFileSync(assetsPath, 'utf8');
+                  const assetsUpdated = assetsSource
+                      .replaceAll(
+                          '../../../../prototypes/nexcent-static/icons/',
+                          './fallback/assets/icons/'
+                      )
+                      .replaceAll(
+                          '../../../../prototypes/nexcent-static/img/',
+                          './fallback/assets/img/'
+                      );
+
+                  if (assetsUpdated === assetsSource) {
+                      throw new Error('Prototype asset imports were not found.');
+                  }
+
+                  writeFileSync(assetsPath, assetsUpdated);
+                  NODE
+
+            - name: Add production-source dependency guard
+              run: |
+                  cat > client-extensions/nexcent-landing-elements/scripts/validate-no-prototype-imports.mjs <<'EOF'
+                  import {readdir, readFile} from 'node:fs/promises';
+                  import path from 'node:path';
+                  import {fileURLToPath} from 'node:url';
+
+                  const projectRoot = path.resolve(
+                      path.dirname(fileURLToPath(import.meta.url)),
+                      '..'
+                  );
+                  const sourceRoot = path.join(projectRoot, 'src');
+                  const supportedExtensions = /\.(?:js|jsx|ts|tsx)$/;
+
+                  async function collectSourceFiles(directory) {
+                      const entries = await readdir(directory, {withFileTypes: true});
+                      const files = [];
+
+                      for (const entry of entries) {
+                          const absolutePath = path.join(directory, entry.name);
+
+                          if (entry.isDirectory()) {
+                              files.push(...(await collectSourceFiles(absolutePath)));
+                          }
+                          else if (supportedExtensions.test(entry.name)) {
+                              files.push(absolutePath);
+                          }
+                      }
+
+                      return files;
+                  }
+
+                  const violations = [];
+
+                  for (const sourceFile of await collectSourceFiles(sourceRoot)) {
+                      const source = await readFile(sourceFile, 'utf8');
+
+                      if (source.includes('prototypes/nexcent-static')) {
+                          violations.push(path.relative(projectRoot, sourceFile));
+                      }
+                  }
+
+                  if (violations.length) {
+                      throw new Error(
+                          `Production source must not import the static prototype:\n${violations.join('\n')}`
+                      );
+                  }
+
+                  console.log('Production source is isolated from prototypes/nexcent-static.');
+                  EOF
+
+                  node <<'NODE'
+                  const {readFileSync, writeFileSync} = require('node:fs');
+                  const packagePath = 'client-extensions/nexcent-landing-elements/package.json';
+                  const packageJson = JSON.parse(readFileSync(packagePath, 'utf8'));
+                  const guardCommand = 'node scripts/validate-no-prototype-imports.mjs';
+                  const currentCommand = packageJson.scripts['validate:data-sources'];
+
+                  if (!currentCommand.includes(guardCommand)) {
+                      packageJson.scripts['validate:data-sources'] =
+                          `${currentCommand} && ${guardCommand}`;
+                  }
+
+                  writeFileSync(packagePath, `${JSON.stringify(packageJson, null, 4)}\n`);
+                  NODE
+
+            - name: Install dependencies
+              working-directory: client-extensions/nexcent-landing-elements
+              run: npm ci --no-audit --no-fund
+
+            - name: Validate refactor
+              working-directory: client-extensions/nexcent-landing-elements
+              run: |
+                  npm run validate:data-sources
+                  npm run typecheck
+                  npm test
+                  npm run build
+
+            - name: Commit refactor
+              run: |
+                  git config user.name "github-actions[bot]"
+                  git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+                  git add client-extensions/nexcent-landing-elements
+
+                  if git diff --cached --quiet; then
+                      echo "No refactor changes detected."
+                      exit 0
+                  fi
+
+                  git commit -m "refactor(frontend): isolate fallback assets from prototype"
+                  git push origin "HEAD:${GITHUB_REF_NAME}"

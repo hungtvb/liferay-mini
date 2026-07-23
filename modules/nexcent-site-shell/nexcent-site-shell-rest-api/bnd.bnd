@@ -1,0 +1,6 @@
+Bundle-Name: Nexcent Site Shell REST API
+Bundle-SymbolicName: com.nexcent.site.shell.rest.api
+Bundle-Version: 1.0.0
+Export-Package: \
+    com.nexcent.site.shell.rest.dto.v1_0,\
+    com.nexcent.site.shell.rest.resource.v1_0

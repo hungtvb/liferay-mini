@@ -1,0 +1,142 @@
+{
+    "fieldSets": [
+        {
+            "fields": [
+                {
+                    "dataType": "string",
+                    "defaultValue": "",
+                    "label": "Footer logo URL override",
+                    "name": "logoURL",
+                    "type": "text"
+                },
+                {
+                    "dataType": "string",
+                    "defaultValue": "Nexcent",
+                    "label": "Logo alt text",
+                    "name": "logoAlt",
+                    "type": "text"
+                },
+                {
+                    "dataType": "string",
+                    "defaultValue": "Copyright © 2026 Nexcent Ltd.",
+                    "label": "Copyright text",
+                    "name": "copyrightText",
+                    "type": "text"
+                },
+                {
+                    "dataType": "string",
+                    "defaultValue": "All rights reserved",
+                    "label": "Rights text",
+                    "name": "rightsText",
+                    "type": "text"
+                }
+            ],
+            "label": "Branding"
+        },
+        {
+            "fields": [
+                {
+                    "dataType": "string",
+                    "defaultValue": "Company",
+                    "label": "Company heading",
+                    "name": "companyHeading",
+                    "type": "text"
+                },
+                {
+                    "label": "Company navigation",
+                    "name": "companyNavigation",
+                    "type": "navigationMenuSelector"
+                },
+                {
+                    "dataType": "string",
+                    "defaultValue": "Support",
+                    "label": "Support heading",
+                    "name": "supportHeading",
+                    "type": "text"
+                },
+                {
+                    "label": "Support navigation",
+                    "name": "supportNavigation",
+                    "type": "navigationMenuSelector"
+                }
+            ],
+            "label": "Navigation columns"
+        },
+        {
+            "fields": [
+                {
+                    "defaultValue": true,
+                    "label": "Show newsletter",
+                    "name": "showNewsletter",
+                    "type": "checkbox"
+                },
+                {
+                    "dataType": "string",
+                    "defaultValue": "Stay up to date",
+                    "label": "Newsletter title",
+                    "name": "newsletterTitle",
+                    "type": "text"
+                },
+                {
+                    "dataType": "string",
+                    "defaultValue": "Your email address",
+                    "label": "Email placeholder",
+                    "name": "newsletterPlaceholder",
+                    "type": "text"
+                },
+                {
+                    "dataType": "string",
+                    "defaultValue": "/o/c/nxcnewslettersubscriptions",
+                    "label": "Newsletter endpoint",
+                    "name": "newsletterEndpoint",
+                    "type": "text"
+                },
+                {
+                    "dataType": "string",
+                    "defaultValue": "Subscribe",
+                    "label": "Submit button label",
+                    "name": "newsletterSubmitLabel",
+                    "type": "text"
+                },
+                {
+                    "dataType": "string",
+                    "defaultValue": "Submitting…",
+                    "label": "Submitting message",
+                    "name": "newsletterSubmittingText",
+                    "type": "text"
+                },
+                {
+                    "dataType": "string",
+                    "defaultValue": "Thank you for subscribing.",
+                    "label": "Success message",
+                    "name": "newsletterSuccessText",
+                    "type": "text"
+                },
+                {
+                    "dataType": "string",
+                    "defaultValue": "Subscription failed. Please try again.",
+                    "label": "Error message",
+                    "name": "newsletterErrorText",
+                    "type": "text"
+                }
+            ],
+            "label": "Newsletter"
+        },
+        {
+            "fields": [
+                {
+                    "defaultValue": true,
+                    "label": "Show social links",
+                    "name": "showSocialLinks",
+                    "type": "checkbox"
+                },
+                {
+                    "label": "Social navigation",
+                    "name": "socialNavigation",
+                    "type": "navigationMenuSelector"
+                }
+            ],
+            "label": "Social links"
+        }
+    ]
+}

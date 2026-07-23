@@ -1,0 +1,50 @@
+[#macro navigationJSON items]
+[
+    [#list items as item]
+        {
+            "children": [@navigationJSON items=(item.getChildren())![] /],
+            "externalReferenceCode": "${item.getLayoutId()?c}",
+            "label": "${item.getName()?json_string}",
+            "selected": ${(item.isSelected() || item.isChildSelected())?c},
+            "target": "${(item.getTarget()!"")?json_string}",
+            "url": "${(item.getRegularURL()!"#")?json_string}"
+        }[#sep],[/#sep]
+    [/#list]
+]
+[/#macro]
+
+[#assign
+    companyItems = (companyNavigationObject.navItems)![]
+    socialItems = (socialNavigationObject.navItems)![]
+    supportItems = (supportNavigationObject.navItems)![]
+/]
+
+<nexcent-react-footer
+    company-heading="${htmlUtil.escape(configuration.companyHeading)}"
+    copyright-text="${htmlUtil.escape(configuration.copyrightText)}"
+    logo-alt="${htmlUtil.escape(configuration.logoAlt)}"
+    logo-url="${htmlUtil.escape(configuration.logoURL)}"
+    newsletter-endpoint="${htmlUtil.escape(configuration.newsletterEndpoint)}"
+    newsletter-error-text="${htmlUtil.escape(configuration.newsletterErrorText)}"
+    newsletter-placeholder="${htmlUtil.escape(configuration.newsletterPlaceholder)}"
+    newsletter-submit-label="${htmlUtil.escape(configuration.newsletterSubmitLabel)}"
+    newsletter-submitting-text="${htmlUtil.escape(configuration.newsletterSubmittingText)}"
+    newsletter-success-text="${htmlUtil.escape(configuration.newsletterSuccessText)}"
+    newsletter-title="${htmlUtil.escape(configuration.newsletterTitle)}"
+    rights-text="${htmlUtil.escape(configuration.rightsText)}"
+    show-newsletter="${configuration.showNewsletter?c}"
+    show-social-links="${configuration.showSocialLinks?c}"
+    support-heading="${htmlUtil.escape(configuration.supportHeading)}"
+>
+    <script ${nonceAttribute} data-nexcent-footer-props type="application/json">
+        {
+            "companyNavigation": [@navigationJSON items=companyItems /],
+            "site": {
+                "homeURL": "${(themeDisplay.getURLHome()!"#home")?json_string}",
+                "name": "${(configuration.logoAlt!"Nexcent")?json_string}"
+            },
+            "socialNavigation": [@navigationJSON items=socialItems /],
+            "supportNavigation": [@navigationJSON items=supportItems /]
+        }
+    </script>
+</nexcent-react-footer>

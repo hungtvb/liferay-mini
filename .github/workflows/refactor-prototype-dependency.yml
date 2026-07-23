@@ -43,7 +43,7 @@ jobs:
                   cp -R "$prototype/img" "$fallback/assets/img"
 
                   node <<'NODE'
-                  const {readFileSync, writeFileSync} = require('node:fs');
+                  const {readdirSync, readFileSync, writeFileSync} = require('node:fs');
                   const path = require('node:path');
 
                   const root = process.env.GITHUB_WORKSPACE;
@@ -51,68 +51,71 @@ jobs:
                       root,
                       'client-extensions/nexcent-landing-elements'
                   );
-                  const componentFiles = [
-                      'ContentSections.tsx',
-                      'Footer.tsx',
-                      'Header.tsx',
-                      'Hero.tsx',
-                  ];
+                  const sourceRoot = path.join(extension, 'src');
+                  const fallbackRoot = path.join(sourceRoot, 'static-site/fallback');
 
-                  for (const fileName of componentFiles) {
-                      const filePath = path.join(
-                          extension,
-                          'src/static-site/components',
-                          fileName
+                  function modulePath(fromFile, targetPath) {
+                      const relative = path
+                          .relative(path.dirname(fromFile), targetPath)
+                          .split(path.sep)
+                          .join('/');
+
+                      return relative.startsWith('.') ? relative : `./${relative}`;
+                  }
+
+                  function sourceFiles(directory) {
+                      return readdirSync(directory, {withFileTypes: true}).flatMap(
+                          (entry) => {
+                              const absolutePath = path.join(directory, entry.name);
+
+                              if (entry.isDirectory()) {
+                                  return sourceFiles(absolutePath);
+                              }
+
+                              return /\.(?:js|jsx|ts|tsx)$/.test(entry.name)
+                                  ? [absolutePath]
+                                  : [];
+                          }
                       );
+                  }
+
+                  for (const filePath of sourceFiles(sourceRoot)) {
                       const source = readFileSync(filePath, 'utf8');
-                      const updated = source.replace(
-                          "../../../../../prototypes/nexcent-static/content.json",
-                          '../fallback/content.json'
+                      const fallbackContent = modulePath(
+                          filePath,
+                          path.join(fallbackRoot, 'content.json')
                       );
+                      const fallbackCss = modulePath(
+                          filePath,
+                          path.join(fallbackRoot, 'assets/css/style.css')
+                      );
+                      const updated = source
+                          .replace(
+                              /(?:\.\.\/)+prototypes\/nexcent-static\/content\.json/g,
+                              fallbackContent
+                          )
+                          .replace(
+                              /(?:\.\.\/)+prototypes\/nexcent-static\/css\/style\.css\?inline/g,
+                              `${fallbackCss}?inline`
+                          )
+                          .replace(
+                              /(?:\.\.\/)+prototypes\/nexcent-static\/(icons|img)\/([^'";]+)/g,
+                              (_match, directory, relativeAsset) =>
+                                  modulePath(
+                                      filePath,
+                                      path.join(
+                                          fallbackRoot,
+                                          'assets',
+                                          directory,
+                                          relativeAsset
+                                      )
+                                  )
+                          );
 
-                      if (updated === source) {
-                          throw new Error(`Prototype content import not found in ${fileName}`);
+                      if (updated !== source) {
+                          writeFileSync(filePath, updated);
                       }
-
-                      writeFileSync(filePath, updated);
                   }
-
-                  const assetsPath = path.join(
-                      extension,
-                      'src/static-site/assets.ts'
-                  );
-                  const assetsSource = readFileSync(assetsPath, 'utf8');
-                  const assetsUpdated = assetsSource
-                      .replaceAll(
-                          '../../../../prototypes/nexcent-static/icons/',
-                          './fallback/assets/icons/'
-                      )
-                      .replaceAll(
-                          '../../../../prototypes/nexcent-static/img/',
-                          './fallback/assets/img/'
-                      );
-
-                  if (assetsUpdated === assetsSource) {
-                      throw new Error('Prototype asset imports were not found.');
-                  }
-
-                  writeFileSync(assetsPath, assetsUpdated);
-
-                  const styleBoundaryPath = path.join(
-                      extension,
-                      'src/static-site/StaticStyleBoundary.tsx'
-                  );
-                  const styleBoundarySource = readFileSync(styleBoundaryPath, 'utf8');
-                  const styleBoundaryUpdated = styleBoundarySource.replace(
-                      '../../../../prototypes/nexcent-static/css/style.css?inline',
-                      './fallback/assets/css/style.css?inline'
-                  );
-
-                  if (styleBoundaryUpdated === styleBoundarySource) {
-                      throw new Error('Prototype CSS import was not found.');
-                  }
-
-                  writeFileSync(styleBoundaryPath, styleBoundaryUpdated);
                   NODE
 
             - name: Add production-source dependency guard
@@ -185,9 +188,13 @@ jobs:
               working-directory: client-extensions/nexcent-landing-elements
               run: npm ci --no-audit --no-fund
 
-            - name: Validate data-source isolation
+            - name: Validate existing data-source contracts
               working-directory: client-extensions/nexcent-landing-elements
-              run: npm run validate:data-sources
+              run: node scripts/validate-data-sources.mjs
+
+            - name: Validate prototype isolation
+              working-directory: client-extensions/nexcent-landing-elements
+              run: node scripts/validate-no-prototype-imports.mjs
 
             - name: Run frontend tests
               working-directory: client-extensions/nexcent-landing-elements

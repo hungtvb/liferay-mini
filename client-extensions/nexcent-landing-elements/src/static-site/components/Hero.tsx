@@ -6,6 +6,7 @@ import {
     type HeadlessStructuredContent,
     readContentImage,
     readContentText,
+    readContentValue,
 } from '../headless/headlessContentClient';
 import {useStructuredContentCollection} from '../headless/useStructuredContentCollection';
 import {
@@ -63,60 +64,50 @@ function normalizeLinkTarget(value: string): string {
         return '_self';
     }
 
-    return '';
+    return '_self';
 }
 
-function mapHeroContent(
-    structuredContent: HeadlessStructuredContent,
-    index: number
+export function mapHeroContent(
+    structuredContent: HeadlessStructuredContent
 ): HeroSlide {
-    const fallback =
-        FALLBACK_HERO_SLIDES[index % FALLBACK_HERO_SLIDES.length] ??
-        FALLBACK_HERO_SLIDES[0];
     const image = readContentImage(
         structuredContent,
-        ['image', 'illustration', 'heroImage', 'imageFile'],
-        {alt: fallback.imageAlt, url: fallback.imageURL}
+        ['illustration', 'image', 'heroImage', 'imageFile'],
+        {alt: '', url: ''}
     );
 
     return {
-        buttonHref: readContentText(
-            structuredContent,
-            ['ctaUrl', 'buttonUrl', 'linkUrl'],
-            fallback.buttonHref
-        ),
-        buttonLabel: readContentText(
-            structuredContent,
-            ['ctaLabel', 'buttonLabel', 'linkLabel'],
-            fallback.buttonLabel
-        ),
+        buttonHref: readContentText(structuredContent, [
+            'ctaUrl',
+            'buttonUrl',
+            'linkUrl',
+        ]),
+        buttonLabel: readContentText(structuredContent, [
+            'ctaLabel',
+            'buttonLabel',
+            'linkLabel',
+        ]),
         buttonTarget: normalizeLinkTarget(
-            readContentText(
+            readContentValue(
                 structuredContent,
                 ['ctaTarget', 'buttonTarget', 'linkTarget'],
                 '_self'
             )
         ),
-        description: readContentText(
-            structuredContent,
-            ['description', 'summary'],
-            fallback.description
-        ),
-        highlight: readContentText(
-            structuredContent,
-            ['highlightedText', 'highlight'],
-            fallback.highlight
-        ),
-        imageAlt: readContentText(
-            structuredContent,
-            ['imageAlt', 'illustrationAlt'],
-            image.alt
-        ),
+        description: readContentText(structuredContent, [
+            'description',
+            'summary',
+        ]),
+        highlight: readContentText(structuredContent, [
+            'highlightedText',
+            'highlight',
+        ]),
+        imageAlt: image.alt,
         imageURL: image.url,
         title: readContentText(
             structuredContent,
             ['title', 'heading'],
-            structuredContent.title || fallback.title
+            structuredContent.title
         ),
     };
 }
@@ -193,23 +184,30 @@ export function StaticHero({host}: HeroProps) {
                                         </span>
                                     </h1>
                                     <p className="block__info">{slide.description}</p>
-                                    <a
-                                        className="home__btn btn block__box"
-                                        href={slide.buttonHref}
-                                        rel={
-                                            slide.buttonTarget === '_blank'
-                                                ? 'noreferrer'
-                                                : undefined
-                                        }
-                                        target={slide.buttonTarget || undefined}
-                                    >
-                                        {slide.buttonLabel}
-                                    </a>
+                                    {slide.buttonLabel && slide.buttonHref ? (
+                                        <a
+                                            className="home__btn btn block__box"
+                                            href={slide.buttonHref}
+                                            rel={
+                                                slide.buttonTarget === '_blank'
+                                                    ? 'noreferrer'
+                                                    : undefined
+                                            }
+                                            target={slide.buttonTarget}
+                                        >
+                                            {slide.buttonLabel}
+                                        </a>
+                                    ) : null}
                                 </div>
 
-                                <div className="home__img img">
-                                    <img src={slide.imageURL} alt={slide.imageAlt} />
-                                </div>
+                                {slide.imageURL ? (
+                                    <div className="home__img img">
+                                        <img
+                                            alt={slide.imageAlt}
+                                            src={slide.imageURL}
+                                        />
+                                    </div>
+                                ) : null}
                             </div>
                         </div>
                     </div>

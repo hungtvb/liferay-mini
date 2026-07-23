@@ -37,7 +37,8 @@ jobs:
 
                   mkdir -p "$fallback/assets"
                   cp "$prototype/content.json" "$fallback/content.json"
-                  rm -rf "$fallback/assets/icons" "$fallback/assets/img"
+                  rm -rf "$fallback/assets/css" "$fallback/assets/icons" "$fallback/assets/img"
+                  cp -R "$prototype/css" "$fallback/assets/css"
                   cp -R "$prototype/icons" "$fallback/assets/icons"
                   cp -R "$prototype/img" "$fallback/assets/img"
 
@@ -96,6 +97,22 @@ jobs:
                   }
 
                   writeFileSync(assetsPath, assetsUpdated);
+
+                  const styleBoundaryPath = path.join(
+                      extension,
+                      'src/static-site/StaticStyleBoundary.tsx'
+                  );
+                  const styleBoundarySource = readFileSync(styleBoundaryPath, 'utf8');
+                  const styleBoundaryUpdated = styleBoundarySource.replace(
+                      '../../../../prototypes/nexcent-static/css/style.css?inline',
+                      './fallback/assets/css/style.css?inline'
+                  );
+
+                  if (styleBoundaryUpdated === styleBoundarySource) {
+                      throw new Error('Prototype CSS import was not found.');
+                  }
+
+                  writeFileSync(styleBoundaryPath, styleBoundaryUpdated);
                   NODE
 
             - name: Add production-source dependency guard

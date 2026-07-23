@@ -1,0 +1,63 @@
+name: One-shot Strip Fallback Sourcemap
+
+on:
+    pull_request:
+        paths:
+            - .github/workflows/strip-fallback-sourcemap.yml
+
+permissions:
+    contents: write
+
+jobs:
+    fix:
+        if: github.actor != 'github-actions[bot]'
+        runs-on: ubuntu-latest
+        timeout-minutes: 15
+
+        steps:
+            - name: Check out PR branch
+              uses: actions/checkout@v4
+              with:
+                  fetch-depth: 0
+                  ref: ${{ github.head_ref }}
+
+            - name: Set up Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: 22
+
+            - name: Remove stale source map reference
+              run: |
+                  css="client-extensions/nexcent-landing-elements/src/static-site/fallback/assets/css/style.css"
+                  perl -0pi -e 's@/\*# sourceMappingURL=style\.css\.map \*/\s*\z@\n@' "$css"
+
+                  if grep -q 'sourceMappingURL' "$css"; then
+                      echo "Stale source map reference still exists."
+                      exit 1
+                  fi
+
+            - name: Install dependencies
+              working-directory: client-extensions/nexcent-landing-elements
+              run: npm ci --no-audit --no-fund
+
+            - name: Validate frontend
+              working-directory: client-extensions/nexcent-landing-elements
+              run: |
+                  npm run validate:data-sources
+                  npm run typecheck
+                  npm test
+                  npm run build
+
+            - name: Commit fix
+              run: |
+                  git config user.name "github-actions[bot]"
+                  git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+                  git add client-extensions/nexcent-landing-elements/src/static-site/fallback/assets/css/style.css
+
+                  if git diff --cached --quiet; then
+                      echo "No sourcemap cleanup was needed."
+                      exit 0
+                  fi
+
+                  git commit -m "fix(frontend): remove stale fallback CSS sourcemap"
+                  git push origin "HEAD:${GITHUB_HEAD_REF}"

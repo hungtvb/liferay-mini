@@ -51,10 +51,10 @@ jobs:
                       'client-extensions/nexcent-landing-elements'
                   );
                   const componentFiles = [
-                      'StaticFooter.tsx',
-                      'StaticHeader.tsx',
-                      'StaticHero.tsx',
-                      'StaticSections.tsx',
+                      'ContentSections.tsx',
+                      'Footer.tsx',
+                      'Header.tsx',
+                      'Hero.tsx',
                   ];
 
                   for (const fileName of componentFiles) {

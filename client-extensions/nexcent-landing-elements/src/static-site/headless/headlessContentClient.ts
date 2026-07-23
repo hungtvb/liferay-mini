@@ -124,7 +124,10 @@ export async function loadStructuredContents({
         structureIdentifier,
         locale
     );
-    const contents = await listStructuredContents(structure.id, locale);
+    const contents = await listStructuredContents(structure.id, locale, {
+        pageSize,
+        sort: 'contentFields/sortOrder:asc',
+    });
 
     return contents
         .filter((item) => readContentBoolean(item, ['active', 'enabled'], true))

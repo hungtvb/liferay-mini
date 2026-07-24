@@ -4,8 +4,8 @@
             "fields": [
                 {
                     "dataType": "string",
-                    "defaultValue": "NXC_COMMUNITY_CARD",
-                    "label": "Content Structure key",
+                    "defaultValue": "NXC_ARTICLE",
+                    "label": "Content Structure ERC",
                     "name": "structureIdentifier",
                     "type": "text"
                 },
@@ -44,7 +44,7 @@
                 },
                 {
                     "dataType": "string",
-                    "defaultValue": "Readmore",
+                    "defaultValue": "Read more",
                     "label": "Read more label",
                     "name": "readMoreLabel",
                     "type": "text"

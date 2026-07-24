@@ -25,6 +25,19 @@ function asTask(task) {
   };
 }
 
+async function validateWorkbookSession({config, folder, liferay, session}) {
+  return validateAndBuildPayload({
+    folder,
+    imageLookupConcurrency: config.imageLookupConcurrency,
+    mapping: session.workbook.mapping,
+    resolveDocument: (erc) => liferay.getSiteDocumentByExternalReferenceCode(erc),
+    rowNumbers: session.workbook.rowNumbers,
+    rows: session.workbook.rows,
+    structure: session.structure,
+    targets: session.workbook.targets
+  });
+}
+
 export function createApp({config, liferay, sessions}) {
   const app = express();
   const upload = multer({limits: {fileSize: config.maxUploadBytes}, storage: multer.memoryStorage()});
@@ -35,6 +48,8 @@ export function createApp({config, liferay, sessions}) {
 
   app.get('/api/config', (request, response) => {
     response.json({
+      articleFolderExternalReferenceCode: config.articleFolderExternalReferenceCode,
+      articleFolderName: config.articleFolderName,
       baseUrl: config.baseUrl,
       connected: liferay.connected,
       locale: config.locale,
@@ -48,8 +63,8 @@ export function createApp({config, liferay, sessions}) {
 
   app.post('/api/connect', async (request, response, next) => {
     try {
-      const structures = await liferay.connect();
-      response.json({connection: {baseUrl: config.baseUrl, siteId: config.siteId}, structures});
+      const {folder, structures} = await liferay.connect();
+      response.json({connection: {baseUrl: config.baseUrl, siteId: config.siteId}, folder, structures});
     }
     catch (error) { next(error); }
   });
@@ -69,8 +84,9 @@ export function createApp({config, liferay, sessions}) {
 
   app.get('/api/structures/:structureId/template', async (request, response, next) => {
     try {
+      const folder = await liferay.ensureArticleFolder({force: true});
       const structure = await liferay.getContentStructure(request.params.structureId);
-      const template = await buildTemplateWorkbook(structure);
+      const template = await buildTemplateWorkbook(structure, folder);
       response.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
       response.setHeader('Content-Disposition', `attachment; filename="${template.fileName}"`);
       response.send(Buffer.from(template.buffer));
@@ -84,29 +100,26 @@ export function createApp({config, liferay, sessions}) {
       assert(request.file.originalname.toLowerCase().endsWith('.xlsx'), 400, 'FILE_TYPE_INVALID', 'Only .xlsx files are supported');
       assert(request.body.structureId, 400, 'STRUCTURE_REQUIRED', 'Select a Content Structure');
 
+      const folder = await liferay.ensureArticleFolder({force: true});
       const structure = await liferay.getContentStructure(request.body.structureId);
-      const workbook = await parseTemplateWorkbook(request.file.buffer, structure);
+      const workbook = await parseTemplateWorkbook(request.file.buffer, structure, folder);
       assert(workbook.rows.length <= config.maxImportRows, 400, 'ROW_LIMIT_EXCEEDED', `Workbook contains ${workbook.rows.length} rows; the configured limit is ${config.maxImportRows}`);
 
-      const validation = validateAndBuildPayload({
-        mapping: workbook.mapping,
-        rowNumbers: workbook.rowNumbers,
-        rows: workbook.rows,
-        structure,
-        targets: workbook.targets
-      });
-
-      const session = sessions.create({
+      liferay.clearDocumentCache();
+      const sessionData = {
         fileName: request.file.originalname,
+        folder,
         mapping: workbook.mapping,
         structure,
         targets: workbook.targets,
-        validation,
         workbook
-      });
+      };
+      const validation = await validateWorkbookSession({config, folder, liferay, session: sessionData});
+      const session = sessions.create({...sessionData, validation});
 
       response.status(201).json({
         fileName: session.fileName,
+        folder,
         metadata: workbook.metadata,
         previewRows: workbook.rows.slice(0, 8),
         rowCount: workbook.rows.length,
@@ -123,16 +136,21 @@ export function createApp({config, liferay, sessions}) {
     try {
       const session = sessions.get(request.body?.sessionId);
       assert(session.validation, 409, 'VALIDATION_REQUIRED', 'Validate the workbook before importing');
-      assert(session.validation.canImport, 409, 'VALIDATION_FAILED', 'Resolve all validation errors before importing');
 
       const createStrategy = String(request.body?.createStrategy || '').toUpperCase();
       const importStrategy = String(request.body?.importStrategy || '').toUpperCase();
       assert(CREATE_STRATEGIES.has(createStrategy), 400, 'CREATE_STRATEGY_INVALID', 'createStrategy must be INSERT or UPSERT');
       assert(IMPORT_STRATEGIES.has(importStrategy), 400, 'IMPORT_STRATEGY_INVALID', 'importStrategy must be ON_ERROR_FAIL or ON_ERROR_CONTINUE');
 
-      const task = await liferay.submitStructuredContents(session.validation.payload, {createStrategy, importStrategy});
+      const folder = await liferay.ensureArticleFolder({force: true});
+      liferay.clearDocumentCache();
+      const validation = await validateWorkbookSession({config, folder, liferay, session});
+      sessions.update(session.id, {folder, validation});
+      assert(validation.canImport, 409, 'VALIDATION_FAILED', 'Resolve all validation errors before importing', {validation});
+
+      const task = await liferay.submitStructuredContents(validation.payload, {createStrategy, importStrategy});
       sessions.update(session.id, {createStrategy, importStrategy, taskId: task.id});
-      response.status(202).json({...asTask(task), createStrategy, importStrategy});
+      response.status(202).json({...asTask(task), createStrategy, folder, importStrategy});
     }
     catch (error) { next(error); }
   });

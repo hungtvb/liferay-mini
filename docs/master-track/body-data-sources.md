@@ -79,7 +79,6 @@ System fields:
 - title
 - externalReferenceCode
 - datePublished
-- contentUrl
 - friendlyUrlPath
 
 Structure fields:
@@ -100,6 +99,7 @@ thumbnailAlt
 targetUrl
 linkLabel
 linkTarget
+contentUrl on StructuredContent
 ```
 
 Article card mapping:
@@ -108,11 +108,24 @@ Article card mapping:
 Title     → StructuredContent.title
 Image     → contentFields.coverImage
 Image alt → image.description → image.title → Article title
-Link      → StructuredContent.contentUrl
+Slug      → StructuredContent.friendlyUrlPath
 Order     → datePublished descending when no optional order field exists
 ```
 
-The React component must not build `/web/{site}/w/{slug}` manually. Liferay owns the full Article URL through `contentUrl`.
+The Fragment passes the current Site display URL from `themeDisplay.getScopeGroup().getDisplayURL(...)`. React combines that Site URL with `/w/` and `friendlyUrlPath`:
+
+```text
+{siteDisplayURL}/w/{friendlyUrlPath}
+```
+
+Examples:
+
+```text
+http://localhost:8080/web/nexcent-public-website/w/test-nexcent-article
+https://nexcent.example.com/w/test-nexcent-article
+```
+
+The `contentUrl` property is valid for the nested Image value, but it is not a system property of the Structured Content response.
 
 ## Article detail
 
@@ -157,7 +170,7 @@ training/master-track-code-labs/fragments/nexcent-article-detail
 5. Run the local Article importer.
 6. Add the Article/Marketing Fragment to Home.
 7. Verify the Headless host reports data-content-state="ready".
-8. Verify Article cards open contentUrl under the Nexcent Master Page.
+8. Verify Article cards build the Site URL from friendlyUrlPath and open under the Nexcent Master Page.
 ```
 
 ## Runtime diagnostics

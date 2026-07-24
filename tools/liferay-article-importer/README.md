@@ -13,7 +13,7 @@ System fields:
 - title
 - externalReferenceCode
 - datePublished
-- contentUrl
+- friendlyUrlPath
 
 Structure fields:
 - body
@@ -170,6 +170,8 @@ Do not rename, add, remove, or reorder columns. Generate a new template whenever
 }
 ```
 
+The `contentUrl` above belongs to the nested Image value. It is not a system property of the Structured Content response.
+
 ## Article delivery after import
 
 The Home page React Article list uses the same `NXC_ARTICLE` Structure:
@@ -178,11 +180,24 @@ The Home page React Article list uses the same `NXC_ARTICLE` Structure:
 Title: StructuredContent.title
 Image: contentFields.coverImage
 Image alt: image.description → image.title → Article title
-Link: StructuredContent.contentUrl
+Slug: StructuredContent.friendlyUrlPath
 Order: sortOrder/displayOrder when present; otherwise datePublished descending
 ```
 
 The Headless list request uses `flatten=true` because imported Articles are stored inside `NXC_ARTICLES`. It does not send `contentFields/sortOrder` to the server because Article does not have that field.
+
+The Article Fragment passes the current Site display URL to React. React builds the default Display Page URL as:
+
+```text
+{siteDisplayURL}/w/{friendlyUrlPath}
+```
+
+Examples:
+
+```text
+http://localhost:8080/web/nexcent-public-website/w/test-nexcent-article
+https://nexcent.example.com/w/test-nexcent-article
+```
 
 Create a default Display Page Template in the existing Nexcent Site:
 
@@ -199,16 +214,8 @@ Map the Article Detail Fragment:
 title          → System Field / Title
 publishedDate  → System Field / Publish Date
 coverImage     → NXC Article / coverImage
-body           → NXC Article / body
+body            → NXC Article / body
 ```
-
-Example detail URL:
-
-```text
-/web/nexcent-public-website/w/test-nexcent-article
-```
-
-React must use `contentUrl`; it must not construct the Site path manually.
 
 ## OAuth2 permissions
 
@@ -248,7 +255,8 @@ Runtime gates remain:
 - real image ERC validation;
 - Batch Engine Image payload acceptance;
 - imported content inside `NXC_ARTICLES`;
-- `contentUrl` returned after the Display Page Template is defaulted;
+- `friendlyUrlPath` returned by Headless Delivery;
+- Article detail URL built from the current Site display URL and `/w/` separator;
 - Article detail rendering under the Nexcent Master Page;
 - UPSERT behavior by Article ERC;
 - no secret or access-token exposure.

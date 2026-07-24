@@ -37,7 +37,6 @@ export type ContentField = {
 export type StructuredContent = {
     contentFields: ContentField[];
     contentStructureId: number;
-    contentUrl?: string;
     datePublished?: string;
     externalReferenceCode: string;
     friendlyUrlPath?: string;

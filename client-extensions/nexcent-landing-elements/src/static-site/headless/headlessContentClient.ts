@@ -18,12 +18,6 @@ type LoadStructuredContentsOptions = {
     structureIdentifier: string;
 };
 
-const LINK_FIELD_NAMES = new Set([
-    'ctaurl',
-    'linkurl',
-    'targeturl',
-]);
-
 function normalizeIdentifier(value: string | number | undefined): string {
     return String(value ?? '').trim().toLowerCase();
 }
@@ -76,19 +70,11 @@ export function readContentText(
 ): string {
     const data = findField(content, names)?.contentFieldValue?.data;
 
-    if (data !== null && data !== undefined) {
-        const value = String(data).trim();
-
-        if (value) {
-            return value;
-        }
+    if (data === null || data === undefined) {
+        return fallback;
     }
 
-    if (names.some((name) => LINK_FIELD_NAMES.has(normalizeIdentifier(name)))) {
-        return content.contentUrl?.trim() || fallback;
-    }
-
-    return fallback;
+    return String(data).trim() || fallback;
 }
 
 export function readContentBoolean(

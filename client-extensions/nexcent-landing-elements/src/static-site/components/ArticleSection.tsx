@@ -15,9 +15,10 @@ type HostProps = {
 };
 
 type ArticleCard = {
+    friendlyUrlPath?: string;
     imageAlt: string;
     imageURL: string;
-    linkHref: string;
+    linkHref?: string;
     title: string;
 };
 
@@ -27,6 +28,20 @@ const FALLBACK_ARTICLES: ArticleCard[] = content.marketing.items.map((item) => (
     linkHref: item.linkHref,
     title: item.title,
 }));
+
+export function resolveArticleDetailURL(
+    siteBaseURL: string,
+    friendlyUrlPath: string | undefined
+): string {
+    const base = siteBaseURL.trim().replace(/\/+$/, '');
+    const path = friendlyUrlPath?.trim().replace(/^\/+|\/+$/g, '') ?? '';
+
+    if (!base || !path) {
+        return '';
+    }
+
+    return `${base}/w/${path}`;
+}
 
 function mapArticleContent(
     structuredContent: HeadlessStructuredContent,
@@ -43,9 +58,9 @@ function mapArticleContent(
     );
 
     return {
+        friendlyUrlPath: structuredContent.friendlyUrlPath?.trim(),
         imageAlt: image.alt || title,
         imageURL: image.url,
-        linkHref: structuredContent.contentUrl?.trim() || '',
         title,
     };
 }
@@ -56,6 +71,7 @@ export function StaticArticles({host}: HostProps) {
         'structure-identifier',
         'NXC_ARTICLE'
     );
+    const siteBaseURL = readStringSetting(host, 'site-base-url');
     const maxItems = readNumberSetting(host, 'max-items', 3, {
         max: 12,
         min: 1,
@@ -74,7 +90,14 @@ export function StaticArticles({host}: HostProps) {
         maxItems,
         structureIdentifier,
     });
-    const missingContentUrl = items.filter((item) => !item.linkHref).length;
+    const resolvedItems = items.map((item) => ({
+        ...item,
+        linkHref:
+            resolveArticleDetailURL(siteBaseURL, item.friendlyUrlPath) ||
+            item.linkHref ||
+            '',
+    }));
+    const missingFriendlyUrl = resolvedItems.filter((item) => !item.linkHref).length;
 
     return (
         <section className="marketing" data-runtime-state={status} id="articles">
@@ -85,7 +108,7 @@ export function StaticArticles({host}: HostProps) {
                 </div>
 
                 <div className="marketing__items mt">
-                    {items.map((item, index) => (
+                    {resolvedItems.map((item, index) => (
                         <article className="marketing__item" key={`${item.title}-${index}`}>
                             <div className="marketing__img img">
                                 <img src={item.imageURL} alt={item.imageAlt} />
@@ -116,11 +139,10 @@ export function StaticArticles({host}: HostProps) {
                     </span>
                 ) : null}
 
-                {status === 'ready' && missingContentUrl > 0 ? (
+                {status === 'ready' && missingFriendlyUrl > 0 ? (
                     <span className="sr-only" role="status">
-                        {missingContentUrl} Article links are unavailable. Publish and default
-                        the NXC Article Display Page Template so Headless Delivery returns
-                        contentUrl.
+                        {missingFriendlyUrl} Article links are unavailable. Verify the Article
+                        friendly URL and the Nexcent Article Display Page Template.
                     </span>
                 ) : null}
             </div>

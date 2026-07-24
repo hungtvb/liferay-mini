@@ -14,281 +14,162 @@ Fragment Settings → custom-element attributes → React props
 └── CTA
 
 Headless Delivery API
-├── Hero
-├── Community / Services
-└── Marketing / Community cards
+├── Hero       → NXC_LANDING_HERO
+├── Services   → NXC_SERVICE_ITEM
+└── Articles   → NXC_ARTICLE
 ```
 
-The split satisfies the requirement that at least three sections use Headless
-APIs without making every component perform a runtime request.
-
-`prototypes/nexcent-static/content.json` is only the standalone preview fixture,
-visual parity baseline, test data, and runtime fallback. It is not the intended
-production content source.
+`prototypes/nexcent-static/content.json` remains preview/test fallback data only.
 
 ## Shared Headless runtime
 
-The project has one shared Structured Content API client. Legacy lab components
-and the pixel-perfect React sections both reuse it.
-
 ```text
 GET /o/headless-delivery/v1.0/sites/{siteId}/content-structures?pageSize=200
-        ↓ resolve configured Structure identifier
-GET /o/headless-delivery/v1.0/content-structures/{structureId}/structured-contents?flatten=true&pageSize=100
+        ↓ resolve configured Structure by numeric ID, key, or ERC
+GET /o/headless-delivery/v1.0/content-structures/{structureId}/structured-contents
+    ?flatten=true
+    &pageSize=100
 ```
 
-The client:
+The shared loader:
 
-- Shares one browser request cache.
-- Sends the current page locale.
-- Includes Web Content stored in folders by using `flatten=true`.
-- Resolves a Structure by numeric ID, external reference code, key, or name.
-- Filters entries with `active=false`.
-- Sorts by `sortOrder` or `displayOrder`.
-- Applies the maximum-item value configured on the Fragment.
-
-No credentials, OAuth secrets, passwords, or fixed portal host are embedded in
-the React bundle. Requests are same-origin and use the current Liferay session.
-
-## Structure defaults
-
-The Fragment defaults are intentionally aligned with the existing Excel importer
-in `nexcent-landing-elements`:
-
-```text
-Hero                 NXC Landing Hero
-Community / Services NXC Service Item
-Marketing cards      NXC Community Card
-```
-
-These are Structure names used by the current lab importer. A Fragment can be
-pointed to a numeric ID, ERC, key, or different Structure name in General
-settings when another environment uses different identifiers.
-
-Do not change these defaults to `Nexcent Hero`, `Nexcent Service`, or
-`Nexcent Article` unless the corresponding Structures have actually been created
-and the importer contract has been updated too.
+- caches same-origin browser requests;
+- sends the current locale;
+- uses `flatten=true` because content may be stored in folders;
+- resolves Structure identifiers without relying on editable display names;
+- treats `active`/`enabled` as optional fields;
+- sorts by `sortOrder`/`displayOrder` on the client when those fields exist;
+- otherwise sorts by `datePublished` descending;
+- never sends an optional Structure field such as `contentFields/sortOrder` as a generic server sort.
 
 ## Hero
 
-One Structured Content entry represents one slide. This matches the `Heroes`
-Excel sheet and allows each slide to have an independent workflow, localization,
-schedule, active state, and order.
-
-Default Structure:
+Structure:
 
 ```text
-NXC Landing Hero
+NXC_LANDING_HERO
 ```
 
-Supported fields:
+Supported fields include title, highlightedText, description, CTA fields, image fields, optional `sortOrder`, and optional `active`.
+
+## Services
+
+Structure:
 
 ```text
-title
-highlightedText
-description
-ctaLabel
-ctaUrl
-ctaTarget
-illustration or image
-illustrationAlt or imageAlt
+NXC_SERVICE_ITEM
+```
+
+Supported fields include title, description, icon/image fields, optional link fields, optional `sortOrder`, and optional `active`.
+
+## Articles
+
+The visual section keeps the existing `marketing` CSS and custom-element key, but its production model is Article content.
+
+Structure:
+
+```text
+NXC_ARTICLE
+```
+
+Canonical contract:
+
+```text
+System fields:
+- title
+- externalReferenceCode
+- datePublished
+- contentUrl
+- friendlyUrlPath
+
+Structure fields:
+- body
+- coverImage
+```
+
+Not part of the contract:
+
+```text
 sortOrder
 active
-```
-
-Fragment Settings:
-
-```text
-Content Structure identifier
-Maximum slides
-Autoplay
-Slide interval
-Pause on hover
-Show pagination
-```
-
-## Community / Services
-
-The section title and description belong to the Fragment instance. Reusable
-service cards come from Structured Content.
-
-Default Structure:
-
-```text
-NXC Service Item
-```
-
-Supported fields:
-
-```text
-title
-description
-icon or image
-iconAlt
-linkLabel
-linkUrl
-sortOrder
-active
-```
-
-The current pixel-perfect card layout does not render the optional service link,
-but the importer keeps it for reuse by a Services page or another card variant.
-
-Fragment Settings:
-
-```text
-Content Structure identifier
-Maximum cards
-Title
-Description
-```
-
-## Marketing cards
-
-The section title and description belong to the Fragment instance. The current
-branch loads the three marketing cards from the Structure already supported by
-the workbook importer.
-
-Default Structure:
-
-```text
-NXC Community Card
-```
-
-Supported fields:
-
-```text
-title
+featured
 summary
-thumbnail or image
+authorName
+thumbnail
 thumbnailAlt
-targetUrl or linkUrl
+targetUrl
 linkLabel
 linkTarget
-publishedDate
-sortOrder
-active
 ```
 
-Link resolution order:
+Article card mapping:
 
 ```text
-targetUrl / linkUrl / ctaUrl
-    ↓ when empty
-/w/{friendlyUrlPath}
-    ↓ when unavailable
-static fallback URL
+Title     → StructuredContent.title
+Image     → contentFields.coverImage
+Image alt → image.description → image.title → Article title
+Link      → StructuredContent.contentUrl
+Order     → datePublished descending when no optional order field exists
 ```
 
-The separate Article pipeline may later configure this Fragment to use an Article
-Structure and Display Page. It is not the default until that pipeline is deployed
-to the same target environment.
+The React component must not build `/web/{site}/w/{slug}` manually. Liferay owns the full Article URL through `contentUrl`.
 
-Fragment Settings:
+## Article detail
+
+Article detail is rendered by a Display Page Template inside the existing Nexcent Site.
 
 ```text
-Content Structure identifier
-Maximum articles
-Title
-Description
-Read more label
+Name: Nexcent Article Detail
+Content Type: Web Content Article
+Subtype: NXC Article
+Master Page: Nexcent Master Page
+Default: Yes
 ```
 
-## Fragment Settings-only sections
-
-These sections make no body-content API request. Their `configuration.json`
-values are escaped in FreeMarker, passed as custom-element attributes, and read
-as React props.
-
-### Clients
+Fragment mapping:
 
 ```text
-Title
-Description
-Enable logo ticker
-Six logo URL and alt-text pairs
+title          → System Field / Title
+publishedDate  → System Field / Publish Date
+coverImage     → NXC Article / coverImage
+body            → NXC Article / body
 ```
 
-An empty logo URL uses the bundled design asset.
-
-### Feature Primary and Secondary
+Example local URL:
 
 ```text
-Title
-Description
-Image URL and alt text
-Show button
-Button label, URL, and target
+/web/nexcent-public-website/w/test-nexcent-article
 ```
 
-Both Fragments render the same React feature implementation with different
-default copy and placement in the page composition.
-
-### Statistics
+The source Fragment is under:
 
 ```text
-Title
-Highlighted text
-Description
-Four value, label, icon URL, and icon-alt groups
+training/master-track-code-labs/fragments/nexcent-article-detail
 ```
 
-These values are marketing copy. Replace this source with an Object or business
-API only when the numbers become operational data.
-
-### Testimonial
+## Import and runtime order
 
 ```text
-Quote
-Author
-Organization
-Portrait URL and alt text
-Show partner logos
-Link label, URL, and target
-```
-
-### CTA
-
-```text
-Title
-Show button
-Button label, URL, and target
+1. Create NXC_ARTICLE with body and coverImage.
+2. Create or verify the NXC_ARTICLES Web Content folder.
+3. Create and default the Nexcent Article Detail Display Page Template.
+4. Deploy the React Client Extension and import the Fragment Set.
+5. Run the local Article importer.
+6. Add the Article/Marketing Fragment to Home.
+7. Verify the Headless host reports data-content-state="ready".
+8. Verify Article cards open contentUrl under the Nexcent Master Page.
 ```
 
 ## Runtime diagnostics
 
-Each Headless custom element exposes:
+Each Headless host exposes:
 
 ```text
 data-content-state="loading|ready|fallback"
 data-content-error="..."
 ```
 
-Fallback prevents a missing local Structure from destroying the page layout, but
-it is not a runtime pass. A Liferay screenshot is accepted only when all three
-Headless hosts report:
-
-```text
-data-content-state="ready"
-```
-
-The browser Network panel must also have no failed Headless Delivery request.
-
-## Import and runtime order
-
-```text
-1. Create the required Web Content Structures.
-2. Deploy Nexcent React Runtime.
-3. Import the Nexcent Fragment Set.
-4. Run the Excel importer with referenced assets.
-5. Add the Fragments to the page.
-6. Confirm each Headless Fragment default points to the imported Structure.
-7. Reload the page and verify data-content-state="ready".
-```
-
-The importer requires the Structures to exist first; it creates or updates Web
-Content entries and uploads missing Documents and Media assets, but it does not
-invent an unknown Structure contract at runtime.
+A screenshot is accepted only when the required Headless hosts report `ready` and the Network panel has no failed Headless Delivery request.
 
 ## Validation
 
@@ -300,11 +181,3 @@ npm run typecheck
 npm run build
 npm run package:fragments
 ```
-
-The Frontend Check workflow enforces:
-
-- Exactly three Headless body sections.
-- Six Fragment Settings-only body sections.
-- Importer-aligned Structure defaults.
-- Reuse of the shared Structured Content API client.
-- Presence of every configuration file in the packaged Fragment Set.

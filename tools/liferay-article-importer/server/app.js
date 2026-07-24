@@ -12,6 +12,27 @@ const publicDir = path.resolve(currentDir, '../public');
 const CREATE_STRATEGIES = new Set(['INSERT', 'UPSERT']);
 const IMPORT_STRATEGIES = new Set(['ON_ERROR_FAIL', 'ON_ERROR_CONTINUE']);
 
+function normalizeIdentifier(value) {
+  return String(value ?? '').trim().toLowerCase();
+}
+
+function assertArticleStructure(structure, config) {
+  const expected = normalizeIdentifier(config.articleStructureExternalReferenceCode);
+  const actual = normalizeIdentifier(structure?.externalReferenceCode);
+  assert(
+    actual === expected,
+    400,
+    'ARTICLE_STRUCTURE_MISMATCH',
+    `Expected Article Structure ERC "${config.articleStructureExternalReferenceCode}" but received "${structure?.externalReferenceCode || structure?.name || 'unknown'}"`
+  );
+  return structure;
+}
+
+function findArticleStructure(structures, config) {
+  const expected = normalizeIdentifier(config.articleStructureExternalReferenceCode);
+  return structures.find((structure) => normalizeIdentifier(structure.externalReferenceCode) === expected);
+}
+
 function asTask(task) {
   return {
     errorMessage: task?.errorMessage || '',
@@ -26,6 +47,7 @@ function asTask(task) {
 }
 
 async function validateWorkbookSession({config, folder, liferay, session}) {
+  assertArticleStructure(session.structure, config);
   return validateAndBuildPayload({
     folder,
     imageLookupConcurrency: config.imageLookupConcurrency,
@@ -50,6 +72,7 @@ export function createApp({config, liferay, sessions}) {
     response.json({
       articleFolderExternalReferenceCode: config.articleFolderExternalReferenceCode,
       articleFolderName: config.articleFolderName,
+      articleStructureExternalReferenceCode: config.articleStructureExternalReferenceCode,
       baseUrl: config.baseUrl,
       connected: liferay.connected,
       locale: config.locale,
@@ -64,14 +87,29 @@ export function createApp({config, liferay, sessions}) {
   app.post('/api/connect', async (request, response, next) => {
     try {
       const {folder, structures} = await liferay.connect();
-      response.json({connection: {baseUrl: config.baseUrl, siteId: config.siteId}, folder, structures});
+      const articleStructure = findArticleStructure(structures, config);
+      assert(
+        articleStructure,
+        409,
+        'ARTICLE_STRUCTURE_NOT_FOUND',
+        `Content Structure with ERC "${config.articleStructureExternalReferenceCode}" was not found in Site ${config.siteId}`
+      );
+      response.json({
+        articleStructure,
+        connection: {baseUrl: config.baseUrl, siteId: config.siteId},
+        folder,
+        structures: [articleStructure]
+      });
     }
     catch (error) { next(error); }
   });
 
   app.get('/api/structures/:structureId', async (request, response, next) => {
     try {
-      const structure = await liferay.getContentStructure(request.params.structureId);
+      const structure = assertArticleStructure(
+        await liferay.getContentStructure(request.params.structureId),
+        config
+      );
       const targets = buildTargets(structure);
       response.json({
         structure: summarizeStructure(structure),
@@ -85,7 +123,10 @@ export function createApp({config, liferay, sessions}) {
   app.get('/api/structures/:structureId/template', async (request, response, next) => {
     try {
       const folder = await liferay.ensureArticleFolder({force: true});
-      const structure = await liferay.getContentStructure(request.params.structureId);
+      const structure = assertArticleStructure(
+        await liferay.getContentStructure(request.params.structureId),
+        config
+      );
       const template = await buildTemplateWorkbook(structure, folder);
       response.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
       response.setHeader('Content-Disposition', `attachment; filename="${template.fileName}"`);
@@ -101,7 +142,10 @@ export function createApp({config, liferay, sessions}) {
       assert(request.body.structureId, 400, 'STRUCTURE_REQUIRED', 'Select a Content Structure');
 
       const folder = await liferay.ensureArticleFolder({force: true});
-      const structure = await liferay.getContentStructure(request.body.structureId);
+      const structure = assertArticleStructure(
+        await liferay.getContentStructure(request.body.structureId),
+        config
+      );
       const workbook = await parseTemplateWorkbook(request.file.buffer, structure, folder);
       assert(workbook.rows.length <= config.maxImportRows, 400, 'ROW_LIMIT_EXCEEDED', `Workbook contains ${workbook.rows.length} rows; the configured limit is ${config.maxImportRows}`);
 
@@ -136,6 +180,7 @@ export function createApp({config, liferay, sessions}) {
     try {
       const session = sessions.get(request.body?.sessionId);
       assert(session.validation, 409, 'VALIDATION_REQUIRED', 'Validate the workbook before importing');
+      assertArticleStructure(session.structure, config);
 
       const createStrategy = String(request.body?.createStrategy || '').toUpperCase();
       const importStrategy = String(request.body?.importStrategy || '').toUpperCase();

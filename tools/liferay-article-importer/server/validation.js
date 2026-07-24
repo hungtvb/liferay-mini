@@ -43,194 +43,165 @@ export function convertValue(value, target) {
   return asString(value);
 }
 
-function issue({field, message, row, severity = 'error', value}) {
-  return {field, message, row, severity, value};
+function issue({code, field, message, row, severity = 'error', value}) {
+  return {code, field, message, row, severity, value};
 }
 
-function isImageDocument(document) {
-  return Boolean(document?.id && String(document.encodingFormat || '').toLowerCase().startsWith('image/'));
+function validErc(value) {
+  return /^[A-Za-z0-9][A-Za-z0-9._:/-]{0,254}$/.test(value);
 }
 
-function imagePayload(document) {
-  return Object.fromEntries([
-    ['contentType', document.contentType || 'Document'],
-    ['contentUrl', document.contentUrl],
-    ['description', document.description || document.title],
-    ['encodingFormat', document.encodingFormat],
-    ['fileExtension', document.fileExtension],
-    ['id', document.id],
-    ['sizeInBytes', document.sizeInBytes],
-    ['title', document.title]
-  ].filter(([, value]) => value !== undefined && value !== null));
-}
-
-async function prefetchImages({concurrency, mapping, resolveDocument, rows, targets}) {
-  const imageTargets = targets.filter((target) =>
-    target.supported && target.valueKind === 'documentExternalReferenceCode' && mapping[target.key]
-  );
-  const ercs = [...new Set(imageTargets.flatMap((target) => {
-    const header = mapping[target.key];
-    return rows.map((row) => row[header]).filter((value) => !blank(value)).map((value) => asString(value));
-  }))];
-  const documents = new Map();
-  let cursor = 0;
-
-  async function worker() {
-    while (cursor < ercs.length) {
-      const erc = ercs[cursor];
-      cursor += 1;
-      documents.set(erc, await resolveDocument(erc));
-    }
-  }
-
-  await Promise.all(Array.from({length: Math.min(Math.max(concurrency || 1, 1), ercs.length || 1)}, () => worker()));
-  return documents;
+function existingIndex(items) {
+  return new Map((items || []).map((item) => [String(item.externalReferenceCode || '').trim().toLowerCase(), item]));
 }
 
 export async function validateAndBuildPayload({
+  existingContents = [],
   folder,
-  imageLookupConcurrency = 8,
+  imageResolver,
+  locale,
   mapping,
-  resolveDocument = async () => null,
   rowNumbers,
   rows,
   structure,
-  targets
+  targets,
+  viewableBy = 'Anyone'
 }) {
   const errors = [];
   const warnings = [];
   const payload = [];
+  const rowResults = [];
   const ercRows = new Map();
-  const targetsByKey = new Map(targets.map((target) => [target.key, target]));
+  const existingByErc = existingIndex(existingContents);
+  const imageTargets = targets.filter((target) => target.supported && target.valueKind === 'imageReference');
+  const imageValues = imageTargets.flatMap((target) => {
+    const header = mapping[target.key];
+    return header ? rows.map((row) => row[header]).filter((value) => !blank(value)).map((value) => asString(value)) : [];
+  });
+  const imageResolution = imageResolver
+    ? await imageResolver.resolveMany(imageValues, {force: true})
+    : {indexSummary: {distinctReferenceCount: 0, documentCount: 0}, results: new Map()};
 
   if (!folder?.id) {
-    errors.push(issue({field: 'structuredContentFolderId', message: 'Target Web Content folder is not resolved', row: null}));
+    errors.push(issue({code: 'TARGET_FOLDER_CHANGED', field: 'structuredContentFolderId', message: 'Target Web Content folder is not resolved', row: null}));
   }
 
-  for (const target of targets) {
-    const sourceHeader = mapping[target.key];
-    if (target.required && !sourceHeader) {
-      errors.push(issue({field: target.key, message: `Required target “${target.label}” is not mapped`, row: null}));
-    }
-    if (sourceHeader && !target.supported) {
-      errors.push(issue({field: target.key, message: `“${target.label}” is nested, repeatable, or has an unsupported field type`, row: null}));
-    }
-  }
-
-  if (errors.length > 0) {
-    return {canImport: false, errors, payload, stats: {invalidRows: rows.length, totalRows: rows.length, validRows: 0}, warnings};
-  }
-
-  const documents = await prefetchImages({
-    concurrency: imageLookupConcurrency,
-    mapping,
-    resolveDocument,
-    rows,
-    targets
-  });
-
-  rows.forEach((row, index) => {
-    const excelRow = rowNumbers[index];
+  for (let index = 0; index < rows.length; index += 1) {
+    const row = rows[index];
+    const rowNumber = rowNumbers[index];
     const rowErrors = [];
-    const article = {
+    const item = {
       contentFields: [],
       contentStructureId: structure.id,
-      structuredContentFolderId: folder.id,
-      viewableBy: 'Anyone'
+      structuredContentFolderId: folder?.id,
+      viewableBy
     };
 
-    for (const target of targets) {
-      const targetKey = target.key;
-      const sourceHeader = mapping[targetKey];
-      if (!sourceHeader) continue;
-      if (!targetsByKey.has(targetKey)) {
-        rowErrors.push(issue({field: targetKey, message: 'Unknown mapping target', row: excelRow}));
+    for (const target of targets.filter((candidate) => candidate.supported)) {
+      const header = mapping[target.key];
+      const raw = header ? row[header] : undefined;
+      if (target.required && blank(raw)) {
+        rowErrors.push(issue({
+          code: 'REQUIRED_VALUE_MISSING', field: target.fieldReference || target.name, message: `${target.label} is required`, row: rowNumber, value: raw
+        }));
         continue;
       }
+      if (blank(raw)) continue;
 
-      const rawValue = row[sourceHeader];
-      let converted;
-      try { converted = convertValue(rawValue, target); }
-      catch (error) {
-        rowErrors.push(issue({field: targetKey, message: error.message, row: excelRow, value: rawValue}));
-        continue;
-      }
-
-      if (converted == null) {
-        if (target.required) {
-          rowErrors.push(issue({field: targetKey, message: `Required value “${target.label}” is empty`, row: excelRow}));
-        }
-        continue;
-      }
-
-      if (targetKey === 'system.title') article.title = converted;
-      else if (targetKey === 'system.externalReferenceCode') article.externalReferenceCode = converted;
-      else if (targetKey.startsWith('content.') && target.valueKind === 'documentExternalReferenceCode') {
-        const document = documents.get(converted);
-        if (!document) {
+      if (target.valueKind === 'imageReference') {
+        const reference = asString(raw);
+        const resolved = imageResolution.results.get(reference);
+        if (!resolved || resolved.status !== 'RESOLVED') {
+          const code = resolved?.code || 'IMAGE_NOT_FOUND';
           rowErrors.push(issue({
-            field: targetKey,
-            message: `Image with Document external reference code “${converted}” does not exist in the configured Site`,
-            row: excelRow,
-            value: converted
+            code,
+            field: target.fieldReference,
+            message: `Image reference "${reference}" could not be resolved from the configured image source`,
+            row: rowNumber,
+            value: reference
           }));
           continue;
         }
-        if (!isImageDocument(document)) {
-          rowErrors.push(issue({
-            field: targetKey,
-            message: `Document “${converted}” exists but is not an image`,
-            row: excelRow,
-            value: converted
-          }));
-          continue;
-        }
-        article.contentFields.push({
-          fieldReference: target.fieldReference || target.name,
-          name: target.name,
-          contentFieldValue: {
-            image: imagePayload(document)
-          }
+        const document = resolved.document;
+        item.contentFields.push({
+          contentFieldValue: {image: {id: document.id, title: document.title, description: document.description}},
+          fieldReference: target.fieldReference,
+          name: target.name
         });
+        continue;
       }
-      else if (targetKey.startsWith('content.')) {
-        article.contentFields.push({
-          fieldReference: target.fieldReference || target.name,
-          name: target.name,
-          contentFieldValue: {
-            data: converted
-          }
+
+      let converted;
+      try { converted = convertValue(raw, target); }
+      catch (error) {
+        rowErrors.push(issue({
+          code: 'VALUE_TYPE_INVALID', field: target.fieldReference || target.name, message: `${target.label}: ${error.message}`, row: rowNumber, value: raw
+        }));
+        continue;
+      }
+
+      if (target.key === 'system.title') item.title = converted;
+      else if (target.key === 'system.externalReferenceCode') item.externalReferenceCode = converted;
+      else {
+        item.contentFields.push({
+          contentFieldValue: {data: converted},
+          fieldReference: target.fieldReference,
+          name: target.name
         });
       }
     }
 
-    if (article.externalReferenceCode) {
-      const ercKey = String(article.externalReferenceCode).trim().toLowerCase();
-      if (ercRows.has(ercKey)) {
+    const erc = String(item.externalReferenceCode || '').trim();
+    if (erc && !validErc(erc)) {
+      rowErrors.push(issue({
+        code: 'ERC_FORMAT_INVALID', field: 'externalReferenceCode', message: 'External Reference Code contains unsupported characters or exceeds 255 characters', row: rowNumber, value: erc
+      }));
+    }
+    if (erc) {
+      const normalized = erc.toLowerCase();
+      const prior = ercRows.get(normalized);
+      if (prior) {
         rowErrors.push(issue({
-          field: 'system.externalReferenceCode',
-          message: `Duplicate external reference code; first used on Excel row ${ercRows.get(ercKey)}`,
-          row: excelRow,
-          value: article.externalReferenceCode
+          code: 'ERC_DUPLICATE_IN_WORKBOOK', field: 'externalReferenceCode', message: `External Reference Code duplicates row ${prior}`, row: rowNumber, value: erc
         }));
       }
-      else ercRows.set(ercKey, excelRow);
+      else ercRows.set(normalized, rowNumber);
     }
 
-    if (article.contentFields.length === 0) {
-      warnings.push(issue({field: 'contentFields', message: 'No Structure field value will be sent for this row', row: excelRow, severity: 'warning'}));
+    errors.push(...rowErrors);
+    if (rowErrors.length === 0) payload.push(item);
+    rowResults.push({externalReferenceCode: item.externalReferenceCode || null, row: rowNumber, status: rowErrors.length ? 'BLOCKED' : 'VALID', title: item.title || null});
+  }
+
+  const collisions = [];
+  for (const item of payload) {
+    const existing = existingByErc.get(String(item.externalReferenceCode).toLowerCase());
+    if (existing) {
+      const row = ercRows.get(String(item.externalReferenceCode).toLowerCase());
+      collisions.push({
+        externalReferenceCode: item.externalReferenceCode,
+        existingId: existing.id,
+        existingTitle: existing.title || null,
+        row
+      });
+      warnings.push(issue({
+        code: 'ERC_UPDATE_CONFIRMATION_REQUIRED', field: 'externalReferenceCode', message: `ERC "${item.externalReferenceCode}" already exists and requires strategy confirmation`, row, severity: 'warning', value: item.externalReferenceCode
+      }));
     }
+  }
 
-    if (rowErrors.length > 0) errors.push(...rowErrors);
-    else payload.push(article);
-  });
-
-  const invalidRows = new Set(errors.filter((entry) => entry.row != null).map((entry) => entry.row)).size;
   return {
     canImport: errors.length === 0 && payload.length > 0,
+    ercCollisions: collisions,
     errors,
+    imageSummary: imageResolution.indexSummary,
     payload,
-    stats: {invalidRows, totalRows: rows.length, validRows: payload.length},
+    rowResults,
+    stats: {
+      invalidRows: rowResults.filter((row) => row.status === 'BLOCKED').length,
+      totalRows: rows.length,
+      validRows: rowResults.filter((row) => row.status === 'VALID').length
+    },
     warnings
   };
 }

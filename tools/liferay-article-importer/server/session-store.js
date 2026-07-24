@@ -1,30 +1,38 @@
-import {randomUUID} from 'node:crypto';
+import crypto from 'node:crypto';
 import {AppError} from './errors.js';
 
 export class SessionStore {
-  constructor(ttlMs) {
+  constructor({ttlMs}) {
     this.ttlMs = ttlMs;
     this.sessions = new Map();
-    this.timer = setInterval(() => this.cleanup(), Math.min(ttlMs, 60000));
-    this.timer.unref();
   }
 
-  create(value) {
-    const id = randomUUID();
+  #cleanup() {
     const now = Date.now();
-    this.sessions.set(id, {...value, createdAt: now, expiresAt: now + this.ttlMs, id});
-    return this.sessions.get(id);
+    for (const [id, session] of this.sessions) {
+      if (session.expiresAt <= now) this.sessions.delete(id);
+    }
+  }
+
+  create(data) {
+    this.#cleanup();
+    const now = Date.now();
+    const session = {
+      ...data,
+      createdAt: now,
+      expiresAt: now + this.ttlMs,
+      id: crypto.randomUUID(),
+      submissionPending: false,
+      taskId: null
+    };
+    this.sessions.set(session.id, session);
+    return session;
   }
 
   get(id) {
-    const session = this.sessions.get(id);
-
-    if (!session || session.expiresAt <= Date.now()) {
-      this.sessions.delete(id);
-      throw new AppError(404, 'SESSION_NOT_FOUND', 'Workbook session was not found or has expired');
-    }
-
-    session.expiresAt = Date.now() + this.ttlMs;
+    this.#cleanup();
+    const session = this.sessions.get(String(id || ''));
+    if (!session) throw new AppError(404, 'SESSION_NOT_FOUND', 'Validation session was not found or has expired');
     return session;
   }
 
@@ -34,13 +42,20 @@ export class SessionStore {
     return session;
   }
 
-  cleanup() {
-    const now = Date.now();
-
-    for (const [id, session] of this.sessions) {
-      if (session.expiresAt <= now) {
-        this.sessions.delete(id);
-      }
+  beginSubmission(id) {
+    const session = this.get(id);
+    if (session.taskId || session.submissionPending) {
+      throw new AppError(409, 'IMPORT_ALREADY_SUBMITTED', 'This validation session already has an import task', {taskId: session.taskId});
     }
+    session.submissionPending = true;
+    return session;
+  }
+
+  completeSubmission(id, patch) {
+    return this.update(id, {...patch, submissionPending: false});
+  }
+
+  failSubmission(id) {
+    return this.update(id, {submissionPending: false});
   }
 }

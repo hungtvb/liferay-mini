@@ -1,3 +1,4 @@
+import {setTimeout as delay} from 'node:timers/promises';
 import {AppError} from './errors.js';
 
 function encodePath(value) {
@@ -11,13 +12,8 @@ async function parseResponse(response) {
   catch { return text; }
 }
 
-function folderSummary(folder) {
-  return {
-    externalReferenceCode: folder.externalReferenceCode || null,
-    id: folder.id,
-    name: folder.name,
-    siteId: folder.siteId
-  };
+function retryableStatus(status) {
+  return status === 429 || status === 502 || status === 503 || status === 504;
 }
 
 export class LiferayClient {
@@ -26,8 +22,6 @@ export class LiferayClient {
     this.fetch = fetchImpl;
     this.token = null;
     this.tokenExpiresAt = 0;
-    this.articleFolder = null;
-    this.documentCache = new Map();
   }
 
   get connected() {
@@ -36,14 +30,25 @@ export class LiferayClient {
 
   async connect() {
     await this.#getAccessToken(true);
-    this.clearDocumentCache();
-    const folder = await this.ensureArticleFolder({force: true});
-    const structures = await this.listContentStructures();
-    return {folder, structures};
+    const [structures, folders] = await Promise.all([
+      this.listContentStructures(),
+      this.listStructuredContentFolders()
+    ]);
+    return {
+      folders,
+      imageSource: this.imageSourceSummary(),
+      site: {id: this.config.siteId},
+      structures
+    };
   }
 
-  clearDocumentCache() {
-    this.documentCache.clear();
+  imageSourceSummary() {
+    return {
+      folderId: this.config.imageSourceFolderId,
+      id: this.config.imageSourceId,
+      referenceFormats: ['file:<exact-file-name>', 'erc:<exact-document-erc>'],
+      type: this.config.imageSourceType
+    };
   }
 
   async #getAccessToken(force = false) {
@@ -53,31 +58,29 @@ export class LiferayClient {
       client_secret: this.config.clientSecret,
       grant_type: 'client_credentials'
     });
-
     let response;
     try {
       response = await this.fetch(`${this.config.baseUrl}/o/oauth2/token`, {
         body,
         headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-        method: 'POST'
+        method: 'POST',
+        signal: AbortSignal.timeout(this.config.requestTimeoutMs)
       });
     }
     catch (error) {
       throw new AppError(502, 'LIFERAY_UNREACHABLE', 'Cannot reach the Liferay OAuth2 endpoint', {cause: error.message});
     }
-
     const data = await parseResponse(response);
     if (!response.ok || !data?.access_token) {
       throw new AppError(502, 'OAUTH_FAILED', 'Liferay OAuth2 client credentials authentication failed', {response: data, status: response.status});
     }
-
     const expiresIn = Number(data.expires_in || 600);
     this.token = data.access_token;
     this.tokenExpiresAt = Date.now() + Math.max(expiresIn - 30, 30) * 1000;
     return this.token;
   }
 
-  async #request(path, options = {}, retryAfterUnauthorized = true, notFoundAsNull = false) {
+  async #request(path, options = {}, state = {attempt: 0, retriedUnauthorized: false}, notFoundAsNull = false) {
     const token = await this.#getAccessToken();
     let response;
     try {
@@ -85,19 +88,30 @@ export class LiferayClient {
         ...options,
         headers: {
           Accept: 'application/json',
-          'Accept-Language': this.config.locale,
+          'Accept-Language': options.locale || this.config.defaultLocale,
           Authorization: `Bearer ${token}`,
           ...options.headers
-        }
+        },
+        signal: AbortSignal.timeout(this.config.requestTimeoutMs)
       });
     }
     catch (error) {
+      if (state.attempt < this.config.maxRetries) {
+        await delay(this.config.retryBaseDelayMs * (2 ** state.attempt));
+        return this.#request(path, options, {...state, attempt: state.attempt + 1}, notFoundAsNull);
+      }
       throw new AppError(502, 'LIFERAY_UNREACHABLE', 'Cannot reach the Liferay API', {cause: error.message, path});
     }
 
-    if (response.status === 401 && retryAfterUnauthorized) {
+    if (response.status === 401 && !state.retriedUnauthorized) {
       await this.#getAccessToken(true);
-      return this.#request(path, options, false, notFoundAsNull);
+      return this.#request(path, options, {...state, retriedUnauthorized: true}, notFoundAsNull);
+    }
+    if (retryableStatus(response.status) && state.attempt < this.config.maxRetries) {
+      const retryAfter = Number(response.headers.get('retry-after'));
+      const waitMs = Number.isFinite(retryAfter) ? retryAfter * 1000 : this.config.retryBaseDelayMs * (2 ** state.attempt);
+      await delay(waitMs);
+      return this.#request(path, options, {...state, attempt: state.attempt + 1}, notFoundAsNull);
     }
 
     const data = await parseResponse(response);
@@ -108,76 +122,74 @@ export class LiferayClient {
     return data;
   }
 
-  async ensureArticleFolder({force = false} = {}) {
-    if (this.articleFolder && !force) return this.articleFolder;
-
-    const siteId = encodePath(this.config.siteId);
-    const erc = encodePath(this.config.articleFolderExternalReferenceCode);
-    const lookupPath = `/o/headless-delivery/v1.0/sites/${siteId}/structured-content-folders/by-external-reference-code/${erc}`;
-    let folder = await this.#request(lookupPath, {}, true, true);
-
-    if (!folder) {
-      folder = await this.#request(`/o/headless-delivery/v1.0/sites/${siteId}/structured-content-folders`, {
-        body: JSON.stringify({
-          externalReferenceCode: this.config.articleFolderExternalReferenceCode,
-          name: this.config.articleFolderName,
-          viewableBy: 'Anyone'
-        }),
-        headers: {'Content-Type': 'application/json'},
-        method: 'POST'
-      });
-    }
-
-    this.articleFolder = folderSummary(folder);
-    return this.articleFolder;
-  }
-
-  async getSiteDocumentByExternalReferenceCode(externalReferenceCode, {force = false} = {}) {
-    const erc = String(externalReferenceCode || '').trim();
-    if (!erc) return null;
-    if (!force && this.documentCache.has(erc)) return this.documentCache.get(erc);
-
-    const path = `/o/headless-delivery/v1.0/sites/${encodePath(this.config.siteId)}/documents/by-external-reference-code/${encodePath(erc)}`;
-    const document = await this.#request(path, {}, true, true);
-    this.documentCache.set(erc, document);
-    return document;
-  }
-
-  async listContentStructures() {
+  async #list(path) {
     const items = [];
     let page = 1;
     let lastPage = 1;
     do {
-      const path = `/o/headless-delivery/v1.0/sites/${encodePath(this.config.siteId)}/content-structures?page=${page}&pageSize=200&sort=name:asc`;
-      const data = await this.#request(path);
+      const separator = path.includes('?') ? '&' : '?';
+      const data = await this.#request(`${path}${separator}page=${page}&pageSize=${this.config.imageIndexPageSize}`);
       items.push(...(data?.items || []));
       lastPage = Number(data?.lastPage || 1);
       page += 1;
     }
     while (page <= lastPage);
+    return items;
+  }
 
-    return items.map((item) => ({
-      availableLanguages: item.availableLanguages || [],
-      externalReferenceCode: item.externalReferenceCode || null,
-      id: item.id,
-      name: item.name,
-      siteId: item.siteId
-    }));
+  async listContentStructures() {
+    return this.#list(`/o/headless-delivery/v1.0/sites/${encodePath(this.config.siteId)}/content-structures?sort=name:asc`);
   }
 
   async getContentStructure(structureId) {
     return this.#request(`/o/headless-delivery/v1.0/content-structures/${encodePath(structureId)}`);
   }
 
+  async listStructuredContentFolders() {
+    const items = await this.#list(`/o/headless-delivery/v1.0/sites/${encodePath(this.config.siteId)}/structured-content-folders`);
+    return items.map((folder) => ({
+      externalReferenceCode: folder.externalReferenceCode || null,
+      id: folder.id,
+      name: folder.name,
+      parentStructuredContentFolderId: folder.parentStructuredContentFolderId || null,
+      siteId: folder.siteId
+    }));
+  }
+
+  async getStructuredContentFolder(folderId) {
+    return this.#request(`/o/headless-delivery/v1.0/structured-content-folders/${encodePath(folderId)}`);
+  }
+
+  async listConfiguredImageDocuments() {
+    let path;
+    if (this.config.imageSourceFolderId) {
+      path = `/o/headless-delivery/v1.0/document-folders/${encodePath(this.config.imageSourceFolderId)}/documents`;
+    }
+    else if (this.config.imageSourceType === 'assetLibrary') {
+      path = `/o/headless-delivery/v1.0/asset-libraries/${encodePath(this.config.imageSourceId)}/documents`;
+    }
+    else {
+      path = `/o/headless-delivery/v1.0/sites/${encodePath(this.config.imageSourceId)}/documents`;
+    }
+    return this.#list(path);
+  }
+
+  async listSiteStructuredContents() {
+    return this.#list(`/o/headless-delivery/v1.0/sites/${encodePath(this.config.siteId)}/structured-contents?flatten=true`);
+  }
+
+  async getStructuredContentByExternalReferenceCode(externalReferenceCode) {
+    return this.#request(
+      `/o/headless-delivery/v1.0/sites/${encodePath(this.config.siteId)}/structured-contents/by-external-reference-code/${encodePath(externalReferenceCode)}`,
+      {},
+      {attempt: 0, retriedUnauthorized: false},
+      true
+    );
+  }
+
   async submitStructuredContents(items, {createStrategy, importStrategy}) {
-    const query = new URLSearchParams({
-      createStrategy,
-      importStrategy,
-      siteId: this.config.siteId
-    });
-    const path = `/o/headless-batch-engine/v1.0/import-task/${encodePath(this.config.batchClassName)}?${query}`;
-    console.log(`Path: ${path}`);
-    return this.#request(path, {
+    const query = new URLSearchParams({createStrategy, importStrategy, siteId: String(this.config.siteId)});
+    return this.#request(`/o/headless-batch-engine/v1.0/import-task/${encodePath(this.config.batchClassName)}?${query}`, {
       body: JSON.stringify(items),
       headers: {'Content-Type': 'application/json'},
       method: 'POST'

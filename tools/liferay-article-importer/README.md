@@ -1,240 +1,22 @@
-# Nexcent Local Article Importer
+# Liferay Flat Structured Content Importer
 
-A local Node.js migration utility with a plain HTML/CSS/JavaScript UI for importing `NXC_ARTICLE` Web Content from a Structure-driven Excel workbook.
+Local Node.js migration utility for importing any supported **flat, non-repeatable Liferay Structured Content** from a generated Excel workbook. Article, Hero, Service, Testimonial, Partner, and FAQ Structures use the same code path.
 
-## Canonical content contract
+## Boundary
 
-```text
-Structure ID: NXC_ARTICLE
-Target folder ERC: NXC_ARTICLES
-Target folder name: Articles
+One run uses one configured Liferay Site, one selected Content Structure, one selected Web Content folder, one locale, one fixed image source, one workbook, and one Batch Engine task.
 
-System fields:
-- title
-- externalReferenceCode
-- datePublished
-- friendlyUrlPath
+Supported field types: string/rich text, boolean, date, integer/long, decimal/number, and image. Nested, repeatable, relationship, document, geolocation, and grid fields are not imported. A required unsupported field blocks the Structure. Optional unsupported scalar fields are excluded with a warning.
 
-Structure fields:
-- body
-- coverImage
-```
+## Configuration ownership
 
-The importer does not add `sortOrder`, `active`, `featured`, `summary`, `authorName`, `thumbnail`, or `targetUrl` fields.
+- ENV: Liferay URL, OAuth2 credentials, Site, visibility policy, one image source, technical limits.
+- UI: Structure, target folder, locale, workbook, INSERT/UPSERT, error strategy.
+- Excel: title, ERC, dynamic Structure field values, image references.
 
-## Flow
+Copy `.env.example` to `.env`. Never commit credentials.
 
-```text
-Connect with OAuth2 Client Credentials
-→ resolve or create the configured Articles folder
-→ resolve the exact NXC_ARTICLE Structure by ID
-→ generate a Structure-driven Excel template
-→ fill Article data and existing Image Document ERCs
-→ upload and validate the workbook
-→ preview StructuredContent JSON
-→ choose INSERT/UPSERT
-→ choose ON_ERROR_FAIL/ON_ERROR_CONTINUE
-→ revalidate folder, Structure, and images
-→ submit a Headless Batch Engine ImportTask
-→ poll until terminal status
-```
-
-The OAuth2 client secret and access token remain server-side. The tool does not upload images.
-
-## Configuration
-
-```bash
-cd tools/liferay-article-importer
-cp .env.example .env
-```
-
-Required values:
-
-```dotenv
-LIFERAY_BASE_URL=http://localhost:8080
-LIFERAY_SITE_ID=20117
-LIFERAY_ARTICLE_STRUCTURE_ID=your-structure-id
-LIFERAY_ARTICLE_FOLDER_ERC=NXC_ARTICLES
-LIFERAY_ARTICLE_FOLDER_NAME=Articles
-LIFERAY_OAUTH_CLIENT_ID=your-client-id
-LIFERAY_OAUTH_CLIENT_SECRET=your-client-secret
-```
-
-Optional values:
-
-```dotenv
-PORT=4174
-LIFERAY_LOCALE=en-US
-IMAGE_LOOKUP_CONCURRENCY=8
-BATCH_POLL_INTERVAL_MS=1500
-BATCH_POLL_TIMEOUT_MS=600000
-MAX_UPLOAD_MB=10
-MAX_IMPORT_ROWS=5000
-SESSION_TTL_MS=1800000
-```
-
-Never commit a populated `.env` file.
-
-## Exact Structure guard
-
-The application loads all Site Structures, but exposes only the Structure whose ID exactly matches `LIFERAY_ARTICLE_STRUCTURE_ID`.
-
-The server validates the Structure again when:
-
-- opening the Structure summary;
-- generating the workbook;
-- uploading and validating the workbook;
-- submitting the Batch Engine task.
-
-A similarly named Structure cannot be selected accidentally.
-
-## Target folder contract
-
-1. Connect looks up the configured folder by ERC.
-2. When missing, the tool creates it at the Site root.
-3. The workbook stores the folder ERC and ID in hidden Metadata.
-4. Validation rejects a workbook generated for another folder.
-5. Every payload item includes `structuredContentFolderId`.
-6. The folder is resolved again immediately before mutation.
-
-## Image contract
-
-The current workbook contains:
-
-```text
-Cover Image * ERC [coverImage]
-```
-
-Each Image cell contains the External Reference Code of an existing Documents and Media image.
-
-Validation:
-
-- resolves each unique Document ERC;
-- caches duplicate references in one pass;
-- verifies that the Document exists;
-- verifies that `encodingFormat` starts with `image/`;
-- reports failures against the exact Excel row;
-- resolves images again before import.
-
-Image description remains a child property of the Image value. No separate `coverImageAlt` field is required.
-
-## Workbook contract
-
-Sheets:
-
-```text
-Articles     User data entry
-Field Guide  Field reference, type, required flag, and notes
-Metadata     Very hidden Structure fingerprint and folder binding
-```
-
-Expected columns for `NXC_ARTICLE`:
-
-```text
-Article Title *
-External Reference Code *
-Body * [body]
-Cover Image * ERC [coverImage]
-```
-
-Do not rename, add, remove, or reorder columns. Generate a new template whenever the Structure or target folder changes.
-
-## Generated payload
-
-```json
-{
-  "externalReferenceCode": "NXC-ARTICLE-001",
-  "title": "First article",
-  "contentStructureId": 12345,
-  "structuredContentFolderId": 67890,
-  "contentFields": [
-    {
-      "name": "body",
-      "contentFieldValue": {
-        "data": "<p>Article content</p>"
-      }
-    },
-    {
-      "name": "coverImage",
-      "contentFieldValue": {
-        "image": {
-          "id": 45678,
-          "title": "cover.png",
-          "description": "Article cover",
-          "encodingFormat": "image/png",
-          "contentUrl": "/documents/..."
-        }
-      }
-    }
-  ]
-}
-```
-
-The `contentUrl` above belongs to the nested Image value. It is not a system property of the Structured Content response.
-
-## Article delivery after import
-
-The Home page React Article list uses the same `NXC_ARTICLE` Structure:
-
-```text
-Title: StructuredContent.title
-Image: contentFields.coverImage
-Image alt: image.description → image.title → Article title
-Slug: StructuredContent.friendlyUrlPath
-Order: sortOrder/displayOrder when present; otherwise datePublished descending
-```
-
-The Headless list request uses `flatten=true` because imported Articles are stored inside `NXC_ARTICLES`. It does not send `contentFields/sortOrder` to the server because Article does not have that field.
-
-The Article Fragment passes the current Site display URL to React. React builds the default Display Page URL as:
-
-```text
-{siteDisplayURL}/w/{friendlyUrlPath}
-```
-
-Examples:
-
-```text
-http://localhost:8080/web/nexcent-public-website/w/test-nexcent-article
-https://nexcent.example.com/w/test-nexcent-article
-```
-
-Create a default Display Page Template in the existing Nexcent Site:
-
-```text
-Name: Nexcent Article Detail
-Content Type: Web Content Article
-Subtype: NXC Article
-Master Page: Nexcent Master Page
-```
-
-Map the Article Detail Fragment:
-
-```text
-title          → System Field / Title
-publishedDate  → System Field / Publish Date
-coverImage     → NXC Article / coverImage
-body            → NXC Article / body
-```
-
-## OAuth2 permissions
-
-The Client Credentials user needs permission to:
-
-- read Content Structures;
-- read Documents and Media;
-- read and create Web Content folders;
-- create or update Web Content;
-- create and read Batch Engine tasks.
-
-Scopes:
-
-```text
-Liferay.Headless.Delivery.everything
-Liferay.Headless.Batch.Engine.everything
-```
-
-## Run and verify
+## Run
 
 ```bash
 npm install
@@ -243,20 +25,73 @@ npm test
 npm start
 ```
 
-Open:
+Open `http://localhost:4174`.
+
+## Workflow
+
+1. Connect with OAuth2 Client Credentials. Connect is read-only.
+2. Select a supported Structure, an existing Web Content folder, and one locale.
+3. Generate the Structure-bound workbook.
+4. Fill the `Content Items` sheet and upload it.
+5. Resolve all validation issues.
+6. Choose exactly two options: existing-content handling and error handling.
+7. Submit one Batch Engine import task and poll it to completion.
+
+`INSERT` is the default and verified folder-safe path. `UPSERT` requires confirmation because a missing item may be created at the Web Content root and existing items keep their current folder.
+
+## Workbook
+
+Sheets:
+
+- `Content Items`: headers only; this is the importable sheet.
+- `Field Guide`: fieldReference, internal DDM name, type, required flag, and accepted value.
+- `Example`: sample values that cannot be imported accidentally.
+- `Metadata`: very hidden migration binding.
+
+System columns:
 
 ```text
-http://127.0.0.1:4174
+Content Title *
+External Reference Code *
 ```
 
-Runtime gates remain:
+Dynamic columns are generated from the selected Structure. Both `fieldReference` and internal `name` are preserved in the final payload.
 
-- exact `NXC_ARTICLE` resolution;
-- real image ERC validation;
-- Batch Engine Image payload acceptance;
-- imported content inside `NXC_ARTICLES`;
-- `friendlyUrlPath` returned by Headless Delivery;
-- Article detail URL built from the current Site display URL and `/w/` separator;
-- Article detail rendering under the Nexcent Master Page;
-- UPSERT behavior by Article ERC;
-- no secret or access-token exposure.
+### Images
+
+Every image field generates exactly one Excel column. Accepted values:
+
+```text
+file:hero-home.webp
+erc:NXC_HERO_HOME
+```
+
+- `file:` exact-matches `Document.fileName`, including extension.
+- `erc:` exact-matches `Document.externalReferenceCode`.
+- Prefix is mandatory.
+- No title lookup, fuzzy matching, fallback, Document ID, or cross-source search.
+- The configured Site/Asset Library or folder is paginated once and indexed in memory by fileName and ERC.
+- Missing, ambiguous, or non-image Documents block every affected row before Batch submission.
+
+## Example: NXC Article
+
+Select `NXC Article`, the `Articles` folder, and the desired locale. Generate a template with Article fields such as Body and Cover Image. Use `file:article-cover.webp` or `erc:NXC_ARTICLE_COVER` in the single Cover Image Reference column.
+
+## Example: NXC Hero
+
+Select a flat `NXC Hero` Structure and the `Heroes` folder. The same importer generates Heading, Description, Hero Image Reference, and CTA columns from the live Structure. No Hero-specific code path is used.
+
+## Batch request
+
+```text
+POST /o/headless-batch-engine/v1.0/import-task/com.liferay.headless.delivery.dto.v1_0.StructuredContent
+  ?createStrategy={INSERT|UPSERT}
+  &importStrategy={ON_ERROR_FAIL|ON_ERROR_CONTINUE}
+  &siteId={SITE_ID}
+```
+
+Each payload item carries `contentStructureId`, `structuredContentFolderId`, `viewableBy`, title, ERC, and dynamic fields.
+
+## Not in this release
+
+ZIP image upload, nested/repeatable fields, multi-source image search, downloadable reports, and database-backed import history remain future enhancements.

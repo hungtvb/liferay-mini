@@ -1,4 +1,4 @@
-name: Article Importer Check
+name: Flat Structured Content Importer Check
 
 on:
   pull_request:
@@ -32,6 +32,6 @@ jobs:
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: article-importer-test-output
+          name: flat-structured-content-importer-test-output
           path: tools/liferay-article-importer/test-output.txt
           retention-days: 1

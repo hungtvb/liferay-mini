@@ -7,15 +7,12 @@ import {SessionStore} from './session-store.js';
 try {
   const config = loadConfig();
   const liferay = new LiferayClient(config);
-  const sessions = new SessionStore(config.sessionTtlMs);
-  const app = createApp({config, liferay, sessions});
-
-  app.listen(config.port, '127.0.0.1', () => {
-    console.log(`Nexcent Article Importer: http://127.0.0.1:${config.port}`);
-    console.log(`Liferay: ${config.baseUrl} | Site: ${config.siteId}`);
+  const sessions = new SessionStore({ttlMs: config.sessionTtlMs});
+  createApp({config, liferay, sessions}).listen(config.port, () => {
+    console.log(`Liferay Flat Structured Content Importer: http://localhost:${config.port}`);
   });
 }
 catch (error) {
-  console.error(`[startup] ${error.message}`);
+  console.error(`[${error.code || 'STARTUP_ERROR'}] ${error.message}`);
   process.exitCode = 1;
 }

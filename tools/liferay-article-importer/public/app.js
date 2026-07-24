@@ -1,314 +1,231 @@
-const state = {
-  config: null,
-  file: null,
-  folder: null,
-  pollStartedAt: 0,
-  sessionId: null,
-  structure: null,
-  structureId: null,
-  structures: [],
-  validation: null
-};
-
-const terminalStatuses = new Set(['COMPLETED', 'FAILED', 'CANCELLED', 'COMPLETED_WITH_ERRORS']);
+const state = {config: null, connection: null, analysis: null, sessionId: null, validation: null, taskId: null};
 const byId = (id) => document.getElementById(id);
 
 async function api(path, options = {}) {
-  const response = await fetch(path, {
-    ...options,
-    headers: options.body instanceof FormData ? options.headers : {'Content-Type': 'application/json', ...options.headers}
-  });
+  const response = await fetch(path, options);
   const contentType = response.headers.get('content-type') || '';
-  if (!contentType.includes('application/json')) {
-    if (!response.ok) throw new Error(`Request failed with status ${response.status}`);
-    return response;
-  }
-  const data = await response.json().catch(() => ({}));
+  const data = contentType.includes('application/json') ? await response.json() : await response.blob();
   if (!response.ok) {
-    const error = new Error(data?.error?.message || `Request failed with status ${response.status}`);
+    const error = new Error(data?.error?.message || `Request failed (${response.status})`);
+    error.code = data?.error?.code;
     error.details = data?.error?.details;
     throw error;
   }
-  return data;
+  return {data, response};
 }
 
 function escapeHtml(value) {
-  return String(value ?? '').replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&#039;');
+  return String(value ?? '').replace(/[&<>'"]/g, (char) => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'}[char]));
 }
 
-function setMessage(element, message, type = '') {
-  element.hidden = !message;
-  element.textContent = message || '';
-  element.className = `message${type ? ` is-${type}` : ''}`;
-}
-
-function toast(message) {
-  const element = byId('toast');
+function setStatus(element, message, kind = '') {
   element.textContent = message;
-  element.hidden = false;
-  clearTimeout(toast.timer);
-  toast.timer = setTimeout(() => { element.hidden = true; }, 2400);
+  element.className = `status ${kind}`.trim();
 }
 
-function showStep(step) {
-  document.querySelectorAll('[data-step-panel]').forEach((panel) => { panel.hidden = Number(panel.dataset.stepPanel) !== step; });
-  document.querySelectorAll('[data-step-button]').forEach((button) => {
-    const current = Number(button.dataset.stepButton);
-    button.classList.toggle('is-active', current === step);
-    button.classList.toggle('is-complete', current < step);
-  });
+function renderEnvironment() {
+  const config = state.config;
+  const source = config.imageSource;
+  const rows = [
+    ['Liferay', config.baseUrl], ['Site ID', config.siteId], ['Visibility', config.viewableBy],
+    ['Image source', `${source.type} #${source.id}`], ['Image folder', source.folderId || 'Source root'],
+    ['Limits', `${config.maxImportRows} rows / ${config.maxUploadMb} MB`]
+  ];
+  byId('environment').innerHTML = rows.map(([label, value]) => `<div><span>${escapeHtml(label)}</span><strong>${escapeHtml(value)}</strong></div>`).join('');
 }
 
-function enableStep(step) {
-  const button = document.querySelector(`[data-step-button="${step}"]`);
-  if (button) button.disabled = false;
+function selectedValue(id) {
+  return byId(id).value;
 }
 
-function selectedStructure() {
-  return state.structures.find((item) => String(item.id) === String(state.structureId));
+function invalidateValidation() {
+  state.sessionId = null;
+  state.validation = null;
+  byId('validationSummary').classList.add('hidden');
+  byId('issuesDetails').classList.add('hidden');
+  byId('payloadDetails').classList.add('hidden');
+  byId('importButton').disabled = true;
 }
 
-function renderStructures() {
+function selectionReady() {
+  return Boolean(selectedValue('structureSelect') && selectedValue('folderSelect') && selectedValue('localeSelect') && state.analysis?.status !== 'UNSUPPORTED');
+}
+
+function updateSelectionButtons() {
+  const ready = selectionReady();
+  byId('templateButton').disabled = !ready;
+  byId('validateButton').disabled = !ready;
+}
+
+function renderStructureOptions(structures) {
   const select = byId('structureSelect');
-  const preferred = state.structures.find((item) => /article/i.test(item.name)) || state.structures[0];
-  select.innerHTML = '<option value="">Select a Structure</option>' + state.structures.map((item) => `<option value="${escapeHtml(item.id)}">${escapeHtml(item.name)}${item.externalReferenceCode ? ` · ${escapeHtml(item.externalReferenceCode)}` : ''}</option>`).join('');
-  select.disabled = state.structures.length === 0;
-  if (preferred) {
-    select.value = preferred.id;
-    state.structureId = String(preferred.id);
-    byId('toTemplateButton').disabled = false;
-  }
+  select.innerHTML = '<option value="">Select Structure</option>' + structures.map((item) =>
+    `<option value="${escapeHtml(item.id)}" ${item.status === 'UNSUPPORTED' ? 'disabled' : ''}>${escapeHtml(item.name)} — ${escapeHtml(item.status)}</option>`
+  ).join('');
+}
+
+function renderFolderOptions(folders) {
+  byId('folderSelect').innerHTML = '<option value="">Select folder</option>' + folders.map((item) =>
+    `<option value="${escapeHtml(item.id)}">${escapeHtml(item.name)} (#${escapeHtml(item.id)})</option>`
+  ).join('');
+}
+
+async function loadStructureAnalysis() {
+  invalidateValidation();
+  const structureId = selectedValue('structureSelect');
+  state.analysis = null;
+  byId('localeSelect').innerHTML = '<option value="">Select locale</option>';
+  byId('structureAnalysis').classList.add('hidden');
+  if (!structureId) { updateSelectionButtons(); return; }
+  const {data} = await api(`/api/structures/${encodeURIComponent(structureId)}`);
+  state.analysis = data.analysis;
+  const locales = data.analysis.availableLanguages.length ? data.analysis.availableLanguages : [state.config.defaultLocale];
+  byId('localeSelect').innerHTML = locales.map((locale) => `<option value="${escapeHtml(locale)}" ${locale === state.config.defaultLocale ? 'selected' : ''}>${escapeHtml(locale)}</option>`).join('');
+  const notice = byId('structureAnalysis');
+  notice.classList.remove('hidden');
+  const excluded = data.analysis.excludedFields || [];
+  notice.innerHTML = `<strong>${escapeHtml(data.analysis.status)}</strong> · ${data.analysis.supportedFields.length} supported fields` +
+    (excluded.length ? `<br>Excluded optional fields: ${excluded.map((field) => escapeHtml(field.label)).join(', ')}` : '');
+  updateSelectionButtons();
 }
 
 async function connect() {
   const button = byId('connectButton');
   button.disabled = true;
-  button.textContent = 'Connecting…';
-  setMessage(byId('connectMessage'), '');
+  setStatus(byId('connectionStatus'), 'Connecting…');
   try {
-    const data = await api('/api/connect', {method: 'POST', body: '{}'});
-    state.folder = data.folder;
-    state.structures = data.structures;
-    renderStructures();
-    byId('connectionStatus').textContent = 'Connected';
-    byId('connectionStatus').className = 'status-pill is-success';
-    setMessage(byId('connectMessage'), `${data.structures.length} Content Structures loaded. Target folder: ${data.folder.name} (${data.folder.externalReferenceCode}).`, 'success');
-    enableStep(2);
-    button.textContent = 'Reconnect';
+    const {data} = await api('/api/connect', {method: 'POST'});
+    state.connection = data;
+    renderStructureOptions(data.structures);
+    renderFolderOptions(data.folders);
+    byId('selectionPanel').classList.remove('hidden');
+    setStatus(byId('connectionStatus'), `Connected. ${data.structures.length} Structures and ${data.folders.length} folders loaded.`, 'success');
   }
   catch (error) {
-    byId('connectionStatus').textContent = 'Connection failed';
-    byId('connectionStatus').className = 'status-pill is-error';
-    setMessage(byId('connectMessage'), error.message, 'error');
-    button.textContent = 'Retry connection';
+    setStatus(byId('connectionStatus'), `${error.code || 'ERROR'}: ${error.message}`, 'error');
   }
   finally { button.disabled = false; }
 }
 
-async function openTemplateStep() {
-  try {
-    const data = await api(`/api/structures/${state.structureId}`);
-    state.structure = data;
-    const structure = selectedStructure();
-    byId('selectedStructure').textContent = structure?.name || 'Selected Structure';
-    byId('structureSummary').innerHTML = [
-      `<div class="read-only-field"><span>Structure</span><strong>${escapeHtml(data.structure.name)}</strong></div>`,
-      `<div class="read-only-field"><span>Target folder</span><strong>${escapeHtml(state.folder?.name || state.config.articleFolderName)}</strong></div>`,
-      `<div class="read-only-field"><span>Supported fields</span><strong>${data.supportedFields.length}</strong></div>`,
-      `<div class="read-only-field"><span>Excluded fields</span><strong>${data.unsupportedFields.length}</strong></div>`
-    ].join('');
-    byId('templateStatus').textContent = data.unsupportedFields.length
-      ? `${data.unsupportedFields.length} unsupported document/nested/repeatable/relationship/geolocation/grid fields are excluded.`
-      : 'All Structure fields are supported by this template.';
-    showStep(2);
-  }
-  catch (error) { toast(error.message); }
-}
-
 async function downloadTemplate() {
-  const button = byId('downloadTemplateButton');
+  const button = byId('templateButton');
   button.disabled = true;
-  button.textContent = 'Generating…';
   try {
-    const response = await api(`/api/structures/${state.structureId}/template`);
-    const blob = await response.blob();
-    const disposition = response.headers.get('content-disposition') || '';
-    const fileName = disposition.match(/filename="([^"]+)"/)?.[1] || 'article_template.xlsx';
+    const {data, response} = await api('/api/templates', {
+      body: JSON.stringify({folderId: selectedValue('folderSelect'), locale: selectedValue('localeSelect'), structureId: selectedValue('structureSelect')}),
+      headers: {'Content-Type': 'application/json'},
+      method: 'POST'
+    });
+    const match = response.headers.get('content-disposition')?.match(/filename="([^"]+)"/);
     const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = fileName;
+    link.href = URL.createObjectURL(data);
+    link.download = match?.[1] || 'structured-content-import-template.xlsx';
     link.click();
     URL.revokeObjectURL(link.href);
-    byId('templateStatus').textContent = `${fileName} downloaded. Fill the Articles sheet and keep all headers unchanged.`;
   }
-  catch (error) { toast(error.message); }
-  finally {
-    button.disabled = false;
-    button.textContent = 'Download Excel template';
-  }
+  catch (error) { alert(`${error.code || 'ERROR'}: ${error.message}`); }
+  finally { button.disabled = !selectionReady(); }
 }
 
-function setWorkbookFile(file) {
-  state.file = file || null;
-  byId('fileName').textContent = file ? `${file.name} · ${(file.size / 1024).toFixed(1)} KB` : 'No file selected';
-  byId('validateButton').disabled = !file;
+function renderValidation(validation) {
+  state.validation = validation;
+  const summary = byId('validationSummary');
+  summary.classList.remove('hidden');
+  summary.innerHTML = `<div class="metrics">
+    <div><strong>${validation.stats.totalRows}</strong><span>Total rows</span></div>
+    <div><strong>${validation.stats.validRows}</strong><span>Valid</span></div>
+    <div><strong>${validation.stats.invalidRows}</strong><span>Blocked</span></div>
+    <div><strong>${validation.imageSummary.distinctReferenceCount || 0}</strong><span>Image references</span></div>
+  </div>`;
+  const allIssues = [...validation.errors, ...validation.warnings];
+  const issues = byId('issues');
+  byId('issuesDetails').classList.toggle('hidden', allIssues.length === 0);
+  issues.innerHTML = allIssues.map((item) => `<article class="issue ${escapeHtml(item.severity)}"><strong>${escapeHtml(item.code)}</strong><span>Row ${escapeHtml(item.row ?? '—')} · ${escapeHtml(item.field || 'workbook')}</span><p>${escapeHtml(item.message)}</p></article>`).join('');
+  byId('payloadDetails').classList.remove('hidden');
+  byId('payloadPreview').textContent = JSON.stringify(validation.payloadPreview, null, 2);
+  byId('importButton').disabled = !validation.canImport;
 }
 
-function renderValidation(data) {
-  state.folder = data.folder;
-  state.validation = data.validation;
-  byId('workbookSummary').innerHTML = [
-    `<span>File: <strong>${escapeHtml(data.fileName)}</strong></span>`,
-    `<span>Sheet: <strong>${escapeHtml(data.sheetName)}</strong></span>`,
-    `<span>Rows: <strong>${data.rowCount}</strong></span>`,
-    `<span>Structure: <strong>${escapeHtml(data.structure.name)}</strong></span>`,
-    `<span>Folder: <strong>${escapeHtml(data.folder.name)}</strong></span>`
-  ].join('');
-  const validation = data.validation;
-  byId('validationBadges').innerHTML = [
-    `<span class="ok">${validation.stats.validRows} valid</span>`,
-    `<span class="${validation.errors.length ? 'bad' : 'ok'}">${validation.errors.length} errors</span>`,
-    `<span>${validation.warnings.length} warnings</span>`
-  ].join('');
-  const issues = [...validation.errors, ...validation.warnings];
-  byId('issuesList').innerHTML = issues.length ? issues.map((entry) => `<div class="issue ${entry.severity === 'warning' ? 'warning' : ''}"><strong>${entry.row ? `Excel row ${entry.row}` : 'Template'} · ${escapeHtml(entry.field)}</strong><span>${escapeHtml(entry.message)}</span></div>`).join('') : '<div class="empty-state">No validation issues. The payload is ready for migration.</div>';
-  byId('jsonPreview').textContent = JSON.stringify(validation.payload, null, 2);
-  byId('jsonCount').textContent = `${validation.payload.length} items`;
-  byId('startImportButton').disabled = !validation.canImport;
-  enableStep(3);
-}
-
-async function validateWorkbook() {
+async function validateWorkbook(event) {
+  event.preventDefault();
+  const file = byId('workbookFile').files[0];
+  if (!file) return;
   const button = byId('validateButton');
   button.disabled = true;
-  button.textContent = 'Validating…';
-  setMessage(byId('uploadMessage'), '');
+  const form = new FormData();
+  form.set('file', file);
+  form.set('structureId', selectedValue('structureSelect'));
+  form.set('folderId', selectedValue('folderSelect'));
+  form.set('locale', selectedValue('localeSelect'));
   try {
-    const form = new FormData();
-    form.append('file', state.file);
-    form.append('structureId', state.structureId);
-    const data = await api('/api/workbooks', {body: form, method: 'POST'});
+    const {data} = await api('/api/workbooks', {body: form, method: 'POST'});
     state.sessionId = data.sessionId;
-    renderValidation(data);
-    showStep(3);
-  }
-  catch (error) { setMessage(byId('uploadMessage'), error.message, 'error'); }
-  finally {
-    button.disabled = !state.file;
-    button.textContent = 'Next: validate JSON';
-  }
-}
-
-function renderJob(task) {
-  const total = Number(task.totalItemsCount || state.validation?.payload.length || 0);
-  const processed = Number(task.processedItemsCount || 0);
-  const percent = total > 0 ? Math.min(100, Math.round((processed / total) * 100)) : 0;
-  const terminal = terminalStatuses.has(task.executeStatus);
-  const success = task.executeStatus === 'COMPLETED' && (!task.failedItems || task.failedItems.length === 0);
-  byId('taskId').textContent = task.id || '—';
-  byId('processedCount').textContent = `${processed} / ${total}`;
-  byId('jobStrategy').textContent = `${byId('createStrategy').value} · ${byId('importStrategy').value}`;
-  byId('progressBar').style.width = `${success ? 100 : percent}%`;
-  byId('jobStatus').textContent = task.executeStatus;
-  byId('jobStatus').className = `status-pill ${success ? 'is-success' : terminal ? 'is-error' : ''}`;
-  byId('jobMessage').textContent = task.errorMessage || (terminal ? 'Batch job finished.' : 'Waiting for Liferay Batch Engine…');
-  const failed = task.failedItems || [];
-  byId('failedItems').hidden = failed.length === 0;
-  byId('failedItems').innerHTML = failed.map((item, index) => `<div class="issue"><strong>Failed item ${index + 1}</strong><span>${escapeHtml(item.message || item.errorMessage || JSON.stringify(item))}</span></div>`).join('');
-  byId('newImportButton').hidden = !terminal;
-  return terminal;
-}
-
-async function pollJob(taskId) {
-  if (Date.now() - state.pollStartedAt > state.config.pollTimeoutMs) {
-    byId('jobStatus').textContent = 'TIMEOUT';
-    byId('jobStatus').className = 'status-pill is-error';
-    byId('jobMessage').textContent = 'Polling timed out. The Liferay job may still be running; inspect it using the task ID.';
-    byId('newImportButton').hidden = false;
-    return;
-  }
-  try {
-    const task = await api(`/api/imports/${taskId}`);
-    if (!renderJob(task)) setTimeout(() => pollJob(taskId), state.config.pollIntervalMs);
+    renderValidation(data.validation);
   }
   catch (error) {
-    byId('jobMessage').textContent = `Status check failed: ${error.message}. Retrying…`;
-    setTimeout(() => pollJob(taskId), state.config.pollIntervalMs);
+    state.sessionId = null;
+    byId('importButton').disabled = true;
+    alert(`${error.code || 'ERROR'}: ${error.message}`);
   }
+  finally { button.disabled = !selectionReady(); }
+}
+
+function updateUpsertWarning() {
+  const isUpsert = document.querySelector('input[name="createStrategy"]:checked').value === 'UPSERT';
+  byId('upsertConfirmWrap').classList.toggle('hidden', !isUpsert);
+  if (!isUpsert) byId('confirmUpsert').checked = false;
+}
+
+async function pollTask(taskId) {
+  const startedAt = Date.now();
+  while (Date.now() - startedAt < state.config.pollTimeoutMs) {
+    const {data} = await api(`/api/imports/${encodeURIComponent(taskId)}`);
+    setStatus(byId('taskStatus'), `${data.executeStatus}: ${data.processedItemsCount}/${data.totalItemsCount}`);
+    byId('taskResult').classList.remove('hidden');
+    byId('taskResult').textContent = JSON.stringify(data, null, 2);
+    if (['COMPLETED', 'FAILED'].includes(data.executeStatus)) return;
+    await new Promise((resolve) => setTimeout(resolve, state.config.pollIntervalMs));
+  }
+  throw new Error('Batch polling timed out');
 }
 
 async function startImport() {
-  const button = byId('startImportButton');
+  const button = byId('importButton');
+  const createStrategy = document.querySelector('input[name="createStrategy"]:checked').value;
+  const importStrategy = document.querySelector('input[name="importStrategy"]:checked').value;
+  if (createStrategy === 'UPSERT' && !byId('confirmUpsert').checked) {
+    alert('Confirm the UPSERT folder limitation first.');
+    return;
+  }
   button.disabled = true;
-  showStep(4);
-  enableStep(4);
+  setStatus(byId('taskStatus'), 'Submitting one Batch Engine task…');
   try {
-    const task = await api('/api/imports', {
-      body: JSON.stringify({
-        createStrategy: byId('createStrategy').value,
-        importStrategy: byId('importStrategy').value,
-        sessionId: state.sessionId
-      }),
+    const {data} = await api('/api/imports', {
+      body: JSON.stringify({confirmUpsert: byId('confirmUpsert').checked, createStrategy, importStrategy, sessionId: state.sessionId}),
+      headers: {'Content-Type': 'application/json'},
       method: 'POST'
     });
-    state.pollStartedAt = Date.now();
-    renderJob(task);
-    pollJob(task.id);
+    state.taskId = data.id;
+    await pollTask(data.id);
   }
   catch (error) {
-    byId('jobStatus').textContent = 'SUBMIT FAILED';
-    byId('jobStatus').className = 'status-pill is-error';
-    byId('jobMessage').textContent = error.details?.validation?.errors?.[0]?.message || error.message;
-    byId('newImportButton').hidden = false;
+    setStatus(byId('taskStatus'), `${error.code || 'ERROR'}: ${error.message}`, 'error');
   }
 }
 
-function resetForNewImport() {
-  state.file = null;
-  state.sessionId = null;
-  state.validation = null;
-  byId('workbookInput').value = '';
-  setWorkbookFile(null);
-  byId('startImportButton').disabled = true;
-  showStep(2);
-}
-
-function setupTabs() {
-  document.querySelectorAll('[data-tab]').forEach((button) => button.addEventListener('click', () => {
-    document.querySelectorAll('[data-tab]').forEach((tab) => tab.classList.toggle('is-active', tab === button));
-    document.querySelectorAll('[data-tab-panel]').forEach((panel) => { panel.hidden = panel.dataset.tabPanel !== button.dataset.tab; });
-  }));
-}
-
-async function initialize() {
-  state.config = await api('/api/config');
-  byId('baseUrl').textContent = state.config.baseUrl;
-  byId('siteId').textContent = state.config.siteId;
-  byId('environment').innerHTML = `Liferay: <strong>${escapeHtml(state.config.baseUrl)}</strong><br>Site: <strong>${escapeHtml(state.config.siteId)}</strong><br>Folder: <strong>${escapeHtml(state.config.articleFolderName)}</strong><br>Max: <strong>${state.config.maxImportRows} rows / ${state.config.maxUploadMb} MB</strong>`;
-
+async function init() {
+  const {data} = await api('/api/config');
+  state.config = data;
+  renderEnvironment();
   byId('connectButton').addEventListener('click', connect);
-  byId('structureSelect').addEventListener('change', (event) => {
-    state.structureId = event.target.value;
-    byId('toTemplateButton').disabled = !state.structureId;
-  });
-  byId('toTemplateButton').addEventListener('click', openTemplateStep);
-  byId('downloadTemplateButton').addEventListener('click', downloadTemplate);
-  byId('workbookInput').addEventListener('change', (event) => setWorkbookFile(event.target.files?.[0]));
-  byId('validateButton').addEventListener('click', validateWorkbook);
-  byId('startImportButton').addEventListener('click', startImport);
-  byId('newImportButton').addEventListener('click', resetForNewImport);
-  byId('copyJsonButton').addEventListener('click', async () => { await navigator.clipboard.writeText(byId('jsonPreview').textContent); toast('JSON copied'); });
-  byId('downloadJsonButton').addEventListener('click', () => {
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(new Blob([byId('jsonPreview').textContent], {type: 'application/json'}));
-    link.download = 'structured-content-import.json';
-    link.click();
-    URL.revokeObjectURL(link.href);
-  });
-  document.querySelectorAll('[data-back]').forEach((button) => button.addEventListener('click', () => showStep(Number(button.dataset.back))));
-  setupTabs();
+  byId('structureSelect').addEventListener('change', loadStructureAnalysis);
+  byId('folderSelect').addEventListener('change', () => { invalidateValidation(); updateSelectionButtons(); });
+  byId('localeSelect').addEventListener('change', () => { invalidateValidation(); updateSelectionButtons(); });
+  byId('templateButton').addEventListener('click', downloadTemplate);
+  byId('workbookForm').addEventListener('submit', validateWorkbook);
+  byId('workbookFile').addEventListener('change', updateSelectionButtons);
+  document.querySelectorAll('input[name="createStrategy"]').forEach((input) => input.addEventListener('change', updateUpsertWarning));
+  byId('importButton').addEventListener('click', startImport);
 }
 
-initialize().catch((error) => {
-  document.body.innerHTML = `<main class="shell"><section class="panel"><h1>Configuration error</h1><p>${escapeHtml(error.message)}</p></section></main>`;
-});
+init().catch((error) => setStatus(byId('connectionStatus'), error.message, 'error'));

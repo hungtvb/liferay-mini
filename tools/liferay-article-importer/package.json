@@ -1,11 +1,9 @@
 {
-  "name": "@nexcent/liferay-article-importer",
-  "version": "0.1.0",
+  "name": "@nexcent/liferay-flat-structured-content-importer",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
-  "engines": {
-    "node": ">=22.0.0"
-  },
+  "engines": {"node": ">=22.0.0"},
   "scripts": {
     "dev": "node --watch server/index.js",
     "start": "node server/index.js",

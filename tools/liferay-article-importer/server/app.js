@@ -3,66 +3,91 @@ import {fileURLToPath} from 'node:url';
 import express from 'express';
 import multer from 'multer';
 import {AppError, assert} from './errors.js';
-import {buildTargets, summarizeStructure} from './mapping.js';
+import {ImageResolver} from './image-resolver.js';
+import {ImportService, normalizeTask} from './import-service.js';
+import {summarizeStructure} from './mapping.js';
+import {analyzeStructure} from './structure-analyzer.js';
 import {validateAndBuildPayload} from './validation.js';
 import {buildTemplateWorkbook, parseTemplateWorkbook} from './workbook.js';
 
 const currentDir = path.dirname(fileURLToPath(import.meta.url));
 const publicDir = path.resolve(currentDir, '../public');
-const CREATE_STRATEGIES = new Set(['INSERT', 'UPSERT']);
-const IMPORT_STRATEGIES = new Set(['ON_ERROR_FAIL', 'ON_ERROR_CONTINUE']);
 
-function normalizeIdentifier(value) {
-  return String(value ?? '').trim().toLowerCase();
+function normalizeLocale(value) {
+  return String(value || '').trim().replace('_', '-').toLowerCase();
 }
 
-function assertArticleStructure(structure, config) {
-  const expected = normalizeIdentifier(config.articleStructureId);
-  const actual = normalizeIdentifier(structure?.id);
-  assert(
-    actual === expected,
-    400,
-    'ARTICLE_STRUCTURE_MISMATCH',
-    `Expected Article Structure ID "${config.articleStructureId}" but received "${structure?.id || structure?.name || 'unknown'}"`
-  );
-  return structure;
+async function mapLimit(items, limit, mapper) {
+  const results = new Array(items.length);
+  let cursor = 0;
+  async function worker() {
+    while (cursor < items.length) {
+      const index = cursor;
+      cursor += 1;
+      results[index] = await mapper(items[index], index);
+    }
+  }
+  await Promise.all(Array.from({length: Math.min(limit, Math.max(items.length, 1))}, worker));
+  return results;
 }
 
-function findArticleStructure(structures, config) {
-  const expected = normalizeIdentifier(config.articleStructureId);
-  return structures.find((structure) => normalizeIdentifier(structure.id) === expected);
-}
-
-function asTask(task) {
+function publicValidation(validation, previewRows) {
+  const {errors, payload, rowResults, warnings, ...safe} = validation;
   return {
-    errorMessage: task?.errorMessage || '',
-    executeStatus: task?.executeStatus || 'UNKNOWN',
-    externalReferenceCode: task?.externalReferenceCode || null,
-    failedItems: task?.failedItems || [],
-    id: task?.id,
-    importStrategy: task?.importStrategy || null,
-    processedItemsCount: Number(task?.processedItemsCount || 0),
-    totalItemsCount: Number(task?.totalItemsCount || 0)
+    ...safe,
+    errors: errors.slice(0, 200),
+    errorsTruncated: errors.length > 200,
+    payloadPreview: payload.slice(0, previewRows),
+    rowResultsPreview: rowResults.slice(0, previewRows),
+    warnings: warnings.slice(0, 200),
+    warningsTruncated: warnings.length > 200
   };
 }
 
-async function validateWorkbookSession({config, folder, liferay, session}) {
-  assertArticleStructure(session.structure, config);
+async function loadSelection({config, liferay, folderId, locale, structureId}) {
+  assert(structureId, 400, 'STRUCTURE_REQUIRED', 'Select a Content Structure');
+  assert(folderId, 400, 'TARGET_FOLDER_REQUIRED', 'Select a target Web Content folder');
+  const [structure, folder] = await Promise.all([
+    liferay.getContentStructure(structureId),
+    liferay.getStructuredContentFolder(folderId)
+  ]);
+  const selectedLocale = String(locale || config.defaultLocale).trim();
+  const analysis = analyzeStructure(structure, selectedLocale);
+  assert(analysis.status !== 'UNSUPPORTED', 409, 'STRUCTURE_UNSUPPORTED', 'Selected Structure is not supported by the flat importer', {blockingFields: analysis.blockingFields});
+  const languages = analysis.availableLanguages.map(normalizeLocale);
+  assert(languages.length === 0 || languages.includes(normalizeLocale(selectedLocale)), 400, 'LOCALE_UNSUPPORTED', `Locale ${selectedLocale} is not available for the selected Structure`);
+  if (folder.siteId != null) {
+    assert(String(folder.siteId) === String(config.siteId), 400, 'TARGET_FOLDER_CHANGED', 'Selected folder does not belong to the configured Site');
+  }
+  return {
+    analysis,
+    folder: {externalReferenceCode: folder.externalReferenceCode || null, id: folder.id, name: folder.name, siteId: folder.siteId},
+    locale: selectedLocale,
+    structure
+  };
+}
+
+async function validateSession({config, imageResolver, liferay, selection, workbook}) {
+  const existingContents = await liferay.listSiteStructuredContents();
   return validateAndBuildPayload({
-    folder,
-    imageLookupConcurrency: config.imageLookupConcurrency,
-    mapping: session.workbook.mapping,
-    resolveDocument: (erc) => liferay.getSiteDocumentByExternalReferenceCode(erc),
-    rowNumbers: session.workbook.rowNumbers,
-    rows: session.workbook.rows,
-    structure: session.structure,
-    targets: session.workbook.targets
+    existingContents,
+    folder: selection.folder,
+    imageResolver,
+    locale: selection.locale,
+    mapping: workbook.mapping,
+    rowNumbers: workbook.rowNumbers,
+    rows: workbook.rows,
+    structure: selection.structure,
+    targets: workbook.targets,
+    viewableBy: config.viewableBy
   });
 }
 
 export function createApp({config, liferay, sessions}) {
   const app = express();
   const upload = multer({limits: {fileSize: config.maxUploadBytes}, storage: multer.memoryStorage()});
+  const imageResolver = new ImageResolver({liferay});
+  const imports = new ImportService({liferay, sessions});
 
   app.disable('x-powered-by');
   app.use(express.json({limit: '2mb'}));
@@ -70,64 +95,55 @@ export function createApp({config, liferay, sessions}) {
 
   app.get('/api/config', (request, response) => {
     response.json({
-      articleFolderExternalReferenceCode: config.articleFolderExternalReferenceCode,
-      articleFolderName: config.articleFolderName,
-      articleStructureId: config.articleStructureId,
       baseUrl: config.baseUrl,
       connected: liferay.connected,
-      locale: config.locale,
+      defaultLocale: config.defaultLocale,
+      imageSource: liferay.imageSourceSummary(),
       maxImportRows: config.maxImportRows,
       maxUploadMb: Math.round(config.maxUploadBytes / 1024 / 1024),
       pollIntervalMs: config.pollIntervalMs,
       pollTimeoutMs: config.pollTimeoutMs,
-      siteId: config.siteId
+      siteId: config.siteId,
+      viewableBy: config.viewableBy
     });
   });
 
   app.post('/api/connect', async (request, response, next) => {
     try {
-      const {folder, structures} = await liferay.connect();
-      const articleStructure = findArticleStructure(structures, config);
-      assert(
-        articleStructure,
-        409,
-        'ARTICLE_STRUCTURE_NOT_FOUND',
-        `Content Structure with ID "${config.articleStructureId}" was not found in Site ${config.siteId}`
-      );
-      response.json({
-        articleStructure,
-        connection: {baseUrl: config.baseUrl, siteId: config.siteId},
-        folder,
-        structures: [articleStructure]
+      const connected = await liferay.connect();
+      const structures = await mapLimit(connected.structures, 5, async (summary) => {
+        const structure = await liferay.getContentStructure(summary.id);
+        return summarizeStructure(structure, config.defaultLocale);
       });
+      response.json({...connected, structures});
     }
     catch (error) { next(error); }
   });
 
   app.get('/api/structures/:structureId', async (request, response, next) => {
     try {
-      const structure = assertArticleStructure(
-        await liferay.getContentStructure(request.params.structureId),
-        config
-      );
-      const targets = buildTargets(structure);
-      response.json({
-        structure: summarizeStructure(structure),
-        supportedFields: targets.filter((target) => target.key.startsWith('content.') && target.supported),
-        unsupportedFields: targets.filter((target) => target.key.startsWith('content.') && !target.supported)
-      });
+      const structure = await liferay.getContentStructure(request.params.structureId);
+      const locale = request.query.locale || config.defaultLocale;
+      response.json({analysis: analyzeStructure(structure, locale), structure: summarizeStructure(structure, locale)});
     }
     catch (error) { next(error); }
   });
 
-  app.get('/api/structures/:structureId/template', async (request, response, next) => {
+  app.get('/api/folders', async (request, response, next) => {
+    try { response.json({items: await liferay.listStructuredContentFolders()}); }
+    catch (error) { next(error); }
+  });
+
+  app.post('/api/templates', async (request, response, next) => {
     try {
-      const folder = await liferay.ensureArticleFolder({force: true});
-      const structure = assertArticleStructure(
-        await liferay.getContentStructure(request.params.structureId),
-        config
-      );
-      const template = await buildTemplateWorkbook(structure, folder);
+      const selection = await loadSelection({config, liferay, ...request.body});
+      const template = await buildTemplateWorkbook({
+        folder: selection.folder,
+        imageSource: liferay.imageSourceSummary(),
+        locale: selection.locale,
+        siteId: config.siteId,
+        structure: selection.structure
+      });
       response.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
       response.setHeader('Content-Disposition', `attachment; filename="${template.fileName}"`);
       response.send(Buffer.from(template.buffer));
@@ -139,38 +155,36 @@ export function createApp({config, liferay, sessions}) {
     try {
       assert(request.file, 400, 'FILE_REQUIRED', 'Select the completed .xlsx template');
       assert(request.file.originalname.toLowerCase().endsWith('.xlsx'), 400, 'FILE_TYPE_INVALID', 'Only .xlsx files are supported');
-      assert(request.body.structureId, 400, 'STRUCTURE_REQUIRED', 'Select a Content Structure');
-
-      const folder = await liferay.ensureArticleFolder({force: true});
-      const structure = assertArticleStructure(
-        await liferay.getContentStructure(request.body.structureId),
-        config
-      );
-      const workbook = await parseTemplateWorkbook(request.file.buffer, structure, folder);
-      assert(workbook.rows.length <= config.maxImportRows, 400, 'ROW_LIMIT_EXCEEDED', `Workbook contains ${workbook.rows.length} rows; the configured limit is ${config.maxImportRows}`);
-
-      liferay.clearDocumentCache();
-      const sessionData = {
-        fileName: request.file.originalname,
-        folder,
-        mapping: workbook.mapping,
-        structure,
-        targets: workbook.targets,
-        workbook
+      const selection = await loadSelection({config, liferay, ...request.body});
+      const context = {
+        folder: selection.folder,
+        imageSource: liferay.imageSourceSummary(),
+        locale: selection.locale,
+        siteId: config.siteId,
+        structure: selection.structure
       };
-      const validation = await validateWorkbookSession({config, folder, liferay, session: sessionData});
-      const session = sessions.create({...sessionData, validation});
-
+      const workbook = await parseTemplateWorkbook(request.file.buffer, context);
+      assert(workbook.rows.length <= config.maxImportRows, 400, 'MAX_ROWS_EXCEEDED', `Workbook contains ${workbook.rows.length} rows; limit is ${config.maxImportRows}`);
+      imageResolver.clear();
+      const validation = await validateSession({config, imageResolver, liferay, selection, workbook});
+      const session = sessions.create({
+        fileName: request.file.originalname,
+        folder: selection.folder,
+        locale: selection.locale,
+        structure: selection.structure,
+        validation,
+        workbook
+      });
       response.status(201).json({
         fileName: session.fileName,
-        folder,
+        folder: selection.folder,
         metadata: workbook.metadata,
-        previewRows: workbook.rows.slice(0, 8),
+        previewRows: workbook.rows.slice(0, config.previewRows),
         rowCount: workbook.rows.length,
         sessionId: session.id,
         sheetName: workbook.sheetName,
-        structure: summarizeStructure(structure),
-        validation
+        structure: summarizeStructure(selection.structure, selection.locale),
+        validation: publicValidation(validation, config.previewRows)
       });
     }
     catch (error) { next(error); }
@@ -179,29 +193,25 @@ export function createApp({config, liferay, sessions}) {
   app.post('/api/imports', async (request, response, next) => {
     try {
       const session = sessions.get(request.body?.sessionId);
-      assert(session.validation, 409, 'VALIDATION_REQUIRED', 'Validate the workbook before importing');
-      assertArticleStructure(session.structure, config);
-
-      const createStrategy = String(request.body?.createStrategy || '').toUpperCase();
-      const importStrategy = String(request.body?.importStrategy || '').toUpperCase();
-      assert(CREATE_STRATEGIES.has(createStrategy), 400, 'CREATE_STRATEGY_INVALID', 'createStrategy must be INSERT or UPSERT');
-      assert(IMPORT_STRATEGIES.has(importStrategy), 400, 'IMPORT_STRATEGY_INVALID', 'importStrategy must be ON_ERROR_FAIL or ON_ERROR_CONTINUE');
-
-      const folder = await liferay.ensureArticleFolder({force: true});
-      liferay.clearDocumentCache();
-      const validation = await validateWorkbookSession({config, folder, liferay, session});
-      sessions.update(session.id, {folder, validation});
-      assert(validation.canImport, 409, 'VALIDATION_FAILED', 'Resolve all validation errors before importing', {validation});
-
-      const task = await liferay.submitStructuredContents(validation.payload, {createStrategy, importStrategy});
-      sessions.update(session.id, {createStrategy, importStrategy, taskId: task.id});
-      response.status(202).json({...asTask(task), createStrategy, folder, importStrategy});
+      const selection = await loadSelection({
+        config,
+        folderId: session.folder.id,
+        liferay,
+        locale: session.locale,
+        structureId: session.structure.id
+      });
+      imageResolver.clear();
+      const validation = await validateSession({config, imageResolver, liferay, selection, workbook: session.workbook});
+      sessions.update(session.id, {folder: selection.folder, structure: selection.structure, validation});
+      assert(validation.canImport, 409, 'VALIDATION_FAILED', 'Resolve all validation errors before importing', {validation: publicValidation(validation, config.previewRows)});
+      const task = await imports.submit({...request.body, sessionId: session.id});
+      response.status(202).json({...task, folder: selection.folder});
     }
     catch (error) { next(error); }
   });
 
   app.get('/api/imports/:taskId', async (request, response, next) => {
-    try { response.json(asTask(await liferay.getImportTask(request.params.taskId))); }
+    try { response.json(normalizeTask(await liferay.getImportTask(request.params.taskId))); }
     catch (error) { next(error); }
   });
 
@@ -212,9 +222,9 @@ export function createApp({config, liferay, sessions}) {
       response.status(413).json({error: {code: 'FILE_TOO_LARGE', message: `Workbook exceeds the ${Math.round(config.maxUploadBytes / 1024 / 1024)} MB upload limit`}});
       return;
     }
-    const status = error instanceof AppError ? error.status : 500;
-    const code = error instanceof AppError ? error.code : 'INTERNAL_ERROR';
-    if (!(error instanceof AppError)) console.error(error);
+    const status = error instanceof AppError ? error.status : Number(error.status) || 500;
+    const code = error instanceof AppError ? error.code : error.code || 'INTERNAL_ERROR';
+    if (status >= 500) console.error(error);
     response.status(status).json({error: {code, details: error.details, message: error.message || 'Unexpected server error'}});
   });
 

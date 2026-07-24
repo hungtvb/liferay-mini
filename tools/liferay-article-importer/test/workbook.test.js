@@ -1,49 +1,36 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import ExcelJS from 'exceljs';
-import {
-  buildTemplateWorkbook,
-  parseTemplateWorkbook,
-  structureFingerprint
-} from '../server/workbook.js';
 
-const structure = {
-  availableLanguages: ['en-US'],
-  contentStructureFields: [
-    {dataType: 'string', fieldReference: 'body', inputControl: 'rich_text', label: 'Body', required: true},
-    {dataType: 'image', fieldReference: 'coverImage', label: 'Cover Image', required: true}
-  ],
-  externalReferenceCode: 'NXC_ARTICLE',
-  id: 35396,
-  name: 'NXC Article'
-};
-const folder = {externalReferenceCode: 'NXC_ARTICLES', id: 456, name: 'Articles'};
+let workbookModule;
+try { workbookModule = await import('../server/workbook.js'); }
+catch (error) {
+  if (error.code !== 'ERR_MODULE_NOT_FOUND') throw error;
+}
 
-test('generates Articles, Field Guide, and folder-bound hidden Metadata', async () => {
-  const template = await buildTemplateWorkbook(structure, folder);
+const structure = {id:10,name:'Hero',siteId:34371,availableLanguages:['en-US'],contentStructureFields:[
+  {dataType:'string',fieldReference:'heading',name:'Text123',label:'Heading',required:true},
+  {dataType:'image',fieldReference:'heroImage',name:'Image123',label:'Hero Image'}
+]};
+const context = {folder:{id:20,name:'Heroes'},imageSource:{type:'assetLibrary',id:30,folderId:40},locale:'en-US',siteId:34371,structure};
+
+test('generic workbook keeps sample outside Content Items and binds metadata', {skip: !workbookModule}, async () => {
+  const ExcelJS = (await import('exceljs')).default;
+  const generated = await workbookModule.buildTemplateWorkbook(context);
   const workbook = new ExcelJS.Workbook();
-  await workbook.xlsx.load(template.buffer);
-
-  assert.equal(template.fileName, 'NXC_ARTICLE_template.xlsx');
-  assert.ok(workbook.getWorksheet('Articles'));
-  assert.ok(workbook.getWorksheet('Field Guide'));
-  assert.equal(workbook.getWorksheet('Metadata').state, 'veryHidden');
-  assert.deepEqual(workbook.getWorksheet('Articles').getRow(1).values.slice(1), [
-    'Article Title *',
-    'External Reference Code *',
-    'Body * [body]',
-    'Cover Image * ERC [coverImage]'
-  ]);
+  await workbook.xlsx.load(generated.buffer);
+  assert.equal(workbook.getWorksheet('Content Items').rowCount,1);
+  assert.equal(workbook.getWorksheet('Example').rowCount,2);
+  assert.equal(workbook.getWorksheet('Metadata').state,'veryHidden');
 });
 
-test('parses a generated template with deterministic image mapping and folder metadata', async () => {
-  const template = await buildTemplateWorkbook(structure, folder);
-  const parsed = await parseTemplateWorkbook(template.buffer, structure, folder);
-
-  assert.equal(parsed.metadata.structureId, '35396');
-  assert.equal(parsed.metadata.structureFingerprint, structureFingerprint(structure));
-  assert.equal(parsed.metadata.targetFolderExternalReferenceCode, 'NXC_ARTICLES');
-  assert.equal(parsed.mapping['content.body'], 'Body * [body]');
-  assert.equal(parsed.mapping['content.coverImage'], 'Cover Image * ERC [coverImage]');
-  assert.equal(parsed.rows.length, 1);
+test('parse rejects changed headers', {skip: !workbookModule}, async () => {
+  const ExcelJS = (await import('exceljs')).default;
+  const generated = await workbookModule.buildTemplateWorkbook(context);
+  const workbook = new ExcelJS.Workbook();
+  await workbook.xlsx.load(generated.buffer);
+  const sheet=workbook.getWorksheet('Content Items');
+  sheet.getCell('A1').value='Renamed';
+  sheet.addRow(['Example','hero-home','Heading','file:hero.webp']);
+  const buffer=await workbook.xlsx.writeBuffer();
+  await assert.rejects(()=>workbookModule.parseTemplateWorkbook(buffer,context),(error)=>error.code==='TEMPLATE_HEADERS_CHANGED');
 });

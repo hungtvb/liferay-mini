@@ -37,6 +37,7 @@ export type ContentField = {
 export type StructuredContent = {
     contentFields: ContentField[];
     contentStructureId: number;
+    contentUrl?: string;
     datePublished?: string;
     externalReferenceCode: string;
     friendlyUrlPath?: string;
@@ -46,6 +47,7 @@ export type StructuredContent = {
 
 export type ListStructuredContentsOptions = {
     filter?: string;
+    flatten?: boolean;
     pageSize?: number;
     sort?: string;
 };
@@ -130,6 +132,10 @@ export async function listStructuredContents(
         Math.max(1, Math.trunc(options.pageSize ?? 100))
     );
     const query = new URLSearchParams({pageSize: String(pageSize)});
+
+    if (options.flatten !== false) {
+        query.set('flatten', 'true');
+    }
 
     if (options.filter?.trim()) {
         query.set('filter', options.filter.trim());

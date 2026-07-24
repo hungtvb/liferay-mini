@@ -1,4 +1,5 @@
 const state = {config: null, connection: null, analysis: null, sessionId: null, validation: null, taskId: null};
+const terminalStatuses = new Set(['COMPLETED', 'FAILED', 'CANCELLED', 'COMPLETED_WITH_ERRORS']);
 const byId = (id) => document.getElementById(id);
 
 async function api(path, options = {}) {
@@ -127,6 +128,14 @@ async function downloadTemplate() {
   finally { button.disabled = !selectionReady(); }
 }
 
+function updateImportButton() {
+  const createStrategy = document.querySelector('input[name="createStrategy"]:checked')?.value || 'INSERT';
+  const hasCollisions = (state.validation?.ercCollisions || []).length > 0;
+  const upsertConfirmed = byId('confirmUpsert').checked;
+  const strategyBlocked = (createStrategy === 'INSERT' && hasCollisions) || (createStrategy === 'UPSERT' && !upsertConfirmed);
+  byId('importButton').disabled = !state.sessionId || !state.validation?.canImport || strategyBlocked;
+}
+
 function renderValidation(validation) {
   state.validation = validation;
   const summary = byId('validationSummary');
@@ -143,7 +152,7 @@ function renderValidation(validation) {
   issues.innerHTML = allIssues.map((item) => `<article class="issue ${escapeHtml(item.severity)}"><strong>${escapeHtml(item.code)}</strong><span>Row ${escapeHtml(item.row ?? '—')} · ${escapeHtml(item.field || 'workbook')}</span><p>${escapeHtml(item.message)}</p></article>`).join('');
   byId('payloadDetails').classList.remove('hidden');
   byId('payloadPreview').textContent = JSON.stringify(validation.payloadPreview, null, 2);
-  byId('importButton').disabled = !validation.canImport;
+  updateImportButton();
 }
 
 async function validateWorkbook(event) {
@@ -174,6 +183,7 @@ function updateUpsertWarning() {
   const isUpsert = document.querySelector('input[name="createStrategy"]:checked').value === 'UPSERT';
   byId('upsertConfirmWrap').classList.toggle('hidden', !isUpsert);
   if (!isUpsert) byId('confirmUpsert').checked = false;
+  updateImportButton();
 }
 
 async function pollTask(taskId) {
@@ -183,7 +193,7 @@ async function pollTask(taskId) {
     setStatus(byId('taskStatus'), `${data.executeStatus}: ${data.processedItemsCount}/${data.totalItemsCount}`);
     byId('taskResult').classList.remove('hidden');
     byId('taskResult').textContent = JSON.stringify(data, null, 2);
-    if (['COMPLETED', 'FAILED'].includes(data.executeStatus)) return;
+    if (terminalStatuses.has(data.executeStatus)) return;
     await new Promise((resolve) => setTimeout(resolve, state.config.pollIntervalMs));
   }
   throw new Error('Batch polling timed out');
@@ -225,6 +235,7 @@ async function init() {
   byId('workbookForm').addEventListener('submit', validateWorkbook);
   byId('workbookFile').addEventListener('change', updateSelectionButtons);
   document.querySelectorAll('input[name="createStrategy"]').forEach((input) => input.addEventListener('change', updateUpsertWarning));
+  byId('confirmUpsert').addEventListener('change', updateImportButton);
   byId('importButton').addEventListener('click', startImport);
 }
 

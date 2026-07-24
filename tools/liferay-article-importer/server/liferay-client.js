@@ -82,6 +82,8 @@ export class LiferayClient {
 
   async #request(path, options = {}, state = {attempt: 0, retriedUnauthorized: false}, notFoundAsNull = false) {
     const token = await this.#getAccessToken();
+    const method = String(options.method || 'GET').toUpperCase();
+    const canRetry = ['GET', 'HEAD', 'OPTIONS'].includes(method);
     let response;
     try {
       response = await this.fetch(`${this.config.baseUrl}${path}`, {
@@ -96,7 +98,7 @@ export class LiferayClient {
       });
     }
     catch (error) {
-      if (state.attempt < this.config.maxRetries) {
+      if (canRetry && state.attempt < this.config.maxRetries) {
         await delay(this.config.retryBaseDelayMs * (2 ** state.attempt));
         return this.#request(path, options, {...state, attempt: state.attempt + 1}, notFoundAsNull);
       }
@@ -107,7 +109,7 @@ export class LiferayClient {
       await this.#getAccessToken(true);
       return this.#request(path, options, {...state, retriedUnauthorized: true}, notFoundAsNull);
     }
-    if (retryableStatus(response.status) && state.attempt < this.config.maxRetries) {
+    if (canRetry && retryableStatus(response.status) && state.attempt < this.config.maxRetries) {
       const retryAfter = Number(response.headers.get('retry-after'));
       const waitMs = Number.isFinite(retryAfter) ? retryAfter * 1000 : this.config.retryBaseDelayMs * (2 ** state.attempt);
       await delay(waitMs);

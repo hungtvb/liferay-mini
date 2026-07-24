@@ -2,51 +2,29 @@ import {AppError} from './errors.js';
 
 function readRequired(name) {
   const value = process.env[name]?.trim();
-
-  if (!value) {
-    throw new AppError(500, 'CONFIG_MISSING', `Missing required environment variable: ${name}`);
-  }
-
+  if (!value) throw new AppError(500, 'CONFIG_MISSING', `Missing required environment variable: ${name}`);
   return value;
 }
 
 function readInteger(name, fallback, {min = 1, max = Number.MAX_SAFE_INTEGER} = {}) {
   const raw = process.env[name]?.trim();
   const value = raw ? Number.parseInt(raw, 10) : fallback;
-
   if (!Number.isInteger(value) || value < min || value > max) {
     throw new AppError(500, 'CONFIG_INVALID', `${name} must be an integer between ${min} and ${max}`);
   }
-
   return value;
 }
 
 export function loadConfig() {
   const baseUrl = readRequired('LIFERAY_BASE_URL').replace(/\/+$/, '');
-
-  try {
-    new URL(baseUrl);
-  }
-  catch {
-    throw new AppError(500, 'CONFIG_INVALID', 'LIFERAY_BASE_URL must be a valid absolute URL');
-  }
-
-  const importStrategy = (process.env.LIFERAY_IMPORT_STRATEGY || 'ON_ERROR_CONTINUE').trim();
-
-  if (!['ON_ERROR_CONTINUE', 'ON_ERROR_FAIL'].includes(importStrategy)) {
-    throw new AppError(
-      500,
-      'CONFIG_INVALID',
-      'LIFERAY_IMPORT_STRATEGY must be ON_ERROR_CONTINUE or ON_ERROR_FAIL'
-    );
-  }
+  try { new URL(baseUrl); }
+  catch { throw new AppError(500, 'CONFIG_INVALID', 'LIFERAY_BASE_URL must be a valid absolute URL'); }
 
   return {
     baseUrl,
     batchClassName: 'com.liferay.headless.delivery.dto.v1_0.StructuredContent',
     clientId: readRequired('LIFERAY_OAUTH_CLIENT_ID'),
     clientSecret: readRequired('LIFERAY_OAUTH_CLIENT_SECRET'),
-    importStrategy,
     locale: (process.env.LIFERAY_LOCALE || 'en-US').trim(),
     maxImportRows: readInteger('MAX_IMPORT_ROWS', 5000, {max: 100000}),
     maxUploadBytes: readInteger('MAX_UPLOAD_MB', 10, {max: 100}) * 1024 * 1024,

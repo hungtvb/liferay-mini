@@ -1,13 +1,7 @@
 function textFromLocalized(value) {
-  if (typeof value === 'string') {
-    return value;
-  }
-
-  if (!value || typeof value !== 'object') {
-    return '';
-  }
-
-  return value['en-US'] || value['en_GB'] || Object.values(value).find(Boolean) || '';
+  if (typeof value === 'string') return value;
+  if (!value || typeof value !== 'object') return '';
+  return value['en-US'] || value['en_US'] || Object.values(value).find(Boolean) || '';
 }
 
 export function normalizeKey(value) {
@@ -26,8 +20,9 @@ function fieldRequired(field) {
 function fieldSupported(field) {
   const nested = field.nestedContentStructureFields || field.nestedContentFields || [];
   const repeatable = field.repeatable === true || field.multiple === true;
-
-  return nested.length === 0 && !repeatable;
+  const type = String(field.dataType || '').toLowerCase();
+  const unsupportedTypes = new Set(['document', 'image', 'geolocation', 'relationship', 'grid']);
+  return nested.length === 0 && !repeatable && !unsupportedTypes.has(type);
 }
 
 export function buildTargets(structure) {
@@ -36,7 +31,7 @@ export function buildTargets(structure) {
       aliases: ['title', 'article title', 'headline', 'name'],
       dataType: 'string',
       key: 'system.title',
-      label: 'Article title',
+      label: 'Article Title',
       name: 'title',
       required: true,
       section: 'Article',
@@ -46,7 +41,7 @@ export function buildTargets(structure) {
       aliases: ['external reference code', 'externalReferenceCode', 'erc', 'article id'],
       dataType: 'string',
       key: 'system.externalReferenceCode',
-      label: 'External reference code',
+      label: 'External Reference Code',
       name: 'externalReferenceCode',
       required: true,
       section: 'Article',
@@ -55,12 +50,12 @@ export function buildTargets(structure) {
   ];
 
   const contentTargets = (structure.contentStructureFields || []).map((field) => ({
-    aliases: [field.name, textFromLocalized(field.label), field.externalReferenceCode],
+    aliases: [field.name, field.fieldReference, textFromLocalized(field.label), field.externalReferenceCode],
     dataType: field.dataType || 'string',
     inputControl: field.inputControl || null,
-    key: `content.${field.name}`,
-    label: textFromLocalized(field.label) || field.name,
-    name: field.name,
+    key: `content.${field.fieldReference || field.name}`,
+    label: textFromLocalized(field.label) || field.fieldReference || field.name,
+    name: field.fieldReference || field.name,
     required: fieldRequired(field),
     section: 'Structure fields',
     supported: fieldSupported(field)
@@ -69,19 +64,35 @@ export function buildTargets(structure) {
   return [...systemTargets, ...contentTargets];
 }
 
-export function createAutoMapping(headers, targets) {
-  const normalizedHeaders = headers.map((header) => ({
-    header,
-    normalized: normalizeKey(header)
-  }));
-  const mapping = {};
+export function buildTemplateColumns(structure) {
+  return buildTargets(structure)
+    .filter((target) => target.supported)
+    .map((target) => ({
+      ...target,
+      header: target.key.startsWith('system.')
+        ? `${target.label}${target.required ? ' *' : ''}`
+        : `${target.label}${target.required ? ' *' : ''} [${target.name}]`
+    }));
+}
 
-  for (const target of targets) {
-    const candidates = [target.name, target.label, ...(target.aliases || [])]
-      .map(normalizeKey)
-      .filter(Boolean);
-    const match = normalizedHeaders.find((header) => candidates.includes(header.normalized));
-    mapping[target.key] = match?.header || null;
+export function createTemplateMapping(headers, targets) {
+  const mapping = {};
+  const targetsByName = new Map(targets.map((target) => [target.name, target]));
+
+  for (const header of headers) {
+    const fieldMatch = String(header).match(/\[([^\]]+)\]\s*$/);
+    let target = fieldMatch ? targetsByName.get(fieldMatch[1].trim()) : null;
+
+    if (!target) {
+      const normalized = normalizeKey(String(header).replace(/\s*\*\s*$/, ''));
+      target = targets.find((candidate) =>
+        [candidate.label, candidate.name, ...(candidate.aliases || [])]
+          .map(normalizeKey)
+          .includes(normalized)
+      );
+    }
+
+    if (target) mapping[target.key] = header;
   }
 
   return mapping;

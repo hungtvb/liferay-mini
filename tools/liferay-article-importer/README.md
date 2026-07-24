@@ -1,139 +1,45 @@
 # Nexcent Local Article Importer
 
-A local Node.js migration utility with a plain HTML/CSS/JavaScript UI for importing Liferay Web Content Articles from an Excel template generated from the live Content Structure.
+A local Node.js migration utility with a plain HTML/CSS/JavaScript UI for importing `NXC_ARTICLE` Web Content from a Structure-driven Excel workbook.
+
+## Canonical content contract
+
+```text
+Structure ERC: NXC_ARTICLE
+Target folder ERC: NXC_ARTICLES
+Target folder name: Articles
+
+System fields:
+- title
+- externalReferenceCode
+- datePublished
+- contentUrl
+
+Structure fields:
+- body
+- coverImage
+```
+
+The importer does not add `sortOrder`, `active`, `featured`, `summary`, `authorName`, `thumbnail`, or `targetUrl` fields.
 
 ## Flow
 
 ```text
-Connect with OAuth2 client credentials
-→ resolve the configured Web Content folder by ERC
-→ create the folder at Site root when it does not exist
-→ load Content Structures from the configured Site
-→ select the Article Structure
-→ generate and download the Excel template
-→ fill the Articles sheet without changing headers
-→ use existing Documents and Media ERCs for Image fields
-→ upload the completed template
-→ validate Structure, folder, rows, and every image reference
+Connect with OAuth2 Client Credentials
+→ resolve or create the configured Articles folder
+→ resolve the exact NXC_ARTICLE Structure by ERC
+→ generate a Structure-driven Excel template
+→ fill Article data and existing Image Document ERCs
+→ upload and validate the workbook
 → preview StructuredContent JSON
-→ choose INSERT/UPSERT and ON_ERROR_FAIL/ON_ERROR_CONTINUE
-→ revalidate folder and images immediately before mutation
-→ submit the Headless Batch Engine import
-→ poll ImportTask until terminal status
+→ choose INSERT/UPSERT
+→ choose ON_ERROR_FAIL/ON_ERROR_CONTINUE
+→ revalidate folder, Structure, and images
+→ submit a Headless Batch Engine ImportTask
+→ poll until terminal status
 ```
 
 The OAuth2 client secret and access token remain server-side. The tool does not upload images.
-
-## Target folder contract
-
-All imported Articles are assigned to one configured Web Content folder.
-
-```dotenv
-LIFERAY_ARTICLE_FOLDER_ERC=NXC_ARTICLES
-LIFERAY_ARTICLE_FOLDER_NAME=Articles
-```
-
-The folder ERC is the stable identity:
-
-1. `Connect` looks up the folder by ERC in the configured Site.
-2. When it is missing, the tool creates it at the Site root using the configured name.
-3. The generated workbook stores the target folder ERC and ID in hidden Metadata.
-4. Validation rejects a workbook generated for a different folder.
-5. The payload includes `structuredContentFolderId` for every Article.
-6. The folder is resolved again immediately before Batch Engine submission.
-
-## Image contract
-
-Image fields in the selected Structure become Excel columns such as:
-
-```text
-Cover Image * ERC [coverImage]
-```
-
-Each cell must contain the **External Reference Code of an existing Document** in the configured Site's Documents and Media repository.
-
-During validation, the tool:
-
-- resolves each unique Document ERC through Headless Delivery;
-- caches duplicate references within the validation pass;
-- verifies that the Document exists;
-- verifies that `encodingFormat` starts with `image/`;
-- reports missing or non-image Documents against the exact Excel row;
-- blocks the entire workbook while any validation error exists;
-- resolves all images again immediately before import to reduce stale-validation risk.
-
-The tool does not search by filename because filenames are not guaranteed to be unique or stable.
-
-## Template contract
-
-Each generated workbook contains:
-
-```text
-Articles     User data entry sheet
-Field Guide  Field reference, type, required flag, and format notes
-Metadata     Very hidden Structure fingerprint and target folder binding
-```
-
-For the current `NXC Article` Structure, the expected columns are:
-
-```text
-Article Title *
-External Reference Code *
-Body * [body]
-Cover Image * ERC [coverImage]
-```
-
-Do not rename, add, remove, or reorder columns. The field reference in `[]` is the stable mapping key. When the Structure or target folder changes, generate a fresh template.
-
-The template includes one sample row. Replace or delete it before the real migration.
-
-## Scope
-
-Included:
-
-- dynamic Content Structure discovery;
-- automatic target-folder lookup and creation;
-- Structure-driven Excel generation;
-- scalar text/HTML, number, boolean, and date fields;
-- non-repeatable Image fields referencing existing Documents by ERC;
-- required title/ERC validation;
-- duplicate Article ERC detection;
-- row-level missing-image and non-image errors;
-- Structure fingerprint and target-folder workbook binding;
-- JSON preview, copy, and download;
-- exactly two migration options:
-  - `INSERT` or `UPSERT`;
-  - `ON_ERROR_FAIL` or `ON_ERROR_CONTINUE`;
-- Batch Engine progress and failed-item display.
-
-Not included:
-
-- image upload;
-- Documents and Media folder creation;
-- generic Document fields;
-- nested or repeatable fields;
-- relationships, geolocation, or grid fields;
-- multi-locale or multi-sheet import;
-- persistent local history.
-
-## Liferay OAuth2 setup
-
-Create an OAuth2 application in **Control Panel → Security → OAuth 2 Administration** using Client Credentials. Select a Liferay user that can:
-
-- read Content Structures;
-- read Documents and Media entries;
-- read and create Web Content folders;
-- create or update Web Content;
-- create and read Batch Engine import tasks.
-
-Required scopes:
-
-```text
-Liferay.Headless.Delivery.everything
-Liferay.Headless.Batch.Engine.everything
-```
-
-No browser-to-Liferay CORS configuration is required because the browser calls only the local Node server.
 
 ## Configuration
 
@@ -147,13 +53,14 @@ Required values:
 ```dotenv
 LIFERAY_BASE_URL=http://localhost:8080
 LIFERAY_SITE_ID=20117
+LIFERAY_ARTICLE_STRUCTURE_ERC=NXC_ARTICLE
 LIFERAY_ARTICLE_FOLDER_ERC=NXC_ARTICLES
 LIFERAY_ARTICLE_FOLDER_NAME=Articles
 LIFERAY_OAUTH_CLIENT_ID=your-client-id
 LIFERAY_OAUTH_CLIENT_SECRET=your-client-secret
 ```
 
-Optional values include:
+Optional values:
 
 ```dotenv
 PORT=4174
@@ -166,26 +73,73 @@ MAX_IMPORT_ROWS=5000
 SESSION_TTL_MS=1800000
 ```
 
-Never commit the populated `.env` file.
+Never commit a populated `.env` file.
 
-## Run
+## Exact Structure guard
 
-```bash
-npm install
-npm run check
-npm test
-npm start
-```
+The application loads all Site Structures, but exposes only the Structure whose External Reference Code exactly matches `LIFERAY_ARTICLE_STRUCTURE_ERC`.
 
-Open:
+The server validates the Structure again when:
+
+- opening the Structure summary;
+- generating the workbook;
+- uploading and validating the workbook;
+- submitting the Batch Engine task.
+
+A similarly named Structure cannot be selected accidentally.
+
+## Target folder contract
+
+1. Connect looks up the configured folder by ERC.
+2. When missing, the tool creates it at the Site root.
+3. The workbook stores the folder ERC and ID in hidden Metadata.
+4. Validation rejects a workbook generated for another folder.
+5. Every payload item includes `structuredContentFolderId`.
+6. The folder is resolved again immediately before mutation.
+
+## Image contract
+
+The current workbook contains:
 
 ```text
-http://127.0.0.1:4174
+Cover Image * ERC [coverImage]
 ```
 
-## Generated payload
+Each Image cell contains the External Reference Code of an existing Documents and Media image.
 
-A valid row becomes a `StructuredContent` item similar to:
+Validation:
+
+- resolves each unique Document ERC;
+- caches duplicate references in one pass;
+- verifies that the Document exists;
+- verifies that `encodingFormat` starts with `image/`;
+- reports failures against the exact Excel row;
+- resolves images again before import.
+
+Image description remains a child property of the Image value. No separate `coverImageAlt` field is required.
+
+## Workbook contract
+
+Sheets:
+
+```text
+Articles     User data entry
+Field Guide  Field reference, type, required flag, and notes
+Metadata     Very hidden Structure fingerprint and folder binding
+```
+
+Expected columns for `NXC_ARTICLE`:
+
+```text
+Article Title *
+External Reference Code *
+Body * [body]
+Cover Image * ERC [coverImage]
+```
+
+Do not rename, add, remove, or reorder columns. Generate a new template whenever the Structure or target folder changes.
+
+## Generated payload
 
 ```json
 {
@@ -216,21 +170,85 @@ A valid row becomes a `StructuredContent` item similar to:
 }
 ```
 
-## Liferay API calls
+## Article delivery after import
+
+The Home page React Article list uses the same `NXC_ARTICLE` Structure:
 
 ```text
-POST /o/oauth2/token
-GET  /o/headless-delivery/v1.0/sites/{siteId}/structured-content-folders/by-external-reference-code/{folderERC}
-POST /o/headless-delivery/v1.0/sites/{siteId}/structured-content-folders
-GET  /o/headless-delivery/v1.0/sites/{siteId}/content-structures
-GET  /o/headless-delivery/v1.0/content-structures/{contentStructureId}
-GET  /o/headless-delivery/v1.0/sites/{siteId}/documents/by-external-reference-code/{documentERC}
-POST /o/headless-batch-engine/v1.0/import-task/com.liferay.headless.delivery.dto.v1_0.StructuredContent?siteId={siteId}&createStrategy={INSERT|UPSERT}&importStrategy={ON_ERROR_FAIL|ON_ERROR_CONTINUE}
-GET  /o/headless-batch-engine/v1.0/import-task/{taskId}
+Title: StructuredContent.title
+Image: contentFields.coverImage
+Image alt: image.description → image.title → Article title
+Link: StructuredContent.contentUrl
+Order: sortOrder/displayOrder when present; otherwise datePublished descending
 ```
 
-## Verification boundary
+The Headless list request uses `flatten=true` because imported Articles are stored inside `NXC_ARTICLES`. It does not send `contentFields/sortOrder` to the server because Article does not have that field.
 
-Automated checks cover syntax, folder creation behavior, Document ERC lookup caching, deterministic template columns, hidden Metadata, Structure fingerprinting, folder binding, image resolution, row-level missing-image errors, scalar conversion, payload generation, duplicate ERCs, and required values.
+Create a default Display Page Template in the existing Nexcent Site:
 
-A real Liferay DXP 2026.Q1.1 instance is still required to verify OAuth permissions, exact Batch Engine image payload acceptance, folder assignment after import, task completion, and created Web Content.
+```text
+Name: Nexcent Article Detail
+Content Type: Web Content Article
+Subtype: NXC Article
+Master Page: Nexcent Master Page
+```
+
+Map the Article Detail Fragment:
+
+```text
+title          → System Field / Title
+publishedDate  → System Field / Publish Date
+coverImage     → NXC Article / coverImage
+body           → NXC Article / body
+```
+
+Example detail URL:
+
+```text
+/web/nexcent-public-website/w/test-nexcent-article
+```
+
+React must use `contentUrl`; it must not construct the Site path manually.
+
+## OAuth2 permissions
+
+The Client Credentials user needs permission to:
+
+- read Content Structures;
+- read Documents and Media;
+- read and create Web Content folders;
+- create or update Web Content;
+- create and read Batch Engine tasks.
+
+Scopes:
+
+```text
+Liferay.Headless.Delivery.everything
+Liferay.Headless.Batch.Engine.everything
+```
+
+## Run and verify
+
+```bash
+npm install
+npm run check
+npm test
+npm start
+```
+
+Open:
+
+```text
+http://127.0.0.1:4174
+```
+
+Runtime gates remain:
+
+- exact `NXC_ARTICLE` resolution;
+- real image ERC validation;
+- Batch Engine Image payload acceptance;
+- imported content inside `NXC_ARTICLES`;
+- `contentUrl` returned after the Display Page Template is defaulted;
+- Article detail rendering under the Nexcent Master Page;
+- UPSERT behavior by Article ERC;
+- no secret or access-token exposure.

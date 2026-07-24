@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Liferay Flat Structured Content Importer</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <main class="shell">
+    <header class="hero">
+      <p class="eyebrow">One-time migration utility</p>
+      <h1>Flat Structured Content Importer</h1>
+      <p>Generate a Structure-bound Excel template, validate every row, resolve images from one fixed source, and submit one Liferay Batch Engine task.</p>
+    </header>
+
+    <section class="panel" aria-labelledby="connection-heading">
+      <div class="step-title"><span>1</span><div><h2 id="connection-heading">Connect and select</h2><p>Connection settings, default locale, and image scope are read-only and come from the server environment.</p></div></div>
+      <div id="environment" class="summary-grid"></div>
+      <button id="connectButton" class="primary">Connect to Liferay</button>
+      <div id="connectionStatus" class="status" aria-live="polite"></div>
+      <div id="selectionPanel" class="selection-grid hidden">
+        <label>Content Structure<select id="structureSelect"></select></label>
+        <label>Target Web Content folder<select id="folderSelect"></select></label>
+      </div>
+      <div id="structureAnalysis" class="notice hidden"></div>
+    </section>
+
+    <section class="panel" aria-labelledby="template-heading">
+      <div class="step-title"><span>2</span><div><h2 id="template-heading">Generate template</h2><p>The Content Items sheet has headers only. Example data stays on a separate sheet.</p></div></div>
+      <button id="templateButton" class="primary" disabled>Download Excel template</button>
+      <div class="hint"><code>file:hero-home.webp</code> or <code>erc:NXC_HERO_HOME</code> — one column per image field, exact match only.</div>
+    </section>
+
+    <section class="panel" aria-labelledby="validate-heading">
+      <div class="step-title"><span>3</span><div><h2 id="validate-heading">Validate and preview</h2><p>Missing images, invalid values, changed headers, and workbook-scope mismatches block import.</p></div></div>
+      <form id="workbookForm">
+        <input id="workbookFile" name="file" type="file" accept=".xlsx" required>
+        <button class="primary" type="submit" disabled id="validateButton">Validate workbook</button>
+      </form>
+      <div id="validationSummary" class="hidden"></div>
+      <details id="issuesDetails" class="hidden"><summary>Validation issues</summary><div id="issues"></div></details>
+      <details id="payloadDetails" class="hidden"><summary>Payload preview</summary><pre id="payloadPreview"></pre></details>
+    </section>
+
+    <section class="panel" aria-labelledby="import-heading">
+      <div class="step-title"><span>4</span><div><h2 id="import-heading">Import</h2><p>INSERT is folder-safe and remains the default.</p></div></div>
+      <div class="option-groups">
+        <fieldset>
+          <legend>Existing content handling</legend>
+          <label><input type="radio" name="createStrategy" value="INSERT" checked> Create new only (INSERT)</label>
+          <label><input type="radio" name="createStrategy" value="UPSERT"> Create or update by ERC (UPSERT)</label>
+        </fieldset>
+        <fieldset>
+          <legend>When an item fails</legend>
+          <label><input type="radio" name="importStrategy" value="ON_ERROR_FAIL" checked> Stop whole import</label>
+          <label><input type="radio" name="importStrategy" value="ON_ERROR_CONTINUE"> Continue and collect failures</label>
+        </fieldset>
+      </div>
+      <label id="upsertConfirmWrap" class="warning hidden"><input type="checkbox" id="confirmUpsert"> I understand UPSERT may create a missing item in the Web Content root and existing items keep their current folder.</label>
+      <button id="importButton" class="danger" disabled>Start Batch import</button>
+      <div id="taskStatus" class="status" aria-live="polite"></div>
+      <pre id="taskResult" class="hidden"></pre>
+    </section>
+  </main>
+  <script type="module" src="/app.js"></script>
+</body>
+</html>

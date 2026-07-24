@@ -1,0 +1,37 @@
+name: Flat Structured Content Importer Check
+
+on:
+  pull_request:
+    paths:
+      - tools/liferay-article-importer/**
+      - .github/workflows/article-importer-check.yml
+  push:
+    branches:
+      - feat/excel-web-content-importer
+    paths:
+      - tools/liferay-article-importer/**
+      - .github/workflows/article-importer-check.yml
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: tools/liferay-article-importer
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install --no-audit --no-fund
+      - run: npm run check
+      - name: Run tests
+        run: npm test 2>&1 | tee test-output.txt
+      - name: Upload test diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: flat-structured-content-importer-test-output
+          path: tools/liferay-article-importer/test-output.txt
+          retention-days: 1

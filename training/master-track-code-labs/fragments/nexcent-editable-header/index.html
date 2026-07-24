@@ -1,0 +1,51 @@
+<header class="nxc-editable-header" data-nxc-editable-header>
+    <div class="nxc-editable-header__inner">
+        <a
+            aria-label="${configuration.brandLabel!'Nexcent home'}"
+            class="nxc-editable-header__brand"
+            href="${configuration.brandUrl!'/'}"
+        >
+            <img
+                alt="${configuration.logoAlt!'Nexcent'}"
+                class="nxc-editable-header__logo"
+                data-lfr-editable-id="header-logo"
+                data-lfr-editable-type="image"
+                src="[resources:logo.svg]"
+            />
+        </a>
+
+        <button
+            aria-expanded="false"
+            class="nxc-editable-header__toggle"
+            data-nxc-header-toggle
+            type="button"
+        >
+            <span class="nxc-visually-hidden" data-nxc-header-toggle-label>
+                ${configuration.openLabel!'Open navigation'}
+            </span>
+
+            <span aria-hidden="true" class="nxc-editable-header__toggle-icon">
+                <span></span>
+                <span></span>
+                <span></span>
+            </span>
+        </button>
+
+        <div class="nxc-editable-header__panel" data-nxc-header-panel>
+            <div class="nxc-editable-header__menu-slot nxc-header-navigation">
+                <lfr-drop-zone id="menu-display"></lfr-drop-zone>
+            </div>
+
+            <div class="nxc-editable-header__actions-slot">
+                <lfr-drop-zone id="account-actions"></lfr-drop-zone>
+            </div>
+        </div>
+    </div>
+
+    <span data-nxc-header-open-label hidden>
+        ${configuration.openLabel!'Open navigation'}
+    </span>
+    <span data-nxc-header-close-label hidden>
+        ${configuration.closeLabel!'Close navigation'}
+    </span>
+</header>

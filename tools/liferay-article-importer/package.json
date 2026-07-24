@@ -1,0 +1,19 @@
+{
+  "name": "@nexcent/liferay-flat-structured-content-importer",
+  "version": "0.2.0",
+  "private": true,
+  "type": "module",
+  "engines": {"node": ">=22.0.0"},
+  "scripts": {
+    "dev": "node --watch server/index.js",
+    "start": "node server/index.js",
+    "test": "node --test",
+    "check": "node scripts/check.mjs"
+  },
+  "dependencies": {
+    "dotenv": "17.4.2",
+    "exceljs": "4.4.0",
+    "express": "5.2.1",
+    "multer": "2.2.0"
+  }
+}

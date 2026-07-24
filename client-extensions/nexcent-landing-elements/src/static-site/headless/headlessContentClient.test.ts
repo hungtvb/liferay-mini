@@ -17,7 +17,7 @@ afterEach(() => {
 });
 
 describe('Headless content client', () => {
-    it('uses server pagination and Structure-field sorting with cached requests', async () => {
+    it('loads flattened content once and sorts optional Structure order on the client', async () => {
         const fetchMock = vi.fn().mockImplementation(async (input: RequestInfo | URL) => {
             const url = String(input);
 
@@ -105,11 +105,97 @@ describe('Headless content client', () => {
 
         const structuredContentRequest = String(fetchMock.mock.calls[1]?.[0]);
 
-        expect(structuredContentRequest).toContain('pageSize=1');
-        expect(structuredContentRequest).toContain(
-            'sort=contentFields%2FsortOrder%3Aasc'
-        );
-        expect(structuredContentRequest).not.toContain('pageSize=100');
+        expect(structuredContentRequest).toContain('pageSize=100');
+        expect(structuredContentRequest).toContain('flatten=true');
+        expect(structuredContentRequest).not.toContain('sort=');
+        expect(structuredContentRequest).not.toContain('contentFields%2FsortOrder');
+    });
+
+    it('uses Article friendly URL paths and orders Articles by publish date without sortOrder', async () => {
+        const fetchMock = vi.fn().mockImplementation(async (input: RequestInfo | URL) => {
+            const url = String(input);
+
+            if (url.includes('/content-structures?pageSize=200')) {
+                return {
+                    json: async () => ({
+                        items: [
+                            {
+                                externalReferenceCode: 'NXC_ARTICLE',
+                                id: 789,
+                                name: 'NXC Article',
+                            },
+                        ],
+                    }),
+                    ok: true,
+                    status: 200,
+                    statusText: 'OK',
+                };
+            }
+
+            return {
+                json: async () => ({
+                    items: [
+                        {
+                            contentFields: [],
+                            contentStructureId: 789,
+                            datePublished: '2026-07-20T00:00:00Z',
+                            externalReferenceCode: 'ARTICLE-OLDER',
+                            friendlyUrlPath: 'older',
+                            id: 1,
+                            title: 'Older',
+                        },
+                        {
+                            contentFields: [
+                                {
+                                    contentFieldValue: {
+                                        image: {
+                                            contentUrl: '/documents/d/nexcent/cover',
+                                            description: 'Article cover description',
+                                        },
+                                    },
+                                    name: 'coverImage',
+                                },
+                            ],
+                            contentStructureId: 789,
+                            datePublished: '2026-07-24T00:00:00Z',
+                            externalReferenceCode: 'ARTICLE-NEWER',
+                            friendlyUrlPath: 'newer',
+                            id: 2,
+                            title: 'Newer',
+                        },
+                    ],
+                }),
+                ok: true,
+                status: 200,
+                statusText: 'OK',
+            };
+        });
+
+        vi.stubGlobal('window', {
+            Liferay: undefined,
+            location: {origin: 'http://localhost:8080'},
+        });
+        vi.stubGlobal('fetch', fetchMock);
+
+        const articles = await loadStructuredContents({
+            locale: 'en-US',
+            pageSize: 3,
+            siteId: '20123',
+            structureIdentifier: 'NXC_ARTICLE',
+        });
+
+        expect(articles.map((item) => item.title)).toEqual(['Newer', 'Older']);
+        expect(articles[0].friendlyUrlPath).toBe('newer');
+        expect(readContentText(articles[0], ['targetUrl'], '')).toBe('');
+        expect(
+            readContentImage(articles[0], ['coverImage'], {
+                alt: 'Fallback',
+                url: '/fallback.png',
+            })
+        ).toEqual({
+            alt: 'Article cover description',
+            url: '/documents/d/nexcent/cover',
+        });
     });
 
     it('reads nested text, booleans, numbers, and image values', () => {

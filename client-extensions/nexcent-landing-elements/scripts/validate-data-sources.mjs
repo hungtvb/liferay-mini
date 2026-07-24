@@ -11,7 +11,7 @@ const fragmentDirectory = path.join(projectDirectory, 'fragments');
 const headlessFragmentDefaults = {
     'nexcent-react-community': 'NXC_SERVICE_ITEM',
     'nexcent-react-hero': 'NXC_LANDING_HERO',
-    'nexcent-react-marketing': 'NXC_COMMUNITY_CARD',
+    'nexcent-react-marketing': 'NXC_ARTICLE',
 };
 const headlessFragments = Object.keys(headlessFragmentDefaults);
 const settingsFragments = [
@@ -63,7 +63,7 @@ for (const fragmentName of [...headlessFragments, ...settingsFragments]) {
 
         if (structureField?.defaultValue !== expectedDefault) {
             throw new Error(
-                `${fragmentName} must default to Structure key "${expectedDefault}".`
+                `${fragmentName} must default to Structure ERC/key "${expectedDefault}".`
             );
         }
     }
@@ -80,6 +80,15 @@ for (const fragmentName of headlessFragments) {
             throw new Error(`${fragmentName} is missing ${attribute}`);
         }
     }
+}
+
+const articleFragmentHtml = await readFile(
+    path.join(fragmentDirectory, 'nexcent-react-marketing', 'index.html'),
+    'utf8'
+);
+
+if (!articleFragmentHtml.includes('site-base-url=')) {
+    throw new Error('Article list Fragment must pass the current Site display URL.');
 }
 
 for (const fragmentName of settingsFragments) {
@@ -135,28 +144,6 @@ for (const [fragmentName, contract] of Object.entries(shellContracts)) {
     }
 }
 
-const footerConfiguration = await readJson(
-    path.join(
-        fragmentDirectory,
-        'nexcent-react-footer',
-        'configuration.json'
-    )
-);
-const footerFields = configurationFields(footerConfiguration);
-
-for (const obsoleteSocialField of [
-    'instagramURL',
-    'dribbbleURL',
-    'twitterURL',
-    'youtubeURL',
-]) {
-    if (footerFields.some((field) => field.name === obsoleteSocialField)) {
-        throw new Error(
-            `Footer must use Social Navigation instead of ${obsoleteSocialField}.`
-        );
-    }
-}
-
 const headerSource = await readFile(
     path.join(projectDirectory, 'src/static-site/components/Header.tsx'),
     'utf8'
@@ -183,6 +170,10 @@ const heroSource = await readFile(
 );
 const sectionSource = await readFile(
     path.join(projectDirectory, 'src/static-site/components/ContentSections.tsx'),
+    'utf8'
+);
+const articleSource = await readFile(
+    path.join(projectDirectory, 'src/static-site/components/ArticleSection.tsx'),
     'utf8'
 );
 const sharedHeadlessApi = await readFile(
@@ -217,12 +208,17 @@ for (const componentName of ['StaticCommunity', 'StaticMarketing']) {
 for (const expected of [
     '/content-structures?pageSize=200',
     'new URLSearchParams',
-    "query.set('sort'",
+    "query.set('flatten', 'true')",
     'options.pageSize',
+    'friendlyUrlPath?: string',
 ]) {
     if (!sharedHeadlessApi.includes(expected)) {
         throw new Error(`Shared Structured Content API is missing ${expected}.`);
     }
+}
+
+if (sharedHeadlessApi.includes('contentUrl?: string;\n    datePublished')) {
+    throw new Error('StructuredContent must not declare the unsupported contentUrl property.');
 }
 
 for (const sharedFunction of [
@@ -237,12 +233,34 @@ for (const sharedFunction of [
     }
 }
 
-if (!headlessAdapter.includes("sort: 'contentFields/sortOrder:asc'")) {
-    throw new Error('Structured Content must be sorted by sortOrder on the server.');
+if (headlessAdapter.includes("sort: 'contentFields/sortOrder:asc'")) {
+    throw new Error(
+        'The generic Structured Content loader must not sort by an optional Structure field on the server.'
+    );
+}
+
+for (const expected of ["'coverImage'", 'content.datePublished', 'flatten: true']) {
+    if (!headlessAdapter.includes(expected)) {
+        throw new Error(`Article Headless delivery contract is missing ${expected}.`);
+    }
+}
+
+for (const expected of [
+    'structuredContent.friendlyUrlPath',
+    "'site-base-url'",
+    '`$\{base}/w/$\{path}`',
+]) {
+    if (!articleSource.includes(expected)) {
+        throw new Error(`Article detail-link contract is missing ${expected}.`);
+    }
+}
+
+if (articleSource.includes('structuredContent.contentUrl')) {
+    throw new Error('Article list must not depend on unsupported StructuredContent.contentUrl.');
 }
 
 if (!headlessHook.includes('pageSize: maxItems')) {
-    throw new Error('Fragment maximum items must be passed to the Headless API page size.');
+    throw new Error('Fragment maximum items must be passed to the Headless loader.');
 }
 
 if (sharedHeadlessApi.includes('item.name, item.id')) {
@@ -250,5 +268,5 @@ if (sharedHeadlessApi.includes('item.name, item.id')) {
 }
 
 console.log(
-    `Validated ${headlessFragments.length} Headless sections, ${settingsFragments.length} Fragment Settings sections, and ${Object.keys(shellContracts).length} embedded shell contracts.`
+    `Validated ${headlessFragments.length} Headless sections, ${settingsFragments.length} Fragment Settings sections, ${Object.keys(shellContracts).length} embedded shell contracts, and the NXC_ARTICLE delivery contract.`
 );

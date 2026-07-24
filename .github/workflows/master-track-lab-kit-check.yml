@@ -6,8 +6,11 @@ on:
             - '.github/workflows/master-track-lab-kit-check.yml'
             - 'README.md'
             - 'scripts/verify-course.mjs'
+            - 'client-extensions/nexcent-landing-elements/**'
+            - 'client-extensions/nexcent-theme/**'
             - 'client-extensions/nexcent-training-batch-lab/**'
             - 'docs/master-track/**'
+            - 'modules/nexcent-site-shell/**'
             - 'modules/nexcent-training/**'
             - 'training/master-track-code-labs/**'
     workflow_dispatch:
@@ -52,8 +55,19 @@ jobs:
             - name: Verify Service Builder regeneration
               run: ./gradlew :modules:nexcent-training:nexcent-training-service:buildService
 
-            - name: Generate REST Builder source
+            - name: Generate Training REST Builder source
               run: ./gradlew :modules:nexcent-training:nexcent-training-rest-impl:buildREST
+
+            - name: Generate Site Shell REST Builder source
+              run: |
+                  set +e
+                  ./gradlew \
+                    :modules:nexcent-site-shell:nexcent-site-shell-rest-impl:buildREST \
+                    --stacktrace > diagnostics/site-shell-rest.log 2>&1
+                  code=$?
+                  tail -n 120 diagnostics/site-shell-rest.log
+                  echo "$code" > diagnostics/site-shell-rest.exit
+                  exit 0
 
             - name: Build application modules
               run: |
@@ -63,9 +77,11 @@ jobs:
                     :modules:nexcent-training:nexcent-training-service:build \
                     :modules:nexcent-training:nexcent-training-rest-api:build \
                     :modules:nexcent-training:nexcent-training-rest-impl:build \
+                    :modules:nexcent-site-shell:nexcent-site-shell-rest-api:build \
+                    :modules:nexcent-site-shell:nexcent-site-shell-rest-impl:build \
                     --stacktrace > diagnostics/application-build.log 2>&1
                   code=$?
-                  cat diagnostics/application-build.log
+                  tail -n 160 diagnostics/application-build.log
                   echo "$code" > diagnostics/application-build.exit
                   exit 0
 
@@ -77,7 +93,7 @@ jobs:
                     ../../gradlew build --stacktrace
                   ) > diagnostics/batch-build.log 2>&1
                   code=$?
-                  cat diagnostics/batch-build.log
+                  tail -n 120 diagnostics/batch-build.log
                   echo "$code" > diagnostics/batch-build.exit
                   exit 0
 

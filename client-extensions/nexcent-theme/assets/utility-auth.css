@@ -1,0 +1,189 @@
+/* Nexcent presentation for Liferay's OOTB Login and Create Account views. */
+#portlet_com_liferay_login_web_portlet_LoginPortlet,
+.portlet-login {
+    box-sizing: border-box;
+    margin: clamp(2rem, 5vw, 4.5rem) auto;
+    max-width: 54rem;
+    padding-inline: var(--nxc-page-gutter);
+    width: 100%;
+}
+
+#portlet_com_liferay_login_web_portlet_LoginPortlet .portlet-content,
+.portlet-login .portlet-content {
+    background: var(--nxc-color-white);
+    border: 0.0625rem solid rgb(171 190 209 / 38%);
+    border-radius: 0.75rem;
+    box-shadow: 0 1rem 2.5rem rgb(38 50 56 / 10%);
+    padding: clamp(1.5rem, 4vw, 2.75rem);
+}
+
+#portlet_com_liferay_login_web_portlet_LoginPortlet .portlet-header,
+.portlet-login .portlet-header {
+    align-items: center;
+    margin-bottom: 1.75rem;
+}
+
+#portlet_com_liferay_login_web_portlet_LoginPortlet .portlet-title-text,
+.portlet-login .portlet-title-text {
+    color: var(--nxc-color-heading);
+    font-size: clamp(1.75rem, 4vw, 2.25rem);
+    font-weight: 600;
+    line-height: 1.2;
+}
+
+#portlet_com_liferay_login_web_portlet_LoginPortlet .login-container,
+.portlet-login .login-container {
+    margin-inline: auto;
+    max-width: 29rem;
+    width: 100%;
+}
+
+#portlet_com_liferay_login_web_portlet_LoginPortlet .form-group,
+.portlet-login .form-group {
+    margin-bottom: 1.25rem;
+}
+
+#portlet_com_liferay_login_web_portlet_LoginPortlet .control-label,
+.portlet-login .control-label {
+    color: var(--nxc-color-heading);
+    font-size: 0.875rem;
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+}
+
+#portlet_com_liferay_login_web_portlet_LoginPortlet .form-control,
+#portlet_com_liferay_login_web_portlet_LoginPortlet .input-group-inset,
+.portlet-login .form-control,
+.portlet-login .input-group-inset {
+    background: var(--nxc-color-white);
+    border-color: var(--nxc-color-border);
+    border-radius: var(--nxc-radius-sm);
+    color: var(--nxc-color-heading);
+    min-height: 3rem;
+    padding: 0.6875rem 0.875rem;
+    transition:
+        border-color var(--nxc-transition-fast),
+        box-shadow var(--nxc-transition-fast);
+}
+
+#portlet_com_liferay_login_web_portlet_LoginPortlet .form-control:focus,
+#portlet_com_liferay_login_web_portlet_LoginPortlet .input-group-inset:focus-within,
+.portlet-login .form-control:focus,
+.portlet-login .input-group-inset:focus-within {
+    border-color: var(--nxc-color-primary);
+    box-shadow: var(--nxc-focus-ring);
+    outline: none;
+}
+
+#portlet_com_liferay_login_web_portlet_LoginPortlet .custom-control-label,
+.portlet-login .custom-control-label {
+    color: var(--nxc-color-text);
+}
+
+#portlet_com_liferay_login_web_portlet_LoginPortlet .button-holder,
+.portlet-login .button-holder {
+    margin-top: 1.5rem;
+}
+
+#portlet_com_liferay_login_web_portlet_LoginPortlet .btn-primary,
+.portlet-login .btn-primary {
+    background: var(--nxc-color-primary);
+    border-color: var(--nxc-color-primary);
+    border-radius: var(--nxc-radius-sm);
+    color: var(--nxc-color-white);
+    font-size: 0.875rem;
+    font-weight: 500;
+    min-height: 2.75rem;
+    padding: 0.625rem 1.5rem;
+    transition:
+        background-color var(--nxc-transition-reference),
+        border-color var(--nxc-transition-reference),
+        box-shadow var(--nxc-transition-fast),
+        transform var(--nxc-transition-fast);
+}
+
+#portlet_com_liferay_login_web_portlet_LoginPortlet .btn-primary:hover,
+.portlet-login .btn-primary:hover {
+    background: var(--nxc-color-primary-hover);
+    border-color: var(--nxc-color-primary-hover);
+    color: var(--nxc-color-white);
+    transform: translateY(-0.125rem);
+}
+
+#portlet_com_liferay_login_web_portlet_LoginPortlet .btn-primary:focus,
+#portlet_com_liferay_login_web_portlet_LoginPortlet .btn-primary:focus-visible,
+.portlet-login .btn-primary:focus,
+.portlet-login .btn-primary:focus-visible {
+    box-shadow: var(--nxc-focus-ring);
+}
+
+#portlet_com_liferay_login_web_portlet_LoginPortlet .sign-in-form .button-holder .btn-primary,
+.portlet-login .sign-in-form .button-holder .btn-primary {
+    width: 100%;
+}
+
+#portlet_com_liferay_login_web_portlet_LoginPortlet .navigation,
+.portlet-login .navigation {
+    border-top: 0.0625rem solid rgb(171 190 209 / 35%);
+    margin-top: 1.5rem;
+    padding-top: 1.25rem;
+    text-align: center;
+}
+
+#portlet_com_liferay_login_web_portlet_LoginPortlet a,
+.portlet-login a {
+    color: var(--nxc-color-primary-active);
+    font-weight: 500;
+    text-decoration: none;
+}
+
+#portlet_com_liferay_login_web_portlet_LoginPortlet a:hover,
+.portlet-login a:hover {
+    color: var(--nxc-color-primary-hover);
+    text-decoration: underline;
+}
+
+#portlet_com_liferay_login_web_portlet_LoginPortlet .sheet,
+.portlet-login .sheet {
+    border: 0;
+    box-shadow: none;
+    margin: 0;
+    padding: 0;
+}
+
+#portlet_com_liferay_login_web_portlet_LoginPortlet .sheet-section,
+.portlet-login .sheet-section {
+    margin-bottom: 2rem;
+}
+
+#portlet_com_liferay_login_web_portlet_LoginPortlet .sheet-subtitle,
+.portlet-login .sheet-subtitle {
+    border-bottom-color: rgb(171 190 209 / 45%);
+    color: var(--nxc-color-heading);
+    font-size: 1rem;
+    font-weight: 600;
+    padding-bottom: 0.75rem;
+}
+
+#portlet_com_liferay_login_web_portlet_LoginPortlet .alert,
+.portlet-login .alert {
+    border-radius: var(--nxc-radius-sm);
+}
+
+@media (max-width: 767.98px) {
+    #portlet_com_liferay_login_web_portlet_LoginPortlet,
+    .portlet-login {
+        margin-block: 1.5rem 2.5rem;
+    }
+
+    #portlet_com_liferay_login_web_portlet_LoginPortlet .portlet-content,
+    .portlet-login .portlet-content {
+        border-radius: var(--nxc-radius-md);
+        padding: 1.25rem;
+    }
+
+    #portlet_com_liferay_login_web_portlet_LoginPortlet .portlet-header,
+    .portlet-login .portlet-header {
+        margin-bottom: 1.25rem;
+    }
+}

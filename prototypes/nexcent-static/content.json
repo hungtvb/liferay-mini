@@ -1,0 +1,179 @@
+{
+  "navigation": [
+    {"label": "Home", "href": "#home"},
+    {"label": "Service", "href": "#services"},
+    {"label": "Feature", "href": "#features"},
+    {"label": "Product", "href": "#product"},
+    {"label": "Testimonial", "href": "#testimonial"},
+    {"label": "FAQ", "href": "#faq"}
+  ],
+  "headerActions": [
+    {"label": "Login", "href": "#login", "variant": "light"},
+    {"label": "Sign up", "href": "#signup", "variant": "primary"}
+  ],
+  "hero": {
+    "slides": [
+      {
+        "title": "Lessons and insights",
+        "highlight": "from 8 years",
+        "description": "Where to grow your business as a photographer: site or social media?",
+        "buttonLabel": "Register",
+        "buttonHref": "#register",
+        "image": "hero",
+        "imageAlt": "Business growth illustration"
+      },
+      {
+        "title": "Lessons and insights",
+        "highlight": "from 8 years",
+        "description": "Where to grow your business as a photographer: site or social media?",
+        "buttonLabel": "Register",
+        "buttonHref": "#register",
+        "image": "hero",
+        "imageAlt": "Business growth illustration"
+      },
+      {
+        "title": "Lessons and insights",
+        "highlight": "from 8 years",
+        "description": "Where to grow your business as a photographer: site or social media?",
+        "buttonLabel": "Register",
+        "buttonHref": "#register",
+        "image": "hero",
+        "imageAlt": "Business growth illustration"
+      }
+    ]
+  },
+  "clients": {
+    "title": "Our Clients",
+    "description": "We have been working with some Fortune 500+ clients",
+    "logos": [
+      {"image": "client1", "alt": "Client 1"},
+      {"image": "client2", "alt": "Client 2"},
+      {"image": "client3", "alt": "Client 3"},
+      {"image": "client4", "alt": "Client 4"},
+      {"image": "client5", "alt": "Client 5"},
+      {"image": "client6", "alt": "Client 6"}
+    ]
+  },
+  "community": {
+    "title": "Manage your entire community in a single system",
+    "description": "Who is Nextcent suitable for?",
+    "items": [
+      {
+        "title": "Membership Organisations",
+        "description": "Our membership management software provides full automation of membership renewals and payments",
+        "image": "people1",
+        "imageAlt": "Membership organisations"
+      },
+      {
+        "title": "National Associations",
+        "description": "Our membership management software provides full automation of membership renewals and payments",
+        "image": "building",
+        "imageAlt": "National associations"
+      },
+      {
+        "title": "Clubs And Groups",
+        "description": "Our membership management software provides full automation of membership renewals and payments",
+        "image": "hands",
+        "imageAlt": "Clubs and groups"
+      }
+    ]
+  },
+  "features": {
+    "primary": {
+      "title": "The unseen of spending three years at Pixelgrade",
+      "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed sit amet justo ipsum. Sed accumsan quam vitae est varius fringilla. Pellentesque placerat vestibulum lorem sed porta. Nullam mattis tristique iaculis. Nullam pulvinar sit amet risus pretium auctor. Etiam quis massa pulvinar, aliquam quam vitae, tempus sem. Donec elementum pulvinar odio.",
+      "buttonLabel": "Learn More",
+      "buttonHref": "#learn-more",
+      "image": "featurePrimary",
+      "imageAlt": "Mobile login illustration"
+    },
+    "secondary": {
+      "title": "How to design your site footer like we did",
+      "description": "Donec a eros justo. Fusce egestas tristique ultrices. Nam tempor, augue nec tincidunt molestie, massa nunc varius arcu, at scelerisque elit erat a magna. Donec quis erat at libero ultrices mollis. In hac habitasse platea dictumst. Vivamus vehicula leo dui, at porta nisi facilisis finibus. In euismod augue vitae nisi ultricies, non aliquet urna tincidunt. Integer in nisi eget nulla commodo faucibus efficitur quis massa. Praesent felis est, finibus et nisi ac, hendrerit venenatis libero. Donec consectetur faucibus ipsum id gravida.",
+      "buttonLabel": "Learn More",
+      "buttonHref": "#learn-more",
+      "image": "featureSecondary",
+      "imageAlt": "Mobile authentication illustration"
+    }
+  },
+  "statistics": {
+    "title": "Helping a local",
+    "highlight": "business reinvent itself",
+    "description": "We reached here with our hard work and dedication",
+    "items": [
+      {"value": "2,245,341", "label": "Members", "image": "people2", "imageAlt": "Members"},
+      {"value": "46,328", "label": "Clubs", "image": "hands2", "imageAlt": "Clubs"},
+      {"value": "828,867", "label": "Event Bookings", "image": "event", "imageAlt": "Event bookings"},
+      {"value": "1,926,436", "label": "Payments", "image": "payment", "imageAlt": "Payments"}
+    ]
+  },
+  "testimonial": {
+    "quote": "Maecenas dignissim justo eget nulla rutrum molestie. Maecenas lobortis sem dui, vel rutrum risus tincidunt ullamcorper. Proin eu enim metus. Vivamus sed libero ornare, tristique quam in, gravida enim. Nullam ut molestie arcu, at hendrerit elit. Morbi laoreet elit at ligula molestie, nec molestie mi blandit. Suspendisse cursus tellus sed augue ultrices, quis tristique nulla sodales. Suspendisse eget lorem eu turpis vestibulum pretium. Suspendisse potenti. Quisque malesuada enim sapien, vitae placerat ante feugiat eget. Quisque vulputate odio neque, eget efficitur libero condimentum id. Curabitur id nibh id sem dignissim finibus ac sit amet magna.",
+    "author": "Tim Smith",
+    "organization": "British Dragon Boat Racing Association",
+    "image": "testimonial",
+    "imageAlt": "Tim Smith",
+    "linkLabel": "Meet all customers",
+    "linkHref": "#customers"
+  },
+  "marketing": {
+    "title": "Caring is the new marketing",
+    "description": "The Nexcent blog is the best place to read about the latest membership insights, trends and more. See who's joining the community, read about how our community are increasing their membership income and lot's more.",
+    "items": [
+      {
+        "title": "Creating Streamlined Safeguarding Processes with OneRen",
+        "image": "article1",
+        "imageAlt": "Safeguarding process meeting",
+        "linkLabel": "Readmore",
+        "linkHref": "#article-1"
+      },
+      {
+        "title": "What are your safeguarding responsibilities and how can you manage them?",
+        "image": "article2",
+        "imageAlt": "Laptop and work desk",
+        "linkLabel": "Readmore",
+        "linkHref": "#article-2"
+      },
+      {
+        "title": "Revamping the Membership Model with Triathlon Australia",
+        "image": "article3",
+        "imageAlt": "Laptop keyboard",
+        "linkLabel": "Readmore",
+        "linkHref": "#article-3"
+      }
+    ]
+  },
+  "cta": {
+    "title": "Pellentesque suscipit fringilla libero eu.",
+    "buttonLabel": "Get a Demo",
+    "buttonHref": "#demo"
+  },
+  "footer": {
+    "copyright": "Copyright © 2020 Nexcent ltd.",
+    "rights": "All rights reserved",
+    "columns": [
+      {
+        "title": "Company",
+        "links": [
+          {"label": "About us", "href": "#about"},
+          {"label": "Blog", "href": "#blog"},
+          {"label": "Contact us", "href": "#contact"},
+          {"label": "Pricing", "href": "#pricing"},
+          {"label": "Testimonials", "href": "#testimonials"}
+        ]
+      },
+      {
+        "title": "Support",
+        "links": [
+          {"label": "Help center", "href": "#help"},
+          {"label": "Terms of service", "href": "#terms"},
+          {"label": "Legal", "href": "#legal"},
+          {"label": "Privacy policy", "href": "#privacy"},
+          {"label": "Status", "href": "#status"}
+        ]
+      }
+    ],
+    "newsletterTitle": "Stay up to date",
+    "newsletterPlaceholder": "Your email address"
+  }
+}

@@ -2,6 +2,16 @@ assemble:
     - from: build
       into: static
 
+nexcent-react-runtime:
+    name: Nexcent React Runtime
+    scope: layout
+    scriptElementAttributes:
+        data-senna-track: permanent
+        defer: true
+        type: module
+    type: globalJS
+    url: index.js
+
 nexcent-lab-status:
     cssURLs:
         - style.css

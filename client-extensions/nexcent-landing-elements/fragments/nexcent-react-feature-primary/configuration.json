@@ -1,0 +1,75 @@
+{
+    "fieldSets": [
+        {
+            "fields": [
+                {
+                    "dataType": "string",
+                    "defaultValue": "The unseen of spending three years at Pixelgrade",
+                    "label": "Title",
+                    "name": "title",
+                    "type": "text"
+                },
+                {
+                    "dataType": "string",
+                    "defaultValue": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed sit amet justo ipsum. Sed accumsan quam vitae est varius fringilla. Pellentesque placerat vestibulum lorem sed porta. Nullam mattis tristique iaculis. Nullam pulvinar sit amet risus pretium auctor. Etiam quis massa pulvinar, aliquam quam vitae, tempus sem. Donec elementum pulvinar odio.",
+                    "label": "Description",
+                    "name": "description",
+                    "type": "text"
+                },
+                {
+                    "dataType": "string",
+                    "defaultValue": "",
+                    "label": "Image URL",
+                    "name": "imageURL",
+                    "type": "text"
+                },
+                {
+                    "dataType": "string",
+                    "defaultValue": "Mobile login illustration",
+                    "label": "Image alt text",
+                    "name": "imageAlt",
+                    "type": "text"
+                }
+            ],
+            "label": "Content"
+        },
+        {
+            "fields": [
+                {
+                    "defaultValue": true,
+                    "label": "Show button",
+                    "name": "showButton",
+                    "type": "checkbox"
+                },
+                {
+                    "dataType": "string",
+                    "defaultValue": "Learn More",
+                    "label": "Button label",
+                    "name": "buttonLabel",
+                    "type": "text"
+                },
+                {
+                    "dataType": "string",
+                    "defaultValue": "#learn-more",
+                    "label": "Button URL",
+                    "name": "buttonURL",
+                    "type": "text"
+                },
+                {
+                    "dataType": "string",
+                    "defaultValue": "_self",
+                    "label": "Button target",
+                    "name": "buttonTarget",
+                    "type": "select",
+                    "typeOptions": {
+                        "validValues": [
+                            {"label": "Same tab", "value": "_self"},
+                            {"label": "New tab", "value": "_blank"}
+                        ]
+                    }
+                }
+            ],
+            "label": "Call to action"
+        }
+    ]
+}

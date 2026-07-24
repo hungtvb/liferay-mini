@@ -1,0 +1,50 @@
+buildscript {
+    dependencies {
+        classpath group: "com.liferay", name: "com.liferay.gradle.plugins.rest.builder", version: "1.1.32"
+    }
+
+    repositories {
+        maven {
+            url "https://repository-cdn.liferay.com/nexus/content/groups/public"
+        }
+    }
+}
+
+apply plugin: "com.liferay.portal.tools.rest.builder"
+
+dependencies {
+    compileOnly group: "com.liferay.portal", name: "release.dxp.api"
+    compileOnly project(":modules:nexcent-site-shell:nexcent-site-shell-rest-api")
+}
+
+group = "com.nexcent.site.shell"
+
+tasks.named("buildREST") {
+    doLast {
+        File applicationFile = file(
+            "src/main/java/com/nexcent/site/shell/rest/internal/jaxrs/application/NexcentSiteShellApplication.java"
+        )
+
+        if (!applicationFile.exists()) {
+            throw new GradleException("REST Builder did not generate NexcentSiteShellApplication.java")
+        }
+
+        String source = applicationFile.getText("UTF-8")
+        String marker = '"liferay.jackson=false",'
+
+        if (!source.contains(marker)) {
+            throw new GradleException("Unable to locate the generated JAX-RS application property marker")
+        }
+
+        if (!source.contains("auth.verifier.guest.allowed=true")) {
+            source = source.replace(
+                marker,
+                '"auth.verifier.guest.allowed=true",\n\t\t"liferay.access.control.disable=true",\n\t\t' +
+                    marker +
+                    '\n\t\t"oauth2.scopechecker.type=none",'
+            )
+
+            applicationFile.setText(source, "UTF-8")
+        }
+    }
+}

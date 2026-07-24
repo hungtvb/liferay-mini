@@ -1,0 +1,77 @@
+name: React Visual Parity Check
+
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/react-visual-parity-check.yml"
+      - "client-extensions/nexcent-landing-elements/**"
+      - "client-extensions/nexcent-theme/**"
+      - "prototypes/nexcent-static/**"
+      - "training/master-track-code-labs/fragments/nexcent-react-*/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  compare-static-and-react:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    defaults:
+      run:
+        working-directory: client-extensions/nexcent-landing-elements
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install project dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Install visual audit dependencies
+        run: >-
+          npm install --no-save --package-lock=false --no-audit --no-fund
+          playwright@1.55.0 pixelmatch@7.1.0 pngjs@7.0.0
+
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Start static reference and React preview
+        run: |
+          python3 -m http.server 4174 \
+            --bind 127.0.0.1 \
+            --directory ../../prototypes/nexcent-static \
+            > /tmp/nexcent-reference.log 2>&1 &
+          echo $! > /tmp/nexcent-reference.pid
+
+          npm run preview:static \
+            > /tmp/nexcent-react-preview.log 2>&1 &
+          echo $! > /tmp/nexcent-react-preview.pid
+
+      - name: Run pixel parity audit
+        env:
+          NXC_MAXIMUM_MISMATCH_RATIO: "0.015"
+        run: node scripts/visual-parity-audit.mjs
+
+      - name: Print server logs on failure
+        if: failure()
+        run: |
+          echo "--- Static reference server ---"
+          cat /tmp/nexcent-reference.log || true
+          echo "--- React preview server ---"
+          cat /tmp/nexcent-react-preview.log || true
+
+      - name: Upload screenshots and diff report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: nexcent-react-visual-parity
+          path: client-extensions/nexcent-landing-elements/build/visual-parity
+          if-no-files-found: warn
+          retention-days: 14

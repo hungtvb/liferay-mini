@@ -6,6 +6,18 @@ const requiredFiles = [
     'modules/nexcent-training/nexcent-training-service/service.xml',
     'modules/nexcent-training/nexcent-training-rest-impl/rest-config.yaml',
     'modules/nexcent-training/nexcent-training-rest-impl/rest-openapi.yaml',
+    'modules/nexcent-site-shell/nexcent-site-shell-rest-api/bnd.bnd',
+    'modules/nexcent-site-shell/nexcent-site-shell-rest-api/build.gradle',
+    'modules/nexcent-site-shell/nexcent-site-shell-rest-impl/bnd.bnd',
+    'modules/nexcent-site-shell/nexcent-site-shell-rest-impl/build.gradle',
+    'modules/nexcent-site-shell/nexcent-site-shell-rest-impl/rest-config.yaml',
+    'modules/nexcent-site-shell/nexcent-site-shell-rest-impl/rest-openapi.yaml',
+    'modules/nexcent-site-shell/nexcent-site-shell-rest-impl/src/main/java/com/nexcent/site/shell/rest/internal/resource/v1_0/SiteShellResourceImpl.java',
+    'client-extensions/nexcent-theme/client-extension.yaml',
+    'client-extensions/nexcent-theme/assets/global-entry.css',
+    'client-extensions/nexcent-theme/assets/global.css',
+    'client-extensions/nexcent-theme/assets/react-shell.css',
+    'client-extensions/nexcent-theme/src/frontend-token-definition.json',
     'training/master-track-code-labs/fragments/nexcent-account-actions/fragment.json',
     'training/master-track-code-labs/fragments/nexcent-mobile-navigation/fragment.json',
     'training/master-track-code-labs/fragments/nexcent-mobile-navigation/configuration.json',
@@ -14,6 +26,23 @@ const requiredFiles = [
     'training/master-track-code-labs/fragments/nexcent-mobile-navigation/index.js',
     'training/master-track-code-labs/fragments/nexcent-section-wrapper/fragment.json',
     'training/master-track-code-labs/fragments/nexcent-section-wrapper/configuration.json',
+    'client-extensions/nexcent-landing-elements/fragments/collection.json',
+    'client-extensions/nexcent-landing-elements/fragments/nexcent-react-header/fragment.json',
+    'client-extensions/nexcent-landing-elements/fragments/nexcent-react-header/configuration.json',
+    'client-extensions/nexcent-landing-elements/fragments/nexcent-react-header/index.html',
+    'client-extensions/nexcent-landing-elements/fragments/nexcent-react-hero/fragment.json',
+    'client-extensions/nexcent-landing-elements/fragments/nexcent-react-clients/fragment.json',
+    'client-extensions/nexcent-landing-elements/fragments/nexcent-react-community/fragment.json',
+    'client-extensions/nexcent-landing-elements/fragments/nexcent-react-feature-primary/fragment.json',
+    'client-extensions/nexcent-landing-elements/fragments/nexcent-react-statistics/fragment.json',
+    'client-extensions/nexcent-landing-elements/fragments/nexcent-react-feature-secondary/fragment.json',
+    'client-extensions/nexcent-landing-elements/fragments/nexcent-react-testimonial/fragment.json',
+    'client-extensions/nexcent-landing-elements/fragments/nexcent-react-marketing/fragment.json',
+    'client-extensions/nexcent-landing-elements/fragments/nexcent-react-cta/fragment.json',
+    'client-extensions/nexcent-landing-elements/fragments/nexcent-react-footer/fragment.json',
+    'client-extensions/nexcent-landing-elements/fragments/nexcent-react-footer/configuration.json',
+    'client-extensions/nexcent-landing-elements/fragments/nexcent-react-footer/index.html',
+    'client-extensions/nexcent-landing-elements/scripts/package-fragments.mjs',
     'training/master-track-code-labs/web-content-templates/nxc-landing-hero.ftl',
     'training/master-track-code-labs/web-content-templates/nxc-service-item.ftl',
     'training/master-track-code-labs/sample-data/nexcent-landing.mock.json',
@@ -167,6 +196,86 @@ for (const expected of [
 ]) {
     if (!restOpenApi.includes(expected)) {
         throw new Error(`REST Builder contract is missing ${expected}.`);
+    }
+}
+
+const siteShellOpenApi = await readFile(
+    'modules/nexcent-site-shell/nexcent-site-shell-rest-impl/rest-openapi.yaml',
+    'utf8'
+);
+
+for (const expected of [
+    'getSiteSiteShell',
+    '/sites/{siteId}/site-shell',
+    'AccountContext',
+    'NavigationItem',
+]) {
+    if (!siteShellOpenApi.includes(expected)) {
+        throw new Error(`Site Shell REST contract is missing ${expected}.`);
+    }
+}
+
+const siteShellBuild = await readFile(
+    'modules/nexcent-site-shell/nexcent-site-shell-rest-impl/build.gradle',
+    'utf8'
+);
+
+for (const expected of [
+    'auth.verifier.guest.allowed=true',
+    'liferay.access.control.disable=true',
+    'oauth2.scopechecker.type=none',
+]) {
+    if (!siteShellBuild.includes(expected)) {
+        throw new Error(`Site Shell public read contract is missing ${expected}.`);
+    }
+}
+
+const themeClientExtension = await readFile(
+    'client-extensions/nexcent-theme/client-extension.yaml',
+    'utf8'
+);
+const themeEntry = await readFile(
+    'client-extensions/nexcent-theme/assets/global-entry.css',
+    'utf8'
+);
+const reactShellCss = await readFile(
+    'client-extensions/nexcent-theme/assets/react-shell.css',
+    'utf8'
+);
+
+if (!themeClientExtension.includes('url: global-entry.css')) {
+    throw new Error('Nexcent Global CSS must load the React-aware global entry.');
+}
+
+for (const expected of ['./global.css', './react-shell.css']) {
+    if (!themeEntry.includes(expected)) {
+        throw new Error(`Theme global entry is missing ${expected}.`);
+    }
+}
+
+for (const expected of [
+    'nexcent-react-header',
+    'nexcent-react-footer',
+    '--nxc-color-primary',
+    'lfr-layout-structure-item-nexcent-react-header',
+]) {
+    if (!reactShellCss.includes(expected)) {
+        throw new Error(`React shell theme bridge is missing ${expected}.`);
+    }
+}
+
+for (const fragmentPath of [
+    'client-extensions/nexcent-landing-elements/fragments/nexcent-react-header/index.html',
+    'client-extensions/nexcent-landing-elements/fragments/nexcent-react-footer/index.html',
+]) {
+    const fragmentHtml = (await readFile(fragmentPath, 'utf8')).trim();
+
+    if (!/^<nexcent-react-(header|footer)\b[^>]*><\/nexcent-react-\1>$/.test(fragmentHtml)) {
+        throw new Error(`${fragmentPath} must contain exactly one React custom-element tag.`);
+    }
+
+    if (!fragmentHtml.includes('themeDisplay.getScopeGroupId()')) {
+        throw new Error(`${fragmentPath} must pass the runtime site ID to React.`);
     }
 }
 

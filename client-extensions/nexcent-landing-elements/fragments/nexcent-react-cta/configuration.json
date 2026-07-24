@@ -1,0 +1,49 @@
+{
+    "fieldSets": [
+        {
+            "fields": [
+                {
+                    "dataType": "string",
+                    "defaultValue": "Pellentesque suscipit fringilla libero eu.",
+                    "label": "Title",
+                    "name": "title",
+                    "type": "text"
+                },
+                {
+                    "defaultValue": true,
+                    "label": "Show button",
+                    "name": "showButton",
+                    "type": "checkbox"
+                },
+                {
+                    "dataType": "string",
+                    "defaultValue": "Get a Demo",
+                    "label": "Button label",
+                    "name": "buttonLabel",
+                    "type": "text"
+                },
+                {
+                    "dataType": "string",
+                    "defaultValue": "#demo",
+                    "label": "Button URL",
+                    "name": "buttonURL",
+                    "type": "text"
+                },
+                {
+                    "dataType": "string",
+                    "defaultValue": "_self",
+                    "label": "Button target",
+                    "name": "buttonTarget",
+                    "type": "select",
+                    "typeOptions": {
+                        "validValues": [
+                            {"label": "Same tab", "value": "_self"},
+                            {"label": "New tab", "value": "_blank"}
+                        ]
+                    }
+                }
+            ],
+            "label": "Call to action"
+        }
+    ]
+}

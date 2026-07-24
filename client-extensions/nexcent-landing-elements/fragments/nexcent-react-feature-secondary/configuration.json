@@ -1,0 +1,75 @@
+{
+    "fieldSets": [
+        {
+            "fields": [
+                {
+                    "dataType": "string",
+                    "defaultValue": "How to design your site footer like we did",
+                    "label": "Title",
+                    "name": "title",
+                    "type": "text"
+                },
+                {
+                    "dataType": "string",
+                    "defaultValue": "Donec a eros justo. Fusce egestas tristique ultrices. Nam tempor, augue nec tincidunt molestie, massa nunc varius arcu, at scelerisque elit erat a magna. Donec quis erat at libero ultrices mollis. In hac habitasse platea dictumst. Vivamus vehicula leo dui, at porta nisi facilisis finibus. In euismod augue vitae nisi ultricies, non aliquet urna tincidunt. Integer in nisi eget nulla commodo faucibus efficitur quis massa. Praesent felis est, finibus et nisi ac, hendrerit venenatis libero. Donec consectetur faucibus ipsum id gravida.",
+                    "label": "Description",
+                    "name": "description",
+                    "type": "text"
+                },
+                {
+                    "dataType": "string",
+                    "defaultValue": "",
+                    "label": "Image URL",
+                    "name": "imageURL",
+                    "type": "text"
+                },
+                {
+                    "dataType": "string",
+                    "defaultValue": "Mobile authentication illustration",
+                    "label": "Image alt text",
+                    "name": "imageAlt",
+                    "type": "text"
+                }
+            ],
+            "label": "Content"
+        },
+        {
+            "fields": [
+                {
+                    "defaultValue": true,
+                    "label": "Show button",
+                    "name": "showButton",
+                    "type": "checkbox"
+                },
+                {
+                    "dataType": "string",
+                    "defaultValue": "Learn More",
+                    "label": "Button label",
+                    "name": "buttonLabel",
+                    "type": "text"
+                },
+                {
+                    "dataType": "string",
+                    "defaultValue": "#learn-more",
+                    "label": "Button URL",
+                    "name": "buttonURL",
+                    "type": "text"
+                },
+                {
+                    "dataType": "string",
+                    "defaultValue": "_self",
+                    "label": "Button target",
+                    "name": "buttonTarget",
+                    "type": "select",
+                    "typeOptions": {
+                        "validValues": [
+                            {"label": "Same tab", "value": "_self"},
+                            {"label": "New tab", "value": "_blank"}
+                        ]
+                    }
+                }
+            ],
+            "label": "Call to action"
+        }
+    ]
+}

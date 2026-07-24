@@ -21,7 +21,7 @@ function fieldSupported(field) {
   const nested = field.nestedContentStructureFields || field.nestedContentFields || [];
   const repeatable = field.repeatable === true || field.multiple === true;
   const type = String(field.dataType || '').toLowerCase();
-  const unsupportedTypes = new Set(['document', 'image', 'geolocation', 'relationship', 'grid']);
+  const unsupportedTypes = new Set(['document', 'geolocation', 'relationship', 'grid']);
   return nested.length === 0 && !repeatable && !unsupportedTypes.has(type);
 }
 
@@ -35,7 +35,8 @@ export function buildTargets(structure) {
       name: 'title',
       required: true,
       section: 'Article',
-      supported: true
+      supported: true,
+      valueKind: 'scalar'
     },
     {
       aliases: ['external reference code', 'externalReferenceCode', 'erc', 'article id'],
@@ -45,21 +46,35 @@ export function buildTargets(structure) {
       name: 'externalReferenceCode',
       required: true,
       section: 'Article',
-      supported: true
+      supported: true,
+      valueKind: 'scalar'
     }
   ];
 
-  const contentTargets = (structure.contentStructureFields || []).map((field) => ({
-    aliases: [field.name, field.fieldReference, textFromLocalized(field.label), field.externalReferenceCode],
-    dataType: field.dataType || 'string',
-    inputControl: field.inputControl || null,
-    key: `content.${field.fieldReference || field.name}`,
-    label: textFromLocalized(field.label) || field.fieldReference || field.name,
-    name: field.fieldReference || field.name,
-    required: fieldRequired(field),
-    section: 'Structure fields',
-    supported: fieldSupported(field)
-  }));
+  const contentTargets = (structure.contentStructureFields || []).map((field) => {
+    const dataType = String(field.dataType || 'string').toLowerCase();
+    const label = textFromLocalized(field.label) || field.fieldReference || field.name;
+    const name = field.fieldReference || field.name;
+
+    return {
+      aliases: [
+        field.name,
+        field.fieldReference,
+        label,
+        field.externalReferenceCode,
+        ...(dataType === 'image' ? [`${label} ERC`, `${name} ERC`, 'image ERC', 'document ERC'] : [])
+      ],
+      dataType,
+      inputControl: field.inputControl || null,
+      key: `content.${name}`,
+      label,
+      name,
+      required: fieldRequired(field),
+      section: 'Structure fields',
+      supported: fieldSupported(field),
+      valueKind: dataType === 'image' ? 'documentExternalReferenceCode' : 'scalar'
+    };
+  });
 
   return [...systemTargets, ...contentTargets];
 }
@@ -71,7 +86,9 @@ export function buildTemplateColumns(structure) {
       ...target,
       header: target.key.startsWith('system.')
         ? `${target.label}${target.required ? ' *' : ''}`
-        : `${target.label}${target.required ? ' *' : ''} [${target.name}]`
+        : target.valueKind === 'documentExternalReferenceCode'
+          ? `${target.label}${target.required ? ' *' : ''} ERC [${target.name}]`
+          : `${target.label}${target.required ? ' *' : ''} [${target.name}]`
     }));
 }
 

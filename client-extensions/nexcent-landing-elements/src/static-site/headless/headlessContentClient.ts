@@ -18,6 +18,12 @@ type LoadStructuredContentsOptions = {
     structureIdentifier: string;
 };
 
+const LINK_FIELD_NAMES = new Set([
+    'ctaurl',
+    'linkurl',
+    'targeturl',
+]);
+
 function normalizeIdentifier(value: string | number | undefined): string {
     return String(value ?? '').trim().toLowerCase();
 }
@@ -42,6 +48,27 @@ function findField(
     );
 }
 
+function readOptionalContentNumber(
+    content: HeadlessStructuredContent,
+    names: string[]
+): number | undefined {
+    const rawValue = readContentText(content, names, '');
+
+    if (!rawValue) {
+        return undefined;
+    }
+
+    const value = Number(rawValue);
+
+    return Number.isFinite(value) ? value : undefined;
+}
+
+function publishedTimestamp(content: HeadlessStructuredContent): number {
+    const value = Date.parse(content.datePublished ?? '');
+
+    return Number.isFinite(value) ? value : 0;
+}
+
 export function readContentText(
     content: HeadlessStructuredContent,
     names: string[],
@@ -49,11 +76,19 @@ export function readContentText(
 ): string {
     const data = findField(content, names)?.contentFieldValue?.data;
 
-    if (data === null || data === undefined) {
-        return fallback;
+    if (data !== null && data !== undefined) {
+        const value = String(data).trim();
+
+        if (value) {
+            return value;
+        }
     }
 
-    return String(data).trim() || fallback;
+    if (names.some((name) => LINK_FIELD_NAMES.has(normalizeIdentifier(name)))) {
+        return content.contentUrl?.trim() || fallback;
+    }
+
+    return fallback;
 }
 
 export function readContentBoolean(
@@ -85,7 +120,8 @@ export function readContentImage(
     names: string[],
     fallback: {alt: string; url: string}
 ): {alt: string; url: string} {
-    const fieldValue = findField(content, names)?.contentFieldValue;
+    const imageFieldNames = [...new Set([...names, 'coverImage'])];
+    const fieldValue = findField(content, imageFieldNames)?.contentFieldValue;
     const image = fieldValue?.image ?? fieldValue?.document;
     const rawData = fieldValue?.data;
     let dataImage: HeadlessDocument | undefined;
@@ -125,17 +161,31 @@ export async function loadStructuredContents({
         locale
     );
     const contents = await listStructuredContents(structure.id, locale, {
-        pageSize,
-        sort: 'contentFields/sortOrder:asc',
+        flatten: true,
+        pageSize: 100,
     });
 
     return contents
         .filter((item) => readContentBoolean(item, ['active', 'enabled'], true))
-        .sort(
-            (left, right) =>
-                readContentNumber(left, ['sortOrder', 'displayOrder'], 0) -
-                readContentNumber(right, ['sortOrder', 'displayOrder'], 0)
-        )
+        .sort((left, right) => {
+            const leftOrder = readOptionalContentNumber(left, [
+                'sortOrder',
+                'displayOrder',
+            ]);
+            const rightOrder = readOptionalContentNumber(right, [
+                'sortOrder',
+                'displayOrder',
+            ]);
+
+            if (leftOrder !== undefined || rightOrder !== undefined) {
+                return (
+                    (leftOrder ?? Number.MAX_SAFE_INTEGER) -
+                    (rightOrder ?? Number.MAX_SAFE_INTEGER)
+                );
+            }
+
+            return publishedTimestamp(right) - publishedTimestamp(left);
+        })
         .slice(0, pageSize);
 }
 

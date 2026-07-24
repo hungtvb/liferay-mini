@@ -53,26 +53,49 @@ export function buildTargets(structure) {
 
   const contentTargets = (structure.contentStructureFields || []).map((field) => {
     const dataType = String(field.dataType || 'string').toLowerCase();
-    const label = textFromLocalized(field.label) || field.fieldReference || field.name;
-    const name = field.fieldReference || field.name;
+    const label =
+      textFromLocalized(field.label) ||
+      field.fieldReference ||
+      field.name;
+
+    const fieldReference = field.fieldReference || field.name;
+    const name = field.name || fieldReference;
 
     return {
       aliases: [
-        field.name,
-        field.fieldReference,
+        fieldReference,
+        name,
         label,
         field.externalReferenceCode,
-        ...(dataType === 'image' ? [`${label} ERC`, `${name} ERC`, 'image ERC', 'document ERC'] : [])
+        ...(dataType === 'image'
+          ? [
+              `${label} ERC`,
+              `${fieldReference} ERC`,
+              `${name} ERC`,
+              'image ERC',
+              'document ERC'
+            ]
+          : [])
       ],
       dataType,
+      fieldReference,
       inputControl: field.inputControl || null,
-      key: `content.${name}`,
+
+      // Dùng fieldReference làm identity thân thiện cho mapping Excel.
+      key: `content.${fieldReference}`,
+
       label,
+
+      // Internal DDM field name.
       name,
+
       required: fieldRequired(field),
       section: 'Structure fields',
       supported: fieldSupported(field),
-      valueKind: dataType === 'image' ? 'documentExternalReferenceCode' : 'scalar'
+      valueKind:
+        dataType === 'image'
+          ? 'documentExternalReferenceCode'
+          : 'scalar'
     };
   });
 
@@ -82,34 +105,69 @@ export function buildTargets(structure) {
 export function buildTemplateColumns(structure) {
   return buildTargets(structure)
     .filter((target) => target.supported)
-    .map((target) => ({
-      ...target,
-      header: target.key.startsWith('system.')
-        ? `${target.label}${target.required ? ' *' : ''}`
-        : target.valueKind === 'documentExternalReferenceCode'
-          ? `${target.label}${target.required ? ' *' : ''} ERC [${target.name}]`
-          : `${target.label}${target.required ? ' *' : ''} [${target.name}]`
-    }));
+    .map((target) => {
+      if (target.key.startsWith('system.')) {
+        return {
+          ...target,
+          header: `${target.label}${target.required ? ' *' : ''}`
+        };
+      }
+
+      const reference = target.fieldReference || target.name;
+
+      return {
+        ...target,
+        header:
+          target.valueKind === 'documentExternalReferenceCode'
+            ? `${target.label}${target.required ? ' *' : ''} ERC [${reference}]`
+            : `${target.label}${target.required ? ' *' : ''} [${reference}]`
+      };
+    });
 }
 
 export function createTemplateMapping(headers, targets) {
   const mapping = {};
-  const targetsByName = new Map(targets.map((target) => [target.name, target]));
+
+  const targetsByReference = new Map();
+
+  for (const target of targets) {
+    if (target.fieldReference) {
+      targetsByReference.set(target.fieldReference, target);
+    }
+
+    if (target.name) {
+      targetsByReference.set(target.name, target);
+    }
+  }
 
   for (const header of headers) {
     const fieldMatch = String(header).match(/\[([^\]]+)\]\s*$/);
-    let target = fieldMatch ? targetsByName.get(fieldMatch[1].trim()) : null;
+
+    let target = fieldMatch
+      ? targetsByReference.get(fieldMatch[1].trim())
+      : null;
 
     if (!target) {
-      const normalized = normalizeKey(String(header).replace(/\s*\*\s*$/, ''));
+      const normalized = normalizeKey(
+        String(header).replace(/\s*\*\s*$/, '')
+      );
+
       target = targets.find((candidate) =>
-        [candidate.label, candidate.name, ...(candidate.aliases || [])]
+        [
+          candidate.label,
+          candidate.fieldReference,
+          candidate.name,
+          ...(candidate.aliases || [])
+        ]
+          .filter(Boolean)
           .map(normalizeKey)
           .includes(normalized)
       );
     }
 
-    if (target) mapping[target.key] = header;
+    if (target) {
+      mapping[target.key] = header;
+    }
   }
 
   return mapping;

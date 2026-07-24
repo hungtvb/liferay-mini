@@ -120,7 +120,8 @@ export class LiferayClient {
       folder = await this.#request(`/o/headless-delivery/v1.0/sites/${siteId}/structured-content-folders`, {
         body: JSON.stringify({
           externalReferenceCode: this.config.articleFolderExternalReferenceCode,
-          name: this.config.articleFolderName
+          name: this.config.articleFolderName,
+          viewableBy: 'Anyone'
         }),
         headers: {'Content-Type': 'application/json'},
         method: 'POST'
@@ -175,6 +176,7 @@ export class LiferayClient {
       siteId: this.config.siteId
     });
     const path = `/o/headless-batch-engine/v1.0/import-task/${encodePath(this.config.batchClassName)}?${query}`;
+    console.log(`Path: ${path}`);
     return this.#request(path, {
       body: JSON.stringify(items),
       headers: {'Content-Type': 'application/json'},

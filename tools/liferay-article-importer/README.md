@@ -5,7 +5,7 @@ A local Node.js migration utility with a plain HTML/CSS/JavaScript UI for import
 ## Canonical content contract
 
 ```text
-Structure ERC: NXC_ARTICLE
+Structure ID: NXC_ARTICLE
 Target folder ERC: NXC_ARTICLES
 Target folder name: Articles
 
@@ -27,7 +27,7 @@ The importer does not add `sortOrder`, `active`, `featured`, `summary`, `authorN
 ```text
 Connect with OAuth2 Client Credentials
 → resolve or create the configured Articles folder
-→ resolve the exact NXC_ARTICLE Structure by ERC
+→ resolve the exact NXC_ARTICLE Structure by ID
 → generate a Structure-driven Excel template
 → fill Article data and existing Image Document ERCs
 → upload and validate the workbook
@@ -53,7 +53,7 @@ Required values:
 ```dotenv
 LIFERAY_BASE_URL=http://localhost:8080
 LIFERAY_SITE_ID=20117
-LIFERAY_ARTICLE_STRUCTURE_ERC=NXC_ARTICLE
+LIFERAY_ARTICLE_STRUCTURE_ID=your-structure-id
 LIFERAY_ARTICLE_FOLDER_ERC=NXC_ARTICLES
 LIFERAY_ARTICLE_FOLDER_NAME=Articles
 LIFERAY_OAUTH_CLIENT_ID=your-client-id
@@ -77,7 +77,7 @@ Never commit a populated `.env` file.
 
 ## Exact Structure guard
 
-The application loads all Site Structures, but exposes only the Structure whose External Reference Code exactly matches `LIFERAY_ARTICLE_STRUCTURE_ERC`.
+The application loads all Site Structures, but exposes only the Structure whose ID exactly matches `LIFERAY_ARTICLE_STRUCTURE_ID`.
 
 The server validates the Structure again when:
 

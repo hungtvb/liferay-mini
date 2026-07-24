@@ -33,6 +33,7 @@ export function structureFingerprint(structure) {
     .filter((target) => target.key.startsWith('content.'))
     .map((target) => ({
       dataType: target.dataType,
+      fieldReference: target.fieldReference || target.name,
       name: target.name,
       required: target.required,
       supported: target.supported,
@@ -199,9 +200,15 @@ export async function parseTemplateWorkbook(buffer, structure, folder = null) {
   assert(rows.length > 0, 400, 'WORKBOOK_NO_ROWS', 'The Articles sheet contains no data rows');
 
   const targets = buildTargets(structure);
+  const mapping = Object.fromEntries(
+    expectedColumns.map((column, index) => [
+        column.key,
+        headers[index]
+      ])
+    );
   return {
     headers,
-    mapping: createTemplateMapping(headers, targets),
+    mapping,
     metadata,
     rowNumbers,
     rows,

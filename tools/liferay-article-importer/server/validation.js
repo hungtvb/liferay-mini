@@ -55,7 +55,7 @@ function imagePayload(document) {
   return Object.fromEntries([
     ['contentType', document.contentType || 'Document'],
     ['contentUrl', document.contentUrl],
-    ['description', document.description || ''],
+    ['description', document.description || document.title],
     ['encodingFormat', document.encodingFormat],
     ['fileExtension', document.fileExtension],
     ['id', document.id],
@@ -135,7 +135,8 @@ export async function validateAndBuildPayload({
     const article = {
       contentFields: [],
       contentStructureId: structure.id,
-      structuredContentFolderId: folder.id
+      structuredContentFolderId: folder.id,
+      viewableBy: 'Anyone'
     };
 
     for (const target of targets) {
@@ -184,10 +185,22 @@ export async function validateAndBuildPayload({
           }));
           continue;
         }
-        article.contentFields.push({contentFieldValue: {image: imagePayload(document)}, name: target.name});
+        article.contentFields.push({
+          fieldReference: target.fieldReference || target.name,
+          name: target.name,
+          contentFieldValue: {
+            image: imagePayload(document)
+          }
+        });
       }
       else if (targetKey.startsWith('content.')) {
-        article.contentFields.push({contentFieldValue: {data: converted}, name: target.name});
+        article.contentFields.push({
+          fieldReference: target.fieldReference || target.name,
+          name: target.name,
+          contentFieldValue: {
+            data: converted
+          }
+        });
       }
     }
 

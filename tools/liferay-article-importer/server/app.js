@@ -17,20 +17,20 @@ function normalizeIdentifier(value) {
 }
 
 function assertArticleStructure(structure, config) {
-  const expected = normalizeIdentifier(config.articleStructureExternalReferenceCode);
-  const actual = normalizeIdentifier(structure?.externalReferenceCode);
+  const expected = normalizeIdentifier(config.articleStructureId);
+  const actual = normalizeIdentifier(structure?.id);
   assert(
     actual === expected,
     400,
     'ARTICLE_STRUCTURE_MISMATCH',
-    `Expected Article Structure ERC "${config.articleStructureExternalReferenceCode}" but received "${structure?.externalReferenceCode || structure?.name || 'unknown'}"`
+    `Expected Article Structure ID "${config.articleStructureId}" but received "${structure?.id || structure?.name || 'unknown'}"`
   );
   return structure;
 }
 
 function findArticleStructure(structures, config) {
-  const expected = normalizeIdentifier(config.articleStructureExternalReferenceCode);
-  return structures.find((structure) => normalizeIdentifier(structure.externalReferenceCode) === expected);
+  const expected = normalizeIdentifier(config.articleStructureId);
+  return structures.find((structure) => normalizeIdentifier(structure.id) === expected);
 }
 
 function asTask(task) {
@@ -72,7 +72,7 @@ export function createApp({config, liferay, sessions}) {
     response.json({
       articleFolderExternalReferenceCode: config.articleFolderExternalReferenceCode,
       articleFolderName: config.articleFolderName,
-      articleStructureExternalReferenceCode: config.articleStructureExternalReferenceCode,
+      articleStructureId: config.articleStructureId,
       baseUrl: config.baseUrl,
       connected: liferay.connected,
       locale: config.locale,
@@ -92,7 +92,7 @@ export function createApp({config, liferay, sessions}) {
         articleStructure,
         409,
         'ARTICLE_STRUCTURE_NOT_FOUND',
-        `Content Structure with ERC "${config.articleStructureExternalReferenceCode}" was not found in Site ${config.siteId}`
+        `Content Structure with ID "${config.articleStructureId}" was not found in Site ${config.siteId}`
       );
       response.json({
         articleStructure,

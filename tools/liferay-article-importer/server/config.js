@@ -23,7 +23,7 @@ export function loadConfig() {
   return {
     articleFolderExternalReferenceCode: readRequired('LIFERAY_ARTICLE_FOLDER_ERC'),
     articleFolderName: readRequired('LIFERAY_ARTICLE_FOLDER_NAME'),
-    articleStructureExternalReferenceCode: readRequired('LIFERAY_ARTICLE_STRUCTURE_ERC'),
+    articleStructureId: readRequired('LIFERAY_ARTICLE_STRUCTURE_ID'),
     baseUrl,
     batchClassName: 'com.liferay.headless.delivery.dto.v1_0.StructuredContent',
     clientId: readRequired('LIFERAY_OAUTH_CLIENT_ID'),

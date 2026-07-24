@@ -10,6 +10,7 @@ export type Page<T> = {
 export type ContentStructure = {
     externalReferenceCode?: string;
     id: number;
+    key?: string;
     name: string;
 };
 
@@ -22,11 +23,13 @@ export type ImageValue = {
 
 export type ContentFieldValue = {
     data?: unknown;
+    document?: ImageValue;
     image?: ImageValue;
 };
 
 export type ContentField = {
     contentFieldValue?: ContentFieldValue;
+    fieldReference?: string;
     name: string;
     nestedContentFields?: ContentField[];
 };
@@ -34,16 +37,50 @@ export type ContentField = {
 export type StructuredContent = {
     contentFields: ContentField[];
     contentStructureId: number;
+    datePublished?: string;
     externalReferenceCode: string;
+    friendlyUrlPath?: string;
     id: number;
     title: string;
 };
 
+export type ListStructuredContentsOptions = {
+    filter?: string;
+    pageSize?: number;
+    sort?: string;
+};
+
+const requestCache = new Map<string, Promise<unknown>>();
+
+function normalizeIdentifier(value: string | number | undefined): string {
+    return String(value ?? '').trim().toLowerCase();
+}
+
+function cachedPortalFetch<T>(path: string, locale = ''): Promise<T> {
+    const cacheKey = `${locale}:${path}`;
+    const cachedRequest = requestCache.get(cacheKey);
+
+    if (cachedRequest) {
+        return cachedRequest as Promise<T>;
+    }
+
+    const request = portalFetch<T>(path, {
+        headers: locale ? {'Accept-Language': locale} : undefined,
+    });
+
+    requestCache.set(cacheKey, request);
+    request.catch(() => requestCache.delete(cacheKey));
+
+    return request;
+}
+
 export async function listContentStructures(
-    siteId: string
+    siteId: string,
+    locale = ''
 ): Promise<ContentStructure[]> {
-    const page = await portalFetch<Page<ContentStructure>>(
-        `/o/headless-delivery/v1.0/sites/${encodeURIComponent(siteId)}/content-structures?pageSize=100`
+    const page = await cachedPortalFetch<Page<ContentStructure>>(
+        `/o/headless-delivery/v1.0/sites/${encodeURIComponent(siteId)}/content-structures?pageSize=200`,
+        locale
     );
 
     return page.items;
@@ -51,20 +88,32 @@ export async function listContentStructures(
 
 export async function resolveContentStructure(
     siteId: string,
-    identifier: string
+    identifier: string,
+    locale = ''
 ): Promise<ContentStructure> {
-    const normalizedIdentifier = identifier.trim().toLowerCase();
-    const structures = await listContentStructures(siteId);
-    const structure = structures.find(
-        (item) =>
-            item.externalReferenceCode?.toLowerCase() ===
-                normalizedIdentifier ||
-            item.name.trim().toLowerCase() === normalizedIdentifier
+    const normalizedIdentifier = normalizeIdentifier(identifier);
+
+    if (!normalizedIdentifier) {
+        throw new Error('A Content Structure key or ERC is required.');
+    }
+
+    if (/^\d+$/.test(normalizedIdentifier)) {
+        return {
+            id: Number(normalizedIdentifier),
+            name: identifier,
+        };
+    }
+
+    const structures = await listContentStructures(siteId, locale);
+    const structure = structures.find((item) =>
+        [item.externalReferenceCode, item.key, item.id].some(
+            (candidate) => normalizeIdentifier(candidate) === normalizedIdentifier
+        )
     );
 
     if (!structure) {
         throw new Error(
-            `Content Structure "${identifier}" was not found in site ${siteId}.`
+            `Content Structure key or ERC "${identifier}" was not found in site ${siteId}.`
         );
     }
 
@@ -72,13 +121,36 @@ export async function resolveContentStructure(
 }
 
 export async function listStructuredContents(
-    contentStructureId: number
+    contentStructureId: number,
+    locale = '',
+    options: ListStructuredContentsOptions = {}
 ): Promise<StructuredContent[]> {
-    const page = await portalFetch<Page<StructuredContent>>(
-        `/o/headless-delivery/v1.0/content-structures/${contentStructureId}/structured-contents?flatten=true&pageSize=100`
+    const pageSize = Math.min(
+        100,
+        Math.max(1, Math.trunc(options.pageSize ?? 100))
+    );
+    const query = new URLSearchParams({pageSize: String(pageSize)});
+
+    if (options.filter?.trim()) {
+        query.set('filter', options.filter.trim());
+    }
+
+    if (options.sort?.trim()) {
+        query.set('sort', options.sort.trim());
+    }
+
+    const page = await cachedPortalFetch<Page<StructuredContent>>(
+        `/o/headless-delivery/v1.0/content-structures/${encodeURIComponent(
+            String(contentStructureId)
+        )}/structured-contents?${query.toString()}`,
+        locale
     );
 
     return page.items;
+}
+
+export function clearStructuredContentRequestCache(): void {
+    requestCache.clear();
 }
 
 export function flattenContentFields(
@@ -90,6 +162,10 @@ export function flattenContentFields(
         for (const field of items) {
             if (field.contentFieldValue) {
                 result.set(field.name, field.contentFieldValue);
+
+                if (field.fieldReference) {
+                    result.set(field.fieldReference, field.contentFieldValue);
+                }
             }
 
             if (field.nestedContentFields?.length) {
@@ -146,5 +222,7 @@ export function readImage(
     fields: Map<string, ContentFieldValue>,
     name: string
 ): ImageValue | undefined {
-    return fields.get(name)?.image;
+    const value = fields.get(name);
+
+    return value?.image ?? value?.document;
 }

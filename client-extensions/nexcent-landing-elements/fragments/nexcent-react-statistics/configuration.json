@@ -1,0 +1,36 @@
+{
+    "fieldSets": [
+        {
+            "fields": [
+                {"dataType": "string", "defaultValue": "Helping a local", "label": "Title", "name": "title", "type": "text"},
+                {"dataType": "string", "defaultValue": "business reinvent itself", "label": "Highlighted text", "name": "highlight", "type": "text"},
+                {"dataType": "string", "defaultValue": "We reached here with our hard work and dedication", "label": "Description", "name": "description", "type": "text"}
+            ],
+            "label": "Section"
+        },
+        {
+            "fields": [
+                {"dataType": "string", "defaultValue": "2,245,341", "label": "Metric 1 value", "name": "metric1Value", "type": "text"},
+                {"dataType": "string", "defaultValue": "Members", "label": "Metric 1 label", "name": "metric1Label", "type": "text"},
+                {"dataType": "string", "defaultValue": "", "label": "Metric 1 icon URL", "name": "metric1IconURL", "type": "text"},
+                {"dataType": "string", "defaultValue": "Members", "label": "Metric 1 icon alt", "name": "metric1IconAlt", "type": "text"},
+
+                {"dataType": "string", "defaultValue": "46,328", "label": "Metric 2 value", "name": "metric2Value", "type": "text"},
+                {"dataType": "string", "defaultValue": "Clubs", "label": "Metric 2 label", "name": "metric2Label", "type": "text"},
+                {"dataType": "string", "defaultValue": "", "label": "Metric 2 icon URL", "name": "metric2IconURL", "type": "text"},
+                {"dataType": "string", "defaultValue": "Clubs", "label": "Metric 2 icon alt", "name": "metric2IconAlt", "type": "text"},
+
+                {"dataType": "string", "defaultValue": "828,867", "label": "Metric 3 value", "name": "metric3Value", "type": "text"},
+                {"dataType": "string", "defaultValue": "Event Bookings", "label": "Metric 3 label", "name": "metric3Label", "type": "text"},
+                {"dataType": "string", "defaultValue": "", "label": "Metric 3 icon URL", "name": "metric3IconURL", "type": "text"},
+                {"dataType": "string", "defaultValue": "Event bookings", "label": "Metric 3 icon alt", "name": "metric3IconAlt", "type": "text"},
+
+                {"dataType": "string", "defaultValue": "1,926,436", "label": "Metric 4 value", "name": "metric4Value", "type": "text"},
+                {"dataType": "string", "defaultValue": "Payments", "label": "Metric 4 label", "name": "metric4Label", "type": "text"},
+                {"dataType": "string", "defaultValue": "", "label": "Metric 4 icon URL", "name": "metric4IconURL", "type": "text"},
+                {"dataType": "string", "defaultValue": "Payments", "label": "Metric 4 icon alt", "name": "metric4IconAlt", "type": "text"}
+            ],
+            "label": "Metrics"
+        }
+    ]
+}

@@ -6,6 +6,7 @@ import {Features} from './components/Features/Features';
 import {Hero} from './components/Hero/Hero';
 import {ContentImporter} from './components/Importer/ContentImporter';
 import {Services} from './components/Services/Services';
+import {registerStaticElements} from './static-site/registerStaticElements';
 import './styles.css';
 
 type ElementRenderer = (element: HTMLElement) => ReactNode;
@@ -69,3 +70,5 @@ registerReactElement('nexcent-features', (element) => (
         }
     />
 ));
+
+registerStaticElements();

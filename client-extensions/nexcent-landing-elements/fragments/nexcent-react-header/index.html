@@ -1,0 +1,48 @@
+[#macro navigationJSON items]
+[
+    [#list items as item]
+        {
+            "children": [@navigationJSON items=(item.getChildren())![] /],
+            "externalReferenceCode": "${item.getLayoutId()?c}",
+            "label": "${item.getName()?json_string}",
+            "selected": ${(item.isSelected() || item.isChildSelected())?c},
+            "target": "${(item.getTarget()!"")?json_string}",
+            "url": "${(item.getRegularURL()!"#")?json_string}"
+        }[#sep],[/#sep]
+    [/#list]
+]
+[/#macro]
+
+[#assign
+    account = themeDisplay.getUser()
+    navigationItems = (navigationSourceObject.navItems)![]
+/]
+
+<nexcent-react-header
+    login-label="${htmlUtil.escape(configuration.loginLabel)}"
+    logo-alt="${htmlUtil.escape(configuration.logoAlt)}"
+    logo-url="${htmlUtil.escape(configuration.logoURL)}"
+    my-account-label="${htmlUtil.escape(configuration.myAccountLabel)}"
+    show-account-actions="${configuration.showAccountActions?c}"
+    sign-out-label="${htmlUtil.escape(configuration.signOutLabel)}"
+    sign-up-label="${htmlUtil.escape(configuration.signUpLabel)}"
+>
+    <script ${nonceAttribute} data-nexcent-header-props type="application/json">
+        {
+            "account": {
+                "accountURL": "${(themeDisplay.getURLMyAccount()!"")?string?json_string}",
+                "createAccountURL": "${(configuration.createAccountURL!"/web/guest/create-account")?json_string}",
+                "displayName": "${(account.getFullName()!"")?json_string}",
+                "loginURL": "${(themeDisplay.getURLSignIn()!"/c/portal/login")?json_string}",
+                "logoutURL": "${(themeDisplay.getURLSignOut()!"/c/portal/logout")?json_string}",
+                "portraitURL": "${(account.getPortraitURL(themeDisplay)!"")?json_string}",
+                "signedIn": ${themeDisplay.isSignedIn()?c}
+            },
+            "navigation": [@navigationJSON items=navigationItems /],
+            "site": {
+                "homeURL": "${(themeDisplay.getURLHome()!"#home")?json_string}",
+                "name": "${(configuration.logoAlt!"Nexcent")?json_string}"
+            }
+        }
+    </script>
+</nexcent-react-header>

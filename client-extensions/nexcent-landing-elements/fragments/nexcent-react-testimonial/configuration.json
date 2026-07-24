@@ -1,0 +1,82 @@
+{
+    "fieldSets": [
+        {
+            "fields": [
+                {
+                    "dataType": "string",
+                    "defaultValue": "Maecenas dignissim justo eget nulla rutrum molestie. Maecenas lobortis sem dui, vel rutrum risus tincidunt ullamcorper. Proin eu enim metus. Vivamus sed libero ornare, tristique quam in, gravida enim. Nullam ut molestie arcu, at hendrerit elit. Morbi laoreet elit at ligula molestie, nec molestie mi blandit. Suspendisse cursus tellus sed augue ultrices, quis tristique nulla sodales. Suspendisse eget lorem eu turpis vestibulum pretium. Suspendisse potenti. Quisque malesuada enim sapien, vitae placerat ante feugiat eget. Quisque vulputate odio neque, eget efficitur libero condimentum id. Curabitur id nibh id sem dignissim finibus ac sit amet magna.",
+                    "label": "Quote",
+                    "name": "quote",
+                    "type": "text"
+                },
+                {
+                    "dataType": "string",
+                    "defaultValue": "Tim Smith",
+                    "label": "Author",
+                    "name": "author",
+                    "type": "text"
+                },
+                {
+                    "dataType": "string",
+                    "defaultValue": "British Dragon Boat Racing Association",
+                    "label": "Organization",
+                    "name": "organization",
+                    "type": "text"
+                },
+                {
+                    "dataType": "string",
+                    "defaultValue": "",
+                    "label": "Portrait URL",
+                    "name": "imageURL",
+                    "type": "text"
+                },
+                {
+                    "dataType": "string",
+                    "defaultValue": "Tim Smith",
+                    "label": "Portrait alt text",
+                    "name": "imageAlt",
+                    "type": "text"
+                }
+            ],
+            "label": "Testimonial"
+        },
+        {
+            "fields": [
+                {
+                    "defaultValue": true,
+                    "label": "Show partner logos",
+                    "name": "showPartnerLogos",
+                    "type": "checkbox"
+                },
+                {
+                    "dataType": "string",
+                    "defaultValue": "Meet all customers",
+                    "label": "Link label",
+                    "name": "linkLabel",
+                    "type": "text"
+                },
+                {
+                    "dataType": "string",
+                    "defaultValue": "#customers",
+                    "label": "Link URL",
+                    "name": "linkURL",
+                    "type": "text"
+                },
+                {
+                    "dataType": "string",
+                    "defaultValue": "_self",
+                    "label": "Link target",
+                    "name": "linkTarget",
+                    "type": "select",
+                    "typeOptions": {
+                        "validValues": [
+                            {"label": "Same tab", "value": "_self"},
+                            {"label": "New tab", "value": "_blank"}
+                        ]
+                    }
+                }
+            ],
+            "label": "Partner action"
+        }
+    ]
+}

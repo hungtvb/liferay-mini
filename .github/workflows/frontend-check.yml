@@ -4,6 +4,7 @@ on:
   pull_request:
     paths:
       - "client-extensions/nexcent-landing-elements/**"
+      - "client-extensions/nexcent-theme/**"
       - "sample-data/json/**"
       - "sample-data/excel/**"
       - ".github/workflows/frontend-check.yml"
@@ -12,6 +13,7 @@ on:
       - main
     paths:
       - "client-extensions/nexcent-landing-elements/**"
+      - "client-extensions/nexcent-theme/**"
       - "sample-data/json/**"
       - "sample-data/excel/**"
       - ".github/workflows/frontend-check.yml"
@@ -32,13 +34,25 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
 
+      - name: Set up Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 22
 
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
       - name: Install dependencies
         run: npm ci --no-audit --no-fund
+
+      - name: Validate Fragment data source contracts
+        run: npm run validate:data-sources
 
       - name: Test importer validation
         run: npm test
@@ -46,13 +60,36 @@ jobs:
       - name: Type-check
         run: npm run typecheck
 
-      - name: Build Client Extension
+      - name: Build React Client Extension
         run: npm run build
 
-      - name: Verify deterministic output
+      - name: Package Nexcent Fragment Set
+        run: npm run package:fragments
+
+      - name: Verify deterministic frontend output
         run: |
           test -f build/index.js
           test -f build/style.css
+          test -s build/fragments/collections-nexcent-components.zip
+          jar --list --file build/fragments/collections-nexcent-components.zip | grep -q 'nexcent-components/collection.json'
+          jar --list --file build/fragments/collections-nexcent-components.zip | grep -q 'nexcent-components/fragments/nexcent-react-header/configuration.json'
+          jar --list --file build/fragments/collections-nexcent-components.zip | grep -q 'nexcent-components/fragments/nexcent-react-hero/configuration.json'
+          jar --list --file build/fragments/collections-nexcent-components.zip | grep -q 'nexcent-components/fragments/nexcent-react-community/configuration.json'
+          jar --list --file build/fragments/collections-nexcent-components.zip | grep -q 'nexcent-components/fragments/nexcent-react-marketing/configuration.json'
+          jar --list --file build/fragments/collections-nexcent-components.zip | grep -q 'nexcent-components/fragments/nexcent-react-footer/configuration.json'
+
+      - name: Build Nexcent Theme Client Extension
+        working-directory: client-extensions/nexcent-theme
+        run: ../../gradlew build
+
+      - name: Verify theme output
+        working-directory: client-extensions/nexcent-theme
+        run: |
+          test -f assets/global-entry.css
+          test -f assets/react-shell.css
+          grep -q 'url: global-entry.css' client-extension.yaml
+          grep -q './global.css' assets/global-entry.css
+          grep -q './react-shell.css' assets/global-entry.css
 
       - name: Generate sample workbook
         run: npm run generate:workbook

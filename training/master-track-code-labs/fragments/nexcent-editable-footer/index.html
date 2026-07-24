@@ -1,0 +1,124 @@
+<footer class="nxc-editable-footer" data-nxc-editable-footer>
+    <div class="nxc-editable-footer__inner">
+        <div class="nxc-editable-footer__grid">
+            <section class="nxc-editable-footer__branding">
+                <a
+                    aria-label="${configuration.brandLabel!'Nexcent home'}"
+                    class="nxc-editable-footer__brand"
+                    href="${configuration.brandUrl!'/'}"
+                >
+                    <img
+                        alt="${configuration.logoAlt!'Nexcent'}"
+                        class="nxc-editable-footer__logo"
+                        data-lfr-editable-id="footer-logo"
+                        data-lfr-editable-type="image"
+                        src="[resources:footer-logo.svg]"
+                    />
+                </a>
+
+                <div class="nxc-editable-footer__copy">
+                    <p
+                        data-lfr-editable-id="footer-copyright"
+                        data-lfr-editable-type="text"
+                    >Copyright © 2020 Nexcent ltd.</p>
+                    <p
+                        data-lfr-editable-id="footer-rights"
+                        data-lfr-editable-type="text"
+                    >All rights reserved</p>
+                </div>
+
+                [#if configuration.showSocialLinks]
+                    <nav
+                        aria-label="${configuration.socialLabel!'Social links'}"
+                        class="nxc-editable-footer__socials"
+                    >
+                        <a
+                            aria-label="Instagram"
+                            href="${configuration.instagramUrl!'#'}"
+                        >
+                            <svg aria-hidden="true" viewBox="0 0 24 24">
+                                <rect height="18" rx="5" width="18" x="3" y="3"></rect>
+                                <circle cx="12" cy="12" r="4"></circle>
+                                <circle class="is-filled" cx="17.5" cy="6.5" r="1"></circle>
+                            </svg>
+                        </a>
+                        <a
+                            aria-label="Dribbble"
+                            href="${configuration.dribbbleUrl!'#'}"
+                        >
+                            <svg aria-hidden="true" viewBox="0 0 24 24">
+                                <circle cx="12" cy="12" r="9"></circle>
+                                <path d="M7 4.8c3.4 3.7 5.9 8 7.4 13.7"></path>
+                                <path d="M4 13c5.1-1.6 10.4-1.7 16-.2"></path>
+                                <path d="M15.5 4.8c-2.7 3.2-6.4 5.2-11 5.9"></path>
+                            </svg>
+                        </a>
+                        <a
+                            aria-label="Twitter"
+                            href="${configuration.twitterUrl!'#'}"
+                        >
+                            <svg aria-hidden="true" viewBox="0 0 24 24">
+                                <path class="is-filled" d="M18.7 7.1v.5c0 5-3.8 10.7-10.7 10.7-2.1 0-4.1-.6-5.8-1.7h.9c1.8 0 3.4-.6 4.6-1.6-1.7 0-3.1-1.1-3.6-2.6.2 0 .5.1.8.1.3 0 .7 0 1-.1-1.8-.4-3.1-1.9-3.1-3.8v-.1c.5.3 1.1.5 1.8.5-1.1-.7-1.8-1.9-1.8-3.2 0-.7.2-1.4.5-2 1.9 2.4 4.8 3.9 8 4.1-.1-.3-.1-.6-.1-.9 0-2.1 1.7-3.9 3.9-3.9 1.1 0 2.1.5 2.8 1.2.9-.2 1.7-.5 2.5-.9-.3.9-.9 1.6-1.7 2.1.8-.1 1.6-.3 2.3-.6-.6.8-1.3 1.5-2.1 2.2Z"></path>
+                            </svg>
+                        </a>
+                        <a
+                            aria-label="YouTube"
+                            href="${configuration.youtubeUrl!'#'}"
+                        >
+                            <svg aria-hidden="true" viewBox="0 0 24 24">
+                                <rect height="14" rx="4" width="20" x="2" y="5"></rect>
+                                <path class="is-filled" d="m10 9 6 3-6 3Z"></path>
+                            </svg>
+                        </a>
+                    </nav>
+                [/#if]
+            </section>
+
+            <section class="nxc-editable-footer__column nxc-editable-footer__company">
+                <h2
+                    class="nxc-editable-footer__title"
+                    data-lfr-editable-id="company-title"
+                    data-lfr-editable-type="text"
+                >Company</h2>
+
+                <nav
+                    aria-label="${configuration.companyNavigationLabel!'Company navigation'}"
+                    class="nxc-editable-footer__menu-slot nxc-footer-menu"
+                >
+                    <lfr-drop-zone id="company-menu"></lfr-drop-zone>
+                </nav>
+            </section>
+
+            <section class="nxc-editable-footer__column nxc-editable-footer__support">
+                <h2
+                    class="nxc-editable-footer__title"
+                    data-lfr-editable-id="support-title"
+                    data-lfr-editable-type="text"
+                >Support</h2>
+
+                <nav
+                    aria-label="${configuration.supportNavigationLabel!'Support navigation'}"
+                    class="nxc-editable-footer__menu-slot nxc-footer-menu"
+                >
+                    <lfr-drop-zone id="support-menu"></lfr-drop-zone>
+                </nav>
+            </section>
+
+            <section class="nxc-editable-footer__column nxc-editable-footer__newsletter">
+                <h2
+                    class="nxc-editable-footer__title"
+                    data-lfr-editable-id="newsletter-title"
+                    data-lfr-editable-type="text"
+                >Stay up to date</h2>
+
+                <div
+                    aria-label="${configuration.newsletterLabel!'Newsletter subscription'}"
+                    class="nxc-editable-footer__newsletter-slot nxc-footer-newsletter"
+                    role="region"
+                >
+                    <lfr-drop-zone id="newsletter"></lfr-drop-zone>
+                </div>
+            </section>
+        </div>
+    </div>
+</footer>

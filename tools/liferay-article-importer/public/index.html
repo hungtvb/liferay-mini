@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Nexcent Article Migration</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <main class="shell">
+    <header class="page-header">
+      <div>
+        <p class="eyebrow">One-time migration utility</p>
+        <h1>Import Liferay Articles from Excel</h1>
+        <p class="subtitle">Generate a workbook from the selected Content Structure, fill it, validate the exact payload, then run one Batch Engine migration.</p>
+      </div>
+      <div class="environment" id="environment" aria-live="polite"></div>
+    </header>
+
+    <nav class="stepper" aria-label="Import progress">
+      <button class="step is-active" data-step-button="1" type="button"><span>1</span> Connect</button>
+      <button class="step" data-step-button="2" type="button" disabled><span>2</span> Template</button>
+      <button class="step" data-step-button="3" type="button" disabled><span>3</span> Validate</button>
+      <button class="step" data-step-button="4" type="button" disabled><span>4</span> Import</button>
+    </nav>
+
+    <section class="panel" data-step-panel="1">
+      <div class="panel-heading">
+        <div><p class="step-label">Step 1</p><h2>Connect and choose a Structure</h2></div>
+        <span class="status-pill" id="connectionStatus">Not connected</span>
+      </div>
+      <div class="connection-grid">
+        <div class="read-only-field"><span>Liferay URL</span><strong id="baseUrl">—</strong></div>
+        <div class="read-only-field"><span>Site ID</span><strong id="siteId">—</strong></div>
+        <div class="read-only-field"><span>Authentication</span><strong>OAuth2 client credentials</strong></div>
+      </div>
+      <div class="actions actions-split">
+        <button class="button button-primary" id="connectButton" type="button">Connect</button>
+        <label class="field structure-field"><span>Content Structure</span><select id="structureSelect" disabled><option value="">Connect first</option></select></label>
+        <button class="button button-secondary" id="toTemplateButton" type="button" disabled>Continue</button>
+      </div>
+      <div class="message" id="connectMessage" hidden></div>
+    </section>
+
+    <section class="panel" data-step-panel="2" hidden>
+      <div class="panel-heading">
+        <div><p class="step-label">Step 2</p><h2>Generate and complete the Excel template</h2></div>
+        <span class="status-pill status-neutral" id="selectedStructure">No Structure</span>
+      </div>
+      <div class="connection-grid" id="structureSummary"></div>
+      <div class="scope-note"><strong>Template contract:</strong> do not rename, add, remove, or reorder columns. The hidden Metadata sheet binds the workbook to the exact Structure schema.</div>
+      <div class="actions actions-split">
+        <button class="button button-secondary" id="downloadTemplateButton" type="button">Download Excel template</button>
+        <span id="templateStatus">Download the template, enter your migration rows, then upload it below.</span>
+      </div>
+      <label class="drop-zone" id="dropZone">
+        <input id="workbookInput" type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">
+        <span class="drop-icon">↑</span>
+        <strong>Upload the completed template</strong>
+        <span>The tool validates Metadata, headers, required values, types, and duplicate ERCs.</span>
+        <span class="file-name" id="fileName">No file selected</span>
+      </label>
+      <div class="actions actions-end">
+        <button class="button button-ghost" data-back="1" type="button">Back</button>
+        <button class="button button-primary" id="validateButton" type="button" disabled>Next: validate JSON</button>
+      </div>
+      <div class="message" id="uploadMessage" hidden></div>
+    </section>
+
+    <section class="panel" data-step-panel="3" hidden>
+      <div class="panel-heading">
+        <div><p class="step-label">Step 3</p><h2>Validate and preview</h2></div>
+        <div class="summary-badges" id="validationBadges"></div>
+      </div>
+      <div class="workbook-summary" id="workbookSummary"></div>
+      <div class="tabs" role="tablist">
+        <button class="tab is-active" data-tab="issues" type="button">Issues</button>
+        <button class="tab" data-tab="json" type="button">JSON payload</button>
+      </div>
+      <div class="tab-panel" data-tab-panel="issues"><div id="issuesList" class="issues-list"></div></div>
+      <div class="tab-panel" data-tab-panel="json" hidden>
+        <div class="json-toolbar"><span id="jsonCount">0 items</span><div><button class="button button-ghost button-small" id="copyJsonButton" type="button">Copy</button><button class="button button-ghost button-small" id="downloadJsonButton" type="button">Download</button></div></div>
+        <pre id="jsonPreview">[]</pre>
+      </div>
+      <fieldset class="import-options">
+        <legend>Migration options</legend>
+        <label class="field"><span>Existing Articles</span><select id="createStrategy"><option value="UPSERT" selected>Create or update by External Reference Code</option><option value="INSERT">Create new only</option></select></label>
+        <label class="field"><span>When an item fails</span><select id="importStrategy"><option value="ON_ERROR_FAIL" selected>Stop the entire import</option><option value="ON_ERROR_CONTINUE">Continue and collect failed items</option></select></label>
+      </fieldset>
+      <div class="actions actions-end">
+        <button class="button button-ghost" data-back="2" type="button">Back</button>
+        <button class="button button-primary" id="startImportButton" type="button" disabled>Start Batch Import</button>
+      </div>
+    </section>
+
+    <section class="panel" data-step-panel="4" hidden>
+      <div class="panel-heading"><div><p class="step-label">Step 4</p><h2>Batch Engine job</h2></div><span class="status-pill" id="jobStatus">Preparing</span></div>
+      <div class="job-card">
+        <div class="job-meta"><div><span>Task ID</span><strong id="taskId">—</strong></div><div><span>Processed</span><strong id="processedCount">0 / 0</strong></div><div><span>Options</span><strong id="jobStrategy">—</strong></div></div>
+        <div class="progress-track" aria-label="Batch progress"><div id="progressBar"></div></div>
+        <p id="jobMessage">Submitting payload to Liferay…</p>
+      </div>
+      <div id="failedItems" class="issues-list" hidden></div>
+      <div class="actions actions-end"><button class="button button-secondary" id="newImportButton" type="button" hidden>Import another workbook</button></div>
+    </section>
+  </main>
+  <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+  <script type="module" src="/app.js"></script>
+</body>
+</html>

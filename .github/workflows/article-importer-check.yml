@@ -26,4 +26,12 @@ jobs:
           node-version: 22
       - run: npm install --no-audit --no-fund
       - run: npm run check
-      - run: npm test
+      - name: Run tests
+        run: npm test 2>&1 | tee test-output.txt
+      - name: Upload test diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: article-importer-test-output
+          path: tools/liferay-article-importer/test-output.txt
+          retention-days: 1

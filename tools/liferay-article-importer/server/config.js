@@ -27,6 +27,14 @@ function readEnum(name, fallback, allowed) {
   return value;
 }
 
+function readHost(name, fallback = '127.0.0.1') {
+  const value = (process.env[name]?.trim() || fallback);
+  if (!/^[A-Za-z0-9.:[\]_-]+$/.test(value)) {
+    throw new AppError(500, 'CONFIG_INVALID', `${name} must be a valid host name or IP address`);
+  }
+  return value;
+}
+
 function readUrl(name) {
   const value = readRequired(name).replace(/\/+$/, '');
   try { return new URL(value).toString().replace(/\/$/, ''); }
@@ -44,10 +52,12 @@ export function loadConfig() {
     clientId: readRequired('LIFERAY_OAUTH_CLIENT_ID'),
     clientSecret: readRequired('LIFERAY_OAUTH_CLIENT_SECRET'),
     defaultLocale: (process.env.LIFERAY_DEFAULT_LOCALE || 'en-US').trim(),
+    host: readHost('HOST'),
     imageIndexPageSize: readInteger('IMAGE_INDEX_PAGE_SIZE', 200, {max: 500}),
     imageSourceFolderId: readInteger('LIFERAY_IMAGE_SOURCE_FOLDER_ID', null, {optional: true}),
     imageSourceId,
     imageSourceType,
+    maxActiveSessions: readInteger('MAX_ACTIVE_SESSIONS', 10, {max: 100}),
     maxImportRows: readInteger('MAX_IMPORT_ROWS', 5000, {max: 100000}),
     maxRetries: readInteger('LIFERAY_MAX_RETRIES', 3, {min: 0, max: 10}),
     maxUploadBytes: readInteger('MAX_UPLOAD_MB', 50, {max: 500}) * 1024 * 1024,

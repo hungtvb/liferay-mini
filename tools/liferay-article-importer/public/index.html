@@ -15,14 +15,13 @@
     </header>
 
     <section class="panel" aria-labelledby="connection-heading">
-      <div class="step-title"><span>1</span><div><h2 id="connection-heading">Connect and select</h2><p>Connection settings are read-only and come from the server environment.</p></div></div>
+      <div class="step-title"><span>1</span><div><h2 id="connection-heading">Connect and select</h2><p>Connection settings, default locale, and image scope are read-only and come from the server environment.</p></div></div>
       <div id="environment" class="summary-grid"></div>
       <button id="connectButton" class="primary">Connect to Liferay</button>
       <div id="connectionStatus" class="status" aria-live="polite"></div>
       <div id="selectionPanel" class="selection-grid hidden">
         <label>Content Structure<select id="structureSelect"></select></label>
         <label>Target Web Content folder<select id="folderSelect"></select></label>
-        <label>Locale<select id="localeSelect"></select></label>
       </div>
       <div id="structureAnalysis" class="notice hidden"></div>
     </section>

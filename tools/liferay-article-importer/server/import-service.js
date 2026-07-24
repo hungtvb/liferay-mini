@@ -1,4 +1,4 @@
-import {assert} from './errors.js';
+import {AppError, assert} from './errors.js';
 
 const CREATE_STRATEGIES = new Set(['INSERT', 'UPSERT']);
 const IMPORT_STRATEGIES = new Set(['ON_ERROR_FAIL', 'ON_ERROR_CONTINUE']);
@@ -14,6 +14,19 @@ export function normalizeTask(task) {
     processedItemsCount: Number(task?.processedItemsCount || 0),
     totalItemsCount: Number(task?.totalItemsCount || 0)
   };
+}
+
+function submissionUnknownError(error) {
+  return new AppError(
+    409,
+    'BATCH_SUBMISSION_UNKNOWN',
+    'Liferay may have created the Batch task, but the importer did not receive a confirmed task ID. Do not submit this validation session again; verify Batch Engine tasks in Liferay.',
+    {
+      cause: error.message,
+      originalCode: error.code || null,
+      originalDetails: error.details || null
+    }
+  );
 }
 
 export class ImportService {
@@ -43,6 +56,19 @@ export class ImportService {
         createStrategy: normalizedCreate,
         importStrategy: normalizedImport
       });
+
+      if (!task?.id) {
+        const error = new AppError(502, 'BATCH_TASK_RESPONSE_INVALID', 'Liferay accepted the request but did not return a Batch task ID', {
+          requestMayHaveSucceeded: true,
+          response: task
+        });
+        this.sessions.markSubmissionUnknown(sessionId, {
+          createStrategy: normalizedCreate,
+          importStrategy: normalizedImport
+        });
+        throw submissionUnknownError(error);
+      }
+
       this.sessions.completeSubmission(sessionId, {
         createStrategy: normalizedCreate,
         importStrategy: normalizedImport,
@@ -51,6 +77,16 @@ export class ImportService {
       return {...normalizeTask(task), createStrategy: normalizedCreate, importStrategy: normalizedImport};
     }
     catch (error) {
+      if (error.code === 'BATCH_SUBMISSION_UNKNOWN') throw error;
+
+      if (error.details?.requestMayHaveSucceeded === true) {
+        this.sessions.markSubmissionUnknown(sessionId, {
+          createStrategy: normalizedCreate,
+          importStrategy: normalizedImport
+        });
+        throw submissionUnknownError(error);
+      }
+
       this.sessions.failSubmission(sessionId);
       throw error;
     }

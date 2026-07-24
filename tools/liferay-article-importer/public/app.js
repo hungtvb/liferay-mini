@@ -28,8 +28,13 @@ function renderEnvironment() {
   const config = state.config;
   const source = config.imageSource;
   const rows = [
-    ['Liferay', config.baseUrl], ['Site ID', config.siteId], ['Visibility', config.viewableBy],
-    ['Image source', `${source.type} #${source.id}`], ['Image folder', source.folderId || 'Source root'],
+    ['Liferay', config.baseUrl],
+    ['Site ID', config.siteId],
+    ['Default locale', config.defaultLocale],
+    ['Visibility', config.viewableBy],
+    ['Local bind', `${config.host}:${location.port || '4174'}`],
+    ['Image source', `${source.type} #${source.id}`],
+    ['Image folder', source.folderName || source.folderId || 'Source root'],
     ['Limits', `${config.maxImportRows} rows / ${config.maxUploadMb} MB`]
   ];
   byId('environment').innerHTML = rows.map(([label, value]) => `<div><span>${escapeHtml(label)}</span><strong>${escapeHtml(value)}</strong></div>`).join('');
@@ -49,7 +54,7 @@ function invalidateValidation() {
 }
 
 function selectionReady() {
-  return Boolean(selectedValue('structureSelect') && selectedValue('folderSelect') && selectedValue('localeSelect') && state.analysis?.status !== 'UNSUPPORTED');
+  return Boolean(selectedValue('structureSelect') && selectedValue('folderSelect') && state.analysis?.status !== 'UNSUPPORTED');
 }
 
 function updateSelectionButtons() {
@@ -67,7 +72,7 @@ function renderStructureOptions(structures) {
 
 function renderFolderOptions(folders) {
   byId('folderSelect').innerHTML = '<option value="">Select folder</option>' + folders.map((item) =>
-    `<option value="${escapeHtml(item.id)}">${escapeHtml(item.name)} (#${escapeHtml(item.id)})</option>`
+    `<option value="${escapeHtml(item.id)}">${escapeHtml(item.path || item.name)} (#${escapeHtml(item.id)})</option>`
   ).join('');
 }
 
@@ -75,32 +80,33 @@ async function loadStructureAnalysis() {
   invalidateValidation();
   const structureId = selectedValue('structureSelect');
   state.analysis = null;
-  byId('localeSelect').innerHTML = '<option value="">Select locale</option>';
   byId('structureAnalysis').classList.add('hidden');
   if (!structureId) { updateSelectionButtons(); return; }
   const {data} = await api(`/api/structures/${encodeURIComponent(structureId)}`);
   state.analysis = data.analysis;
-  const locales = data.analysis.availableLanguages.length ? data.analysis.availableLanguages : [state.config.defaultLocale];
-  byId('localeSelect').innerHTML = locales.map((locale) => `<option value="${escapeHtml(locale)}" ${locale === state.config.defaultLocale ? 'selected' : ''}>${escapeHtml(locale)}</option>`).join('');
   const notice = byId('structureAnalysis');
   notice.classList.remove('hidden');
   const excluded = data.analysis.excludedFields || [];
-  notice.innerHTML = `<strong>${escapeHtml(data.analysis.status)}</strong> · ${data.analysis.supportedFields.length} supported fields` +
-    (excluded.length ? `<br>Excluded optional fields: ${excluded.map((field) => escapeHtml(field.label)).join(', ')}` : '');
+  const optionFields = (data.analysis.supportedFields || []).filter((field) => field.valueKind === 'option');
+  notice.innerHTML = `<strong>${escapeHtml(data.analysis.status)}</strong> · ${data.analysis.supportedFields.length} supported fields · default locale ${escapeHtml(state.config.defaultLocale)}` +
+    (excluded.length ? `<br>Excluded optional fields: ${excluded.map((field) => escapeHtml(field.label)).join(', ')}` : '') +
+    (optionFields.length ? `<br>Validated option fields: ${optionFields.map((field) => escapeHtml(field.label)).join(', ')}` : '');
   updateSelectionButtons();
 }
 
 async function connect() {
   const button = byId('connectButton');
   button.disabled = true;
-  setStatus(byId('connectionStatus'), 'Connecting…');
+  setStatus(byId('connectionStatus'), 'Connecting and validating configured scope…');
   try {
     const {data} = await api('/api/connect', {method: 'POST'});
     state.connection = data;
+    state.config.imageSource = data.imageSource;
+    renderEnvironment();
     renderStructureOptions(data.structures);
     renderFolderOptions(data.folders);
     byId('selectionPanel').classList.remove('hidden');
-    setStatus(byId('connectionStatus'), `Connected. ${data.structures.length} Structures and ${data.folders.length} folders loaded.`, 'success');
+    setStatus(byId('connectionStatus'), `Connected. ${data.structures.length} Structures and ${data.folders.length} folders loaded. Image source scope validated.`, 'success');
   }
   catch (error) {
     setStatus(byId('connectionStatus'), `${error.code || 'ERROR'}: ${error.message}`, 'error');
@@ -113,7 +119,7 @@ async function downloadTemplate() {
   button.disabled = true;
   try {
     const {data, response} = await api('/api/templates', {
-      body: JSON.stringify({folderId: selectedValue('folderSelect'), locale: selectedValue('localeSelect'), structureId: selectedValue('structureSelect')}),
+      body: JSON.stringify({folderId: selectedValue('folderSelect'), structureId: selectedValue('structureSelect')}),
       headers: {'Content-Type': 'application/json'},
       method: 'POST'
     });
@@ -165,7 +171,6 @@ async function validateWorkbook(event) {
   form.set('file', file);
   form.set('structureId', selectedValue('structureSelect'));
   form.set('folderId', selectedValue('folderSelect'));
-  form.set('locale', selectedValue('localeSelect'));
   try {
     const {data} = await api('/api/workbooks', {body: form, method: 'POST'});
     state.sessionId = data.sessionId;
@@ -230,7 +235,6 @@ async function init() {
   byId('connectButton').addEventListener('click', connect);
   byId('structureSelect').addEventListener('change', loadStructureAnalysis);
   byId('folderSelect').addEventListener('change', () => { invalidateValidation(); updateSelectionButtons(); });
-  byId('localeSelect').addEventListener('change', () => { invalidateValidation(); updateSelectionButtons(); });
   byId('templateButton').addEventListener('click', downloadTemplate);
   byId('workbookForm').addEventListener('submit', validateWorkbook);
   byId('workbookFile').addEventListener('change', updateSelectionButtons);

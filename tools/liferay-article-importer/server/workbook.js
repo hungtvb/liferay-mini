@@ -3,7 +3,7 @@ import {assert} from './errors.js';
 import {buildTargets, buildTemplateColumns, strictTemplateMapping} from './mapping.js';
 import {analyzeStructure} from './structure-analyzer.js';
 
-const TEMPLATE_VERSION = '3';
+const TEMPLATE_VERSION = '4';
 const CONTENT_SHEET = 'Content Items';
 const GUIDE_SHEET = 'Field Guide';
 const EXAMPLE_SHEET = 'Example';
@@ -33,10 +33,17 @@ function metadataContract({folder, imageSource, locale, siteId, structure}) {
   };
 }
 
+function acceptedValue(column) {
+  if (column.valueKind === 'imageReference') return 'file:<exact-file-name> or erc:<exact-document-erc>';
+  if (column.valueKind === 'option') return column.options.map((option) => option.value).join(' | ');
+  return column.dataType;
+}
+
 function sampleValue(column) {
   if (column.key === 'system.title') return 'Example content item';
   if (column.key === 'system.externalReferenceCode') return 'example-content-item';
   if (column.valueKind === 'imageReference') return 'file:example-image.webp';
+  if (column.valueKind === 'option') return column.options[0]?.value || '';
   if (column.dataType === 'boolean') return true;
   if (column.dataType === 'date') return '2026-01-31';
   if (['integer', 'long'].includes(column.dataType)) return 1;
@@ -110,7 +117,7 @@ export async function buildTemplateWorkbook({folder, imageSource, locale, siteId
       column.dataType,
       column.required ? 'Yes' : 'No',
       column.inputControl || '',
-      column.valueKind === 'imageReference' ? 'file:<exact-file-name> or erc:<exact-document-erc>' : column.dataType
+      acceptedValue(column)
     ]);
   }
   for (const field of analysis.excludedFields) {

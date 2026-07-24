@@ -7,9 +7,9 @@ import {SessionStore} from './session-store.js';
 try {
   const config = loadConfig();
   const liferay = new LiferayClient(config);
-  const sessions = new SessionStore({ttlMs: config.sessionTtlMs});
-  createApp({config, liferay, sessions}).listen(config.port, () => {
-    console.log(`Liferay Flat Structured Content Importer: http://localhost:${config.port}`);
+  const sessions = new SessionStore({maxSessions: config.maxActiveSessions, ttlMs: config.sessionTtlMs});
+  createApp({config, liferay, sessions}).listen(config.port, config.host, () => {
+    console.log(`Liferay Flat Structured Content Importer: http://${config.host}:${config.port}`);
   });
 }
 catch (error) {

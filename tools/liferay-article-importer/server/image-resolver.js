@@ -37,6 +37,18 @@ function minimalImage(document) {
   };
 }
 
+function emptyResolution() {
+  return {
+    indexSummary: {
+      documentCount: 0,
+      duplicateErcCount: 0,
+      duplicateFileNameCount: 0,
+      distinctReferenceCount: 0
+    },
+    results: new Map()
+  };
+}
+
 export class ImageResolver {
   constructor({liferay}) {
     this.liferay = liferay;
@@ -67,8 +79,10 @@ export class ImageResolver {
   }
 
   async resolveMany(values, {force = false} = {}) {
-    const index = await this.load({force});
     const distinct = [...new Set(values.filter((value) => String(value ?? '').trim()).map((value) => String(value).trim()))];
+    if (distinct.length === 0) return emptyResolution();
+
+    const index = await this.load({force});
     const results = new Map();
 
     for (const raw of distinct) {

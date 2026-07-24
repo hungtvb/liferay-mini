@@ -24,6 +24,14 @@ test('loads one source once and resolves file/erc in memory', async () => {
   assert.equal(result.results.get('erc:hero_erc').document.description, 'Hero');
 });
 
+test('does not load the image source when there are no references', async () => {
+  let calls = 0;
+  const resolver = new ImageResolver({liferay: {async listConfiguredImageDocuments() { calls += 1; return documents; }}});
+  const result = await resolver.resolveMany([]);
+  assert.equal(calls, 0);
+  assert.equal(result.indexSummary.distinctReferenceCount, 0);
+});
+
 test('does not fallback between file and ERC indexes', async () => {
   const resolver = new ImageResolver({liferay: {async listConfiguredImageDocuments() { return documents; }}});
   const result = await resolver.resolveMany(['file:HERO_ERC.jpg']);

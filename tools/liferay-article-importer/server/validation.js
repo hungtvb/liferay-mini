@@ -20,6 +20,9 @@ function parseNumber(value, integer) {
   if (!Number.isFinite(parsed) || (integer && !Number.isInteger(parsed))) {
     throw new Error(integer ? 'Expected an integer' : 'Expected a number');
   }
+  if (integer && !Number.isSafeInteger(parsed)) {
+    throw new Error('Expected an integer within the JavaScript safe integer range');
+  }
   return parsed;
 }
 
@@ -36,6 +39,16 @@ function parseDate(value) {
 export function convertValue(value, target) {
   const dataType = String(target.dataType || 'string').toLowerCase();
   if (blank(value)) return null;
+
+  if (target.valueKind === 'option') {
+    const optionValue = asString(value);
+    const allowed = new Set((target.options || []).map((option) => String(option.value)));
+    if (!allowed.has(optionValue)) {
+      throw new Error(`Expected one of: ${[...allowed].join(', ')}`);
+    }
+    return optionValue;
+  }
+
   if (dataType === 'boolean') return parseBoolean(value);
   if (['integer', 'long'].includes(dataType)) return parseNumber(value, true);
   if (['double', 'float', 'number', 'decimal'].includes(dataType)) return parseNumber(value, false);
@@ -55,6 +68,24 @@ function existingIndex(items) {
   return new Map((items || []).map((item) => [String(item.externalReferenceCode || '').trim().toLowerCase(), item]));
 }
 
+function duplicateErcGroups({mapping, rowNumbers, rows}) {
+  const header = mapping['system.externalReferenceCode'];
+  const groups = new Map();
+
+  if (!header) return groups;
+
+  for (let index = 0; index < rows.length; index += 1) {
+    const raw = rows[index][header];
+    if (blank(raw)) continue;
+    const normalized = asString(raw).toLowerCase();
+    const current = groups.get(normalized) || [];
+    current.push(rowNumbers[index]);
+    groups.set(normalized, current);
+  }
+
+  return new Map([...groups].filter(([, values]) => values.length > 1));
+}
+
 export async function validateAndBuildPayload({
   existingContents = [],
   folder,
@@ -71,6 +102,7 @@ export async function validateAndBuildPayload({
   const warnings = [];
   const payload = [];
   const rowResults = [];
+  const duplicateGroups = duplicateErcGroups({mapping, rowNumbers, rows});
   const ercRows = new Map();
   const existingByErc = existingIndex(existingContents);
   const imageTargets = targets.filter((target) => target.supported && target.valueKind === 'imageReference');
@@ -78,9 +110,9 @@ export async function validateAndBuildPayload({
     const header = mapping[target.key];
     return header ? rows.map((row) => row[header]).filter((value) => !blank(value)).map((value) => asString(value)) : [];
   });
-  const imageResolution = imageResolver
+  const imageResolution = imageValues.length > 0 && imageResolver
     ? await imageResolver.resolveMany(imageValues, {force: true})
-    : {indexSummary: {distinctReferenceCount: 0, documentCount: 0}, results: new Map()};
+    : {indexSummary: {distinctReferenceCount: 0, documentCount: 0, duplicateErcCount: 0, duplicateFileNameCount: 0}, results: new Map()};
 
   if (!folder?.id) {
     errors.push(issue({code: 'TARGET_FOLDER_CHANGED', field: 'structuredContentFolderId', message: 'Target Web Content folder is not resolved', row: null}));
@@ -159,13 +191,17 @@ export async function validateAndBuildPayload({
     }
     if (erc) {
       const normalized = erc.toLowerCase();
-      const prior = ercRows.get(normalized);
-      if (prior) {
+      if (!ercRows.has(normalized)) ercRows.set(normalized, rowNumber);
+      const duplicateRows = duplicateGroups.get(normalized);
+      if (duplicateRows) {
         rowErrors.push(issue({
-          code: 'ERC_DUPLICATE_IN_WORKBOOK', field: 'externalReferenceCode', message: `External Reference Code duplicates row ${prior}`, row: rowNumber, value: erc
+          code: 'ERC_DUPLICATE_IN_WORKBOOK',
+          field: 'externalReferenceCode',
+          message: `External Reference Code is duplicated in rows ${duplicateRows.join(', ')}`,
+          row: rowNumber,
+          value: erc
         }));
       }
-      else ercRows.set(normalized, rowNumber);
     }
 
     errors.push(...rowErrors);

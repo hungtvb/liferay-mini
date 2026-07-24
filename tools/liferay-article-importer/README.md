@@ -4,17 +4,19 @@ Local Node.js migration utility for importing any supported **flat, non-repeatab
 
 ## Boundary
 
-One run uses one configured Liferay Site, one selected Content Structure, one selected Web Content folder, one locale, one fixed image source, one workbook, and one Batch Engine task.
+One run uses one configured Liferay Site, one selected Content Structure, one selected Web Content folder, one fixed default locale, one fixed image source, one workbook, and one Batch Engine task.
 
-Supported field types: string/rich text, boolean, date, integer/long, decimal/number, and image. Nested, repeatable, relationship, document, geolocation, and grid fields are not imported. A required unsupported field blocks the Structure. Optional unsupported scalar fields are excluded with a warning.
+Supported field types: string/rich text, boolean, date, integer/long, decimal/number, image, and single-value select/radio fields. Nested, repeatable, relationship, document, geolocation, and grid fields are not imported. A required unsupported field blocks the Structure. Optional unsupported fields are excluded with a warning.
 
 ## Configuration ownership
 
-- ENV: Liferay URL, OAuth2 credentials, Site, visibility policy, one image source, technical limits.
-- UI: Structure, target folder, locale, workbook, INSERT/UPSERT, error strategy.
-- Excel: title, ERC, dynamic Structure field values, image references.
+- ENV: Liferay URL, OAuth2 credentials, Site, default locale, visibility policy, one image source, local bind address, and technical limits.
+- UI: Structure, target folder, workbook, INSERT/UPSERT, and error strategy.
+- Excel: title, ERC, dynamic Structure field values, and image references.
 
 Copy `.env.example` to `.env`. Never commit credentials.
+
+The server binds to `127.0.0.1` by default. Set `HOST` explicitly only when the migration UI must be reachable from another machine.
 
 ## Run
 
@@ -25,26 +27,29 @@ npm test
 npm start
 ```
 
-Open `http://localhost:4174`.
+Open `http://127.0.0.1:4174`.
 
 ## Workflow
 
 1. Connect with OAuth2 Client Credentials. Connect is read-only.
-2. Select a supported Structure, an existing Web Content folder, and one locale.
-3. Generate the Structure-bound workbook.
-4. Fill the `Content Items` sheet and upload it.
-5. Resolve all validation issues.
-6. Choose exactly two options: existing-content handling and error handling.
-7. Submit one Batch Engine import task and poll it to completion.
+2. The tool validates the configured image Site/Asset Library and optional image folder.
+3. Select a supported Structure and an existing Web Content folder.
+4. Generate the Structure-bound workbook using `LIFERAY_DEFAULT_LOCALE`.
+5. Fill the `Content Items` sheet and upload it.
+6. Resolve all validation issues.
+7. Choose exactly two options: existing-content handling and error handling.
+8. Submit one Batch Engine import task and poll it to completion.
 
 `INSERT` is the default and verified folder-safe path. `UPSERT` requires confirmation because a missing item may be created at the Web Content root and existing items keep their current folder.
+
+When a Batch POST may have succeeded but no task ID is received, the validation session is locked as `BATCH_SUBMISSION_UNKNOWN`. Do not submit that session again; inspect Batch Engine tasks in Liferay.
 
 ## Workbook
 
 Sheets:
 
 - `Content Items`: headers only; this is the importable sheet.
-- `Field Guide`: fieldReference, internal DDM name, type, required flag, and accepted value.
+- `Field Guide`: fieldReference, internal DDM name, type, required flag, input control, and accepted value.
 - `Example`: sample values that cannot be imported accidentally.
 - `Metadata`: very hidden migration binding.
 
@@ -56,6 +61,8 @@ External Reference Code *
 ```
 
 Dynamic columns are generated from the selected Structure. Both `fieldReference` and internal `name` are preserved in the final payload.
+
+For select and radio fields, the Field Guide lists the exact accepted option values. Display labels are not accepted in place of option values.
 
 ### Images
 
@@ -70,12 +77,14 @@ erc:NXC_HERO_HOME
 - `erc:` exact-matches `Document.externalReferenceCode`.
 - Prefix is mandatory.
 - No title lookup, fuzzy matching, fallback, Document ID, or cross-source search.
-- The configured Site/Asset Library or folder is paginated once and indexed in memory by fileName and ERC.
+- A Site or Asset Library source root includes descendants.
+- When `LIFERAY_IMAGE_SOURCE_FOLDER_ID` is set, only documents directly inside that validated folder are indexed.
 - Missing, ambiguous, or non-image Documents block every affected row before Batch submission.
+- A Structure with no populated image references does not load the configured image source.
 
 ## Example: NXC Article
 
-Select `NXC Article`, the `Articles` folder, and the desired locale. Generate a template with Article fields such as Body and Cover Image. Use `file:article-cover.webp` or `erc:NXC_ARTICLE_COVER` in the single Cover Image Reference column.
+Select `NXC Article` and the `Articles` folder. Generate a template with Article fields such as Body and Cover Image. Use `file:article-cover.webp` or `erc:NXC_ARTICLE_COVER` in the single Cover Image Reference column.
 
 ## Example: NXC Hero
 
@@ -92,6 +101,15 @@ POST /o/headless-batch-engine/v1.0/import-task/com.liferay.headless.delivery.dto
 
 Each payload item carries `contentStructureId`, `structuredContentFolderId`, `viewableBy`, title, ERC, and dynamic fields.
 
+## Current safety limits
+
+- Structure and target Web Content folder must belong to the configured Site.
+- Optional image folder must belong to the configured image source.
+- All duplicate workbook ERC rows are blocked.
+- Batch POST requests are never automatically retried.
+- Ambiguous Batch submissions remain locked.
+- Validation sessions are TTL-bound and capped by `MAX_ACTIVE_SESSIONS`.
+
 ## Not in this release
 
-ZIP image upload, nested/repeatable fields, multi-source image search, downloadable reports, and database-backed import history remain future enhancements.
+Per-run locale selection, multilingual values, ZIP image upload, nested/repeatable fields, multi-source image search, downloadable reports, and database-backed import history remain future enhancements.

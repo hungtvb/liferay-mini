@@ -44,18 +44,20 @@ function publicValidation(validation, previewRows) {
   };
 }
 
-async function loadSelection({config, liferay, folderId, locale, structureId}) {
+async function loadSelection({config, liferay, folderId, structureId}) {
   assert(structureId, 400, 'STRUCTURE_REQUIRED', 'Select a Content Structure');
   assert(folderId, 400, 'TARGET_FOLDER_REQUIRED', 'Select a target Web Content folder');
   const [structure, folder] = await Promise.all([
     liferay.getContentStructure(structureId),
-    liferay.getStructuredContentFolder(folderId)
+    liferay.getStructuredContentFolder(folderId),
+    liferay.validateConfiguredImageSource()
   ]);
-  const selectedLocale = String(locale || config.defaultLocale).trim();
+  const selectedLocale = config.defaultLocale;
   const analysis = analyzeStructure(structure, selectedLocale);
   assert(analysis.status !== 'UNSUPPORTED', 409, 'STRUCTURE_UNSUPPORTED', 'Selected Structure is not supported by the flat importer', {blockingFields: analysis.blockingFields});
+  assert(String(structure.siteId ?? '') === String(config.siteId), 400, 'STRUCTURE_SITE_MISMATCH', 'Selected Structure does not belong to the configured Site');
   const languages = analysis.availableLanguages.map(normalizeLocale);
-  assert(languages.length === 0 || languages.includes(normalizeLocale(selectedLocale)), 400, 'LOCALE_UNSUPPORTED', `Locale ${selectedLocale} is not available for the selected Structure`);
+  assert(languages.length === 0 || languages.includes(normalizeLocale(selectedLocale)), 400, 'DEFAULT_LOCALE_UNSUPPORTED', `Default locale ${selectedLocale} is not available for the selected Structure`);
   if (folder.siteId != null) {
     assert(String(folder.siteId) === String(config.siteId), 400, 'TARGET_FOLDER_CHANGED', 'Selected folder does not belong to the configured Site');
   }
@@ -98,6 +100,7 @@ export function createApp({config, liferay, sessions}) {
       baseUrl: config.baseUrl,
       connected: liferay.connected,
       defaultLocale: config.defaultLocale,
+      host: config.host,
       imageSource: liferay.imageSourceSummary(),
       maxImportRows: config.maxImportRows,
       maxUploadMb: Math.round(config.maxUploadBytes / 1024 / 1024),
@@ -115,7 +118,7 @@ export function createApp({config, liferay, sessions}) {
         const structure = await liferay.getContentStructure(summary.id);
         return summarizeStructure(structure, config.defaultLocale);
       });
-      response.json({...connected, structures});
+      response.json({...connected, imageSource: liferay.imageSourceSummary(), structures});
     }
     catch (error) { next(error); }
   });
@@ -123,8 +126,11 @@ export function createApp({config, liferay, sessions}) {
   app.get('/api/structures/:structureId', async (request, response, next) => {
     try {
       const structure = await liferay.getContentStructure(request.params.structureId);
-      const locale = request.query.locale || config.defaultLocale;
-      response.json({analysis: analyzeStructure(structure, locale), structure: summarizeStructure(structure, locale)});
+      assert(String(structure.siteId ?? '') === String(config.siteId), 400, 'STRUCTURE_SITE_MISMATCH', 'Selected Structure does not belong to the configured Site');
+      response.json({
+        analysis: analyzeStructure(structure, config.defaultLocale),
+        structure: summarizeStructure(structure, config.defaultLocale)
+      });
     }
     catch (error) { next(error); }
   });
@@ -197,7 +203,6 @@ export function createApp({config, liferay, sessions}) {
         config,
         folderId: session.folder.id,
         liferay,
-        locale: session.locale,
         structureId: session.structure.id
       });
       imageResolver.clear();

@@ -11,7 +11,7 @@ const fragmentDirectory = path.join(projectDirectory, 'fragments');
 const headlessFragmentDefaults = {
     'nexcent-react-community': 'NXC_SERVICE_ITEM',
     'nexcent-react-hero': 'NXC_LANDING_HERO',
-    'nexcent-react-marketing': 'NXC_COMMUNITY_CARD',
+    'nexcent-react-marketing': 'NXC_ARTICLE',
 };
 const headlessFragments = Object.keys(headlessFragmentDefaults);
 const settingsFragments = [
@@ -63,7 +63,7 @@ for (const fragmentName of [...headlessFragments, ...settingsFragments]) {
 
         if (structureField?.defaultValue !== expectedDefault) {
             throw new Error(
-                `${fragmentName} must default to Structure key "${expectedDefault}".`
+                `${fragmentName} must default to Structure ERC/key "${expectedDefault}".`
             );
         }
     }
@@ -135,28 +135,6 @@ for (const [fragmentName, contract] of Object.entries(shellContracts)) {
     }
 }
 
-const footerConfiguration = await readJson(
-    path.join(
-        fragmentDirectory,
-        'nexcent-react-footer',
-        'configuration.json'
-    )
-);
-const footerFields = configurationFields(footerConfiguration);
-
-for (const obsoleteSocialField of [
-    'instagramURL',
-    'dribbbleURL',
-    'twitterURL',
-    'youtubeURL',
-]) {
-    if (footerFields.some((field) => field.name === obsoleteSocialField)) {
-        throw new Error(
-            `Footer must use Social Navigation instead of ${obsoleteSocialField}.`
-        );
-    }
-}
-
 const headerSource = await readFile(
     path.join(projectDirectory, 'src/static-site/components/Header.tsx'),
     'utf8'
@@ -217,8 +195,9 @@ for (const componentName of ['StaticCommunity', 'StaticMarketing']) {
 for (const expected of [
     '/content-structures?pageSize=200',
     'new URLSearchParams',
-    "query.set('sort'",
+    "query.set('flatten', 'true')",
     'options.pageSize',
+    'contentUrl?: string',
 ]) {
     if (!sharedHeadlessApi.includes(expected)) {
         throw new Error(`Shared Structured Content API is missing ${expected}.`);
@@ -237,12 +216,25 @@ for (const sharedFunction of [
     }
 }
 
-if (!headlessAdapter.includes("sort: 'contentFields/sortOrder:asc'")) {
-    throw new Error('Structured Content must be sorted by sortOrder on the server.');
+if (headlessAdapter.includes("sort: 'contentFields/sortOrder:asc'")) {
+    throw new Error(
+        'The generic Structured Content loader must not sort by an optional Structure field on the server.'
+    );
+}
+
+for (const expected of [
+    "'coverImage'",
+    'content.contentUrl',
+    'content.datePublished',
+    'flatten: true',
+]) {
+    if (!headlessAdapter.includes(expected)) {
+        throw new Error(`Article Headless delivery contract is missing ${expected}.`);
+    }
 }
 
 if (!headlessHook.includes('pageSize: maxItems')) {
-    throw new Error('Fragment maximum items must be passed to the Headless API page size.');
+    throw new Error('Fragment maximum items must be passed to the Headless loader.');
 }
 
 if (sharedHeadlessApi.includes('item.name, item.id')) {
@@ -250,5 +242,5 @@ if (sharedHeadlessApi.includes('item.name, item.id')) {
 }
 
 console.log(
-    `Validated ${headlessFragments.length} Headless sections, ${settingsFragments.length} Fragment Settings sections, and ${Object.keys(shellContracts).length} embedded shell contracts.`
+    `Validated ${headlessFragments.length} Headless sections, ${settingsFragments.length} Fragment Settings sections, ${Object.keys(shellContracts).length} embedded shell contracts, and the NXC_ARTICLE delivery contract.`
 );

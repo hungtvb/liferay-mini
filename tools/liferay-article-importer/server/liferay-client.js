@@ -6,17 +6,9 @@ function encodePath(value) {
 
 async function parseResponse(response) {
   const text = await response.text();
-
-  if (!text) {
-    return null;
-  }
-
-  try {
-    return JSON.parse(text);
-  }
-  catch {
-    return text;
-  }
+  if (!text) return null;
+  try { return JSON.parse(text); }
+  catch { return text; }
 }
 
 export class LiferayClient {
@@ -37,10 +29,7 @@ export class LiferayClient {
   }
 
   async #getAccessToken(force = false) {
-    if (!force && this.connected) {
-      return this.token;
-    }
-
+    if (!force && this.connected) return this.token;
     const body = new URLSearchParams({
       client_id: this.config.clientId,
       client_secret: this.config.clientSecret,
@@ -48,7 +37,6 @@ export class LiferayClient {
     });
 
     let response;
-
     try {
       response = await this.fetch(`${this.config.baseUrl}/o/oauth2/token`, {
         body,
@@ -57,31 +45,23 @@ export class LiferayClient {
       });
     }
     catch (error) {
-      throw new AppError(502, 'LIFERAY_UNREACHABLE', 'Cannot reach the Liferay OAuth2 endpoint', {
-        cause: error.message
-      });
+      throw new AppError(502, 'LIFERAY_UNREACHABLE', 'Cannot reach the Liferay OAuth2 endpoint', {cause: error.message});
     }
 
     const data = await parseResponse(response);
-
     if (!response.ok || !data?.access_token) {
-      throw new AppError(502, 'OAUTH_FAILED', 'Liferay OAuth2 client credentials authentication failed', {
-        response: data,
-        status: response.status
-      });
+      throw new AppError(502, 'OAUTH_FAILED', 'Liferay OAuth2 client credentials authentication failed', {response: data, status: response.status});
     }
 
     const expiresIn = Number(data.expires_in || 600);
     this.token = data.access_token;
     this.tokenExpiresAt = Date.now() + Math.max(expiresIn - 30, 30) * 1000;
-
     return this.token;
   }
 
   async #request(path, options = {}, retryAfterUnauthorized = true) {
     const token = await this.#getAccessToken();
     let response;
-
     try {
       response = await this.fetch(`${this.config.baseUrl}${path}`, {
         ...options,
@@ -94,10 +74,7 @@ export class LiferayClient {
       });
     }
     catch (error) {
-      throw new AppError(502, 'LIFERAY_UNREACHABLE', 'Cannot reach the Liferay API', {
-        cause: error.message,
-        path
-      });
+      throw new AppError(502, 'LIFERAY_UNREACHABLE', 'Cannot reach the Liferay API', {cause: error.message, path});
     }
 
     if (response.status === 401 && retryAfterUnauthorized) {
@@ -106,15 +83,9 @@ export class LiferayClient {
     }
 
     const data = await parseResponse(response);
-
     if (!response.ok) {
-      throw new AppError(response.status, 'LIFERAY_API_ERROR', 'Liferay API request failed', {
-        path,
-        response: data,
-        status: response.status
-      });
+      throw new AppError(response.status, 'LIFERAY_API_ERROR', 'Liferay API request failed', {path, response: data, status: response.status});
     }
-
     return data;
   }
 
@@ -122,7 +93,6 @@ export class LiferayClient {
     const items = [];
     let page = 1;
     let lastPage = 1;
-
     do {
       const path = `/o/headless-delivery/v1.0/sites/${encodePath(this.config.siteId)}/content-structures?page=${page}&pageSize=200&sort=name:asc`;
       const data = await this.#request(path);
@@ -142,18 +112,16 @@ export class LiferayClient {
   }
 
   async getContentStructure(structureId) {
-    return this.#request(
-      `/o/headless-delivery/v1.0/content-structures/${encodePath(structureId)}`
-    );
+    return this.#request(`/o/headless-delivery/v1.0/content-structures/${encodePath(structureId)}`);
   }
 
-  async submitStructuredContents(items) {
+  async submitStructuredContents(items, {createStrategy, importStrategy}) {
     const query = new URLSearchParams({
-      importStrategy: this.config.importStrategy,
+      createStrategy,
+      importStrategy,
       siteId: this.config.siteId
     });
     const path = `/o/headless-batch-engine/v1.0/import-task/${encodePath(this.config.batchClassName)}?${query}`;
-
     return this.#request(path, {
       body: JSON.stringify(items),
       headers: {'Content-Type': 'application/json'},
@@ -162,8 +130,6 @@ export class LiferayClient {
   }
 
   async getImportTask(taskId) {
-    return this.#request(
-      `/o/headless-batch-engine/v1.0/import-task/${encodePath(taskId)}`
-    );
+    return this.#request(`/o/headless-batch-engine/v1.0/import-task/${encodePath(taskId)}`);
   }
 }

@@ -12,15 +12,14 @@ Build a small local JavaScript utility that imports Web Content Articles from a 
 ```text
 Connect with OAuth2 Client Credentials
 → resolve or create the configured Web Content folder
-→ load Site Content Structures
-→ select the Article Structure
+→ resolve the exact NXC_ARTICLE Structure by ERC
 → generate a folder-bound Excel template
 → enter Article data and existing Image Document ERCs
 → upload and validate the workbook
 → report row-level issues before mutation
 → preview StructuredContent JSON
 → choose INSERT/UPSERT and error strategy
-→ revalidate folder and images
+→ revalidate folder, Structure, and images
 → submit one Headless Batch Engine ImportTask
 → poll until terminal status
 ```
@@ -57,9 +56,9 @@ The Node process owns the OAuth2 client secret and access token. The browser rec
 
 - One configured Liferay Site per process.
 - One configured target Web Content folder.
+- Exact Article Structure resolution by ERC.
 - Folder lookup by External Reference Code.
 - Root folder creation when the configured folder does not exist.
-- Dynamic Content Structure discovery.
 - Structure-driven `.xlsx` template generation.
 - Required `title` and `externalReferenceCode` system fields.
 - Scalar string, rich text, number, boolean, and date fields.
@@ -92,6 +91,7 @@ Required `.env` values:
 ```dotenv
 LIFERAY_BASE_URL=http://localhost:8080
 LIFERAY_SITE_ID=20117
+LIFERAY_ARTICLE_STRUCTURE_ERC=NXC_ARTICLE
 LIFERAY_ARTICLE_FOLDER_ERC=NXC_ARTICLES
 LIFERAY_ARTICLE_FOLDER_NAME=Articles
 LIFERAY_OAUTH_CLIENT_ID=your-client-id
@@ -111,7 +111,7 @@ MAX_IMPORT_ROWS=5000
 SESSION_TTL_MS=1800000
 ```
 
-The folder ERC is the stable folder identity. The folder name is used only when the folder must be created.
+The Structure ERC and folder ERC are stable identities. Names are display values only.
 
 ## 5. OAuth2 permissions
 
@@ -145,21 +145,14 @@ GET  /o/headless-delivery/v1.0/sites/{siteId}/structured-content-folders/by-exte
 POST /o/headless-delivery/v1.0/sites/{siteId}/structured-content-folders
 ```
 
-Creation body:
-
-```json
-{
-  "externalReferenceCode": "NXC_ARTICLES",
-  "name": "Articles"
-}
-```
-
 ### Load Structures
 
 ```text
 GET /o/headless-delivery/v1.0/sites/{siteId}/content-structures
 GET /o/headless-delivery/v1.0/content-structures/{contentStructureId}
 ```
+
+The importer exposes only the Structure whose `externalReferenceCode` equals `NXC_ARTICLE`.
 
 ### Resolve images
 
@@ -182,15 +175,23 @@ GET /o/headless-batch-engine/v1.0/import-task/{taskId}
 
 ## 7. Article Structure contract
 
-Current target Structure:
-
 ```text
-NXC Article
-├── Body        rich text   fieldReference: body
-└── Cover Image image       fieldReference: coverImage
+Structure ERC: NXC_ARTICLE
+
+System properties:
+- title
+- externalReferenceCode
+- datePublished
+- friendlyUrlPath
+
+Structure fields:
+- body        rich text
+- coverImage  image
 ```
 
 `Article Title` and `External Reference Code` are StructuredContent system properties, not Structure fields.
+
+There is no Structured Content `contentUrl` property in this contract. The `contentUrl` property exists only inside an Image value and points to the Documents and Media asset.
 
 ## 8. Workbook contract
 
@@ -215,24 +216,9 @@ Rules:
 
 - Do not rename, add, remove, or reorder columns.
 - Image cells contain existing Document ERCs, not filenames or URLs.
-- The first row is the header.
 - Empty rows are ignored.
 - An old template is rejected when the Structure fingerprint changes.
 - A template is rejected when its target folder ERC differs from the current configuration.
-
-Metadata includes:
-
-```text
-templateVersion
-structureId
-structureExternalReferenceCode
-structureFingerprint
-targetFolderId
-targetFolderExternalReferenceCode
-targetFolderName
-generatedAt
-defaultLocale
-```
 
 ## 9. Validation
 
@@ -243,6 +229,7 @@ defaultLocale
 - Workbook headers match the generated template exactly.
 - Structure fingerprint matches the live Structure.
 - Target folder ERC matches the live configuration.
+- Live Structure ERC matches `NXC_ARTICLE`.
 
 ### Row-level checks
 
@@ -252,25 +239,17 @@ defaultLocale
 - Image ERC does not resolve to a Document.
 - Document exists but is not an image.
 
-Missing image example:
-
-```text
-Excel row 12 · content.coverImage
-Image with Document external reference code “NXC-IMAGE-404” does not exist in the configured Site
-```
-
 ### Mutation gate
 
 ```text
 errors.length === 0
 AND payload.length > 0
+AND NXC_ARTICLE is resolved
 AND target folder is resolved
 AND every referenced image resolves to an image Document
 ```
 
-The importer rejects the whole workbook when any preflight error exists. It does not submit only the valid rows.
-
-Immediately before import, the server resolves the folder again, clears its Document cache, reruns validation, and submits only if the second validation passes.
+Immediately before import, the server resolves the folder and Structure again, clears its Document cache, reruns validation, and submits only if the second validation passes.
 
 ## 10. Payload generation
 
@@ -307,27 +286,59 @@ Each valid Excel row becomes one item:
 
 Blank optional fields are omitted. Content field order follows the Structure order.
 
-## 11. Local API
+## 11. Article delivery
+
+The Home React section requests `NXC_ARTICLE` content using:
+
+```text
+GET /o/headless-delivery/v1.0/content-structures/{structureId}/structured-contents
+    ?flatten=true
+    &pageSize=100
+```
+
+It does not send `contentFields/sortOrder` because Article has no such field. It sorts by `datePublished` descending when no optional order field exists.
+
+Card mapping:
+
+```text
+Title → StructuredContent.title
+Image → contentFields.coverImage
+Alt   → image.description → image.title → title
+Slug  → StructuredContent.friendlyUrlPath
+```
+
+The Fragment passes the current Site display URL using `themeDisplay.getScopeGroup().getDisplayURL(...)`. React resolves the detail URL as:
+
+```text
+{siteDisplayURL}/w/{friendlyUrlPath}
+```
+
+Example:
+
+```text
+http://localhost:8080/web/nexcent-public-website/w/test-nexcent-article
+```
+
+The default Nexcent Article Display Page Template then renders the detail using the Nexcent Master Page.
+
+## 12. Local API
 
 | Method | Path | Purpose |
 |---|---|---|
 | `GET` | `/api/config` | Return safe configuration |
-| `POST` | `/api/connect` | Authenticate, resolve/create folder, and load Structures |
-| `GET` | `/api/structures/{id}` | Load one Structure and derived field support |
+| `POST` | `/api/connect` | Authenticate, resolve/create folder, and resolve NXC_ARTICLE |
+| `GET` | `/api/structures/{id}` | Load the guarded Article Structure |
 | `GET` | `/api/structures/{id}/template` | Generate folder-bound Excel template |
 | `POST` | `/api/workbooks` | Parse and validate a workbook |
 | `POST` | `/api/imports` | Revalidate and submit Batch Engine task |
 | `GET` | `/api/imports/{taskId}` | Poll normalized task status |
-
-## 12. Temporary state
-
-Workbook data, mapping, validation output, resolved folder, and task ID are held in memory with sliding expiration. Restarting the local server clears all sessions. Secrets and access tokens are never stored in workbook sessions.
 
 ## 13. Verification
 
 Automated checks cover:
 
 - JavaScript syntax;
+- exact Structure ERC guarding;
 - normalization and deterministic mapping;
 - Image ERC template columns;
 - unsupported nested and repeatable fields;
@@ -339,25 +350,22 @@ Automated checks cover:
 - `structuredContentFolderId` payload generation;
 - image payload generation;
 - row-level missing-image errors;
-- duplicate ERC and required-value errors.
+- duplicate ERC and required-value errors;
+- Article list `flatten=true` behavior;
+- absence of server-side `sortOrder` for Article;
+- friendly URL path based detail-link construction.
 
 Runtime acceptance still requires the exact DXP 2026.Q1.1 instance:
 
 1. OAuth2 permissions succeed.
-2. Folder lookup and creation succeed.
-3. Real Article Structure metadata matches the expected fields.
+2. Exact `NXC_ARTICLE` resolution succeeds.
+3. Folder lookup and creation succeed.
 4. Existing image ERCs resolve correctly.
 5. Missing images block import with the expected row number.
 6. Batch Engine accepts the Image payload shape.
 7. Created Articles appear inside the configured folder.
-8. UPSERT behavior by Article ERC is verified.
-9. No secret or access token appears in browser responses or logs.
-
-Current evidence:
-
-```text
-SOURCE IMPLEMENTED
-SYNTAX CHECKED
-UNIT TESTED
-LIFERAY RUNTIME PENDING
-```
+8. Headless Delivery returns `friendlyUrlPath`.
+9. Article cards open the expected Site `/w/{slug}` URL.
+10. The default Article Display Page renders under Nexcent Master Page.
+11. UPSERT behavior by Article ERC is verified.
+12. No secret or access token appears in browser responses or logs.

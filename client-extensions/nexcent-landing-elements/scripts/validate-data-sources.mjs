@@ -82,6 +82,15 @@ for (const fragmentName of headlessFragments) {
     }
 }
 
+const articleFragmentHtml = await readFile(
+    path.join(fragmentDirectory, 'nexcent-react-marketing', 'index.html'),
+    'utf8'
+);
+
+if (!articleFragmentHtml.includes('site-base-url=')) {
+    throw new Error('Article list Fragment must pass the current Site display URL.');
+}
+
 for (const fragmentName of settingsFragments) {
     const html = await readFile(
         path.join(fragmentDirectory, fragmentName, 'index.html'),
@@ -163,6 +172,10 @@ const sectionSource = await readFile(
     path.join(projectDirectory, 'src/static-site/components/ContentSections.tsx'),
     'utf8'
 );
+const articleSource = await readFile(
+    path.join(projectDirectory, 'src/static-site/components/ArticleSection.tsx'),
+    'utf8'
+);
 const sharedHeadlessApi = await readFile(
     path.join(projectDirectory, 'src/api/structuredContent.ts'),
     'utf8'
@@ -197,11 +210,15 @@ for (const expected of [
     'new URLSearchParams',
     "query.set('flatten', 'true')",
     'options.pageSize',
-    'contentUrl?: string',
+    'friendlyUrlPath?: string',
 ]) {
     if (!sharedHeadlessApi.includes(expected)) {
         throw new Error(`Shared Structured Content API is missing ${expected}.`);
     }
+}
+
+if (sharedHeadlessApi.includes('contentUrl?: string;\n    datePublished')) {
+    throw new Error('StructuredContent must not declare the unsupported contentUrl property.');
 }
 
 for (const sharedFunction of [
@@ -222,15 +239,24 @@ if (headlessAdapter.includes("sort: 'contentFields/sortOrder:asc'")) {
     );
 }
 
-for (const expected of [
-    "'coverImage'",
-    'content.contentUrl',
-    'content.datePublished',
-    'flatten: true',
-]) {
+for (const expected of ["'coverImage'", 'content.datePublished', 'flatten: true']) {
     if (!headlessAdapter.includes(expected)) {
         throw new Error(`Article Headless delivery contract is missing ${expected}.`);
     }
+}
+
+for (const expected of [
+    'structuredContent.friendlyUrlPath',
+    "'site-base-url'",
+    '`$\{base}/w/$\{path}`',
+]) {
+    if (!articleSource.includes(expected)) {
+        throw new Error(`Article detail-link contract is missing ${expected}.`);
+    }
+}
+
+if (articleSource.includes('structuredContent.contentUrl')) {
+    throw new Error('Article list must not depend on unsupported StructuredContent.contentUrl.');
 }
 
 if (!headlessHook.includes('pageSize: maxItems')) {

@@ -11,12 +11,23 @@ async function parseResponse(response) {
   catch { return text; }
 }
 
+function folderSummary(folder) {
+  return {
+    externalReferenceCode: folder.externalReferenceCode || null,
+    id: folder.id,
+    name: folder.name,
+    siteId: folder.siteId
+  };
+}
+
 export class LiferayClient {
   constructor(config, fetchImpl = globalThis.fetch) {
     this.config = config;
     this.fetch = fetchImpl;
     this.token = null;
     this.tokenExpiresAt = 0;
+    this.articleFolder = null;
+    this.documentCache = new Map();
   }
 
   get connected() {
@@ -25,7 +36,14 @@ export class LiferayClient {
 
   async connect() {
     await this.#getAccessToken(true);
-    return this.listContentStructures();
+    this.clearDocumentCache();
+    const folder = await this.ensureArticleFolder({force: true});
+    const structures = await this.listContentStructures();
+    return {folder, structures};
+  }
+
+  clearDocumentCache() {
+    this.documentCache.clear();
   }
 
   async #getAccessToken(force = false) {
@@ -59,7 +77,7 @@ export class LiferayClient {
     return this.token;
   }
 
-  async #request(path, options = {}, retryAfterUnauthorized = true) {
+  async #request(path, options = {}, retryAfterUnauthorized = true, notFoundAsNull = false) {
     const token = await this.#getAccessToken();
     let response;
     try {
@@ -79,14 +97,49 @@ export class LiferayClient {
 
     if (response.status === 401 && retryAfterUnauthorized) {
       await this.#getAccessToken(true);
-      return this.#request(path, options, false);
+      return this.#request(path, options, false, notFoundAsNull);
     }
 
     const data = await parseResponse(response);
+    if (response.status === 404 && notFoundAsNull) return null;
     if (!response.ok) {
       throw new AppError(response.status, 'LIFERAY_API_ERROR', 'Liferay API request failed', {path, response: data, status: response.status});
     }
     return data;
+  }
+
+  async ensureArticleFolder({force = false} = {}) {
+    if (this.articleFolder && !force) return this.articleFolder;
+
+    const siteId = encodePath(this.config.siteId);
+    const erc = encodePath(this.config.articleFolderExternalReferenceCode);
+    const lookupPath = `/o/headless-delivery/v1.0/sites/${siteId}/structured-content-folders/by-external-reference-code/${erc}`;
+    let folder = await this.#request(lookupPath, {}, true, true);
+
+    if (!folder) {
+      folder = await this.#request(`/o/headless-delivery/v1.0/sites/${siteId}/structured-content-folders`, {
+        body: JSON.stringify({
+          externalReferenceCode: this.config.articleFolderExternalReferenceCode,
+          name: this.config.articleFolderName
+        }),
+        headers: {'Content-Type': 'application/json'},
+        method: 'POST'
+      });
+    }
+
+    this.articleFolder = folderSummary(folder);
+    return this.articleFolder;
+  }
+
+  async getSiteDocumentByExternalReferenceCode(externalReferenceCode, {force = false} = {}) {
+    const erc = String(externalReferenceCode || '').trim();
+    if (!erc) return null;
+    if (!force && this.documentCache.has(erc)) return this.documentCache.get(erc);
+
+    const path = `/o/headless-delivery/v1.0/sites/${encodePath(this.config.siteId)}/documents/by-external-reference-code/${encodePath(erc)}`;
+    const document = await this.#request(path, {}, true, true);
+    this.documentCache.set(erc, document);
+    return document;
   }
 
   async listContentStructures() {

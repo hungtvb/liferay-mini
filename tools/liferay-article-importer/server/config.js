@@ -21,10 +21,13 @@ export function loadConfig() {
   catch { throw new AppError(500, 'CONFIG_INVALID', 'LIFERAY_BASE_URL must be a valid absolute URL'); }
 
   return {
+    articleFolderExternalReferenceCode: readRequired('LIFERAY_ARTICLE_FOLDER_ERC'),
+    articleFolderName: readRequired('LIFERAY_ARTICLE_FOLDER_NAME'),
     baseUrl,
     batchClassName: 'com.liferay.headless.delivery.dto.v1_0.StructuredContent',
     clientId: readRequired('LIFERAY_OAUTH_CLIENT_ID'),
     clientSecret: readRequired('LIFERAY_OAUTH_CLIENT_SECRET'),
+    imageLookupConcurrency: readInteger('IMAGE_LOOKUP_CONCURRENCY', 8, {max: 32}),
     locale: (process.env.LIFERAY_LOCALE || 'en-US').trim(),
     maxImportRows: readInteger('MAX_IMPORT_ROWS', 5000, {max: 100000}),
     maxUploadBytes: readInteger('MAX_UPLOAD_MB', 10, {max: 100}) * 1024 * 1024,

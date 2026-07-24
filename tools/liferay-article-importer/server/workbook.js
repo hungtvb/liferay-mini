@@ -3,7 +3,7 @@ import ExcelJS from 'exceljs';
 import {AppError, assert} from './errors.js';
 import {buildTemplateColumns, buildTargets, createTemplateMapping} from './mapping.js';
 
-const TEMPLATE_VERSION = '1';
+const TEMPLATE_VERSION = '2';
 
 function cellValue(value) {
   if (value == null) return null;
@@ -35,7 +35,8 @@ export function structureFingerprint(structure) {
       dataType: target.dataType,
       name: target.name,
       required: target.required,
-      supported: target.supported
+      supported: target.supported,
+      valueKind: target.valueKind
     }))
     .sort((left, right) => left.name.localeCompare(right.name));
 
@@ -49,7 +50,18 @@ function safeFileName(value) {
     .replace(/^_+|_+$/g, '') || 'ARTICLE';
 }
 
-export async function buildTemplateWorkbook(structure) {
+function columnNotes(column) {
+  if (column.valueKind === 'documentExternalReferenceCode') {
+    return 'Document external reference code. The image must already exist in this Site’s Documents and Media.';
+  }
+  const type = String(column.dataType).toLowerCase();
+  if (type === 'date') return 'YYYY-MM-DD';
+  if (type === 'boolean') return 'true or false';
+  if (column.inputControl === 'rich_text') return 'HTML is allowed';
+  return 'Do not rename this column';
+}
+
+export async function buildTemplateWorkbook(structure, folder = null) {
   const workbook = new ExcelJS.Workbook();
   workbook.creator = 'Nexcent Liferay Article Importer';
   workbook.created = new Date();
@@ -67,6 +79,7 @@ export async function buildTemplateWorkbook(structure) {
   for (const column of columns) {
     if (column.key === 'system.title') sample[column.key] = 'Sample article title';
     else if (column.key === 'system.externalReferenceCode') sample[column.key] = 'article-sample-001';
+    else if (column.valueKind === 'documentExternalReferenceCode') sample[column.key] = 'replace-with-existing-image-erc';
     else if (String(column.dataType).toLowerCase() === 'boolean') sample[column.key] = true;
     else if (String(column.dataType).toLowerCase() === 'date') sample[column.key] = '2026-07-24';
     else if (['integer', 'long', 'double', 'float', 'number', 'decimal'].includes(String(column.dataType).toLowerCase())) sample[column.key] = 1;
@@ -91,19 +104,25 @@ export async function buildTemplateWorkbook(structure) {
     {header: 'Field Reference', key: 'name', width: 28},
     {header: 'Type', key: 'dataType', width: 18},
     {header: 'Required', key: 'required', width: 12},
-    {header: 'Format / Notes', key: 'notes', width: 52}
+    {header: 'Format / Notes', key: 'notes', width: 72}
   ];
   guide.getRow(1).font = {bold: true};
   columns.forEach((column) => guide.addRow({
     dataType: column.dataType,
     header: column.header,
     name: column.name,
-    notes: String(column.dataType).toLowerCase() === 'date' ? 'YYYY-MM-DD' : String(column.dataType).toLowerCase() === 'boolean' ? 'true or false' : column.inputControl === 'rich_text' ? 'HTML is allowed' : 'Do not rename this column',
+    notes: columnNotes(column),
     required: column.required ? 'Yes' : 'No'
   }));
 
   const unsupported = buildTargets(structure).filter((target) => target.key.startsWith('content.') && !target.supported);
-  unsupported.forEach((target) => guide.addRow({dataType: target.dataType, header: 'Not included', name: target.name, notes: 'Unsupported in migration v1 (image, document, nested, repeatable, relationship, grid)', required: target.required ? 'Yes' : 'No'}));
+  unsupported.forEach((target) => guide.addRow({
+    dataType: target.dataType,
+    header: 'Not included',
+    name: target.name,
+    notes: 'Unsupported in migration v2 (document, nested, repeatable, relationship, geolocation, grid)',
+    required: target.required ? 'Yes' : 'No'
+  }));
 
   const metadata = workbook.addWorksheet('Metadata');
   metadata.columns = [{header: 'Key', key: 'key', width: 38}, {header: 'Value', key: 'value', width: 80}];
@@ -115,6 +134,9 @@ export async function buildTemplateWorkbook(structure) {
     structureFingerprint: structureFingerprint(structure),
     structureId: String(structure.id),
     structureName: typeof structure.name === 'string' ? structure.name : JSON.stringify(structure.name || ''),
+    targetFolderExternalReferenceCode: folder?.externalReferenceCode || '',
+    targetFolderId: folder?.id == null ? '' : String(folder.id),
+    targetFolderName: folder?.name || '',
     templateVersion: TEMPLATE_VERSION
   };
   Object.entries(values).forEach(([key, value]) => metadata.addRow({key, value}));
@@ -138,19 +160,20 @@ function readMetadata(workbook) {
   return metadata;
 }
 
-export async function parseTemplateWorkbook(buffer, structure) {
+export async function parseTemplateWorkbook(buffer, structure, folder = null) {
   const workbook = new ExcelJS.Workbook();
-  try {
-    await workbook.xlsx.load(buffer);
-  }
+  try { await workbook.xlsx.load(buffer); }
   catch (error) {
     throw new AppError(400, 'WORKBOOK_INVALID', 'The uploaded file is not a readable .xlsx workbook', {cause: error.message});
   }
 
   const metadata = readMetadata(workbook);
-  assert(metadata.templateVersion === TEMPLATE_VERSION, 400, 'TEMPLATE_VERSION_UNSUPPORTED', `Template version ${metadata.templateVersion || 'unknown'} is not supported`);
+  assert(metadata.templateVersion === TEMPLATE_VERSION, 400, 'TEMPLATE_VERSION_UNSUPPORTED', `Template version ${metadata.templateVersion || 'unknown'} is not supported. Download a fresh template.`);
   assert(String(metadata.structureId) === String(structure.id), 400, 'TEMPLATE_STRUCTURE_MISMATCH', 'This template belongs to a different Content Structure');
   assert(metadata.structureFingerprint === structureFingerprint(structure), 409, 'STRUCTURE_CHANGED', 'The Content Structure changed after this template was generated. Download a new template.');
+  if (folder) {
+    assert(metadata.targetFolderExternalReferenceCode === String(folder.externalReferenceCode || ''), 409, 'TARGET_FOLDER_CHANGED', 'This template was generated for a different Web Content folder. Download a new template.');
+  }
 
   const worksheet = workbook.getWorksheet('Articles');
   assert(worksheet, 400, 'ARTICLES_SHEET_MISSING', 'The Articles sheet is missing');

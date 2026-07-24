@@ -5,58 +5,94 @@ import {convertValue, validateAndBuildPayload} from '../server/validation.js';
 
 const structure = {
   contentStructureFields: [
-    {dataType: 'string', label: 'Summary', name: 'summary'},
-    {dataType: 'boolean', label: 'Active', name: 'active'},
-    {dataType: 'date', label: 'Publication date', name: 'publicationDate'}
+    {dataType: 'string', label: 'Body', name: 'body', required: true},
+    {dataType: 'image', label: 'Cover Image', name: 'coverImage', required: true}
   ],
   id: 123
 };
 const targets = buildTargets(structure);
 const mapping = {
-  'content.active': 'Active',
-  'content.publicationDate': 'Date',
-  'content.summary': 'Summary',
+  'content.body': 'Body',
+  'content.coverImage': 'Cover Image ERC',
   'system.externalReferenceCode': 'ERC',
   'system.title': 'Title'
 };
+const folder = {externalReferenceCode: 'NXC_ARTICLES', id: 456, name: 'Articles'};
+const image = {
+  contentType: 'Document',
+  contentUrl: '/documents/20117/0/cover.png/uuid',
+  description: 'Cover description',
+  encodingFormat: 'image/png',
+  externalReferenceCode: 'IMG-COVER-001',
+  fileExtension: 'png',
+  id: 789,
+  sizeInBytes: 1234,
+  title: 'cover.png'
+};
 
-test('builds the StructuredContent batch payload', () => {
-  const result = validateAndBuildPayload({
+test('builds payload in the configured folder with a resolved image', async () => {
+  const result = await validateAndBuildPayload({
+    folder,
     mapping,
+    resolveDocument: async (erc) => erc === 'IMG-COVER-001' ? image : null,
     rowNumbers: [2],
-    rows: [{Active: 'yes', Date: '2026-07-24', ERC: 'NXC-ARTICLE-001', Summary: 'Hello', Title: 'First article'}],
+    rows: [{Body: '<p>Hello</p>', 'Cover Image ERC': 'IMG-COVER-001', ERC: 'NXC-ARTICLE-001', Title: 'First article'}],
     structure,
     targets
   });
-
   assert.equal(result.canImport, true);
   assert.deepEqual(result.payload, [{
     contentFields: [
-      {contentFieldValue: {data: 'Hello'}, name: 'summary'},
-      {contentFieldValue: {data: true}, name: 'active'},
-      {contentFieldValue: {data: '2026-07-24'}, name: 'publicationDate'}
+      {contentFieldValue: {data: '<p>Hello</p>'}, name: 'body'},
+      {contentFieldValue: {image: {
+        contentType: 'Document',
+        contentUrl: '/documents/20117/0/cover.png/uuid',
+        description: 'Cover description',
+        encodingFormat: 'image/png',
+        fileExtension: 'png',
+        id: 789,
+        sizeInBytes: 1234,
+        title: 'cover.png'
+      }}, name: 'coverImage'}
     ],
     contentStructureId: 123,
     externalReferenceCode: 'NXC-ARTICLE-001',
+    structuredContentFolderId: 456,
     title: 'First article'
   }]);
 });
 
-test('rejects duplicate ERCs and empty titles', () => {
-  const result = validateAndBuildPayload({
+test('rejects a row when the referenced image does not exist', async () => {
+  const result = await validateAndBuildPayload({
+    folder,
     mapping,
+    resolveDocument: async () => null,
+    rowNumbers: [2],
+    rows: [{Body: '<p>Hello</p>', 'Cover Image ERC': 'MISSING-IMAGE', ERC: 'NXC-ARTICLE-001', Title: 'First article'}],
+    structure,
+    targets
+  });
+  assert.equal(result.canImport, false);
+  assert.equal(result.stats.invalidRows, 1);
+  assert.ok(result.errors.some((entry) => entry.row === 2 && entry.message.includes('does not exist')));
+});
+
+test('rejects duplicate article ERCs and empty titles', async () => {
+  const result = await validateAndBuildPayload({
+    folder,
+    mapping,
+    resolveDocument: async () => image,
     rowNumbers: [2, 3],
     rows: [
-      {Active: true, Date: '2026-07-24', ERC: 'NXC-1', Summary: 'A', Title: 'A'},
-      {Active: false, Date: '2026-07-25', ERC: 'nxc-1', Summary: 'B', Title: ''}
+      {Body: 'A', 'Cover Image ERC': 'IMG-COVER-001', ERC: 'NXC-1', Title: 'A'},
+      {Body: 'B', 'Cover Image ERC': 'IMG-COVER-001', ERC: 'nxc-1', Title: ''}
     ],
     structure,
     targets
   });
-
   assert.equal(result.canImport, false);
   assert.ok(result.errors.some((entry) => entry.message.includes('Duplicate external reference code')));
-  assert.ok(result.errors.some((entry) => entry.message.includes('Article title')));
+  assert.ok(result.errors.some((entry) => entry.message.includes('Article Title')));
 });
 
 test('converts supported scalar types', () => {

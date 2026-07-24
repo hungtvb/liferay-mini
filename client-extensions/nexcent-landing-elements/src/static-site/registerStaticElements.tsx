@@ -1,12 +1,12 @@
 import React, {type ReactNode} from 'react';
 import {createRoot, type Root} from 'react-dom/client';
 
+import {StaticArticles} from './components/ArticleSection';
 import {
     StaticClients,
     StaticCommunity,
     StaticCta,
     StaticFeature,
-    StaticMarketing,
     StaticStatistics,
     StaticTestimonial,
 } from './components/ContentSections';
@@ -98,7 +98,7 @@ export function registerStaticElements() {
         <StaticTestimonial host={element} />
     ));
     registerShadowReactElement('nexcent-react-marketing', (element) => (
-        <StaticMarketing host={element} />
+        <StaticArticles host={element} />
     ));
     registerShadowReactElement('nexcent-react-cta', (element) => (
         <StaticCta host={element} />

@@ -1,6 +1,7 @@
 const state = {
   config: null,
   file: null,
+  folder: null,
   pollStartedAt: 0,
   sessionId: null,
   structure: null,
@@ -86,11 +87,12 @@ async function connect() {
   setMessage(byId('connectMessage'), '');
   try {
     const data = await api('/api/connect', {method: 'POST', body: '{}'});
+    state.folder = data.folder;
     state.structures = data.structures;
     renderStructures();
     byId('connectionStatus').textContent = 'Connected';
     byId('connectionStatus').className = 'status-pill is-success';
-    setMessage(byId('connectMessage'), `${data.structures.length} Content Structures loaded from Site ${data.connection.siteId}.`, 'success');
+    setMessage(byId('connectMessage'), `${data.structures.length} Content Structures loaded. Target folder: ${data.folder.name} (${data.folder.externalReferenceCode}).`, 'success');
     enableStep(2);
     button.textContent = 'Reconnect';
   }
@@ -111,11 +113,12 @@ async function openTemplateStep() {
     byId('selectedStructure').textContent = structure?.name || 'Selected Structure';
     byId('structureSummary').innerHTML = [
       `<div class="read-only-field"><span>Structure</span><strong>${escapeHtml(data.structure.name)}</strong></div>`,
+      `<div class="read-only-field"><span>Target folder</span><strong>${escapeHtml(state.folder?.name || state.config.articleFolderName)}</strong></div>`,
       `<div class="read-only-field"><span>Supported fields</span><strong>${data.supportedFields.length}</strong></div>`,
       `<div class="read-only-field"><span>Excluded fields</span><strong>${data.unsupportedFields.length}</strong></div>`
     ].join('');
     byId('templateStatus').textContent = data.unsupportedFields.length
-      ? `${data.unsupportedFields.length} unsupported image/document/nested/repeatable fields are excluded from v1.`
+      ? `${data.unsupportedFields.length} unsupported document/nested/repeatable/relationship/geolocation/grid fields are excluded.`
       : 'All Structure fields are supported by this template.';
     showStep(2);
   }
@@ -152,12 +155,14 @@ function setWorkbookFile(file) {
 }
 
 function renderValidation(data) {
+  state.folder = data.folder;
   state.validation = data.validation;
   byId('workbookSummary').innerHTML = [
     `<span>File: <strong>${escapeHtml(data.fileName)}</strong></span>`,
     `<span>Sheet: <strong>${escapeHtml(data.sheetName)}</strong></span>`,
     `<span>Rows: <strong>${data.rowCount}</strong></span>`,
-    `<span>Structure: <strong>${escapeHtml(data.structure.name)}</strong></span>`
+    `<span>Structure: <strong>${escapeHtml(data.structure.name)}</strong></span>`,
+    `<span>Folder: <strong>${escapeHtml(data.folder.name)}</strong></span>`
   ].join('');
   const validation = data.validation;
   byId('validationBadges').innerHTML = [
@@ -253,7 +258,7 @@ async function startImport() {
   catch (error) {
     byId('jobStatus').textContent = 'SUBMIT FAILED';
     byId('jobStatus').className = 'status-pill is-error';
-    byId('jobMessage').textContent = error.message;
+    byId('jobMessage').textContent = error.details?.validation?.errors?.[0]?.message || error.message;
     byId('newImportButton').hidden = false;
   }
 }
@@ -279,7 +284,7 @@ async function initialize() {
   state.config = await api('/api/config');
   byId('baseUrl').textContent = state.config.baseUrl;
   byId('siteId').textContent = state.config.siteId;
-  byId('environment').innerHTML = `Liferay: <strong>${escapeHtml(state.config.baseUrl)}</strong><br>Site: <strong>${escapeHtml(state.config.siteId)}</strong><br>Max: <strong>${state.config.maxImportRows} rows / ${state.config.maxUploadMb} MB</strong>`;
+  byId('environment').innerHTML = `Liferay: <strong>${escapeHtml(state.config.baseUrl)}</strong><br>Site: <strong>${escapeHtml(state.config.siteId)}</strong><br>Folder: <strong>${escapeHtml(state.config.articleFolderName)}</strong><br>Max: <strong>${state.config.maxImportRows} rows / ${state.config.maxUploadMb} MB</strong>`;
 
   byId('connectButton').addEventListener('click', connect);
   byId('structureSelect').addEventListener('change', (event) => {

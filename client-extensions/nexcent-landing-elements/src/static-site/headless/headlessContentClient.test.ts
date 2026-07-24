@@ -111,7 +111,7 @@ describe('Headless content client', () => {
         expect(structuredContentRequest).not.toContain('contentFields%2FsortOrder');
     });
 
-    it('uses Article system URLs and orders Articles by publish date without sortOrder', async () => {
+    it('uses Article friendly URL paths and orders Articles by publish date without sortOrder', async () => {
         const fetchMock = vi.fn().mockImplementation(async (input: RequestInfo | URL) => {
             const url = String(input);
 
@@ -138,9 +138,9 @@ describe('Headless content client', () => {
                         {
                             contentFields: [],
                             contentStructureId: 789,
-                            contentUrl: '/web/nexcent-public-website/w/older',
                             datePublished: '2026-07-20T00:00:00Z',
                             externalReferenceCode: 'ARTICLE-OLDER',
+                            friendlyUrlPath: 'older',
                             id: 1,
                             title: 'Older',
                         },
@@ -157,9 +157,9 @@ describe('Headless content client', () => {
                                 },
                             ],
                             contentStructureId: 789,
-                            contentUrl: '/web/nexcent-public-website/w/newer',
                             datePublished: '2026-07-24T00:00:00Z',
                             externalReferenceCode: 'ARTICLE-NEWER',
+                            friendlyUrlPath: 'newer',
                             id: 2,
                             title: 'Newer',
                         },
@@ -185,11 +185,10 @@ describe('Headless content client', () => {
         });
 
         expect(articles.map((item) => item.title)).toEqual(['Newer', 'Older']);
-        expect(readContentText(articles[0], ['targetUrl'], '')).toBe(
-            '/web/nexcent-public-website/w/newer'
-        );
+        expect(articles[0].friendlyUrlPath).toBe('newer');
+        expect(readContentText(articles[0], ['targetUrl'], '')).toBe('');
         expect(
-            readContentImage(articles[0], ['thumbnail'], {
+            readContentImage(articles[0], ['coverImage'], {
                 alt: 'Fallback',
                 url: '/fallback.png',
             })

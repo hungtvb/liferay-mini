@@ -4,10 +4,15 @@ import {fileURLToPath} from 'node:url';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const files = [
+  'package.json', 'vite.config.ts', 'tsconfig.json',
   'server/config.js', 'server/app.js', 'server/index.js', 'server/structure-analyzer.js', 'server/image-resolver.js',
   'server/liferay-client.js', 'server/session-store.js', 'server/workbook.js', 'server/validation.js',
-  'server/import-service.js', 'public/index.html', 'public/app.js', 'public/styles.css', '.env.example', 'README.md'
+  'server/import-service.js', 'ui/index.html', 'ui/src/App.tsx', 'ui/src/api.ts', 'ui/src/types.ts',
+  'ui/src/components/AppHeader.tsx', 'ui/src/components/WorkflowNav.tsx',
+  'ui/src/steps/ConnectStep.tsx', 'ui/src/steps/ConfigureStep.tsx', 'ui/src/steps/WorkbookStep.tsx',
+  'ui/src/steps/ValidationStep.tsx', 'ui/src/steps/ImportStep.tsx', 'ui/src/styles.scss', '.env.example', 'README.md'
 ];
+
 const content = Object.fromEntries(await Promise.all(
   files.map(async (file) => [file, await readFile(path.join(root, file), 'utf8')])
 ));
@@ -25,9 +30,7 @@ for (const forbidden of ['LIFERAY_IMAGE_SOURCE_TYPE', 'LIFERAY_IMAGE_SOURCE_ID',
 }
 
 for (const expected of ['LIFERAY_DEFAULT_CONTENT_VIEWABLE_BY', 'MAX_ACTIVE_SESSIONS', "'HOST'"]) {
-  if (!content['server/config.js'].includes(expected)) {
-    throw new Error(`config.js is missing ${expected}`);
-  }
+  if (!content['server/config.js'].includes(expected)) throw new Error(`config.js is missing ${expected}`);
 }
 
 if (!content['server/config.js'].includes("IMAGE_SOURCE_TYPES = ['site']")) {
@@ -35,82 +38,53 @@ if (!content['server/config.js'].includes("IMAGE_SOURCE_TYPES = ['site']")) {
 }
 
 for (const expected of ['Content Items', 'Field Guide', 'Example', 'Metadata']) {
-  if (!content['server/workbook.js'].includes(expected)) {
-    throw new Error(`workbook.js is missing ${expected}`);
-  }
+  if (!content['server/workbook.js'].includes(expected)) throw new Error(`workbook.js is missing ${expected}`);
 }
 
 for (const expected of ["'file'", "'erc'", 'byFileName', 'byErc']) {
-  if (!content['server/image-resolver.js'].includes(expected)) {
-    throw new Error(`image-resolver.js is missing ${expected}`);
-  }
+  if (!content['server/image-resolver.js'].includes(expected)) throw new Error(`image-resolver.js is missing ${expected}`);
 }
 
-for (const expected of [
-  'app-sidebar', 'journey-nav', 'scope-lock', 'imageFolderSelect', 'viewableBySelect',
-  'action-dock', 'workbookDropzone', 'validationRows', 'progressFill'
-]) {
-  if (!content['public/index.html'].includes(expected)) {
-    throw new Error(`UI is missing ${expected}`);
-  }
+for (const expected of ['react', 'react-dom', 'lucide-react']) {
+  if (!content['package.json'].includes(`"${expected}"`)) throw new Error(`React UI dependency is missing ${expected}`);
 }
 
-for (const expected of [
-  '--brand-500', '.app-sidebar', '.journey-step', '.scope-lock', '.action-dock',
-  '.result-banner', 'prefers-reduced-motion'
-]) {
-  if (!content['public/styles.css'].includes(expected)) {
-    throw new Error(`Nexcent UI system is missing ${expected}`);
-  }
+for (const expected of ['vite build', 'tsc --noEmit', 'concurrently']) {
+  if (!content['package.json'].includes(expected)) throw new Error(`React UI script is missing ${expected}`);
 }
 
-for (const expected of [
-  "imageSourceType: 'site'", 'currentSiteId()', 'setButtonLoading', 'journeyProgress',
-  'scaleX(${percent / 100})'
-]) {
-  if (!content['public/app.js'].includes(expected)) {
-    throw new Error(`UI behavior is missing ${expected}`);
-  }
+for (const expected of ['WorkflowNav', 'ConnectStep', 'ConfigureStep', 'WorkbookStep', 'ValidationStep', 'ImportStep']) {
+  if (!content['ui/src/App.tsx'].includes(expected)) throw new Error(`React workflow is missing ${expected}`);
 }
 
-for (const forbidden of ['imageSourceTypeGroup', 'imageSourceSelect', 'source-choice']) {
-  if (content['public/index.html'].includes(forbidden)) {
-    throw new Error(`Current Site-only UI must not render obsolete source selector: ${forbidden}`);
-  }
+for (const expected of ["imageSourceType: 'site'", 'imageSourceId: String(config.siteId)', 'currentSiteScope']) {
+  if (!content['ui/src/api.ts'].includes(expected)) throw new Error(`Current Site API contract is missing ${expected}`);
 }
 
-if (!content['public/index.html'].includes('value="INSERT" checked')) {
-  throw new Error('UI must default to INSERT');
-}
-if (content['public/index.html'].includes('localeSelect')) {
-  throw new Error('Per-run locale selector must remain out of the current release');
-}
-if (!content['server/app.js'].includes("app.post('/api/connect'")) {
-  throw new Error('Read-only Connect route is missing');
-}
-if (!content['server/app.js'].includes("app.post('/api/image-folders'")) {
-  throw new Error('Per-run image folder route is missing');
-}
-if (content['server/app.js'].includes('ensureArticleFolder')) {
-  throw new Error('Connect must not create an Article folder');
-}
-if (!content['server/liferay-client.js'].includes('IMAGE_SOURCE_FOLDER_MISMATCH')) {
-  throw new Error('Image folder ownership validation is missing');
-}
-if (content['server/liferay-client.js'].includes('/o/headless-asset-library/')) {
-  throw new Error('Demo release must not call Asset Library discovery');
-}
-if (!content['server/liferay-client.js'].includes('/sites/${encodePath(source.id)}/document-folders?flatten=true')) {
-  throw new Error('Current Site Documents and Media folder listing is missing');
-}
-if (!content['server/liferay-client.js'].includes('/structured-content-folders?flatten=true')) {
-  throw new Error('Flattened Web Content folder listing is missing');
-}
-if (!content['server/import-service.js'].includes('BATCH_SUBMISSION_UNKNOWN')) {
-  throw new Error('Ambiguous Batch submission lock is missing');
-}
-if (!content['server/index.js'].includes('config.host')) {
-  throw new Error('Local host binding is missing');
+for (const expected of ['INSERT', 'UPSERT', 'ON_ERROR_FAIL', 'ON_ERROR_CONTINUE']) {
+  if (!content['ui/src/steps/ImportStep.tsx'].includes(expected)) throw new Error(`Import UI is missing ${expected}`);
 }
 
-console.log(`Validated ${files.length} Current Site importer files and the migration workspace UI system.`);
+if (!content['ui/src/steps/ValidationStep.tsx'].includes('disabled={!validation.canImport}')) {
+  throw new Error('Validation UI must block Import navigation when errors remain');
+}
+
+for (const expected of ['workflow-mobile', 'mobile-stepper', 'prefers-reduced-motion', '--primary: #4caf4f']) {
+  if (!content['ui/src/styles.scss'].includes(expected)) throw new Error(`Faithful Nexcent UI styles are missing ${expected}`);
+}
+
+if (content['ui/src/App.tsx'].includes('assetLibrary') || content['ui/src/api.ts'].includes('headless-asset-library')) {
+  throw new Error('Demo React UI must remain Current Site only');
+}
+
+if (!content['server/app.js'].includes("app.post('/api/connect'")) throw new Error('Read-only Connect route is missing');
+if (!content['server/app.js'].includes("app.post('/api/image-folders'")) throw new Error('Per-run image folder route is missing');
+if (content['server/app.js'].includes('ensureArticleFolder')) throw new Error('Connect must not create an Article folder');
+if (!content['server/liferay-client.js'].includes('IMAGE_SOURCE_FOLDER_MISMATCH')) throw new Error('Image folder ownership validation is missing');
+if (content['server/liferay-client.js'].includes('/o/headless-asset-library/')) throw new Error('Demo release must not call Asset Library discovery');
+if (!content['server/liferay-client.js'].includes('/sites/${encodePath(source.id)}/document-folders?flatten=true')) throw new Error('Current Site Documents and Media folder listing is missing');
+if (!content['server/liferay-client.js'].includes('/structured-content-folders?flatten=true')) throw new Error('Flattened Web Content folder listing is missing');
+if (!content['server/import-service.js'].includes('BATCH_SUBMISSION_UNKNOWN')) throw new Error('Ambiguous Batch submission lock is missing');
+if (!content['server/index.js'].includes('config.host')) throw new Error('Local host binding is missing');
+
+console.log(`Validated ${files.length} Current Site importer files and the React migration workspace.`);

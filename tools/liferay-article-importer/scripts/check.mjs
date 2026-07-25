@@ -69,6 +69,14 @@ if (!content['ui/src/steps/ValidationStep.tsx'].includes('disabled={!validation.
   throw new Error('Validation UI must block Import navigation when errors remain');
 }
 
+for (const expected of ['BATCH_SUBMISSION_UNKNOWN', 'submissionLocked']) {
+  if (!content['ui/src/App.tsx'].includes(expected)) throw new Error(`React submission safety is missing ${expected}`);
+}
+
+if (!content['ui/src/steps/ImportStep.tsx'].includes('submissionLocked')) {
+  throw new Error('Import UI must lock ambiguous Batch submissions');
+}
+
 for (const expected of ['workflow-mobile', 'mobile-stepper', 'prefers-reduced-motion', '--primary: #4caf4f']) {
   if (!content['ui/src/styles.scss'].includes(expected)) throw new Error(`Faithful Nexcent UI styles are missing ${expected}`);
 }

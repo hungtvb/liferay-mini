@@ -46,21 +46,36 @@ for (const expected of ["'file'", "'erc'", 'byFileName', 'byErc']) {
   }
 }
 
-for (const expected of ['site-source-card', 'imageSourceTypeGroup', 'imageSourceSelect', 'imageFolderSelect', 'viewableBySelect']) {
+for (const expected of [
+  'app-sidebar', 'journey-nav', 'scope-lock', 'imageFolderSelect', 'viewableBySelect',
+  'action-dock', 'workbookDropzone', 'validationRows', 'progressFill'
+]) {
   if (!content['public/index.html'].includes(expected)) {
     throw new Error(`UI is missing ${expected}`);
   }
 }
 
-for (const expected of ['data-step-target="1"', 'workbookDropzone', 'validationRows', 'progressFill']) {
-  if (!content['public/index.html'].includes(expected)) {
-    throw new Error(`Wizard UI is missing ${expected}`);
+for (const expected of [
+  '--brand-500', '.app-sidebar', '.journey-step', '.scope-lock', '.action-dock',
+  '.result-banner', 'prefers-reduced-motion'
+]) {
+  if (!content['public/styles.css'].includes(expected)) {
+    throw new Error(`Nexcent UI system is missing ${expected}`);
   }
 }
 
-for (const expected of ['--green-500', '.stepper', '.site-source-card', '.result-banner', 'prefers-reduced-motion']) {
-  if (!content['public/styles.css'].includes(expected)) {
-    throw new Error(`Nexcent UI styles are missing ${expected}`);
+for (const expected of [
+  "imageSourceType: 'site'", 'currentSiteId()', 'setButtonLoading', 'journeyProgress',
+  'scaleX(${percent / 100})'
+]) {
+  if (!content['public/app.js'].includes(expected)) {
+    throw new Error(`UI behavior is missing ${expected}`);
+  }
+}
+
+for (const forbidden of ['imageSourceTypeGroup', 'imageSourceSelect', 'source-choice']) {
+  if (content['public/index.html'].includes(forbidden)) {
+    throw new Error(`Current Site-only UI must not render obsolete source selector: ${forbidden}`);
   }
 }
 
@@ -98,4 +113,4 @@ if (!content['server/index.js'].includes('config.host')) {
   throw new Error('Local host binding is missing');
 }
 
-console.log(`Validated ${files.length} Current Site importer files.`);
+console.log(`Validated ${files.length} Current Site importer files and the migration workspace UI system.`);

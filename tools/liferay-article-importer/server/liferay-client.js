@@ -9,18 +9,17 @@ function encodePath(value) {
 async function parseResponse(response) {
   const text = await response.text();
   if (!text) return null;
-  try { return JSON.parse(text); }
-  catch { return text; }
+
+  try {
+    return JSON.parse(text);
+  }
+  catch {
+    return text;
+  }
 }
 
 function retryableStatus(status) {
   return status === 429 || status === 502 || status === 503 || status === 504;
-}
-
-function compatibilityStatus(error) {
-  return error instanceof AppError
-    && error.code === 'LIFERAY_API_ERROR'
-    && [400, 404, 405].includes(error.status);
 }
 
 function folderPaths(items, parentKey) {
@@ -49,15 +48,19 @@ function folderPaths(items, parentKey) {
     return path;
   }
 
-  return items.map((item) => ({...item, path: build(item)}));
+  return items
+    .map((item) => ({...item, path: build(item)}))
+    .sort((left, right) => left.path.localeCompare(right.path));
 }
 
 function parsePositiveInteger(value, field, {optional = false} = {}) {
   if ((value == null || value === '') && optional) return null;
+
   const parsed = Number(value);
   if (!Number.isSafeInteger(parsed) || parsed <= 0) {
     throw new AppError(400, 'IMAGE_SOURCE_INVALID', `${field} must be a positive integer`);
   }
+
   return parsed;
 }
 
@@ -80,7 +83,6 @@ export class LiferayClient {
     this.fetch = fetchImpl;
     this.token = null;
     this.tokenExpiresAt = 0;
-    this.assetLibraries = null;
   }
 
   get connected() {
@@ -89,24 +91,20 @@ export class LiferayClient {
 
   async connect() {
     await this.#getAccessToken(true);
-    const [structures, folders, assetLibraries] = await Promise.all([
+
+    const [structures, folders] = await Promise.all([
       this.listContentStructures(),
-      this.listStructuredContentFolders(),
-      this.listAssetLibraries({force: true})
+      this.listStructuredContentFolders()
     ]);
 
     return {
-      assetLibraries,
       folders,
       imageSources: [
-        {id: this.config.siteId, name: 'Current Site', type: 'site'},
-        ...assetLibraries.map((item) => ({
-          assetLibraryId: item.assetLibraryId,
-          externalReferenceCode: item.externalReferenceCode,
-          id: item.id,
-          name: item.name,
-          type: 'assetLibrary'
-        }))
+        {
+          id: this.config.siteId,
+          name: 'Current Site',
+          type: 'site'
+        }
       ],
       site: {id: this.config.siteId},
       structures
@@ -115,11 +113,13 @@ export class LiferayClient {
 
   async #getAccessToken(force = false) {
     if (!force && this.connected) return this.token;
+
     const body = new URLSearchParams({
       client_id: this.config.clientId,
       client_secret: this.config.clientSecret,
       grant_type: 'client_credentials'
     });
+
     let response;
     try {
       response = await this.fetch(`${this.config.baseUrl}/o/oauth2/token`, {
@@ -130,15 +130,23 @@ export class LiferayClient {
       });
     }
     catch (error) {
-      throw new AppError(502, 'LIFERAY_UNREACHABLE', 'Cannot reach the Liferay OAuth2 endpoint', {cause: error.message});
+      throw new AppError(502, 'LIFERAY_UNREACHABLE', 'Cannot reach the Liferay OAuth2 endpoint', {
+        cause: error.message
+      });
     }
+
     const data = await parseResponse(response);
     if (!response.ok || !data?.access_token) {
-      throw new AppError(502, 'OAUTH_FAILED', 'Liferay OAuth2 client credentials authentication failed', {response: data, status: response.status});
+      throw new AppError(502, 'OAUTH_FAILED', 'Liferay OAuth2 client credentials authentication failed', {
+        response: data,
+        status: response.status
+      });
     }
+
     const expiresIn = Number(data.expires_in || 600);
     this.token = data.access_token;
     this.tokenExpiresAt = Date.now() + Math.max(expiresIn - 30, 30) * 1000;
+
     return this.token;
   }
 
@@ -146,6 +154,7 @@ export class LiferayClient {
     const token = await this.#getAccessToken();
     const method = String(options.method || 'GET').toUpperCase();
     const canRetry = ['GET', 'HEAD', 'OPTIONS'].includes(method);
+
     let response;
     try {
       response = await this.fetch(`${this.config.baseUrl}${path}`, {
@@ -164,6 +173,7 @@ export class LiferayClient {
         await delay(this.config.retryBaseDelayMs * (2 ** state.attempt));
         return this.#request(path, options, {...state, attempt: state.attempt + 1}, notFoundAsNull);
       }
+
       throw new AppError(502, 'LIFERAY_UNREACHABLE', 'Cannot reach the Liferay API', {
         cause: error.message,
         method,
@@ -176,15 +186,20 @@ export class LiferayClient {
       await this.#getAccessToken(true);
       return this.#request(path, options, {...state, retriedUnauthorized: true}, notFoundAsNull);
     }
+
     if (canRetry && retryableStatus(response.status) && state.attempt < this.config.maxRetries) {
       const retryAfter = Number(response.headers.get('retry-after'));
-      const waitMs = Number.isFinite(retryAfter) ? retryAfter * 1000 : this.config.retryBaseDelayMs * (2 ** state.attempt);
+      const waitMs = Number.isFinite(retryAfter)
+        ? retryAfter * 1000
+        : this.config.retryBaseDelayMs * (2 ** state.attempt);
+
       await delay(waitMs);
       return this.#request(path, options, {...state, attempt: state.attempt + 1}, notFoundAsNull);
     }
 
     const data = await parseResponse(response);
     if (response.status === 404 && notFoundAsNull) return null;
+
     if (!response.ok) {
       throw new AppError(response.status, 'LIFERAY_API_ERROR', 'Liferay API request failed', {
         method,
@@ -194,6 +209,7 @@ export class LiferayClient {
         status: response.status
       });
     }
+
     return data;
   }
 
@@ -201,101 +217,17 @@ export class LiferayClient {
     const items = [];
     let page = 1;
     let lastPage = 1;
+
     do {
       const separator = path.includes('?') ? '&' : '?';
       const data = await this.#request(`${path}${separator}page=${page}&pageSize=${this.config.imageIndexPageSize}`);
-      if (Array.isArray(data)) items.push(...data);
-      else items.push(...(data?.items || []));
+      items.push(...(Array.isArray(data) ? data : (data?.items || [])));
       lastPage = Number(data?.lastPage || 1);
       page += 1;
     }
     while (page <= lastPage);
+
     return items;
-  }
-
-  async #listAssetLibraryConnectedSites(item) {
-    if (Array.isArray(item.connectedSites)) return item.connectedSites;
-
-    const identifiers = [...new Set([item.externalReferenceCode, item.id]
-      .filter((value) => value != null && String(value).trim())
-      .map(String))];
-    const attemptedPaths = [];
-
-    for (const identifier of identifiers) {
-      const collectionPath = `/o/headless-asset-library/v1.0/asset-libraries/${encodePath(identifier)}/connected-sites`;
-      attemptedPaths.push(collectionPath);
-      try {
-        return await this.#list(collectionPath);
-      }
-      catch (error) {
-        if (!compatibilityStatus(error)) throw error;
-      }
-
-      const nestedPath = `/o/headless-asset-library/v1.0/asset-libraries/${encodePath(identifier)}?nestedFields=connectedSites`;
-      attemptedPaths.push(nestedPath);
-      try {
-        const result = await this.#request(nestedPath);
-        if (Array.isArray(result?.connectedSites)) return result.connectedSites;
-      }
-      catch (error) {
-        if (!compatibilityStatus(error)) throw error;
-      }
-    }
-
-    throw new AppError(
-      502,
-      'ASSET_LIBRARY_DISCOVERY_FAILED',
-      `Cannot determine connected Sites for Asset Library ${item.name || item.id}`,
-      {
-        assetLibraryExternalReferenceCode: item.externalReferenceCode || null,
-        assetLibraryId: item.id || null,
-        attemptedPaths
-      }
-    );
-  }
-
-  async #listAssetLibrariesCompat() {
-    let items;
-
-    try {
-      items = await this.#list('/o/headless-asset-library/v1.0/asset-libraries?sort=name:asc');
-    }
-    catch (error) {
-      if (!compatibilityStatus(error)) throw error;
-      items = await this.#list('/o/headless-asset-library/v1.0/asset-libraries');
-    }
-
-    return Promise.all(items.map(async (item) => ({
-      ...item,
-      connectedSites: await this.#listAssetLibraryConnectedSites(item)
-    })));
-  }
-
-  async listAssetLibraries({force = false} = {}) {
-    if (this.assetLibraries && !force) return this.assetLibraries;
-
-    let items;
-    try {
-      items = await this.#list('/o/headless-asset-library/v1.0/asset-libraries?nestedFields=connectedSites&sort=name:asc');
-    }
-    catch (error) {
-      if (!compatibilityStatus(error)) throw error;
-      items = await this.#listAssetLibrariesCompat();
-    }
-
-    this.assetLibraries = items
-      .filter((item) => item.siteId)
-      .filter((item) => (item.connectedSites || []).some((site) => String(site.id) === String(this.config.siteId)))
-      .map((item) => ({
-        assetLibraryId: item.id,
-        externalReferenceCode: item.externalReferenceCode || null,
-        id: item.siteId,
-        name: item.name || `Asset Library #${item.siteId}`,
-        type: item.type || 'AssetLibrary'
-      }))
-      .sort((left, right) => left.name.localeCompare(right.name));
-
-    return this.assetLibraries;
   }
 
   async listContentStructures() {
@@ -307,7 +239,10 @@ export class LiferayClient {
   }
 
   async listStructuredContentFolders() {
-    const items = await this.#list(`/o/headless-delivery/v1.0/sites/${encodePath(this.config.siteId)}/structured-content-folders?flatten=true&sort=name:asc`);
+    const items = await this.#list(
+      `/o/headless-delivery/v1.0/sites/${encodePath(this.config.siteId)}/structured-content-folders?flatten=true`
+    );
+
     return folderPaths(items.map((folder) => ({
       externalReferenceCode: folder.externalReferenceCode || null,
       id: folder.id,
@@ -324,19 +259,9 @@ export class LiferayClient {
   async #assertImageSource(scope) {
     const normalized = normalizeImageSource(scope);
 
-    if (normalized.type === 'site') {
-      if (String(normalized.id) !== String(this.config.siteId)) {
-        throw new AppError(400, 'IMAGE_SOURCE_NOT_AVAILABLE', 'Site image source must be the configured Site', {
-          configuredSiteId: this.config.siteId,
-          imageSourceId: normalized.id
-        });
-      }
-      return {...normalized, name: 'Current Site'};
-    }
-
-    const assetLibrary = (await this.listAssetLibraries()).find((item) => String(item.id) === String(normalized.id));
-    if (!assetLibrary) {
-      throw new AppError(400, 'IMAGE_SOURCE_NOT_AVAILABLE', `Asset Library ${normalized.id} is not available to the configured OAuth2 client`, {
+    if (normalized.type !== 'site' || String(normalized.id) !== String(this.config.siteId)) {
+      throw new AppError(400, 'IMAGE_SOURCE_NOT_AVAILABLE', 'Image source must be the configured Current Site', {
+        configuredSiteId: this.config.siteId,
         imageSourceId: normalized.id,
         imageSourceType: normalized.type
       });
@@ -344,16 +269,15 @@ export class LiferayClient {
 
     return {
       ...normalized,
-      assetLibraryId: assetLibrary.assetLibraryId,
-      externalReferenceCode: assetLibrary.externalReferenceCode,
-      name: assetLibrary.name
+      name: 'Current Site'
     };
   }
 
   async listImageFolders(scope) {
     const source = await this.#assertImageSource({...scope, folderId: null});
-    const resource = source.type === 'assetLibrary' ? 'asset-libraries' : 'sites';
-    const items = await this.#list(`/o/headless-delivery/v1.0/${resource}/${encodePath(source.id)}/document-folders?flatten=true&sort=name:asc`);
+    const items = await this.#list(
+      `/o/headless-delivery/v1.0/sites/${encodePath(source.id)}/document-folders?flatten=true`
+    );
 
     return folderPaths(items.map((folder) => ({
       externalReferenceCode: folder.externalReferenceCode || null,
@@ -371,19 +295,24 @@ export class LiferayClient {
     if (source.folderId) {
       const folders = await this.listImageFolders(source);
       folder = folders.find((item) => String(item.id) === String(source.folderId)) || null;
+
       if (!folder) {
         throw new AppError(
           400,
           'IMAGE_SOURCE_FOLDER_MISMATCH',
-          `Document folder ${source.folderId} does not belong to the selected ${source.type} image source`,
-          {imageSourceFolderId: source.folderId, imageSourceId: source.id, imageSourceType: source.type}
+          `Document folder ${source.folderId} does not belong to the configured Current Site`,
+          {
+            imageSourceFolderId: source.folderId,
+            imageSourceId: source.id,
+            imageSourceType: source.type
+          }
         );
       }
     }
 
     return {
-      assetLibraryId: source.assetLibraryId || null,
-      externalReferenceCode: source.externalReferenceCode || null,
+      assetLibraryId: null,
+      externalReferenceCode: null,
       folderId: folder?.id || null,
       folderName: folder?.name || null,
       folderPath: folder?.path || null,
@@ -397,23 +326,17 @@ export class LiferayClient {
 
   async listImageDocuments(scope) {
     const source = await this.resolveImageSource(scope);
-    let path;
-
-    if (source.folderId) {
-      path = `/o/headless-delivery/v1.0/document-folders/${encodePath(source.folderId)}/documents`;
-    }
-    else if (source.type === 'assetLibrary') {
-      path = `/o/headless-delivery/v1.0/asset-libraries/${encodePath(source.id)}/documents?flatten=true`;
-    }
-    else {
-      path = `/o/headless-delivery/v1.0/sites/${encodePath(source.id)}/documents?flatten=true`;
-    }
+    const path = source.folderId
+      ? `/o/headless-delivery/v1.0/document-folders/${encodePath(source.folderId)}/documents`
+      : `/o/headless-delivery/v1.0/sites/${encodePath(source.id)}/documents?flatten=true`;
 
     return this.#list(path);
   }
 
   async listSiteStructuredContents() {
-    return this.#list(`/o/headless-delivery/v1.0/sites/${encodePath(this.config.siteId)}/structured-contents?flatten=true`);
+    return this.#list(
+      `/o/headless-delivery/v1.0/sites/${encodePath(this.config.siteId)}/structured-contents?flatten=true`
+    );
   }
 
   async getStructuredContentByExternalReferenceCode(externalReferenceCode) {
@@ -426,12 +349,20 @@ export class LiferayClient {
   }
 
   async submitStructuredContents(items, {createStrategy, importStrategy}) {
-    const query = new URLSearchParams({createStrategy, importStrategy, siteId: String(this.config.siteId)});
-    return this.#request(`/o/headless-batch-engine/v1.0/import-task/${encodePath(this.config.batchClassName)}?${query}`, {
-      body: JSON.stringify(items),
-      headers: {'Content-Type': 'application/json'},
-      method: 'POST'
+    const query = new URLSearchParams({
+      createStrategy,
+      importStrategy,
+      siteId: String(this.config.siteId)
     });
+
+    return this.#request(
+      `/o/headless-batch-engine/v1.0/import-task/${encodePath(this.config.batchClassName)}?${query}`,
+      {
+        body: JSON.stringify(items),
+        headers: {'Content-Type': 'application/json'},
+        method: 'POST'
+      }
+    );
   }
 
   async getImportTask(taskId) {

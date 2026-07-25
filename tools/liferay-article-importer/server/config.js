@@ -1,7 +1,7 @@
 import {AppError} from './errors.js';
 
 export const VIEWABLE_BY_VALUES = ['Anyone', 'Members', 'Owner'];
-export const IMAGE_SOURCE_TYPES = ['site', 'assetLibrary'];
+export const IMAGE_SOURCE_TYPES = ['site'];
 
 const VIEWABLE_BY_SET = new Set(VIEWABLE_BY_VALUES);
 

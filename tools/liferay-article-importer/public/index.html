@@ -4,136 +4,341 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light">
+  <meta name="theme-color" content="#163d29">
   <title>Nexcent Web Content Importer</title>
   <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
-  <header class="app-header">
-    <a class="brand" href="#" aria-label="Nexcent Web Content Importer home">
-      <span class="brand-mark" aria-hidden="true"><i></i><i></i></span>
-      <span><strong>Nexcent</strong><small>Web Content Importer</small></span>
-    </a>
-    <span id="headerConnectionBadge" class="connection-badge">Not connected</span>
-  </header>
+  <a class="skip-link" href="#mainContent">Skip to migration workspace</a>
 
-  <main class="page-shell">
-    <nav class="stepper" aria-label="Import progress">
-      <button type="button" class="step is-active" data-step-target="1" aria-current="step"><span>1</span><strong>Connect</strong><small>Current</small></button>
-      <span class="step-line" aria-hidden="true"></span>
-      <button type="button" class="step" data-step-target="2" disabled><span>2</span><strong>Scope</strong><small>Not started</small></button>
-      <span class="step-line" aria-hidden="true"></span>
-      <button type="button" class="step" data-step-target="3" disabled><span>3</span><strong>Workbook</strong><small>Not started</small></button>
-      <span class="step-line" aria-hidden="true"></span>
-      <button type="button" class="step" data-step-target="4" disabled><span>4</span><strong>Validate</strong><small>Not started</small></button>
-      <span class="step-line" aria-hidden="true"></span>
-      <button type="button" class="step" data-step-target="5" disabled><span>5</span><strong>Import</strong><small>Not started</small></button>
-    </nav>
+  <div class="app-shell">
+    <aside class="app-sidebar" aria-label="Migration navigation">
+      <a class="brand" href="#" aria-label="Nexcent Web Content Importer home">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i></span>
+        <span class="brand-copy"><strong>Nexcent</strong><small>Content migration</small></span>
+      </a>
 
-    <div class="workspace">
-      <div class="workspace-main">
+      <div class="sidebar-label">Migration run</div>
+      <nav class="journey-nav" aria-label="Import progress">
+        <button type="button" class="journey-step is-active" data-step-target="1" aria-current="step">
+          <span class="journey-index">01</span>
+          <span class="journey-copy"><strong>Connect</strong><small>Current</small></span>
+          <span class="journey-marker" aria-hidden="true"></span>
+        </button>
+        <button type="button" class="journey-step" data-step-target="2" disabled>
+          <span class="journey-index">02</span>
+          <span class="journey-copy"><strong>Scope</strong><small>Not started</small></span>
+          <span class="journey-marker" aria-hidden="true"></span>
+        </button>
+        <button type="button" class="journey-step" data-step-target="3" disabled>
+          <span class="journey-index">03</span>
+          <span class="journey-copy"><strong>Workbook</strong><small>Not started</small></span>
+          <span class="journey-marker" aria-hidden="true"></span>
+        </button>
+        <button type="button" class="journey-step" data-step-target="4" disabled>
+          <span class="journey-index">04</span>
+          <span class="journey-copy"><strong>Validate</strong><small>Not started</small></span>
+          <span class="journey-marker" aria-hidden="true"></span>
+        </button>
+        <button type="button" class="journey-step" data-step-target="5" disabled>
+          <span class="journey-index">05</span>
+          <span class="journey-copy"><strong>Import</strong><small>Not started</small></span>
+          <span class="journey-marker" aria-hidden="true"></span>
+        </button>
+      </nav>
+
+      <div class="sidebar-spacer"></div>
+
+      <section class="sidebar-connection" aria-labelledby="connection-card-title">
+        <div class="connection-card-heading">
+          <span id="railConnectionDot" class="status-dot" aria-hidden="true"></span>
+          <span id="connection-card-title">Liferay connection</span>
+        </div>
+        <strong id="railSite">Site —</strong>
+        <span id="railLiferayUrl">—</span>
+        <button id="railReconnectButton" type="button" class="text-button">Reconnect</button>
+      </section>
+    </aside>
+
+    <div class="app-frame">
+      <header class="topbar">
+        <div>
+          <span class="topbar-kicker">Web Content Importer</span>
+          <strong id="mobileStepLabel">Step 1 of 5 · Connect</strong>
+        </div>
+        <span id="headerConnectionBadge" class="connection-badge">Not connected</span>
+      </header>
+
+      <div class="mobile-progress" aria-hidden="true">
+        <span id="journeyProgress"></span>
+      </div>
+
+      <main id="mainContent" class="main-content" tabindex="-1">
         <section id="step-1" class="wizard-step is-active" data-step="1" aria-labelledby="connect-heading">
-          <div class="page-heading">
-            <p class="eyebrow">Step 1 of 5</p>
-            <h1 id="connect-heading">Connect to Liferay</h1>
-            <p>Authenticate once, then load the configured Site, its Structures, Web Content folders, and Documents and Media folders.</p>
-          </div>
-          <div class="surface connection-surface">
-            <div><span class="section-kicker">Environment</span><h2>Migration endpoint</h2><p>Secrets stay on the local server. The browser receives only migration metadata and validation results.</p></div>
-            <div id="environment" class="environment-list"></div>
-            <div class="surface-actions"><button id="connectButton" type="button" class="button button-primary">Connect to Liferay</button><div id="connectionStatus" class="inline-status" aria-live="polite"></div></div>
+          <header class="stage-header">
+            <div>
+              <p class="eyebrow">01 · Connection</p>
+              <h1 id="connect-heading" tabindex="-1">Start with a verified Site connection</h1>
+              <p>Authenticate through the local server, then load the live Structures and folders needed for this migration run.</p>
+            </div>
+            <span class="stage-tag">Read-only setup</span>
+          </header>
+
+          <div class="connect-grid">
+            <article class="connect-panel">
+              <div class="connect-visual" aria-hidden="true">
+                <svg viewBox="0 0 48 48" focusable="false"><path d="M16 17v-4a8 8 0 0 1 16 0v4M13 17h22a3 3 0 0 1 3 3v17a3 3 0 0 1-3 3H13a3 3 0 0 1-3-3V20a3 3 0 0 1 3-3Z"/><path d="M24 26v6"/></svg>
+              </div>
+              <div class="connect-panel-copy">
+                <span class="section-kicker">Secure local session</span>
+                <h2>Credentials never enter the browser</h2>
+                <p>OAuth2 secrets remain in the Node.js process. This page receives only migration metadata and validation results.</p>
+              </div>
+              <button id="connectButton" type="button" class="button button-primary button-large">Connect to Liferay</button>
+              <div id="connectionStatus" class="inline-status" aria-live="polite"></div>
+            </article>
+
+            <section class="environment-panel" aria-labelledby="environment-heading">
+              <div class="panel-heading">
+                <div>
+                  <span class="section-kicker">Environment</span>
+                  <h2 id="environment-heading">Configured runtime</h2>
+                </div>
+                <span class="soft-badge">Server-owned</span>
+              </div>
+              <div id="environment" class="environment-list"></div>
+            </section>
           </div>
         </section>
 
         <section id="step-2" class="wizard-step" data-step="2" aria-labelledby="scope-heading">
-          <div class="page-heading">
-            <p class="eyebrow">Step 2 of 5</p>
-            <h1 id="scope-heading">Choose the migration scope</h1>
-            <p>The demo imports Web Content and resolves images inside the configured Current Site. Asset Library support remains a later enhancement.</p>
-          </div>
+          <header class="stage-header">
+            <div>
+              <p class="eyebrow">02 · Scope</p>
+              <h1 id="scope-heading" tabindex="-1">Define one controlled migration boundary</h1>
+              <p>Choose the content contract, destination, visibility, and the Documents and Media folder used to resolve image references.</p>
+            </div>
+            <span class="stage-tag">Current Site only</span>
+          </header>
 
-          <div class="surface scope-surface">
-            <div class="section-heading"><span class="section-number">01</span><div><h2>Content destination</h2><p>Choose one Structure and one existing Web Content folder for this run.</p></div></div>
+          <section class="scope-lock" aria-label="Locked Site scope">
+            <span class="scope-lock-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" focusable="false"><path d="M4 21V7l8-4 8 4v14M8 21v-7h8v7M8 9h.01M12 9h.01M16 9h.01"/></svg>
+            </span>
+            <span><small>Migration location</small><strong>Current Site <b id="scopeSiteId">—</b></strong></span>
+            <span class="scope-lock-note">Content and media stay inside the same Site for demo v1.</span>
+          </section>
+
+          <section class="surface scope-panel" aria-labelledby="content-contract-heading">
+            <div class="panel-heading">
+              <div>
+                <span class="section-kicker">Content contract</span>
+                <h2 id="content-contract-heading">What will be created</h2>
+              </div>
+              <span class="section-number">01</span>
+            </div>
+
             <div class="form-grid three-columns">
-              <label class="field">Content Structure <span>*</span><select id="structureSelect"></select></label>
-              <label class="field">Target Web Content folder <span>*</span><select id="folderSelect"></select></label>
-              <label class="field">Content visibility <span>*</span><select id="viewableBySelect"></select></label>
+              <label class="field" for="structureSelect">
+                <span>Content Structure <b>*</b></span>
+                <select id="structureSelect"><option value="">Connect first</option></select>
+                <small>The live Structure defines the Excel columns and payload.</small>
+              </label>
+              <label class="field" for="folderSelect">
+                <span>Web Content folder <b>*</b></span>
+                <select id="folderSelect"><option value="">Connect first</option></select>
+                <small>Every imported item is targeted to this existing folder.</small>
+              </label>
+              <label class="field" for="viewableBySelect">
+                <span>Visibility <b>*</b></span>
+                <select id="viewableBySelect"><option value="">Connect first</option></select>
+                <small>Applied to every Structured Content payload item.</small>
+              </label>
             </div>
-            <div id="structureAnalysis" class="notice hidden"></div>
-          </div>
+            <div id="structureAnalysis" class="notice hidden" aria-live="polite"></div>
+          </section>
 
-          <div class="surface scope-surface">
-            <div class="section-heading"><span class="section-number">02</span><div><h2>Image resolution</h2><p>Resolve exact <code>file:</code> or <code>erc:</code> references from Documents and Media in the same Site.</p></div></div>
-            <div class="site-source-card" aria-label="Current Site image source">
-              <span class="site-source-icon" aria-hidden="true">DM</span>
-              <span class="site-source-copy"><span class="scope-badge">Demo scope</span><strong>Current Site · Documents and Media</strong><small>The Site ID comes from server configuration and cannot be changed during this run.</small></span>
+          <section class="surface media-panel" aria-labelledby="media-heading">
+            <div class="media-intro">
+              <div class="media-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" focusable="false"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="m21 15-5-5L5 20"/></svg>
+              </div>
+              <div>
+                <span class="section-kicker">Image resolution</span>
+                <h2 id="media-heading">Documents and Media</h2>
+                <p>Excel image cells use an exact <code>file:</code> name or <code>erc:</code> value.</p>
+              </div>
             </div>
-            <div class="scope-state-controls" aria-hidden="true">
-              <div id="imageSourceTypeGroup" class="source-type-grid" role="radiogroup" aria-label="Image source type"></div>
-              <label class="field">Image source<select id="imageSourceSelect"></select></label>
-            </div>
-            <div class="form-grid one-column compact-top">
-              <label class="field">Documents and Media folder<select id="imageFolderSelect"></select><small>Use the Site root to include all nested folders, or restrict matching to one folder.</small></label>
-            </div>
-            <div id="imageScopeStatus" class="inline-status" aria-live="polite"></div>
-          </div>
+            <label class="field media-folder-field" for="imageFolderSelect">
+              <span>Search boundary</span>
+              <select id="imageFolderSelect" disabled><option value="">Connect first</option></select>
+              <small>Site root includes nested folders. A selected folder matches only its direct documents.</small>
+            </label>
+            <div id="imageScopeStatus" class="inline-status media-status" aria-live="polite"></div>
+          </section>
 
-          <div class="wizard-actions"><button type="button" class="button button-secondary" data-back-step="1">Back</button><button id="scopeNextButton" type="button" class="button button-primary" disabled>Continue to workbook</button></div>
+          <section class="scope-review" aria-labelledby="scope-review-heading">
+            <div class="scope-review-heading">
+              <span class="section-kicker">Run summary</span>
+              <h2 id="scope-review-heading">Workbook binding preview</h2>
+            </div>
+            <dl class="scope-summary">
+              <div><dt>Structure</dt><dd id="summaryStructure">Not selected</dd></div>
+              <div><dt>Target folder</dt><dd id="summaryFolder">Not selected</dd></div>
+              <div><dt>Media folder</dt><dd id="summaryImageFolder">Site root</dd></div>
+              <div><dt>Visibility</dt><dd id="summaryVisibility">—</dd></div>
+              <div><dt>Locale</dt><dd id="summaryLocale">—</dd></div>
+            </dl>
+          </section>
+
+          <div class="action-dock">
+            <button type="button" class="button button-secondary" data-back-step="1">Back</button>
+            <button id="scopeNextButton" type="button" class="button button-primary" disabled>Continue to workbook</button>
+          </div>
         </section>
 
         <section id="step-3" class="wizard-step" data-step="3" aria-labelledby="workbook-heading">
-          <div class="page-heading"><p class="eyebrow">Step 3 of 5</p><h1 id="workbook-heading">Prepare the workbook</h1><p>Generate a template bound to the selected Site scope, fill the Content Items sheet, then upload the completed workbook.</p></div>
-          <div class="workbook-grid">
-            <div class="surface workbook-card">
-              <span class="section-kicker">Template</span><h2>Structure-bound Excel</h2><p>The workbook includes a Field Guide, safe example data, and hidden scope metadata used to prevent accidental cross-scope imports.</p>
-              <button id="templateButton" type="button" class="button button-secondary" disabled>Download template</button>
-              <div class="reference-hint"><code>file:hero-home.webp</code><span>or</span><code>erc:NXC_HERO_HOME</code></div>
+          <header class="stage-header">
+            <div>
+              <p class="eyebrow">03 · Workbook</p>
+              <h1 id="workbook-heading" tabindex="-1">Generate, complete, and return the workbook</h1>
+              <p>The template is fingerprinted to the selected Structure and Site scope, preventing accidental cross-scope imports.</p>
             </div>
-            <form id="workbookForm" class="surface workbook-card">
-              <span class="section-kicker">Completed workbook</span><h2>Upload and validate</h2>
-              <label id="workbookDropzone" class="dropzone" for="workbookFile"><input id="workbookFile" name="file" type="file" accept=".xlsx" required><strong>Drop an .xlsx file here</strong><span>or click to browse</span><small id="workbookFileMeta">Maximum file size comes from the server configuration.</small></label>
+            <span class="stage-tag">Template v5</span>
+          </header>
+
+          <div class="workbook-flow">
+            <article class="workbook-stage">
+              <div class="workbook-stage-number">01</div>
+              <div class="workbook-stage-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" focusable="false"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6M8 13h8M8 17h5"/></svg>
+              </div>
+              <span class="section-kicker">Download</span>
+              <h2>Get the bound template</h2>
+              <p>Includes Content Items, Field Guide, Example, and hidden migration metadata.</p>
+              <div class="reference-hint"><code>file:cover.webp</code><span>or</span><code>erc:NXC_COVER</code></div>
+              <button id="templateButton" type="button" class="button button-secondary" disabled>Download Excel template</button>
+            </article>
+
+            <div class="flow-connector" aria-hidden="true">
+              <svg viewBox="0 0 24 24" focusable="false"><path d="M5 12h14M14 7l5 5-5 5"/></svg>
+            </div>
+
+            <form id="workbookForm" class="workbook-stage workbook-upload-stage">
+              <div class="workbook-stage-number">02</div>
+              <div class="workbook-stage-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" focusable="false"><path d="M12 16V4M7 9l5-5 5 5M5 20h14"/></svg>
+              </div>
+              <span class="section-kicker">Upload</span>
+              <h2>Return the completed file</h2>
+              <p>Validation checks metadata, rows, ERC collisions, image references, and the final payload.</p>
+              <label id="workbookDropzone" class="dropzone" for="workbookFile">
+                <input id="workbookFile" name="file" type="file" accept=".xlsx" required>
+                <span class="dropzone-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" focusable="false"><path d="M12 16V4M7 9l5-5 5 5M5 20h14"/></svg>
+                </span>
+                <strong>Drop the completed .xlsx here</strong>
+                <span>or choose a file</span>
+                <small id="workbookFileMeta">Maximum file size comes from the server configuration.</small>
+              </label>
               <button class="button button-primary" type="submit" disabled id="validateButton">Validate workbook</button>
               <div id="workbookStatus" class="inline-status" aria-live="polite"></div>
             </form>
           </div>
-          <div class="wizard-actions"><button type="button" class="button button-secondary" data-back-step="2">Back</button></div>
+
+          <div class="action-dock action-dock-single">
+            <button type="button" class="button button-secondary" data-back-step="2">Back to scope</button>
+          </div>
         </section>
 
         <section id="step-4" class="wizard-step" data-step="4" aria-labelledby="validation-heading">
-          <div class="page-heading"><p class="eyebrow">Step 4 of 5</p><h1 id="validation-heading">Review validation</h1><p>Fix every blocked row before Batch Engine submission. Warnings may require an explicit import strategy decision.</p></div>
+          <header class="stage-header">
+            <div>
+              <p class="eyebrow">04 · Validation</p>
+              <h1 id="validation-heading" tabindex="-1">Review the migration gate</h1>
+              <p>Every blocked row must be resolved before the importer unlocks Batch Engine submission.</p>
+            </div>
+            <span class="stage-tag">Preflight check</span>
+          </header>
+
           <div id="validationBanner" class="result-banner"></div>
           <div id="validationSummary" class="metric-grid"></div>
-          <div class="surface validation-surface">
-            <div class="section-heading validation-heading-row"><div><h2>Row preview</h2><p>Showing the server-side preview limit.</p></div><span id="validationPreviewLabel" class="soft-badge"></span></div>
-            <div class="table-wrap"><table><thead><tr><th>Excel row</th><th>ERC</th><th>Title</th><th>Status</th></tr></thead><tbody id="validationRows"></tbody></table></div>
+
+          <section class="surface validation-surface" aria-labelledby="preview-heading">
+            <div class="panel-heading">
+              <div><span class="section-kicker">Data preview</span><h2 id="preview-heading">Validated rows</h2></div>
+              <span id="validationPreviewLabel" class="soft-badge"></span>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>Excel row</th><th>ERC</th><th>Title</th><th>Status</th></tr></thead>
+                <tbody id="validationRows"></tbody>
+              </table>
+            </div>
+          </section>
+
+          <details id="issuesDetails" class="surface details-surface hidden">
+            <summary><span>Validation issues</span><span id="issueCountBadge" class="soft-badge"></span></summary>
+            <div id="issues" class="issue-list"></div>
+          </details>
+          <details id="payloadDetails" class="surface details-surface hidden">
+            <summary><span>Payload preview</span><span class="details-hint">Technical</span></summary>
+            <pre id="payloadPreview"></pre>
+          </details>
+
+          <div class="action-dock">
+            <button type="button" class="button button-secondary" data-back-step="3">Back to workbook</button>
+            <button id="validationNextButton" type="button" class="button button-primary" disabled>Continue to import</button>
           </div>
-          <details id="issuesDetails" class="surface details-surface hidden"><summary>Validation issues <span id="issueCountBadge" class="soft-badge"></span></summary><div id="issues" class="issue-list"></div></details>
-          <details id="payloadDetails" class="surface details-surface hidden"><summary>Payload preview</summary><pre id="payloadPreview"></pre></details>
-          <div class="wizard-actions"><button type="button" class="button button-secondary" data-back-step="3">Back</button><button id="validationNextButton" type="button" class="button button-primary" disabled>Continue to import</button></div>
         </section>
 
         <section id="step-5" class="wizard-step" data-step="5" aria-labelledby="import-heading">
-          <div class="page-heading"><p class="eyebrow">Step 5 of 5</p><h1 id="import-heading">Confirm and import</h1><p>Review the strategy, submit one Batch Engine task, and keep this page open while the task is running.</p></div>
-          <div class="surface import-confirmation">
-            <div class="import-count"><strong id="importItemCount">0</strong><span>content items ready</span></div>
+          <header class="stage-header">
+            <div>
+              <p class="eyebrow">05 · Import</p>
+              <h1 id="import-heading" tabindex="-1">Confirm the final Batch Engine task</h1>
+              <p>Choose the collision and error policies, submit once, then keep this page open while Liferay processes the task.</p>
+            </div>
+            <span class="stage-tag">Write operation</span>
+          </header>
+
+          <section class="import-hero" aria-label="Items ready to import">
+            <div><strong id="importItemCount">0</strong><span>content items</span></div>
+            <p>Validated and ready for one Structured Content Batch task.</p>
+          </section>
+
+          <section class="surface import-options" aria-labelledby="strategy-heading">
+            <div class="panel-heading"><div><span class="section-kicker">Task strategy</span><h2 id="strategy-heading">How Liferay should handle the batch</h2></div></div>
             <div class="option-groups">
-              <fieldset><legend>Existing content handling</legend><label><input type="radio" name="createStrategy" value="INSERT" checked><span><strong>Create new only</strong><small>INSERT · folder-safe default</small></span></label><label><input type="radio" name="createStrategy" value="UPSERT"><span><strong>Create or update by ERC</strong><small>UPSERT · confirmation required</small></span></label></fieldset>
-              <fieldset><legend>When an item fails</legend><label><input type="radio" name="importStrategy" value="ON_ERROR_FAIL" checked><span><strong>Stop the import</strong><small>ON_ERROR_FAIL</small></span></label><label><input type="radio" name="importStrategy" value="ON_ERROR_CONTINUE"><span><strong>Continue and collect failures</strong><small>ON_ERROR_CONTINUE</small></span></label></fieldset>
+              <fieldset>
+                <legend>Existing content</legend>
+                <label class="option-card"><input type="radio" name="createStrategy" value="INSERT" checked><span><strong>Create new only</strong><small>INSERT · blocks known ERC collisions</small></span></label>
+                <label class="option-card"><input type="radio" name="createStrategy" value="UPSERT"><span><strong>Create or update by ERC</strong><small>UPSERT · explicit confirmation required</small></span></label>
+              </fieldset>
+              <fieldset>
+                <legend>Row failures</legend>
+                <label class="option-card"><input type="radio" name="importStrategy" value="ON_ERROR_FAIL" checked><span><strong>Stop the batch</strong><small>ON_ERROR_FAIL · safest migration mode</small></span></label>
+                <label class="option-card"><input type="radio" name="importStrategy" value="ON_ERROR_CONTINUE"><span><strong>Continue processing</strong><small>ON_ERROR_CONTINUE · collect failed rows</small></span></label>
+              </fieldset>
             </div>
             <label id="upsertConfirmWrap" class="warning hidden"><input type="checkbox" id="confirmUpsert"><span>I understand that existing content keeps its current folder and a missing item may be created at the Web Content root.</span></label>
-            <button id="importButton" type="button" class="button button-primary import-button" disabled>Start import</button>
-          </div>
-          <div id="taskPanel" class="surface task-panel hidden"><div class="task-header"><div><span class="section-kicker">Batch Engine</span><h2 id="taskHeading">Submitting task</h2></div><span id="taskPercent" class="task-percent">0%</span></div><div class="progress-track" aria-hidden="true"><div id="progressFill" class="progress-fill"></div></div><div id="taskStatus" class="inline-status" aria-live="polite"></div><details class="task-details"><summary>Technical details</summary><pre id="taskResult"></pre></details></div>
-          <div class="wizard-actions"><button id="importBackButton" type="button" class="button button-secondary" data-back-step="4">Back</button></div>
-        </section>
-      </div>
+            <button id="importButton" type="button" class="button button-primary button-large import-button" disabled>Start import</button>
+          </section>
 
-      <aside class="run-rail" aria-label="Current import summary">
-        <section class="rail-card"><div class="rail-card-heading"><h2>Connection</h2><span id="railConnectionDot" class="status-dot"></span></div><strong id="railLiferayUrl">—</strong><p id="railSite">Site —</p><button id="railReconnectButton" type="button" class="text-button">Reconnect</button></section>
-        <section class="rail-card"><div class="rail-card-heading"><h2>Import scope</h2></div><dl class="scope-summary"><div><dt>Structure</dt><dd id="summaryStructure">Not selected</dd></div><div><dt>Target folder</dt><dd id="summaryFolder">Not selected</dd></div><div><dt>Image source</dt><dd id="summaryImageSource">Current Site</dd></div><div><dt>Image folder</dt><dd id="summaryImageFolder">Site root</dd></div><div><dt>Visibility</dt><dd id="summaryVisibility">—</dd></div><div><dt>Locale</dt><dd id="summaryLocale">—</dd></div></dl></section>
-        <p class="rail-note">Changing the selected scope after validation invalidates the current session and requires another validation.</p>
-      </aside>
+          <section id="taskPanel" class="surface task-panel hidden" aria-live="polite">
+            <div class="task-header"><div><span class="section-kicker">Batch Engine</span><h2 id="taskHeading">Submitting task</h2></div><span id="taskPercent" class="task-percent">0%</span></div>
+            <div class="progress-track" aria-hidden="true"><div id="progressFill" class="progress-fill"></div></div>
+            <div id="taskStatus" class="inline-status"></div>
+            <details class="task-details"><summary>Technical task response</summary><pre id="taskResult"></pre></details>
+          </section>
+
+          <div class="action-dock action-dock-single">
+            <button id="importBackButton" type="button" class="button button-secondary" data-back-step="4">Back to validation</button>
+          </div>
+        </section>
+      </main>
     </div>
-  </main>
+  </div>
 
   <div id="toastRegion" class="toast-region" aria-live="polite" aria-atomic="true"></div>
   <script type="module" src="/app.js"></script>

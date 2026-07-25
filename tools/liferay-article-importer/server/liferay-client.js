@@ -17,6 +17,12 @@ function retryableStatus(status) {
   return status === 429 || status === 502 || status === 503 || status === 504;
 }
 
+function compatibilityStatus(error) {
+  return error instanceof AppError
+    && error.code === 'LIFERAY_API_ERROR'
+    && [400, 404, 405].includes(error.status);
+}
+
 function folderPaths(items, parentKey) {
   const byId = new Map(items.map((item) => [String(item.id), item]));
   const cache = new Map();
@@ -198,7 +204,8 @@ export class LiferayClient {
     do {
       const separator = path.includes('?') ? '&' : '?';
       const data = await this.#request(`${path}${separator}page=${page}&pageSize=${this.config.imageIndexPageSize}`);
-      items.push(...(data?.items || []));
+      if (Array.isArray(data)) items.push(...data);
+      else items.push(...(data?.items || []));
       lastPage = Number(data?.lastPage || 1);
       page += 1;
     }
@@ -206,10 +213,76 @@ export class LiferayClient {
     return items;
   }
 
+  async #listAssetLibraryConnectedSites(item) {
+    if (Array.isArray(item.connectedSites)) return item.connectedSites;
+
+    const identifiers = [...new Set([item.externalReferenceCode, item.id]
+      .filter((value) => value != null && String(value).trim())
+      .map(String))];
+    const attemptedPaths = [];
+
+    for (const identifier of identifiers) {
+      const collectionPath = `/o/headless-asset-library/v1.0/asset-libraries/${encodePath(identifier)}/connected-sites`;
+      attemptedPaths.push(collectionPath);
+      try {
+        return await this.#list(collectionPath);
+      }
+      catch (error) {
+        if (!compatibilityStatus(error)) throw error;
+      }
+
+      const nestedPath = `/o/headless-asset-library/v1.0/asset-libraries/${encodePath(identifier)}?nestedFields=connectedSites`;
+      attemptedPaths.push(nestedPath);
+      try {
+        const result = await this.#request(nestedPath);
+        if (Array.isArray(result?.connectedSites)) return result.connectedSites;
+      }
+      catch (error) {
+        if (!compatibilityStatus(error)) throw error;
+      }
+    }
+
+    throw new AppError(
+      502,
+      'ASSET_LIBRARY_DISCOVERY_FAILED',
+      `Cannot determine connected Sites for Asset Library ${item.name || item.id}`,
+      {
+        assetLibraryExternalReferenceCode: item.externalReferenceCode || null,
+        assetLibraryId: item.id || null,
+        attemptedPaths
+      }
+    );
+  }
+
+  async #listAssetLibrariesCompat() {
+    let items;
+
+    try {
+      items = await this.#list('/o/headless-asset-library/v1.0/asset-libraries?sort=name:asc');
+    }
+    catch (error) {
+      if (!compatibilityStatus(error)) throw error;
+      items = await this.#list('/o/headless-asset-library/v1.0/asset-libraries');
+    }
+
+    return Promise.all(items.map(async (item) => ({
+      ...item,
+      connectedSites: await this.#listAssetLibraryConnectedSites(item)
+    })));
+  }
+
   async listAssetLibraries({force = false} = {}) {
     if (this.assetLibraries && !force) return this.assetLibraries;
 
-    const items = await this.#list('/o/headless-asset-library/v1.0/asset-libraries?nestedFields=connectedSites&sort=name:asc');
+    let items;
+    try {
+      items = await this.#list('/o/headless-asset-library/v1.0/asset-libraries?nestedFields=connectedSites&sort=name:asc');
+    }
+    catch (error) {
+      if (!compatibilityStatus(error)) throw error;
+      items = await this.#listAssetLibrariesCompat();
+    }
+
     this.assetLibraries = items
       .filter((item) => item.siteId)
       .filter((item) => (item.connectedSites || []).some((site) => String(site.id) === String(this.config.siteId)))
@@ -219,7 +292,8 @@ export class LiferayClient {
         id: item.siteId,
         name: item.name || `Asset Library #${item.siteId}`,
         type: item.type || 'AssetLibrary'
-      }));
+      }))
+      .sort((left, right) => left.name.localeCompare(right.name));
 
     return this.assetLibraries;
   }

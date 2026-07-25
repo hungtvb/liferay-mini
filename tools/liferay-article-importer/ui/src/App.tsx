@@ -55,6 +55,7 @@ export function App() {
   const [importStatus, setImportStatus] = useState<AsyncStatus>('idle');
   const [importError, setImportError] = useState<string | null>(null);
   const [task, setTask] = useState<ImportTask | null>(null);
+  const [submissionLocked, setSubmissionLocked] = useState(false);
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
   const toastId = useRef(0);
 
@@ -94,6 +95,7 @@ export function App() {
     setTask(null);
     setImportStatus('idle');
     setImportError(null);
+    setSubmissionLocked(false);
     setMaxUnlockedStep((current) => Math.min(current, 3) as Step);
     if (clearWorkbook) setFile(null);
   }
@@ -225,6 +227,7 @@ export function App() {
     if (!validationPayload?.sessionId) return;
     setImportStatus('loading');
     setImportError(null);
+    setSubmissionLocked(false);
 
     try {
       const initialTask = await submitImport(validationPayload.sessionId, createStrategy, importStrategy, confirmUpsert);
@@ -233,6 +236,7 @@ export function App() {
     }
     catch (error) {
       setImportStatus('error');
+      setSubmissionLocked(error instanceof ApiError && error.code === 'BATCH_SUBMISSION_UNKNOWN');
       setImportError(messageFrom(error));
       showToast(messageFrom(error), 'error');
     }
@@ -251,6 +255,7 @@ export function App() {
     setTask(null);
     setImportStatus('idle');
     setImportError(null);
+    setSubmissionLocked(false);
   }
 
   const structureLabel = useMemo(() => connection?.structures.find((item) => String(item.id) === selection.structureId)?.name || 'Not selected', [connection, selection.structureId]);
@@ -323,6 +328,7 @@ export function App() {
               task={task}
               status={importStatus}
               error={importError}
+              submissionLocked={submissionLocked}
               onBack={() => setCurrentStep(4)}
               onStart={handleStartImport}
               onReset={resetRun}

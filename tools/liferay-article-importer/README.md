@@ -1,26 +1,53 @@
 # Liferay Flat Structured Content Importer
 
-Local Node.js migration utility for importing any supported **flat, non-repeatable Liferay Structured Content** from a generated Excel workbook. Article, Hero, Service, Testimonial, Partner, and FAQ Structures use the same code path.
+Local Node.js migration utility for importing supported **flat, non-repeatable Liferay Structured Content** from a generated Excel workbook. Article, Hero, Service, Testimonial, Partner, FAQ, and similar Structures use the same runtime path.
 
-## Boundary
+## Demo scope
 
-One run uses one configured Liferay Site, one selected Content Structure, one selected Web Content folder, one default locale, one selected image source, one selected visibility policy, one workbook, and one Batch Engine task.
+Version 1 is intentionally scoped to one configured Liferay Site:
 
-Supported field types: string/rich text, boolean, date, integer/long, decimal/number, image, and single-value select/radio. Nested, repeatable, relationship, document, geolocation, and grid fields are not imported. A required unsupported field blocks the Structure. Optional unsupported scalar fields are excluded with a warning.
+```text
+Configured Current Site
+→ load Content Structures
+→ load Web Content folders
+→ load Documents and Media folders
+→ generate a scope-bound Excel workbook
+→ validate rows and image references
+→ submit one Structured Content Batch Engine task
+```
+
+Asset Library support is a planned enhancement. The demo does not call `headless-asset-library`, does not require JSONWS access, and does not expose a second content or media location in the UI.
+
+## Supported contract
+
+One run uses:
+
+- One configured Liferay Site.
+- One selected Content Structure.
+- One selected Web Content folder in that Site.
+- One optional Documents and Media folder in that Site.
+- One fixed default locale.
+- One selected visibility policy.
+- One workbook.
+- One Batch Engine task.
+
+Supported field types: string/rich text, boolean, date, integer/long, decimal/number, image, and single-value select/radio.
+
+Nested, repeatable, relationship, document, geolocation, and grid fields are not imported. A required unsupported field blocks the Structure. Optional unsupported scalar fields are excluded with a warning.
 
 ## Configuration ownership
 
-- ENV: Liferay URL, OAuth2 credentials, Site, default locale, default visibility, local bind, and technical limits.
-- UI: Structure, target folder, image source type, Site/Asset Library source, optional image folder, content visibility, workbook, INSERT/UPSERT, and error strategy.
+- ENV: Liferay URL, OAuth2 credentials, Site ID, default locale, default visibility, local bind address, and technical limits.
+- UI: Structure, target Web Content folder, optional Documents and Media folder, content visibility, workbook, INSERT/UPSERT, and error strategy.
 - Excel: title, ERC, dynamic Structure field values, and image references.
 
-Copy `.env.example` to `.env`. Never commit credentials.
+Copy `.env.example` to `.env`. Never commit secrets.
 
 The OAuth2 client must be able to:
 
-- Read the configured Site's Content Structures and Web Content folders.
-- Read Site Documents and Media when the current Site is selected as the image source.
-- List and read Asset Libraries that should be selectable as image sources.
+- Read the configured Site's Content Structures.
+- Read the configured Site's Web Content folders.
+- Read the configured Site's Documents and Media folders and documents.
 - Submit and read Batch Engine import tasks.
 
 ## Run
@@ -38,25 +65,67 @@ Open `http://127.0.0.1:4174`.
 
 1. Connect with OAuth2 Client Credentials. Connect is read-only.
 2. Select a supported Structure and an existing Web Content folder.
-3. Select one image source:
-   - Current Site; or
-   - One Asset Library visible to the OAuth2 client and connected to the configured Site.
-4. Optionally restrict image resolution to one folder in that source.
-5. Select content visibility: `Anyone`, `Members`, or `Owner`.
-6. Generate the Structure- and scope-bound workbook.
-7. Fill the `Content Items` sheet and upload it.
-8. Resolve all validation issues.
-9. Choose exactly two import options: existing-content handling and error handling.
-10. Submit one Batch Engine import task and poll it to completion.
+3. Select content visibility: `Anyone`, `Members`, or `Owner`.
+4. Use the Current Site Documents and Media root, or restrict image resolution to one folder.
+5. Generate the Structure- and scope-bound workbook.
+6. Fill the `Content Items` sheet and upload it.
+7. Resolve every validation issue.
+8. Choose existing-content handling and error handling.
+9. Submit one Batch Engine import task and poll it to completion.
 
 `INSERT` is the default and verified folder-safe path. `UPSERT` requires confirmation because a missing item may be created at the Web Content root and existing items keep their current folder.
+
+## Liferay APIs
+
+### Content Structures
+
+```text
+GET /o/headless-delivery/v1.0/sites/{SITE_ID}/content-structures
+```
+
+### Web Content folders
+
+```text
+GET /o/headless-delivery/v1.0/sites/{SITE_ID}/structured-content-folders?flatten=true
+```
+
+### Documents and Media folders
+
+```text
+GET /o/headless-delivery/v1.0/sites/{SITE_ID}/document-folders?flatten=true
+```
+
+### Documents
+
+Source root:
+
+```text
+GET /o/headless-delivery/v1.0/sites/{SITE_ID}/documents?flatten=true
+```
+
+Selected folder:
+
+```text
+GET /o/headless-delivery/v1.0/document-folders/{FOLDER_ID}/documents
+```
+
+### Batch import
+
+```text
+POST /o/headless-batch-engine/v1.0/import-task/com.liferay.headless.delivery.dto.v1_0.StructuredContent
+  ?createStrategy={INSERT|UPSERT}
+  &importStrategy={ON_ERROR_FAIL|ON_ERROR_CONTINUE}
+  &siteId={SITE_ID}
+```
+
+Each payload item carries `contentStructureId`, `structuredContentFolderId`, `viewableBy`, title, ERC, and dynamic fields.
 
 ## Workbook
 
 Sheets:
 
 - `Content Items`: headers only; this is the importable sheet.
-- `Field Guide`: fieldReference, internal DDM name, type, required flag, input control, options, and accepted value.
+- `Field Guide`: field reference, internal DDM name, type, required flag, input control, options, and accepted value.
 - `Example`: sample values that cannot be imported accidentally.
 - `Metadata`: very-hidden migration binding.
 
@@ -75,13 +144,13 @@ The metadata contract binds the workbook to:
 - Structure ID and fingerprint.
 - Target Web Content folder.
 - Default locale.
-- Image source type and ID.
-- Optional image folder.
+- Current Site image source ID.
+- Optional Documents and Media folder.
 - Content visibility.
 
-Changing any of these requires generating a new template. The current template contract version is `5`.
+Changing any bound value requires generating a new template. The current template contract version is `5`.
 
-### Images
+## Image references
 
 Every image field generates exactly one Excel column. Accepted values:
 
@@ -90,13 +159,15 @@ file:hero-home.webp
 erc:NXC_HERO_HOME
 ```
 
+Rules:
+
 - `file:` exact-matches `Document.fileName`, including extension.
 - `erc:` exact-matches `Document.externalReferenceCode`.
 - Prefix is mandatory.
 - No title lookup, fuzzy matching, fallback, Document ID, or cross-source search.
-- A source root is loaded recursively with `flatten=true`.
-- An explicitly selected image folder resolves only documents directly in that folder.
-- The selected source is paginated once and indexed in memory by fileName and ERC.
+- The Site root is loaded recursively with `flatten=true`.
+- An explicitly selected folder resolves only documents directly in that folder.
+- Documents are paginated once and indexed in memory by file name and ERC.
 - Missing, ambiguous, or non-image Documents block every affected row before Batch submission.
 
 ## Visibility
@@ -107,7 +178,7 @@ The ENV value:
 LIFERAY_DEFAULT_CONTENT_VIEWABLE_BY=Anyone
 ```
 
-only controls the default UI selection. Each run may choose:
+controls the default UI selection. Each run may choose:
 
 ```text
 Anyone
@@ -117,25 +188,23 @@ Owner
 
 The selected visibility is stored in workbook metadata, validation session state, and every Structured Content payload item.
 
-## Example: NXC Article
+## Examples
 
-Select `NXC Article`, the `Articles` folder, the image source/folder containing the covers, and the desired visibility. Generate a template with Article fields such as Body and Cover Image. Use `file:article-cover.webp` or `erc:NXC_ARTICLE_COVER` in the single Cover Image Reference column.
+### NXC Article
 
-## Example: NXC Hero
+Select `NXC Article`, the `Articles` Web Content folder, the Documents and Media folder containing the covers, and the desired visibility. Generate the template and use `file:article-cover.webp` or `erc:NXC_ARTICLE_COVER` in the Cover Image Reference column.
 
-Select a flat `NXC Hero` Structure and the `Heroes` folder. Select the Site or Asset Library that stores the Hero images. The same importer generates Heading, Description, Hero Image Reference, and CTA columns from the live Structure. No Hero-specific code path is used.
+### NXC Hero
 
-## Batch request
+Select a flat `NXC Hero` Structure and the `Heroes` Web Content folder. Choose the Documents and Media folder containing Hero images. The same importer generates Heading, Description, Hero Image Reference, and CTA columns from the live Structure.
 
-```text
-POST /o/headless-batch-engine/v1.0/import-task/com.liferay.headless.delivery.dto.v1_0.StructuredContent
-  ?createStrategy={INSERT|UPSERT}
-  &importStrategy={ON_ERROR_FAIL|ON_ERROR_CONTINUE}
-  &siteId={SITE_ID}
-```
+## Planned enhancements
 
-Each payload item carries `contentStructureId`, `structuredContentFolderId`, `viewableBy`, title, ERC, and dynamic fields.
-
-## Not in this release
-
-ZIP image upload, nested/repeatable fields, Site selection, per-run locale selection, multi-source image fallback, downloadable reports, and database-backed import history remain future enhancements.
+- Connected Asset Library discovery and validation.
+- Site or Asset Library content destination.
+- Site or Asset Library media source.
+- ZIP image upload.
+- Nested and repeatable fields.
+- Per-run Site and locale selection.
+- Downloadable validation reports.
+- Database-backed import history.

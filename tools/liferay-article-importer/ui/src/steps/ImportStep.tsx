@@ -8,12 +8,13 @@ interface ImportStepProps {
   task: ImportTask | null;
   status: AsyncStatus;
   error?: string | null;
+  submissionLocked: boolean;
   onBack: () => void;
   onStart: (createStrategy: CreateStrategy, importStrategy: ImportStrategy, confirmUpsert: boolean) => void;
   onReset: () => void;
 }
 
-export function ImportStep({validationPayload, task, status, error, onBack, onStart, onReset}: ImportStepProps) {
+export function ImportStep({validationPayload, task, status, error, submissionLocked, onBack, onStart, onReset}: ImportStepProps) {
   const [createStrategy, setCreateStrategy] = useState<CreateStrategy>('INSERT');
   const [importStrategy, setImportStrategy] = useState<ImportStrategy>('ON_ERROR_FAIL');
   const [confirmUpsert, setConfirmUpsert] = useState(false);
@@ -84,14 +85,14 @@ export function ImportStep({validationPayload, task, status, error, onBack, onSt
         </section>
       )}
 
-      {status === 'error' && <div className="alert alert-error"><Database size={20} /><div><strong>Import failed</strong><p>{error || 'Batch Engine task failed.'}</p></div></div>}
+      {status === 'error' && <div className="alert alert-error"><Database size={20} /><div><strong>{submissionLocked ? 'Submission requires manual verification' : 'Import failed'}</strong><p>{error || 'Batch Engine task failed.'}</p></div></div>}
 
       <div className="page-actions">
-        <Button variant="ghost" onClick={onBack} disabled={status === 'loading' || Boolean(task)}>Back</Button>
+        <Button variant="ghost" onClick={onBack} disabled={status === 'loading'}>Back</Button>
         <Button
           icon={Database}
           loading={status === 'loading' && !task}
-          disabled={(createStrategy === 'UPSERT' && !confirmUpsert) || status === 'loading' || Boolean(task)}
+          disabled={(createStrategy === 'UPSERT' && !confirmUpsert) || status === 'loading' || Boolean(task) || submissionLocked}
           onClick={() => onStart(createStrategy, importStrategy, confirmUpsert)}
         >
           Start import of {validationPayload.validation.stats.validRows} items

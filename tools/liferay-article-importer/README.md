@@ -32,7 +32,7 @@ npm test
 npm start
 ```
 
-Open `http://localhost:4174`.
+Open `http://127.0.0.1:4174`.
 
 ## Workflow
 

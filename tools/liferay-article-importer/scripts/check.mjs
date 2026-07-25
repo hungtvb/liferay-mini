@@ -6,7 +6,7 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const files = [
   'server/config.js', 'server/app.js', 'server/index.js', 'server/structure-analyzer.js', 'server/image-resolver.js',
   'server/liferay-client.js', 'server/session-store.js', 'server/workbook.js', 'server/validation.js',
-  'server/import-service.js', 'public/index.html', 'public/app.js', '.env.example', 'README.md'
+  'server/import-service.js', 'public/index.html', 'public/app.js', 'public/styles.css', '.env.example', 'README.md'
 ];
 const content = Object.fromEntries(await Promise.all(files.map(async (file) => [file, await readFile(path.join(root, file), 'utf8')])));
 
@@ -31,8 +31,14 @@ for (const expected of ['Content Items', 'Field Guide', 'Example', 'Metadata']) 
 for (const expected of ["'file'", "'erc'", 'byFileName', 'byErc']) {
   if (!content['server/image-resolver.js'].includes(expected)) throw new Error(`image-resolver.js is missing ${expected}`);
 }
-for (const expected of ['imageSourceTypeSelect', 'imageSourceSelect', 'imageFolderSelect', 'viewableBySelect']) {
+for (const expected of ['imageSourceTypeGroup', 'imageSourceSelect', 'imageFolderSelect', 'viewableBySelect']) {
   if (!content['public/index.html'].includes(expected)) throw new Error(`UI is missing ${expected}`);
+}
+for (const expected of ['data-step-target="1"', 'workbookDropzone', 'validationRows', 'progressFill']) {
+  if (!content['public/index.html'].includes(expected)) throw new Error(`Wizard UI is missing ${expected}`);
+}
+for (const expected of ['--green-500', '.stepper', '.source-choice', '.result-banner']) {
+  if (!content['public/styles.css'].includes(expected)) throw new Error(`Nexcent UI styles are missing ${expected}`);
 }
 
 if (!content['public/index.html'].includes('value="INSERT" checked')) throw new Error('UI must default to INSERT');

@@ -3,71 +3,240 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Liferay Flat Structured Content Importer</title>
+  <title>Nexcent Web Content Importer</title>
   <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
-  <main class="shell">
-    <header class="hero">
-      <p class="eyebrow">One-time migration utility</p>
-      <h1>Flat Structured Content Importer</h1>
-      <p>Generate a Structure-bound Excel template, validate every row, resolve images from one selected source, and submit one Liferay Batch Engine task.</p>
-    </header>
+  <header class="app-header">
+    <a class="brand" href="#" aria-label="Nexcent Web Content Importer home">
+      <span class="brand-mark" aria-hidden="true"><i></i><i></i></span>
+      <span><strong>Nexcent</strong><small>Web Content Importer</small></span>
+    </a>
+    <span id="headerConnectionBadge" class="connection-badge">Not connected</span>
+  </header>
 
-    <section class="panel" aria-labelledby="connection-heading">
-      <div class="step-title"><span>1</span><div><h2 id="connection-heading">Connect and select</h2><p>Connection, Site, default locale, and technical limits come from the server. Image scope and content visibility are selected per import run.</p></div></div>
-      <div id="environment" class="summary-grid"></div>
-      <button id="connectButton" class="primary">Connect to Liferay</button>
-      <div id="connectionStatus" class="status" aria-live="polite"></div>
-      <div id="selectionPanel" class="selection-grid hidden">
-        <label>Content Structure<select id="structureSelect"></select></label>
-        <label>Target Web Content folder<select id="folderSelect"></select></label>
-        <label>Image source type<select id="imageSourceTypeSelect"></select></label>
-        <label>Image source<select id="imageSourceSelect"></select></label>
-        <label>Image folder<select id="imageFolderSelect"></select></label>
-        <label>Content visibility<select id="viewableBySelect"></select></label>
+  <main class="page-shell">
+    <nav class="stepper" aria-label="Import progress">
+      <button type="button" class="step is-active" data-step-target="1" aria-current="step">
+        <span>1</span><strong>Connect</strong><small>Current</small>
+      </button>
+      <span class="step-line" aria-hidden="true"></span>
+      <button type="button" class="step" data-step-target="2" disabled>
+        <span>2</span><strong>Scope</strong><small>Not started</small>
+      </button>
+      <span class="step-line" aria-hidden="true"></span>
+      <button type="button" class="step" data-step-target="3" disabled>
+        <span>3</span><strong>Workbook</strong><small>Not started</small>
+      </button>
+      <span class="step-line" aria-hidden="true"></span>
+      <button type="button" class="step" data-step-target="4" disabled>
+        <span>4</span><strong>Validate</strong><small>Not started</small>
+      </button>
+      <span class="step-line" aria-hidden="true"></span>
+      <button type="button" class="step" data-step-target="5" disabled>
+        <span>5</span><strong>Import</strong><small>Not started</small>
+      </button>
+    </nav>
+
+    <div class="workspace">
+      <div class="workspace-main">
+        <section id="step-1" class="wizard-step is-active" data-step="1" aria-labelledby="connect-heading">
+          <div class="page-heading">
+            <p class="eyebrow">Step 1 of 5</p>
+            <h1 id="connect-heading">Connect to Liferay</h1>
+            <p>Authenticate once, then the importer loads the configured Site, Structures, folders, and available image sources.</p>
+          </div>
+
+          <div class="surface connection-surface">
+            <div>
+              <span class="section-kicker">Environment</span>
+              <h2>Migration endpoint</h2>
+              <p>Credentials stay on the local server and are never exposed in this browser.</p>
+            </div>
+            <div id="environment" class="environment-list"></div>
+            <div class="surface-actions">
+              <button id="connectButton" type="button" class="button button-primary">Connect to Liferay</button>
+              <div id="connectionStatus" class="inline-status" aria-live="polite"></div>
+            </div>
+          </div>
+        </section>
+
+        <section id="step-2" class="wizard-step" data-step="2" aria-labelledby="scope-heading">
+          <div class="page-heading">
+            <p class="eyebrow">Step 2 of 5</p>
+            <h1 id="scope-heading">Define the import scope</h1>
+            <p>Select where content will be created and where image references will be resolved.</p>
+          </div>
+
+          <div class="surface scope-surface">
+            <div class="section-heading">
+              <span class="section-number">01</span>
+              <div><h2>Content target</h2><p>One Structure and one existing Web Content folder per run.</p></div>
+            </div>
+            <div class="form-grid three-columns">
+              <label class="field">Content Structure <span>*</span><select id="structureSelect"></select></label>
+              <label class="field">Target Web Content folder <span>*</span><select id="folderSelect"></select></label>
+              <label class="field">Content visibility <span>*</span><select id="viewableBySelect"></select></label>
+            </div>
+            <div id="structureAnalysis" class="notice hidden"></div>
+          </div>
+
+          <div class="surface scope-surface">
+            <div class="section-heading">
+              <span class="section-number">02</span>
+              <div><h2>Image resolution</h2><p>Resolve exact <code>file:</code> or <code>erc:</code> references from one source.</p></div>
+            </div>
+            <div id="imageSourceTypeGroup" class="source-type-grid" role="radiogroup" aria-label="Image source type"></div>
+            <div class="form-grid two-columns compact-top">
+              <label class="field">Image source <span>*</span><select id="imageSourceSelect"></select></label>
+              <label class="field">Image folder<select id="imageFolderSelect"></select></label>
+            </div>
+            <div id="imageScopeStatus" class="inline-status" aria-live="polite"></div>
+          </div>
+
+          <div class="wizard-actions">
+            <button type="button" class="button button-secondary" data-back-step="1">Back</button>
+            <button id="scopeNextButton" type="button" class="button button-primary" disabled>Continue to workbook</button>
+          </div>
+        </section>
+
+        <section id="step-3" class="wizard-step" data-step="3" aria-labelledby="workbook-heading">
+          <div class="page-heading">
+            <p class="eyebrow">Step 3 of 5</p>
+            <h1 id="workbook-heading">Prepare the workbook</h1>
+            <p>Generate a template bound to the current scope, fill the Content Items sheet, then upload it here.</p>
+          </div>
+
+          <div class="workbook-grid">
+            <div class="surface workbook-card">
+              <span class="section-kicker">Template</span>
+              <h2>Structure-bound Excel</h2>
+              <p>The generated workbook includes Field Guide, Example, and hidden scope metadata.</p>
+              <button id="templateButton" type="button" class="button button-secondary" disabled>Download template</button>
+              <div class="reference-hint"><code>file:hero-home.webp</code><span>or</span><code>erc:NXC_HERO_HOME</code></div>
+            </div>
+
+            <form id="workbookForm" class="surface workbook-card">
+              <span class="section-kicker">Completed workbook</span>
+              <h2>Upload and validate</h2>
+              <label id="workbookDropzone" class="dropzone" for="workbookFile">
+                <input id="workbookFile" name="file" type="file" accept=".xlsx" required>
+                <strong>Drop an .xlsx file here</strong>
+                <span>or click to browse</span>
+                <small id="workbookFileMeta">Maximum file size comes from the server configuration.</small>
+              </label>
+              <button class="button button-primary" type="submit" disabled id="validateButton">Validate workbook</button>
+              <div id="workbookStatus" class="inline-status" aria-live="polite"></div>
+            </form>
+          </div>
+
+          <div class="wizard-actions">
+            <button type="button" class="button button-secondary" data-back-step="2">Back</button>
+          </div>
+        </section>
+
+        <section id="step-4" class="wizard-step" data-step="4" aria-labelledby="validation-heading">
+          <div class="page-heading">
+            <p class="eyebrow">Step 4 of 5</p>
+            <h1 id="validation-heading">Review validation</h1>
+            <p>Fix all blocked rows before Batch Engine submission. Warnings may require a strategy decision.</p>
+          </div>
+
+          <div id="validationBanner" class="result-banner"></div>
+          <div id="validationSummary" class="metric-grid"></div>
+
+          <div class="surface validation-surface">
+            <div class="section-heading validation-heading-row">
+              <div><h2>Row preview</h2><p>Showing the server-side preview limit.</p></div>
+              <span id="validationPreviewLabel" class="soft-badge"></span>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>Excel row</th><th>ERC</th><th>Title</th><th>Status</th></tr></thead>
+                <tbody id="validationRows"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <details id="issuesDetails" class="surface details-surface hidden">
+            <summary>Validation issues <span id="issueCountBadge" class="soft-badge"></span></summary>
+            <div id="issues" class="issue-list"></div>
+          </details>
+          <details id="payloadDetails" class="surface details-surface hidden">
+            <summary>Payload preview</summary>
+            <pre id="payloadPreview"></pre>
+          </details>
+
+          <div class="wizard-actions">
+            <button type="button" class="button button-secondary" data-back-step="3">Back</button>
+            <button id="validationNextButton" type="button" class="button button-primary" disabled>Continue to import</button>
+          </div>
+        </section>
+
+        <section id="step-5" class="wizard-step" data-step="5" aria-labelledby="import-heading">
+          <div class="page-heading">
+            <p class="eyebrow">Step 5 of 5</p>
+            <h1 id="import-heading">Confirm and import</h1>
+            <p>Review the strategy, submit one Batch Engine task, and keep this page open while it is running.</p>
+          </div>
+
+          <div class="surface import-confirmation">
+            <div class="import-count"><strong id="importItemCount">0</strong><span>content items ready</span></div>
+            <div class="option-groups">
+              <fieldset>
+                <legend>Existing content handling</legend>
+                <label><input type="radio" name="createStrategy" value="INSERT" checked><span><strong>Create new only</strong><small>INSERT · folder-safe default</small></span></label>
+                <label><input type="radio" name="createStrategy" value="UPSERT"><span><strong>Create or update by ERC</strong><small>UPSERT · confirmation required</small></span></label>
+              </fieldset>
+              <fieldset>
+                <legend>When an item fails</legend>
+                <label><input type="radio" name="importStrategy" value="ON_ERROR_FAIL" checked><span><strong>Stop the import</strong><small>ON_ERROR_FAIL</small></span></label>
+                <label><input type="radio" name="importStrategy" value="ON_ERROR_CONTINUE"><span><strong>Continue and collect failures</strong><small>ON_ERROR_CONTINUE</small></span></label>
+              </fieldset>
+            </div>
+            <label id="upsertConfirmWrap" class="warning hidden"><input type="checkbox" id="confirmUpsert"><span>I understand that existing content keeps its current folder and a missing item may be created at the Web Content root.</span></label>
+            <button id="importButton" type="button" class="button button-primary import-button" disabled>Start import</button>
+          </div>
+
+          <div id="taskPanel" class="surface task-panel hidden">
+            <div class="task-header"><div><span class="section-kicker">Batch Engine</span><h2 id="taskHeading">Submitting task</h2></div><span id="taskPercent" class="task-percent">0%</span></div>
+            <div class="progress-track" aria-hidden="true"><div id="progressFill" class="progress-fill"></div></div>
+            <div id="taskStatus" class="inline-status" aria-live="polite"></div>
+            <details class="task-details"><summary>Technical details</summary><pre id="taskResult"></pre></details>
+          </div>
+
+          <div class="wizard-actions">
+            <button id="importBackButton" type="button" class="button button-secondary" data-back-step="4">Back</button>
+          </div>
+        </section>
       </div>
-      <div id="imageScopeStatus" class="status" aria-live="polite"></div>
-      <div id="structureAnalysis" class="notice hidden"></div>
-    </section>
 
-    <section class="panel" aria-labelledby="template-heading">
-      <div class="step-title"><span>2</span><div><h2 id="template-heading">Generate template</h2><p>The workbook is bound to the selected Structure, target folder, image scope, default locale, and visibility. Example data stays on a separate sheet.</p></div></div>
-      <button id="templateButton" class="primary" disabled>Download Excel template</button>
-      <div class="hint"><code>file:hero-home.webp</code> or <code>erc:NXC_HERO_HOME</code> — one column per image field, exact match only.</div>
-    </section>
+      <aside class="run-rail" aria-label="Current import summary">
+        <section class="rail-card">
+          <div class="rail-card-heading"><h2>Connection</h2><span id="railConnectionDot" class="status-dot"></span></div>
+          <strong id="railLiferayUrl">—</strong>
+          <p id="railSite">Site —</p>
+          <button id="railReconnectButton" type="button" class="text-button">Reconnect</button>
+        </section>
 
-    <section class="panel" aria-labelledby="validate-heading">
-      <div class="step-title"><span>3</span><div><h2 id="validate-heading">Validate and preview</h2><p>Missing images, invalid values, changed headers, and workbook-scope mismatches block import.</p></div></div>
-      <form id="workbookForm">
-        <input id="workbookFile" name="file" type="file" accept=".xlsx" required>
-        <button class="primary" type="submit" disabled id="validateButton">Validate workbook</button>
-      </form>
-      <div id="validationSummary" class="hidden"></div>
-      <details id="issuesDetails" class="hidden"><summary>Validation issues</summary><div id="issues"></div></details>
-      <details id="payloadDetails" class="hidden"><summary>Payload preview</summary><pre id="payloadPreview"></pre></details>
-    </section>
+        <section class="rail-card">
+          <div class="rail-card-heading"><h2>Import scope</h2></div>
+          <dl class="scope-summary">
+            <div><dt>Structure</dt><dd id="summaryStructure">Not selected</dd></div>
+            <div><dt>Target folder</dt><dd id="summaryFolder">Not selected</dd></div>
+            <div><dt>Image source</dt><dd id="summaryImageSource">Not selected</dd></div>
+            <div><dt>Image folder</dt><dd id="summaryImageFolder">Source root</dd></div>
+            <div><dt>Visibility</dt><dd id="summaryVisibility">—</dd></div>
+            <div><dt>Locale</dt><dd id="summaryLocale">—</dd></div>
+          </dl>
+        </section>
 
-    <section class="panel" aria-labelledby="import-heading">
-      <div class="step-title"><span>4</span><div><h2 id="import-heading">Import</h2><p>INSERT is folder-safe and remains the default.</p></div></div>
-      <div class="option-groups">
-        <fieldset>
-          <legend>Existing content handling</legend>
-          <label><input type="radio" name="createStrategy" value="INSERT" checked> Create new only (INSERT)</label>
-          <label><input type="radio" name="createStrategy" value="UPSERT"> Create or update by ERC (UPSERT)</label>
-        </fieldset>
-        <fieldset>
-          <legend>When an item fails</legend>
-          <label><input type="radio" name="importStrategy" value="ON_ERROR_FAIL" checked> Stop whole import</label>
-          <label><input type="radio" name="importStrategy" value="ON_ERROR_CONTINUE"> Continue and collect failures</label>
-        </fieldset>
-      </div>
-      <label id="upsertConfirmWrap" class="warning hidden"><input type="checkbox" id="confirmUpsert"> I understand UPSERT may create a missing item in the Web Content root and existing items keep their current folder.</label>
-      <button id="importButton" class="danger" disabled>Start Batch import</button>
-      <div id="taskStatus" class="status" aria-live="polite"></div>
-      <pre id="taskResult" class="hidden"></pre>
-    </section>
+        <p class="rail-note">Changing the scope after validation invalidates the current session and requires another validation.</p>
+      </aside>
+    </div>
   </main>
+
+  <div id="toastRegion" class="toast-region" aria-live="polite" aria-atomic="true"></div>
   <script type="module" src="/app.js"></script>
 </body>
 </html>

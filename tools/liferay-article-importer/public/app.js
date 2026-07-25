@@ -1,4 +1,12 @@
-const state = {config: null, connection: null, analysis: null, sessionId: null, validation: null, taskId: null};
+const state = {
+  analysis: null,
+  config: null,
+  connection: null,
+  imageFoldersLoaded: false,
+  sessionId: null,
+  taskId: null,
+  validation: null
+};
 const terminalStatuses = new Set(['COMPLETED', 'FAILED', 'CANCELLED', 'COMPLETED_WITH_ERRORS']);
 const byId = (id) => document.getElementById(id);
 
@@ -26,15 +34,13 @@ function setStatus(element, message, kind = '') {
 
 function renderEnvironment() {
   const config = state.config;
-  const source = config.imageSource;
   const rows = [
     ['Liferay', config.baseUrl],
     ['Site ID', config.siteId],
     ['Default locale', config.defaultLocale],
-    ['Visibility', config.viewableBy],
+    ['Default visibility', config.defaultViewableBy],
     ['Local bind', `${config.host}:${location.port || '4174'}`],
-    ['Image source', `${source.type} #${source.id}`],
-    ['Image folder', source.folderName || source.folderId || 'Source root'],
+    ['Image scope', 'Selected per import run'],
     ['Limits', `${config.maxImportRows} rows / ${config.maxUploadMb} MB`]
   ];
   byId('environment').innerHTML = rows.map(([label, value]) => `<div><span>${escapeHtml(label)}</span><strong>${escapeHtml(value)}</strong></div>`).join('');
@@ -42,6 +48,15 @@ function renderEnvironment() {
 
 function selectedValue(id) {
   return byId(id).value;
+}
+
+function migrationScope() {
+  return {
+    imageSourceFolderId: selectedValue('imageFolderSelect') || null,
+    imageSourceId: selectedValue('imageSourceSelect'),
+    imageSourceType: selectedValue('imageSourceTypeSelect'),
+    viewableBy: selectedValue('viewableBySelect')
+  };
 }
 
 function invalidateValidation() {
@@ -54,7 +69,15 @@ function invalidateValidation() {
 }
 
 function selectionReady() {
-  return Boolean(selectedValue('structureSelect') && selectedValue('folderSelect') && state.analysis?.status !== 'UNSUPPORTED');
+  return Boolean(
+    selectedValue('structureSelect')
+    && selectedValue('folderSelect')
+    && selectedValue('imageSourceTypeSelect')
+    && selectedValue('imageSourceSelect')
+    && selectedValue('viewableBySelect')
+    && state.imageFoldersLoaded
+    && state.analysis?.status !== 'UNSUPPORTED'
+  );
 }
 
 function updateSelectionButtons() {
@@ -74,6 +97,77 @@ function renderFolderOptions(folders) {
   byId('folderSelect').innerHTML = '<option value="">Select folder</option>' + folders.map((item) =>
     `<option value="${escapeHtml(item.id)}">${escapeHtml(item.path || item.name)} (#${escapeHtml(item.id)})</option>`
   ).join('');
+}
+
+function renderVisibilityOptions() {
+  const select = byId('viewableBySelect');
+  select.innerHTML = state.config.viewableByOptions.map((value) =>
+    `<option value="${escapeHtml(value)}" ${value === state.config.defaultViewableBy ? 'selected' : ''}>${escapeHtml(value)}</option>`
+  ).join('');
+}
+
+function renderImageSourceTypes() {
+  const available = new Set((state.connection?.imageSources || []).map((source) => source.type));
+  const labels = {assetLibrary: 'Asset Library', site: 'Current Site'};
+  const select = byId('imageSourceTypeSelect');
+  select.innerHTML = state.config.imageSourceTypes
+    .filter((type) => available.has(type))
+    .map((type) => `<option value="${escapeHtml(type)}">${escapeHtml(labels[type] || type)}</option>`)
+    .join('');
+}
+
+function renderImageSources() {
+  const type = selectedValue('imageSourceTypeSelect');
+  const sources = (state.connection?.imageSources || []).filter((source) => source.type === type);
+  byId('imageSourceSelect').innerHTML = sources.map((source) =>
+    `<option value="${escapeHtml(source.id)}">${escapeHtml(source.name)} (#${escapeHtml(source.id)})</option>`
+  ).join('');
+}
+
+function renderImageFolders(folders) {
+  byId('imageFolderSelect').innerHTML = '<option value="">Source root</option>' + folders.map((item) =>
+    `<option value="${escapeHtml(item.id)}">${escapeHtml(item.path || item.name)} (#${escapeHtml(item.id)})</option>`
+  ).join('');
+}
+
+async function loadImageFolders() {
+  invalidateValidation();
+  state.imageFoldersLoaded = false;
+  renderImageFolders([]);
+  updateSelectionButtons();
+
+  const imageSourceType = selectedValue('imageSourceTypeSelect');
+  const imageSourceId = selectedValue('imageSourceSelect');
+  if (!imageSourceType || !imageSourceId) return;
+
+  const select = byId('imageFolderSelect');
+  select.disabled = true;
+  setStatus(byId('imageScopeStatus'), 'Loading image folders…');
+
+  try {
+    const {data} = await api('/api/image-folders', {
+      body: JSON.stringify({imageSourceId, imageSourceType}),
+      headers: {'Content-Type': 'application/json'},
+      method: 'POST'
+    });
+    renderImageFolders(data.folders);
+    state.imageFoldersLoaded = true;
+    setStatus(byId('imageScopeStatus'), `${data.folders.length} folders available in ${data.source.name}.`, 'success');
+  }
+  catch (error) {
+    setStatus(byId('imageScopeStatus'), `${error.code || 'ERROR'}: ${error.message}`, 'error');
+  }
+  finally {
+    select.disabled = false;
+    updateSelectionButtons();
+  }
+}
+
+async function changeImageSourceType() {
+  invalidateValidation();
+  state.imageFoldersLoaded = false;
+  renderImageSources();
+  await loadImageFolders();
 }
 
 async function loadStructureAnalysis() {
@@ -97,16 +191,23 @@ async function loadStructureAnalysis() {
 async function connect() {
   const button = byId('connectButton');
   button.disabled = true;
-  setStatus(byId('connectionStatus'), 'Connecting and validating configured scope…');
+  setStatus(byId('connectionStatus'), 'Connecting and loading migration scope…');
   try {
     const {data} = await api('/api/connect', {method: 'POST'});
     state.connection = data;
-    state.config.imageSource = data.imageSource;
     renderEnvironment();
     renderStructureOptions(data.structures);
     renderFolderOptions(data.folders);
+    renderVisibilityOptions();
+    renderImageSourceTypes();
+    renderImageSources();
     byId('selectionPanel').classList.remove('hidden');
-    setStatus(byId('connectionStatus'), `Connected. ${data.structures.length} Structures and ${data.folders.length} folders loaded. Image source scope validated.`, 'success');
+    await loadImageFolders();
+    setStatus(
+      byId('connectionStatus'),
+      `Connected. ${data.structures.length} Structures, ${data.folders.length} Web Content folders, and ${data.imageSources.length} image sources loaded.`,
+      'success'
+    );
   }
   catch (error) {
     setStatus(byId('connectionStatus'), `${error.code || 'ERROR'}: ${error.message}`, 'error');
@@ -119,7 +220,11 @@ async function downloadTemplate() {
   button.disabled = true;
   try {
     const {data, response} = await api('/api/templates', {
-      body: JSON.stringify({folderId: selectedValue('folderSelect'), structureId: selectedValue('structureSelect')}),
+      body: JSON.stringify({
+        folderId: selectedValue('folderSelect'),
+        structureId: selectedValue('structureSelect'),
+        ...migrationScope()
+      }),
       headers: {'Content-Type': 'application/json'},
       method: 'POST'
     });
@@ -171,6 +276,7 @@ async function validateWorkbook(event) {
   form.set('file', file);
   form.set('structureId', selectedValue('structureSelect'));
   form.set('folderId', selectedValue('folderSelect'));
+  for (const [key, value] of Object.entries(migrationScope())) form.set(key, value ?? '');
   try {
     const {data} = await api('/api/workbooks', {body: form, method: 'POST'});
     state.sessionId = data.sessionId;
@@ -235,6 +341,10 @@ async function init() {
   byId('connectButton').addEventListener('click', connect);
   byId('structureSelect').addEventListener('change', loadStructureAnalysis);
   byId('folderSelect').addEventListener('change', () => { invalidateValidation(); updateSelectionButtons(); });
+  byId('imageSourceTypeSelect').addEventListener('change', changeImageSourceType);
+  byId('imageSourceSelect').addEventListener('change', loadImageFolders);
+  byId('imageFolderSelect').addEventListener('change', () => { invalidateValidation(); updateSelectionButtons(); });
+  byId('viewableBySelect').addEventListener('change', () => { invalidateValidation(); updateSelectionButtons(); });
   byId('templateButton').addEventListener('click', downloadTemplate);
   byId('workbookForm').addEventListener('submit', validateWorkbook);
   byId('workbookFile').addEventListener('change', updateSelectionButtons);

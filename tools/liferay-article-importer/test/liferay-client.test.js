@@ -9,9 +9,6 @@ const config = {
   clientSecret: 'secret',
   defaultLocale: 'en-US',
   imageIndexPageSize: 200,
-  imageSourceFolderId: 456,
-  imageSourceId: 123,
-  imageSourceType: 'assetLibrary',
   maxRetries: 0,
   requestTimeoutMs: 5000,
   retryBaseDelayMs: 1,
@@ -22,11 +19,14 @@ function response(body, status = 200, headers = {}) {
   return new Response(JSON.stringify(body), {status, headers: {'content-type': 'application/json', ...headers}});
 }
 
-test('validates configured image folder ownership and builds Batch URL', async () => {
+test('discovers per-run image sources, validates folder ownership, and builds Batch URL', async () => {
   const calls = [];
   const client = new LiferayClient(config, async (url, options = {}) => {
     calls.push({url, options});
     if (url.endsWith('/o/oauth2/token')) return response({access_token: 'token', expires_in: 600});
+    if (url.includes('/o/headless-asset-library/v1.0/asset-libraries')) {
+      return response({items: [{id: 9, siteId: 123, name: 'Shared Assets', externalReferenceCode: 'SHARED', connectedSites: [{id: 34371}]}], lastPage: 1});
+    }
     if (url.includes('/asset-libraries/123/document-folders')) {
       return response({items: [{id: 456, name: 'Migration Images'}], lastPage: 1});
     }
@@ -35,44 +35,63 @@ test('validates configured image folder ownership and builds Batch URL', async (
     return response({items: [], lastPage: 1});
   });
 
-  await client.validateConfiguredImageSource();
-  await client.listConfiguredImageDocuments();
+  const connected = await client.connect();
+  const source = await client.resolveImageSource({type: 'assetLibrary', id: 123, folderId: 456});
+  await client.listImageDocuments(source);
   await client.submitStructuredContents([], {createStrategy: 'INSERT', importStrategy: 'ON_ERROR_FAIL'});
 
-  assert(calls.some((call) => call.url.includes('/asset-libraries/123/document-folders?flatten=true&page=1&pageSize=200')));
+  assert.deepEqual(connected.imageSources.map((item) => [item.type, item.id]), [['site', 34371], ['assetLibrary', 123]]);
+  assert(calls.some((call) => call.url.includes('/o/headless-asset-library/v1.0/asset-libraries?nestedFields=connectedSites&sort=name:asc&page=1&pageSize=200')));
+  assert(calls.some((call) => call.url.includes('/asset-libraries/123/document-folders?flatten=true&sort=name:asc&page=1&pageSize=200')));
   assert(calls.some((call) => call.url.includes('/document-folders/456/documents?page=1&pageSize=200')));
   assert(calls.some((call) => call.url.includes('createStrategy=INSERT&importStrategy=ON_ERROR_FAIL&siteId=34371')));
-  assert.equal(client.imageSourceSummary().folderName, 'Migration Images');
+  assert.equal(source.folderName, 'Migration Images');
+  assert.equal(source.assetLibraryId, 9);
 });
 
-test('rejects an image folder outside the configured source', async () => {
+test('rejects an image folder outside the selected source', async () => {
   const client = new LiferayClient(config, async (url) => {
     if (url.endsWith('/o/oauth2/token')) return response({access_token: 'token', expires_in: 600});
+    if (url.includes('/o/headless-asset-library/v1.0/asset-libraries')) {
+      return response({items: [{id: 9, siteId: 123, name: 'Shared Assets', connectedSites: [{id: 34371}]}], lastPage: 1});
+    }
     if (url.includes('/asset-libraries/123/document-folders')) return response({items: [{id: 999}], lastPage: 1});
     return response({items: [], lastPage: 1});
   });
 
   await assert.rejects(
-    () => client.validateConfiguredImageSource(),
+    () => client.resolveImageSource({type: 'assetLibrary', id: 123, folderId: 456}),
     (error) => error.code === 'IMAGE_SOURCE_FOLDER_MISMATCH'
   );
 });
 
 test('uses flatten=true for source-root documents and nested Web Content folders', async () => {
-  const rootConfig = {...config, imageSourceFolderId: null, imageSourceType: 'site'};
   const calls = [];
-  const client = new LiferayClient(rootConfig, async (url) => {
+  const client = new LiferayClient(config, async (url) => {
     calls.push(url);
     if (url.endsWith('/o/oauth2/token')) return response({access_token: 'token', expires_in: 600});
+    if (url.includes('/o/headless-asset-library/v1.0/asset-libraries')) return response({items: [], lastPage: 1});
     return response({items: [], lastPage: 1});
   });
 
-  await client.validateConfiguredImageSource();
-  await client.listConfiguredImageDocuments();
+  await client.listImageDocuments({type: 'site', id: 34371, folderId: null});
   await client.listStructuredContentFolders();
 
-  assert(calls.some((url) => url.includes('/sites/123/documents?flatten=true&page=1&pageSize=200')));
+  assert(calls.some((url) => url.includes('/sites/34371/documents?flatten=true&page=1&pageSize=200')));
   assert(calls.some((url) => url.includes('/sites/34371/structured-content-folders?flatten=true&sort=name:asc&page=1&pageSize=200')));
+});
+
+test('rejects an Asset Library not visible to the OAuth2 client', async () => {
+  const client = new LiferayClient(config, async (url) => {
+    if (url.endsWith('/o/oauth2/token')) return response({access_token: 'token', expires_in: 600});
+    if (url.includes('/o/headless-asset-library/v1.0/asset-libraries')) return response({items: [], lastPage: 1});
+    return response({items: [], lastPage: 1});
+  });
+
+  await assert.rejects(
+    () => client.resolveImageSource({type: 'assetLibrary', id: 123, folderId: null}),
+    (error) => error.code === 'IMAGE_SOURCE_NOT_AVAILABLE'
+  );
 });
 
 test('does not automatically retry Batch POST requests and marks transport failures ambiguous', async () => {

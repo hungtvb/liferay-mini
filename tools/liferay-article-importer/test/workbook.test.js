@@ -11,9 +11,16 @@ const structure = {id:10,name:'Hero',siteId:34371,availableLanguages:['en-US'],c
   {dataType:'string',fieldReference:'heading',name:'Text123',label:'Heading',required:true},
   {dataType:'image',fieldReference:'heroImage',name:'Image123',label:'Hero Image'}
 ]};
-const context = {folder:{id:20,name:'Heroes'},imageSource:{type:'assetLibrary',id:30,folderId:40},locale:'en-US',siteId:34371,structure};
+const context = {
+  folder:{id:20,name:'Heroes'},
+  imageSource:{type:'assetLibrary',id:30,folderId:40},
+  locale:'en-US',
+  siteId:34371,
+  structure,
+  viewableBy:'Anyone'
+};
 
-test('generic workbook keeps sample outside Content Items and binds metadata', {skip: !workbookModule}, async () => {
+test('generic workbook keeps sample outside Content Items and binds per-run scope metadata', {skip: !workbookModule}, async () => {
   const ExcelJS = (await import('exceljs')).default;
   const generated = await workbookModule.buildTemplateWorkbook(context);
   const workbook = new ExcelJS.Workbook();
@@ -21,6 +28,7 @@ test('generic workbook keeps sample outside Content Items and binds metadata', {
   assert.equal(workbook.getWorksheet('Content Items').rowCount,1);
   assert.equal(workbook.getWorksheet('Example').rowCount,2);
   assert.equal(workbook.getWorksheet('Metadata').state,'veryHidden');
+  assert.equal(workbookModule.TEMPLATE_VERSION, '5');
 });
 
 test('parse rejects changed headers', {skip: !workbookModule}, async () => {
@@ -33,4 +41,17 @@ test('parse rejects changed headers', {skip: !workbookModule}, async () => {
   sheet.addRow(['Example','hero-home','Heading','file:hero.webp']);
   const buffer=await workbook.xlsx.writeBuffer();
   await assert.rejects(()=>workbookModule.parseTemplateWorkbook(buffer,context),(error)=>error.code==='TEMPLATE_HEADERS_CHANGED');
+});
+
+test('parse rejects changed content visibility', {skip: !workbookModule}, async () => {
+  const ExcelJS = (await import('exceljs')).default;
+  const generated = await workbookModule.buildTemplateWorkbook(context);
+  const workbook = new ExcelJS.Workbook();
+  await workbook.xlsx.load(generated.buffer);
+  workbook.getWorksheet('Content Items').addRow(['Example','hero-home','Heading','file:hero.webp']);
+  const buffer=await workbook.xlsx.writeBuffer();
+  await assert.rejects(
+    () => workbookModule.parseTemplateWorkbook(buffer,{...context,viewableBy:'Members'}),
+    (error) => error.code === 'VISIBILITY_CHANGED'
+  );
 });

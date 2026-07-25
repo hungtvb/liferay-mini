@@ -50,18 +50,15 @@ function emptyResolution() {
 }
 
 export class ImageResolver {
-  constructor({liferay}) {
+  constructor({imageSource, liferay}) {
+    this.imageSource = imageSource;
     this.liferay = liferay;
-    this.index = null;
-  }
-
-  clear() {
     this.index = null;
   }
 
   async load({force = false} = {}) {
     if (this.index && !force) return this.index;
-    const documents = await this.liferay.listConfiguredImageDocuments();
+    const documents = await this.liferay.listImageDocuments(this.imageSource);
     const byErc = new Map();
     const byFileName = new Map();
     for (const document of documents) {

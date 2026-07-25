@@ -3,7 +3,7 @@ import {assert} from './errors.js';
 import {buildTargets, buildTemplateColumns, strictTemplateMapping} from './mapping.js';
 import {analyzeStructure} from './structure-analyzer.js';
 
-const TEMPLATE_VERSION = '4';
+const TEMPLATE_VERSION = '5';
 const CONTENT_SHEET = 'Content Items';
 const GUIDE_SHEET = 'Field Guide';
 const EXAMPLE_SHEET = 'Example';
@@ -15,7 +15,7 @@ function safeFileName(value) {
     .toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 }
 
-function metadataContract({folder, imageSource, locale, siteId, structure}) {
+function metadataContract({folder, imageSource, locale, siteId, structure, viewableBy}) {
   const analysis = analyzeStructure(structure, locale);
   return {
     generatedAt: new Date().toISOString(),
@@ -29,7 +29,8 @@ function metadataContract({folder, imageSource, locale, siteId, structure}) {
     structureName: analysis.name,
     targetFolderId: folder.id,
     targetFolderName: folder.name,
-    templateVersion: TEMPLATE_VERSION
+    templateVersion: TEMPLATE_VERSION,
+    viewableBy
   };
 }
 
@@ -85,14 +86,15 @@ function assertMetadata(actual, expected) {
     ['locale', 'LOCALE_CHANGED'],
     ['imageSourceType', 'IMAGE_SOURCE_CHANGED'],
     ['imageSourceId', 'IMAGE_SOURCE_CHANGED'],
-    ['imageSourceFolderId', 'IMAGE_SOURCE_CHANGED']
+    ['imageSourceFolderId', 'IMAGE_SOURCE_CHANGED'],
+    ['viewableBy', 'VISIBILITY_CHANGED']
   ];
   for (const [key, code] of checks) {
     assert(String(actual[key] ?? '') === String(expected[key] ?? ''), 400, code, `Workbook metadata ${key} no longer matches the selected migration scope`);
   }
 }
 
-export async function buildTemplateWorkbook({folder, imageSource, locale, siteId, structure}) {
+export async function buildTemplateWorkbook({folder, imageSource, locale, siteId, structure, viewableBy}) {
   const analysis = analyzeStructure(structure, locale);
   assert(analysis.status !== 'UNSUPPORTED', 409, 'STRUCTURE_UNSUPPORTED', 'Selected Structure contains nested, repeatable, or required unsupported fields', {blockingFields: analysis.blockingFields});
   const columns = buildTemplateColumns(structure, locale);
@@ -131,7 +133,7 @@ export async function buildTemplateWorkbook({folder, imageSource, locale, siteId
   styleHeader(example.getRow(1));
   example.columns = content.columns.map((column) => ({width: column.width}));
 
-  const metadata = metadataContract({folder, imageSource, locale, siteId, structure});
+  const metadata = metadataContract({folder, imageSource, locale, siteId, structure, viewableBy});
   writeMetadata(workbook, metadata);
   return {
     buffer: await workbook.xlsx.writeBuffer(),

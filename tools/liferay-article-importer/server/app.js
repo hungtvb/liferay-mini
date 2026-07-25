@@ -2,6 +2,7 @@ import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import express from 'express';
 import multer from 'multer';
+import {IMAGE_SOURCE_TYPES, VIEWABLE_BY_VALUES} from './config.js';
 import {AppError, assert} from './errors.js';
 import {ImageResolver} from './image-resolver.js';
 import {ImportService, normalizeTask} from './import-service.js';
@@ -15,6 +16,20 @@ const publicDir = path.resolve(currentDir, '../public');
 
 function normalizeLocale(value) {
   return String(value || '').trim().replace('_', '-').toLowerCase();
+}
+
+function normalizeViewableBy(value, fallback) {
+  const normalized = String(value || fallback || '').trim();
+  assert(VIEWABLE_BY_VALUES.includes(normalized), 400, 'VISIBILITY_INVALID', `Content visibility must be one of: ${VIEWABLE_BY_VALUES.join(', ')}`);
+  return normalized;
+}
+
+function imageSourceInput(input = {}) {
+  return {
+    folderId: input.imageSourceFolderId || null,
+    id: input.imageSourceId,
+    type: input.imageSourceType
+  };
 }
 
 async function mapLimit(items, limit, mapper) {
@@ -44,14 +59,17 @@ function publicValidation(validation, previewRows) {
   };
 }
 
-async function loadSelection({config, liferay, folderId, structureId}) {
+async function loadSelection({config, liferay, folderId, structureId, viewableBy, ...scopeInput}) {
   assert(structureId, 400, 'STRUCTURE_REQUIRED', 'Select a Content Structure');
   assert(folderId, 400, 'TARGET_FOLDER_REQUIRED', 'Select a target Web Content folder');
-  const [structure, folder] = await Promise.all([
+
+  const scope = imageSourceInput(scopeInput);
+  const [structure, folder, imageSource] = await Promise.all([
     liferay.getContentStructure(structureId),
     liferay.getStructuredContentFolder(folderId),
-    liferay.validateConfiguredImageSource()
+    liferay.resolveImageSource(scope)
   ]);
+
   const selectedLocale = config.defaultLocale;
   const analysis = analyzeStructure(structure, selectedLocale);
   assert(analysis.status !== 'UNSUPPORTED', 409, 'STRUCTURE_UNSUPPORTED', 'Selected Structure is not supported by the flat importer', {blockingFields: analysis.blockingFields});
@@ -61,16 +79,21 @@ async function loadSelection({config, liferay, folderId, structureId}) {
   if (folder.siteId != null) {
     assert(String(folder.siteId) === String(config.siteId), 400, 'TARGET_FOLDER_CHANGED', 'Selected folder does not belong to the configured Site');
   }
+
   return {
     analysis,
     folder: {externalReferenceCode: folder.externalReferenceCode || null, id: folder.id, name: folder.name, siteId: folder.siteId},
+    imageSource,
     locale: selectedLocale,
-    structure
+    structure,
+    viewableBy: normalizeViewableBy(viewableBy, config.defaultViewableBy)
   };
 }
 
-async function validateSession({config, imageResolver, liferay, selection, workbook}) {
+async function validateSession({config, liferay, selection, workbook}) {
   const existingContents = await liferay.listSiteStructuredContents();
+  const imageResolver = new ImageResolver({imageSource: selection.imageSource, liferay});
+
   return validateAndBuildPayload({
     existingContents,
     folder: selection.folder,
@@ -81,14 +104,13 @@ async function validateSession({config, imageResolver, liferay, selection, workb
     rows: workbook.rows,
     structure: selection.structure,
     targets: workbook.targets,
-    viewableBy: config.viewableBy
+    viewableBy: selection.viewableBy
   });
 }
 
 export function createApp({config, liferay, sessions}) {
   const app = express();
   const upload = multer({limits: {fileSize: config.maxUploadBytes}, storage: multer.memoryStorage()});
-  const imageResolver = new ImageResolver({liferay});
   const imports = new ImportService({liferay, sessions});
 
   app.disable('x-powered-by');
@@ -100,14 +122,15 @@ export function createApp({config, liferay, sessions}) {
       baseUrl: config.baseUrl,
       connected: liferay.connected,
       defaultLocale: config.defaultLocale,
+      defaultViewableBy: config.defaultViewableBy,
       host: config.host,
-      imageSource: liferay.imageSourceSummary(),
+      imageSourceTypes: IMAGE_SOURCE_TYPES,
       maxImportRows: config.maxImportRows,
       maxUploadMb: Math.round(config.maxUploadBytes / 1024 / 1024),
       pollIntervalMs: config.pollIntervalMs,
       pollTimeoutMs: config.pollTimeoutMs,
       siteId: config.siteId,
-      viewableBy: config.viewableBy
+      viewableByOptions: VIEWABLE_BY_VALUES
     });
   });
 
@@ -118,7 +141,19 @@ export function createApp({config, liferay, sessions}) {
         const structure = await liferay.getContentStructure(summary.id);
         return summarizeStructure(structure, config.defaultLocale);
       });
-      response.json({...connected, imageSource: liferay.imageSourceSummary(), structures});
+      response.json({...connected, structures});
+    }
+    catch (error) { next(error); }
+  });
+
+  app.post('/api/image-folders', async (request, response, next) => {
+    try {
+      const scope = imageSourceInput(request.body);
+      const [source, folders] = await Promise.all([
+        liferay.resolveImageSource(scope),
+        liferay.listImageFolders(scope)
+      ]);
+      response.json({folders, source});
     }
     catch (error) { next(error); }
   });
@@ -145,10 +180,11 @@ export function createApp({config, liferay, sessions}) {
       const selection = await loadSelection({config, liferay, ...request.body});
       const template = await buildTemplateWorkbook({
         folder: selection.folder,
-        imageSource: liferay.imageSourceSummary(),
+        imageSource: selection.imageSource,
         locale: selection.locale,
         siteId: config.siteId,
-        structure: selection.structure
+        structure: selection.structure,
+        viewableBy: selection.viewableBy
       });
       response.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
       response.setHeader('Content-Disposition', `attachment; filename="${template.fileName}"`);
@@ -164,33 +200,37 @@ export function createApp({config, liferay, sessions}) {
       const selection = await loadSelection({config, liferay, ...request.body});
       const context = {
         folder: selection.folder,
-        imageSource: liferay.imageSourceSummary(),
+        imageSource: selection.imageSource,
         locale: selection.locale,
         siteId: config.siteId,
-        structure: selection.structure
+        structure: selection.structure,
+        viewableBy: selection.viewableBy
       };
       const workbook = await parseTemplateWorkbook(request.file.buffer, context);
       assert(workbook.rows.length <= config.maxImportRows, 400, 'MAX_ROWS_EXCEEDED', `Workbook contains ${workbook.rows.length} rows; limit is ${config.maxImportRows}`);
-      imageResolver.clear();
-      const validation = await validateSession({config, imageResolver, liferay, selection, workbook});
+      const validation = await validateSession({config, liferay, selection, workbook});
       const session = sessions.create({
         fileName: request.file.originalname,
         folder: selection.folder,
+        imageSource: selection.imageSource,
         locale: selection.locale,
         structure: selection.structure,
         validation,
+        viewableBy: selection.viewableBy,
         workbook
       });
       response.status(201).json({
         fileName: session.fileName,
         folder: selection.folder,
+        imageSource: selection.imageSource,
         metadata: workbook.metadata,
         previewRows: workbook.rows.slice(0, config.previewRows),
         rowCount: workbook.rows.length,
         sessionId: session.id,
         sheetName: workbook.sheetName,
         structure: summarizeStructure(selection.structure, selection.locale),
-        validation: publicValidation(validation, config.previewRows)
+        validation: publicValidation(validation, config.previewRows),
+        viewableBy: selection.viewableBy
       });
     }
     catch (error) { next(error); }
@@ -202,15 +242,24 @@ export function createApp({config, liferay, sessions}) {
       const selection = await loadSelection({
         config,
         folderId: session.folder.id,
+        imageSourceFolderId: session.imageSource.folderId,
+        imageSourceId: session.imageSource.id,
+        imageSourceType: session.imageSource.type,
         liferay,
-        structureId: session.structure.id
+        structureId: session.structure.id,
+        viewableBy: session.viewableBy
       });
-      imageResolver.clear();
-      const validation = await validateSession({config, imageResolver, liferay, selection, workbook: session.workbook});
-      sessions.update(session.id, {folder: selection.folder, structure: selection.structure, validation});
+      const validation = await validateSession({config, liferay, selection, workbook: session.workbook});
+      sessions.update(session.id, {
+        folder: selection.folder,
+        imageSource: selection.imageSource,
+        structure: selection.structure,
+        validation,
+        viewableBy: selection.viewableBy
+      });
       assert(validation.canImport, 409, 'VALIDATION_FAILED', 'Resolve all validation errors before importing', {validation: publicValidation(validation, config.previewRows)});
       const task = await imports.submit({...request.body, sessionId: session.id});
-      response.status(202).json({...task, folder: selection.folder});
+      response.status(202).json({...task, folder: selection.folder, imageSource: selection.imageSource, viewableBy: selection.viewableBy});
     }
     catch (error) { next(error); }
   });

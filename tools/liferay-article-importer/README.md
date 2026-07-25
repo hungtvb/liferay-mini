@@ -4,19 +4,24 @@ Local Node.js migration utility for importing any supported **flat, non-repeatab
 
 ## Boundary
 
-One run uses one configured Liferay Site, one selected Content Structure, one selected Web Content folder, one fixed default locale, one fixed image source, one workbook, and one Batch Engine task.
+One run uses one configured Liferay Site, one selected Content Structure, one selected Web Content folder, one default locale, one selected image source, one selected visibility policy, one workbook, and one Batch Engine task.
 
-Supported field types: string/rich text, boolean, date, integer/long, decimal/number, image, and single-value select/radio fields. Nested, repeatable, relationship, document, geolocation, and grid fields are not imported. A required unsupported field blocks the Structure. Optional unsupported fields are excluded with a warning.
+Supported field types: string/rich text, boolean, date, integer/long, decimal/number, image, and single-value select/radio. Nested, repeatable, relationship, document, geolocation, and grid fields are not imported. A required unsupported field blocks the Structure. Optional unsupported scalar fields are excluded with a warning.
 
 ## Configuration ownership
 
-- ENV: Liferay URL, OAuth2 credentials, Site, default locale, visibility policy, one image source, local bind address, and technical limits.
-- UI: Structure, target folder, workbook, INSERT/UPSERT, and error strategy.
+- ENV: Liferay URL, OAuth2 credentials, Site, default locale, default visibility, local bind, and technical limits.
+- UI: Structure, target folder, image source type, Site/Asset Library source, optional image folder, content visibility, workbook, INSERT/UPSERT, and error strategy.
 - Excel: title, ERC, dynamic Structure field values, and image references.
 
 Copy `.env.example` to `.env`. Never commit credentials.
 
-The server binds to `127.0.0.1` by default. Set `HOST` explicitly only when the migration UI must be reachable from another machine.
+The OAuth2 client must be able to:
+
+- Read the configured Site's Content Structures and Web Content folders.
+- Read Site Documents and Media when the current Site is selected as the image source.
+- List and read Asset Libraries that should be selectable as image sources.
+- Submit and read Batch Engine import tasks.
 
 ## Run
 
@@ -27,31 +32,33 @@ npm test
 npm start
 ```
 
-Open `http://127.0.0.1:4174`.
+Open `http://localhost:4174`.
 
 ## Workflow
 
 1. Connect with OAuth2 Client Credentials. Connect is read-only.
-2. The tool validates the configured image Site/Asset Library and optional image folder.
-3. Select a supported Structure and an existing Web Content folder.
-4. Generate the Structure-bound workbook using `LIFERAY_DEFAULT_LOCALE`.
-5. Fill the `Content Items` sheet and upload it.
-6. Resolve all validation issues.
-7. Choose exactly two options: existing-content handling and error handling.
-8. Submit one Batch Engine import task and poll it to completion.
+2. Select a supported Structure and an existing Web Content folder.
+3. Select one image source:
+   - Current Site; or
+   - One Asset Library visible to the OAuth2 client and connected to the configured Site.
+4. Optionally restrict image resolution to one folder in that source.
+5. Select content visibility: `Anyone`, `Members`, or `Owner`.
+6. Generate the Structure- and scope-bound workbook.
+7. Fill the `Content Items` sheet and upload it.
+8. Resolve all validation issues.
+9. Choose exactly two import options: existing-content handling and error handling.
+10. Submit one Batch Engine import task and poll it to completion.
 
 `INSERT` is the default and verified folder-safe path. `UPSERT` requires confirmation because a missing item may be created at the Web Content root and existing items keep their current folder.
-
-When a Batch POST may have succeeded but no task ID is received, the validation session is locked as `BATCH_SUBMISSION_UNKNOWN`. Do not submit that session again; inspect Batch Engine tasks in Liferay.
 
 ## Workbook
 
 Sheets:
 
 - `Content Items`: headers only; this is the importable sheet.
-- `Field Guide`: fieldReference, internal DDM name, type, required flag, input control, and accepted value.
+- `Field Guide`: fieldReference, internal DDM name, type, required flag, input control, options, and accepted value.
 - `Example`: sample values that cannot be imported accidentally.
-- `Metadata`: very hidden migration binding.
+- `Metadata`: very-hidden migration binding.
 
 System columns:
 
@@ -62,7 +69,17 @@ External Reference Code *
 
 Dynamic columns are generated from the selected Structure. Both `fieldReference` and internal `name` are preserved in the final payload.
 
-For select and radio fields, the Field Guide lists the exact accepted option values. Display labels are not accepted in place of option values.
+The metadata contract binds the workbook to:
+
+- Site.
+- Structure ID and fingerprint.
+- Target Web Content folder.
+- Default locale.
+- Image source type and ID.
+- Optional image folder.
+- Content visibility.
+
+Changing any of these requires generating a new template. The current template contract version is `5`.
 
 ### Images
 
@@ -77,18 +94,36 @@ erc:NXC_HERO_HOME
 - `erc:` exact-matches `Document.externalReferenceCode`.
 - Prefix is mandatory.
 - No title lookup, fuzzy matching, fallback, Document ID, or cross-source search.
-- A Site or Asset Library source root includes descendants.
-- When `LIFERAY_IMAGE_SOURCE_FOLDER_ID` is set, only documents directly inside that validated folder are indexed.
+- A source root is loaded recursively with `flatten=true`.
+- An explicitly selected image folder resolves only documents directly in that folder.
+- The selected source is paginated once and indexed in memory by fileName and ERC.
 - Missing, ambiguous, or non-image Documents block every affected row before Batch submission.
-- A Structure with no populated image references does not load the configured image source.
+
+## Visibility
+
+The ENV value:
+
+```text
+LIFERAY_DEFAULT_CONTENT_VIEWABLE_BY=Anyone
+```
+
+only controls the default UI selection. Each run may choose:
+
+```text
+Anyone
+Members
+Owner
+```
+
+The selected visibility is stored in workbook metadata, validation session state, and every Structured Content payload item.
 
 ## Example: NXC Article
 
-Select `NXC Article` and the `Articles` folder. Generate a template with Article fields such as Body and Cover Image. Use `file:article-cover.webp` or `erc:NXC_ARTICLE_COVER` in the single Cover Image Reference column.
+Select `NXC Article`, the `Articles` folder, the image source/folder containing the covers, and the desired visibility. Generate a template with Article fields such as Body and Cover Image. Use `file:article-cover.webp` or `erc:NXC_ARTICLE_COVER` in the single Cover Image Reference column.
 
 ## Example: NXC Hero
 
-Select a flat `NXC Hero` Structure and the `Heroes` folder. The same importer generates Heading, Description, Hero Image Reference, and CTA columns from the live Structure. No Hero-specific code path is used.
+Select a flat `NXC Hero` Structure and the `Heroes` folder. Select the Site or Asset Library that stores the Hero images. The same importer generates Heading, Description, Hero Image Reference, and CTA columns from the live Structure. No Hero-specific code path is used.
 
 ## Batch request
 
@@ -101,15 +136,6 @@ POST /o/headless-batch-engine/v1.0/import-task/com.liferay.headless.delivery.dto
 
 Each payload item carries `contentStructureId`, `structuredContentFolderId`, `viewableBy`, title, ERC, and dynamic fields.
 
-## Current safety limits
-
-- Structure and target Web Content folder must belong to the configured Site.
-- Optional image folder must belong to the configured image source.
-- All duplicate workbook ERC rows are blocked.
-- Batch POST requests are never automatically retried.
-- Ambiguous Batch submissions remain locked.
-- Validation sessions are TTL-bound and capped by `MAX_ACTIVE_SESSIONS`.
-
 ## Not in this release
 
-Per-run locale selection, multilingual values, ZIP image upload, nested/repeatable fields, multi-source image search, downloadable reports, and database-backed import history remain future enhancements.
+ZIP image upload, nested/repeatable fields, Site selection, per-run locale selection, multi-source image fallback, downloadable reports, and database-backed import history remain future enhancements.

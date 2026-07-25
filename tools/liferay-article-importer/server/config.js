@@ -1,7 +1,9 @@
 import {AppError} from './errors.js';
 
-const VIEWABLE_BY_VALUES = new Set(['Anyone', 'Members', 'Owner']);
-const IMAGE_SOURCE_TYPES = new Set(['site', 'assetLibrary']);
+export const VIEWABLE_BY_VALUES = ['Anyone', 'Members', 'Owner'];
+export const IMAGE_SOURCE_TYPES = ['site', 'assetLibrary'];
+
+const VIEWABLE_BY_SET = new Set(VIEWABLE_BY_VALUES);
 
 function readRequired(name) {
   const value = process.env[name]?.trim();
@@ -41,10 +43,14 @@ function readUrl(name) {
   catch { throw new AppError(500, 'CONFIG_INVALID', `${name} must be a valid absolute URL`); }
 }
 
+function defaultViewableBy() {
+  return process.env.LIFERAY_DEFAULT_CONTENT_VIEWABLE_BY?.trim()
+    || process.env.LIFERAY_CONTENT_VIEWABLE_BY?.trim()
+    || 'Anyone';
+}
+
 export function loadConfig() {
   const siteId = readInteger('LIFERAY_SITE_ID', undefined);
-  const imageSourceType = readEnum('LIFERAY_IMAGE_SOURCE_TYPE', undefined, IMAGE_SOURCE_TYPES);
-  const imageSourceId = readInteger('LIFERAY_IMAGE_SOURCE_ID', undefined);
 
   return {
     baseUrl: readUrl('LIFERAY_BASE_URL'),
@@ -52,11 +58,9 @@ export function loadConfig() {
     clientId: readRequired('LIFERAY_OAUTH_CLIENT_ID'),
     clientSecret: readRequired('LIFERAY_OAUTH_CLIENT_SECRET'),
     defaultLocale: (process.env.LIFERAY_DEFAULT_LOCALE || 'en-US').trim(),
+    defaultViewableBy: readEnum('LIFERAY_DEFAULT_CONTENT_VIEWABLE_BY', defaultViewableBy(), VIEWABLE_BY_SET),
     host: readHost('HOST'),
     imageIndexPageSize: readInteger('IMAGE_INDEX_PAGE_SIZE', 200, {max: 500}),
-    imageSourceFolderId: readInteger('LIFERAY_IMAGE_SOURCE_FOLDER_ID', null, {optional: true}),
-    imageSourceId,
-    imageSourceType,
     maxActiveSessions: readInteger('MAX_ACTIVE_SESSIONS', 10, {max: 100}),
     maxImportRows: readInteger('MAX_IMPORT_ROWS', 5000, {max: 100000}),
     maxRetries: readInteger('LIFERAY_MAX_RETRIES', 3, {min: 0, max: 10}),
@@ -68,7 +72,6 @@ export function loadConfig() {
     requestTimeoutMs: readInteger('LIFERAY_REQUEST_TIMEOUT_MS', 30000, {min: 1000, max: 120000}),
     retryBaseDelayMs: readInteger('LIFERAY_RETRY_BASE_DELAY_MS', 500, {min: 50, max: 10000}),
     sessionTtlMs: readInteger('SESSION_TTL_MS', 1800000, {min: 60000, max: 86400000}),
-    siteId,
-    viewableBy: readEnum('LIFERAY_CONTENT_VIEWABLE_BY', 'Anyone', VIEWABLE_BY_VALUES)
+    siteId
   };
 }

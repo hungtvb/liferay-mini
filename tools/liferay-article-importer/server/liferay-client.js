@@ -1,5 +1,6 @@
 import {setTimeout as delay} from 'node:timers/promises';
 import {AppError} from './errors.js';
+import {IMAGE_SOURCE_TYPES} from './config.js';
 
 function encodePath(value) {
   return encodeURIComponent(String(value));
@@ -16,7 +17,7 @@ function retryableStatus(status) {
   return status === 429 || status === 502 || status === 503 || status === 504;
 }
 
-function folderPaths(items) {
+function folderPaths(items, parentKey) {
   const byId = new Map(items.map((item) => [String(item.id), item]));
   const cache = new Map();
 
@@ -25,7 +26,7 @@ function folderPaths(items) {
     if (cache.has(key)) return cache.get(key);
     if (visited.has(key)) return item.name;
 
-    const parentId = item.parentStructuredContentFolderId;
+    const parentId = item[parentKey];
     if (!parentId) {
       cache.set(key, item.name);
       return item.name;
@@ -45,14 +46,35 @@ function folderPaths(items) {
   return items.map((item) => ({...item, path: build(item)}));
 }
 
+function parsePositiveInteger(value, field, {optional = false} = {}) {
+  if ((value == null || value === '') && optional) return null;
+  const parsed = Number(value);
+  if (!Number.isSafeInteger(parsed) || parsed <= 0) {
+    throw new AppError(400, 'IMAGE_SOURCE_INVALID', `${field} must be a positive integer`);
+  }
+  return parsed;
+}
+
+function normalizeImageSource(scope) {
+  const type = String(scope?.type || '').trim();
+  if (!IMAGE_SOURCE_TYPES.includes(type)) {
+    throw new AppError(400, 'IMAGE_SOURCE_INVALID', `Image source type must be one of: ${IMAGE_SOURCE_TYPES.join(', ')}`);
+  }
+
+  return {
+    folderId: parsePositiveInteger(scope?.folderId, 'Image source folder ID', {optional: true}),
+    id: parsePositiveInteger(scope?.id, 'Image source ID'),
+    type
+  };
+}
+
 export class LiferayClient {
   constructor(config, fetchImpl = globalThis.fetch) {
     this.config = config;
     this.fetch = fetchImpl;
     this.token = null;
     this.tokenExpiresAt = 0;
-    this.imageSourceValidated = false;
-    this.configuredImageFolder = null;
+    this.assetLibraries = null;
   }
 
   get connected() {
@@ -61,27 +83,27 @@ export class LiferayClient {
 
   async connect() {
     await this.#getAccessToken(true);
-    const [structures, folders] = await Promise.all([
+    const [structures, folders, assetLibraries] = await Promise.all([
       this.listContentStructures(),
       this.listStructuredContentFolders(),
-      this.validateConfiguredImageSource({force: true})
+      this.listAssetLibraries({force: true})
     ]);
+
     return {
+      assetLibraries,
       folders,
-      imageSource: this.imageSourceSummary(),
+      imageSources: [
+        {id: this.config.siteId, name: 'Current Site', type: 'site'},
+        ...assetLibraries.map((item) => ({
+          assetLibraryId: item.assetLibraryId,
+          externalReferenceCode: item.externalReferenceCode,
+          id: item.id,
+          name: item.name,
+          type: 'assetLibrary'
+        }))
+      ],
       site: {id: this.config.siteId},
       structures
-    };
-  }
-
-  imageSourceSummary() {
-    return {
-      folderId: this.config.imageSourceFolderId,
-      folderName: this.configuredImageFolder?.name || null,
-      id: this.config.imageSourceId,
-      referenceFormats: ['file:<exact-file-name>', 'erc:<exact-document-erc>'],
-      type: this.config.imageSourceType,
-      validated: this.imageSourceValidated
     };
   }
 
@@ -184,6 +206,24 @@ export class LiferayClient {
     return items;
   }
 
+  async listAssetLibraries({force = false} = {}) {
+    if (this.assetLibraries && !force) return this.assetLibraries;
+
+    const items = await this.#list('/o/headless-asset-library/v1.0/asset-libraries?nestedFields=connectedSites&sort=name:asc');
+    this.assetLibraries = items
+      .filter((item) => item.siteId)
+      .filter((item) => (item.connectedSites || []).some((site) => String(site.id) === String(this.config.siteId)))
+      .map((item) => ({
+        assetLibraryId: item.id,
+        externalReferenceCode: item.externalReferenceCode || null,
+        id: item.siteId,
+        name: item.name || `Asset Library #${item.siteId}`,
+        type: item.type || 'AssetLibrary'
+      }));
+
+    return this.assetLibraries;
+  }
+
   async listContentStructures() {
     return this.#list(`/o/headless-delivery/v1.0/sites/${encodePath(this.config.siteId)}/content-structures?sort=name:asc`);
   }
@@ -200,60 +240,101 @@ export class LiferayClient {
       name: folder.name,
       parentStructuredContentFolderId: folder.parentStructuredContentFolderId || null,
       siteId: folder.siteId
-    })));
+    })), 'parentStructuredContentFolderId');
   }
 
   async getStructuredContentFolder(folderId) {
     return this.#request(`/o/headless-delivery/v1.0/structured-content-folders/${encodePath(folderId)}`);
   }
 
-  async listConfiguredImageFolders() {
-    const scope = this.config.imageSourceType === 'assetLibrary' ? 'asset-libraries' : 'sites';
-    return this.#list(`/o/headless-delivery/v1.0/${scope}/${encodePath(this.config.imageSourceId)}/document-folders?flatten=true`);
+  async #assertImageSource(scope) {
+    const normalized = normalizeImageSource(scope);
+
+    if (normalized.type === 'site') {
+      if (String(normalized.id) !== String(this.config.siteId)) {
+        throw new AppError(400, 'IMAGE_SOURCE_NOT_AVAILABLE', 'Site image source must be the configured Site', {
+          configuredSiteId: this.config.siteId,
+          imageSourceId: normalized.id
+        });
+      }
+      return {...normalized, name: 'Current Site'};
+    }
+
+    const assetLibrary = (await this.listAssetLibraries()).find((item) => String(item.id) === String(normalized.id));
+    if (!assetLibrary) {
+      throw new AppError(400, 'IMAGE_SOURCE_NOT_AVAILABLE', `Asset Library ${normalized.id} is not available to the configured OAuth2 client`, {
+        imageSourceId: normalized.id,
+        imageSourceType: normalized.type
+      });
+    }
+
+    return {
+      ...normalized,
+      assetLibraryId: assetLibrary.assetLibraryId,
+      externalReferenceCode: assetLibrary.externalReferenceCode,
+      name: assetLibrary.name
+    };
   }
 
-  async validateConfiguredImageSource({force = false} = {}) {
-    if (this.imageSourceValidated && !force) return this.imageSourceSummary();
+  async listImageFolders(scope) {
+    const source = await this.#assertImageSource({...scope, folderId: null});
+    const resource = source.type === 'assetLibrary' ? 'asset-libraries' : 'sites';
+    const items = await this.#list(`/o/headless-delivery/v1.0/${resource}/${encodePath(source.id)}/document-folders?flatten=true&sort=name:asc`);
 
-    const folders = await this.listConfiguredImageFolders();
-    this.configuredImageFolder = null;
+    return folderPaths(items.map((folder) => ({
+      externalReferenceCode: folder.externalReferenceCode || null,
+      id: folder.id,
+      name: folder.name,
+      parentDocumentFolderId: folder.parentDocumentFolderId || null,
+      siteId: folder.siteId
+    })), 'parentDocumentFolderId');
+  }
 
-    if (this.config.imageSourceFolderId) {
-      this.configuredImageFolder = folders.find((folder) =>
-        String(folder.id) === String(this.config.imageSourceFolderId)
-      ) || null;
+  async resolveImageSource(scope) {
+    const source = await this.#assertImageSource(scope);
+    let folder = null;
 
-      if (!this.configuredImageFolder) {
+    if (source.folderId) {
+      const folders = await this.listImageFolders(source);
+      folder = folders.find((item) => String(item.id) === String(source.folderId)) || null;
+      if (!folder) {
         throw new AppError(
-          500,
+          400,
           'IMAGE_SOURCE_FOLDER_MISMATCH',
-          `Document folder ${this.config.imageSourceFolderId} does not belong to the configured ${this.config.imageSourceType} image source`,
-          {
-            imageSourceFolderId: this.config.imageSourceFolderId,
-            imageSourceId: this.config.imageSourceId,
-            imageSourceType: this.config.imageSourceType
-          }
+          `Document folder ${source.folderId} does not belong to the selected ${source.type} image source`,
+          {imageSourceFolderId: source.folderId, imageSourceId: source.id, imageSourceType: source.type}
         );
       }
     }
 
-    this.imageSourceValidated = true;
-    return this.imageSourceSummary();
+    return {
+      assetLibraryId: source.assetLibraryId || null,
+      externalReferenceCode: source.externalReferenceCode || null,
+      folderId: folder?.id || null,
+      folderName: folder?.name || null,
+      folderPath: folder?.path || null,
+      id: source.id,
+      name: source.name,
+      referenceFormats: ['file:<exact-file-name>', 'erc:<exact-document-erc>'],
+      type: source.type,
+      validated: true
+    };
   }
 
-  async listConfiguredImageDocuments() {
-    await this.validateConfiguredImageSource();
-
+  async listImageDocuments(scope) {
+    const source = await this.resolveImageSource(scope);
     let path;
-    if (this.config.imageSourceFolderId) {
-      path = `/o/headless-delivery/v1.0/document-folders/${encodePath(this.config.imageSourceFolderId)}/documents`;
+
+    if (source.folderId) {
+      path = `/o/headless-delivery/v1.0/document-folders/${encodePath(source.folderId)}/documents`;
     }
-    else if (this.config.imageSourceType === 'assetLibrary') {
-      path = `/o/headless-delivery/v1.0/asset-libraries/${encodePath(this.config.imageSourceId)}/documents?flatten=true`;
+    else if (source.type === 'assetLibrary') {
+      path = `/o/headless-delivery/v1.0/asset-libraries/${encodePath(source.id)}/documents?flatten=true`;
     }
     else {
-      path = `/o/headless-delivery/v1.0/sites/${encodePath(this.config.imageSourceId)}/documents?flatten=true`;
+      path = `/o/headless-delivery/v1.0/sites/${encodePath(source.id)}/documents?flatten=true`;
     }
+
     return this.#list(path);
   }
 

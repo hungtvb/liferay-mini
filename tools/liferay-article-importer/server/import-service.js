@@ -9,6 +9,7 @@ export function normalizeTask(task) {
     executeStatus: task?.executeStatus || 'UNKNOWN',
     externalReferenceCode: task?.externalReferenceCode || null,
     failedItems: task?.failedItems || [],
+    failedItemsCount: Number(task?.failedItemsCount ?? task?.failedItems?.length ?? 0),
     id: task?.id,
     importStrategy: task?.importStrategy || null,
     processedItemsCount: Number(task?.processedItemsCount || 0),

@@ -2,16 +2,13 @@ name: Importer UI Evidence
 
 on:
   workflow_dispatch:
-  pull_request:
-    paths:
-      - tools/liferay-article-importer/**
-      - .github/workflows/article-importer-ui-evidence.yml
-  push:
-    branches:
-      - feat/excel-web-content-importer
-    paths:
-      - tools/liferay-article-importer/**
-      - .github/workflows/article-importer-ui-evidence.yml
+
+permissions:
+  contents: read
+
+concurrency:
+  group: importer-ui-evidence-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   capture:
@@ -21,24 +18,34 @@ jobs:
       run:
         working-directory: tools/liferay-article-importer
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: 22
+          cache: npm
+          cache-dependency-path: tools/liferay-article-importer/package-lock.json
+
       - name: Install dependencies
-        run: npm install --no-audit --no-fund
+        run: npm ci --no-audit --no-fund
+
       - name: Install Chromium
         run: npx playwright install --with-deps chromium
+
       - name: Capture importer UI journey
         run: npm run evidence
+
       - name: Upload importer UI evidence
-        if: always()
+        if: success()
         uses: actions/upload-artifact@v4
         with:
           name: liferay-importer-ui-evidence
           path: tools/liferay-article-importer/evidence
-          if-no-files-found: warn
-          retention-days: 14
+          if-no-files-found: error
+          retention-days: 7
+
       - name: Upload Playwright diagnostics
         if: failure()
         uses: actions/upload-artifact@v4
@@ -46,4 +53,4 @@ jobs:
           name: liferay-importer-ui-playwright-diagnostics
           path: tools/liferay-article-importer/test-results
           if-no-files-found: ignore
-          retention-days: 3
+          retention-days: 1

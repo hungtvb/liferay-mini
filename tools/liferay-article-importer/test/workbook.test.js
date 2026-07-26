@@ -36,9 +36,10 @@ test('generic workbook keeps sample outside Content Items and binds per-run scop
   await workbook.xlsx.load(generated.buffer);
 
   assert.equal(workbook.getWorksheet('Content Items').rowCount, 1);
+  assert.equal(workbook.getWorksheet('Content Items').getCell('C1').value, 'Friendly URL');
   assert.equal(workbook.getWorksheet('Example').rowCount, 2);
   assert.equal(workbook.getWorksheet('Metadata').state, 'veryHidden');
-  assert.equal(workbookModule.TEMPLATE_VERSION, '5');
+  assert.equal(workbookModule.TEMPLATE_VERSION, '6');
 });
 
 test('parse rejects changed headers', {skip: !workbookModule}, async () => {
@@ -49,7 +50,7 @@ test('parse rejects changed headers', {skip: !workbookModule}, async () => {
 
   const sheet = workbook.getWorksheet('Content Items');
   sheet.getCell('A1').value = 'Renamed';
-  sheet.addRow(['Example', 'hero-home', 'Heading', 'file:hero.webp']);
+  sheet.addRow(['Example', 'hero-home', '', 'Heading', 'file:hero.webp']);
 
   const buffer = await workbook.xlsx.writeBuffer();
   await assert.rejects(
@@ -64,7 +65,7 @@ test('parse rejects changed content visibility', {skip: !workbookModule}, async 
   const workbook = new ExcelJS.Workbook();
   await workbook.xlsx.load(generated.buffer);
 
-  workbook.getWorksheet('Content Items').addRow(['Example', 'hero-home', 'Heading', 'file:hero.webp']);
+  workbook.getWorksheet('Content Items').addRow(['Example', 'hero-home', '', 'Heading', 'file:hero.webp']);
   const buffer = await workbook.xlsx.writeBuffer();
 
   await assert.rejects(

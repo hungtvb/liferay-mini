@@ -1,26 +1,32 @@
-import {AlertTriangle, Check, Info, Upload} from 'lucide-react';
+import {AlertTriangle, Check, Download, Info, Upload} from 'lucide-react';
 import {useMemo, useState, type ChangeEvent} from 'react';
 import {Button} from '../components/Button';
-import type {ValidationIssue, ValidationResult, ValidationRow} from '../types';
+import type {AsyncStatus, ValidationIssue, ValidationResult, ValidationRow} from '../types';
 
 interface ValidationStepProps {
   validation: ValidationResult;
+  reportStatus: AsyncStatus;
   onBack: () => void;
   onContinue: () => void;
+  onDownloadReport: () => void;
 }
 
 function issueRows(validation: ValidationResult) {
   const issues: ValidationIssue[] = [...validation.errors, ...validation.warnings];
-  return issues.map((issue, index) => ({
-    id: `${issue.code}-${issue.row ?? 'global'}-${index}`,
-    row: issue.row ?? '—',
-    erc: validation.rowResultsPreview.find((item) => item.row === issue.row)?.externalReferenceCode || '—',
-    title: validation.rowResultsPreview.find((item) => item.row === issue.row)?.title || '',
-    code: issue.code,
-    field: issue.field || 'workbook',
-    message: issue.message,
-    status: issue.severity === 'warning' ? 'WARNING' : 'BLOCKED'
-  }));
+  return issues.map((issue, index) => {
+    const validationRow = validation.rowResultsPreview.find((item) => item.row === issue.row);
+    return {
+      id: `${issue.code}-${issue.row ?? 'global'}-${index}`,
+      row: issue.row ?? '—',
+      erc: validationRow?.externalReferenceCode || '—',
+      title: validationRow?.title || '',
+      friendlyUrlPath: validationRow?.friendlyUrlPath || '',
+      code: issue.code,
+      field: issue.field || 'workbook',
+      message: issue.message,
+      status: issue.severity === 'warning' ? 'WARNING' : 'BLOCKED'
+    };
+  });
 }
 
 function previewRows(validation: ValidationResult) {
@@ -29,14 +35,17 @@ function previewRows(validation: ValidationResult) {
     row: row.row,
     erc: row.externalReferenceCode || '—',
     title: row.title || '',
+    friendlyUrlPath: row.friendlyUrlPath || '',
     code: row.status,
     field: '—',
-    message: row.status === 'VALID' ? 'Row is ready for import.' : 'Review row validation details.',
+    message: row.status === 'VALID'
+      ? `Friendly URL: ${row.friendlyUrlPath || 'not resolved'}`
+      : 'Review row validation details.',
     status: row.status
   }));
 }
 
-export function ValidationStep({validation, onBack, onContinue}: ValidationStepProps) {
+export function ValidationStep({validation, reportStatus, onBack, onContinue, onDownloadReport}: ValidationStepProps) {
   const [payloadOpen, setPayloadOpen] = useState(false);
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState<'issues' | 'preview'>('issues');
@@ -45,7 +54,7 @@ export function ValidationStep({validation, onBack, onContinue}: ValidationStepP
     const source = filter === 'issues' ? issueRows(validation) : previewRows(validation);
     const normalized = query.trim().toLowerCase();
     if (!normalized) return source;
-    return source.filter((row) => [row.erc, row.title, row.code, row.field, row.message].some((value) => String(value).toLowerCase().includes(normalized)));
+    return source.filter((row) => [row.erc, row.title, row.friendlyUrlPath, row.code, row.field, row.message].some((value) => String(value).toLowerCase().includes(normalized)));
   }, [filter, query, validation]);
 
   const issueCount = validation.errors.length + validation.warnings.length;
@@ -79,7 +88,7 @@ export function ValidationStep({validation, onBack, onContinue}: ValidationStepP
         <div className="table-toolbar">
           <h2>{filter === 'issues' ? `Issues (${issueCount})` : 'Row preview'}</h2>
           <div className="table-filters">
-            <input value={query} onChange={(event: ChangeEvent<HTMLInputElement>) => setQuery(event.target.value)} type="search" placeholder="Search ERC..." aria-label="Search validation rows" />
+            <input value={query} onChange={(event: ChangeEvent<HTMLInputElement>) => setQuery(event.target.value)} type="search" placeholder="Search ERC or friendly URL..." aria-label="Search validation rows" />
             <select value={filter} onChange={(event: ChangeEvent<HTMLSelectElement>) => setFilter(event.target.value as 'issues' | 'preview')} aria-label="Validation row filter">
               <option value="issues">Status: Issues</option>
               <option value="preview">All preview rows</option>
@@ -101,7 +110,7 @@ export function ValidationStep({validation, onBack, onContinue}: ValidationStepP
             </tbody>
           </table>
         </div>
-        <div className="table-footer"><span>Showing {rows.length} preview rows</span><span>Server preview is intentionally limited</span></div>
+        <div className="table-footer"><span>Showing {rows.length} preview rows</span><span>Export includes all workbook rows</span></div>
       </section>
 
       <section className="payload-disclosure">
@@ -113,7 +122,12 @@ export function ValidationStep({validation, onBack, onContinue}: ValidationStepP
 
       <div className="page-actions">
         <Button variant="ghost" icon={Upload} onClick={onBack}>Upload corrected workbook</Button>
-        <Button onClick={onContinue} disabled={!validation.canImport}>Continue to import</Button>
+        <div className="action-cluster">
+          <Button variant="secondary" icon={Download} loading={reportStatus === 'loading'} onClick={onDownloadReport}>
+            {reportStatus === 'loading' ? 'Exporting...' : 'Export validation report'}
+          </Button>
+          <Button onClick={onContinue} disabled={!validation.canImport}>Continue to import</Button>
+        </div>
       </div>
     </section>
   );

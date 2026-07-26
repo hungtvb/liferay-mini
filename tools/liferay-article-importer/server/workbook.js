@@ -3,7 +3,7 @@ import {assert} from './errors.js';
 import {buildTargets, buildTemplateColumns, strictTemplateMapping} from './mapping.js';
 import {analyzeStructure} from './structure-analyzer.js';
 
-const TEMPLATE_VERSION = '5';
+const TEMPLATE_VERSION = '6';
 const CONTENT_SHEET = 'Content Items';
 const GUIDE_SHEET = 'Field Guide';
 const EXAMPLE_SHEET = 'Example';
@@ -36,6 +36,7 @@ function metadataContract({folder, imageSource, locale, siteId, structure, viewa
 
 function acceptedValue(column) {
   if (column.valueKind === 'imageReference') return 'file:<exact-file-name> or erc:<exact-document-erc>';
+  if (column.valueKind === 'friendlyUrl') return 'Optional lowercase slug: letters, numbers, and hyphens. Blank generates from Content Title.';
   if (column.valueKind === 'option') return column.options.map((option) => option.value).join(' | ');
   return column.dataType;
 }
@@ -43,6 +44,7 @@ function acceptedValue(column) {
 function sampleValue(column) {
   if (column.key === 'system.title') return 'Example content item';
   if (column.key === 'system.externalReferenceCode') return 'example-content-item';
+  if (column.key === 'system.friendlyUrlPath') return 'example-content-item';
   if (column.valueKind === 'imageReference') return 'file:example-image.webp';
   if (column.valueKind === 'option') return column.options[0]?.value || '';
   if (column.dataType === 'boolean') return true;
@@ -125,7 +127,7 @@ export async function buildTemplateWorkbook({folder, imageSource, locale, siteId
   for (const field of analysis.excludedFields) {
     guide.addRow([`Excluded: ${field.label}`, field.fieldReference, field.name, field.dataType, field.required ? 'Yes' : 'No', field.inputControl || '', field.reason]);
   }
-  guide.columns = [{width: 42}, {width: 28}, {width: 28}, {width: 16}, {width: 12}, {width: 18}, {width: 54}];
+  guide.columns = [{width: 42}, {width: 28}, {width: 28}, {width: 16}, {width: 12}, {width: 18}, {width: 72}];
 
   const example = workbook.addWorksheet(EXAMPLE_SHEET);
   example.addRow(columns.map((column) => column.header));

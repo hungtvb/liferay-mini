@@ -6,7 +6,7 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const files = [
   'package.json', 'vite.config.ts', 'tsconfig.json',
   'server/config.js', 'server/app.js', 'server/index.js', 'server/structure-analyzer.js', 'server/image-resolver.js',
-  'server/liferay-client.js', 'server/session-store.js', 'server/workbook.js', 'server/validation.js',
+  'server/liferay-client.js', 'server/session-store.js', 'server/mapping.js', 'server/workbook.js', 'server/validation.js',
   'server/friendly-url.js', 'server/report.js', 'server/import-service.js', 'ui/index.html', 'ui/src/App.tsx', 'ui/src/api.ts', 'ui/src/types.ts',
   'ui/src/components/AppHeader.tsx', 'ui/src/components/WorkflowNav.tsx',
   'ui/src/steps/ConnectStep.tsx', 'ui/src/steps/ConfigureStep.tsx', 'ui/src/steps/WorkbookStep.tsx',

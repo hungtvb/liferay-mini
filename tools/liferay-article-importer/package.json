@@ -1,0 +1,40 @@
+{
+  "name": "@nexcent/liferay-flat-structured-content-importer",
+  "version": "0.3.0",
+  "private": true,
+  "type": "module",
+  "engines": {"node": ">=22.12.0"},
+  "scripts": {
+    "dev": "concurrently -k -n api,ui -c auto \"npm:dev:server\" \"npm:dev:ui\"",
+    "dev:server": "node --watch server/index.js",
+    "dev:ui": "vite --host 127.0.0.1",
+    "build": "vite build",
+    "preview": "vite preview --host 127.0.0.1 --port 4175",
+    "prestart": "npm run build",
+    "start": "node server/index.js",
+    "typecheck": "tsc --noEmit",
+    "test": "node --test",
+    "evidence": "npm run build && playwright test",
+    "check": "npm run typecheck && npm run build && node scripts/check.mjs"
+  },
+  "dependencies": {
+    "dotenv": "17.4.2",
+    "exceljs": "4.4.0",
+    "express": "5.2.1",
+    "lucide-react": "1.26.0",
+    "multer": "2.2.0",
+    "react": "19.2.8",
+    "react-dom": "19.2.8"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.55.0",
+    "@types/node": "^24.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@vitejs/plugin-react": "^6.0.1",
+    "concurrently": "^10.0.4",
+    "sass": "^1.89.0",
+    "typescript": "^5.9.2",
+    "vite": "^8.1.5"
+  }
+}

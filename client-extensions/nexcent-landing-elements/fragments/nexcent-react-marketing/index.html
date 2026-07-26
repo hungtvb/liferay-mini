@@ -3,6 +3,7 @@
     locale="${htmlUtil.escape(themeDisplay.getLanguageId())}"
     max-items="${configuration.maxItems}"
     read-more-label="${htmlUtil.escape(configuration.readMoreLabel)}"
+    site-base-url="${htmlUtil.escape(themeDisplay.getScopeGroup().getDisplayURL(themeDisplay, false, false))}"
     site-id="${themeDisplay.getScopeGroupId()}"
     structure-identifier="${htmlUtil.escape(configuration.structureIdentifier)}"
     title="${htmlUtil.escape(configuration.title)}"

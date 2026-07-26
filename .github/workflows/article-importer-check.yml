@@ -1,0 +1,61 @@
+name: Structured Content Importer CI
+
+on:
+  pull_request:
+    paths:
+      - tools/liferay-article-importer/**
+      - .github/workflows/article-importer-check.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: importer-ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: tools/liferay-article-importer
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Typecheck React UI
+        run: npm run typecheck
+
+      - name: Build React UI
+        run: npm run build
+
+      - name: Verify importer contracts
+        run: |
+          set -o pipefail
+          node scripts/check.mjs 2>&1 | tee contract-output.txt
+
+      - name: Run tests
+        run: |
+          set -o pipefail
+          npm test 2>&1 | tee test-output.txt
+
+      - name: Upload failure diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: structured-content-importer-diagnostics
+          path: |
+            tools/liferay-article-importer/contract-output.txt
+            tools/liferay-article-importer/test-output.txt
+          if-no-files-found: ignore
+          retention-days: 1

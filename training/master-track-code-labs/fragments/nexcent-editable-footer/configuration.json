@@ -1,0 +1,91 @@
+{
+    "fieldSets": [
+        {
+            "fields": [
+                {
+                    "defaultValue": "/",
+                    "label": "Brand Link",
+                    "name": "brandUrl",
+                    "type": "text"
+                },
+                {
+                    "defaultValue": "Nexcent home",
+                    "label": "Brand Link Label",
+                    "name": "brandLabel",
+                    "type": "text"
+                },
+                {
+                    "defaultValue": "Nexcent",
+                    "label": "Logo Alternative Text",
+                    "name": "logoAlt",
+                    "type": "text"
+                }
+            ],
+            "label": "Branding"
+        },
+        {
+            "fields": [
+                {
+                    "defaultValue": "Company navigation",
+                    "label": "Company Navigation Label",
+                    "name": "companyNavigationLabel",
+                    "type": "text"
+                },
+                {
+                    "defaultValue": "Support navigation",
+                    "label": "Support Navigation Label",
+                    "name": "supportNavigationLabel",
+                    "type": "text"
+                },
+                {
+                    "defaultValue": "Newsletter subscription",
+                    "label": "Newsletter Region Label",
+                    "name": "newsletterLabel",
+                    "type": "text"
+                }
+            ],
+            "label": "Accessibility"
+        },
+        {
+            "fields": [
+                {
+                    "defaultValue": true,
+                    "label": "Show Social Links",
+                    "name": "showSocialLinks",
+                    "type": "checkbox"
+                },
+                {
+                    "defaultValue": "Social links",
+                    "label": "Social Links Label",
+                    "name": "socialLabel",
+                    "type": "text"
+                },
+                {
+                    "defaultValue": "#",
+                    "label": "Instagram URL",
+                    "name": "instagramUrl",
+                    "type": "text"
+                },
+                {
+                    "defaultValue": "#",
+                    "label": "Dribbble URL",
+                    "name": "dribbbleUrl",
+                    "type": "text"
+                },
+                {
+                    "defaultValue": "#",
+                    "label": "Twitter URL",
+                    "name": "twitterUrl",
+                    "type": "text"
+                },
+                {
+                    "defaultValue": "#",
+                    "label": "YouTube URL",
+                    "name": "youtubeUrl",
+                    "type": "text"
+                }
+            ],
+            "label": "Social Links"
+        }
+    ]
+}

@@ -1,0 +1,54 @@
+name: Importer UI Evidence
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: importer-ui-evidence-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  capture:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: tools/liferay-article-importer
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Capture importer UI journey
+        run: npm run evidence
+
+      - name: Upload importer UI evidence
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: liferay-importer-ui-evidence
+          path: tools/liferay-article-importer/evidence
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Upload Playwright diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: liferay-importer-ui-playwright-diagnostics
+          path: tools/liferay-article-importer/test-results
+          if-no-files-found: ignore
+          retention-days: 1

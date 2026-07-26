@@ -1,0 +1,44 @@
+{
+    "fieldSets": [
+        {
+            "fields": [
+                {
+                    "defaultValue": "/",
+                    "label": "Brand Link",
+                    "name": "brandUrl",
+                    "type": "text"
+                },
+                {
+                    "defaultValue": "Nexcent home",
+                    "label": "Brand Link Label",
+                    "name": "brandLabel",
+                    "type": "text"
+                },
+                {
+                    "defaultValue": "Nexcent",
+                    "label": "Logo Alternative Text",
+                    "name": "logoAlt",
+                    "type": "text"
+                }
+            ],
+            "label": "Branding"
+        },
+        {
+            "fields": [
+                {
+                    "defaultValue": "Open navigation",
+                    "label": "Open Navigation Label",
+                    "name": "openLabel",
+                    "type": "text"
+                },
+                {
+                    "defaultValue": "Close navigation",
+                    "label": "Close Navigation Label",
+                    "name": "closeLabel",
+                    "type": "text"
+                }
+            ],
+            "label": "Accessibility"
+        }
+    ]
+}

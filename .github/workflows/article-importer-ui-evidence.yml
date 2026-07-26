@@ -1,0 +1,49 @@
+name: Importer UI Evidence
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - tools/liferay-article-importer/**
+      - .github/workflows/article-importer-ui-evidence.yml
+  push:
+    branches:
+      - feat/excel-web-content-importer
+    paths:
+      - tools/liferay-article-importer/**
+      - .github/workflows/article-importer-ui-evidence.yml
+
+jobs:
+  capture:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: tools/liferay-article-importer
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Capture importer UI journey
+        run: npm run evidence
+      - name: Upload importer UI evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: liferay-importer-ui-evidence
+          path: tools/liferay-article-importer/evidence
+          if-no-files-found: warn
+          retention-days: 14
+      - name: Upload Playwright diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: liferay-importer-ui-playwright-diagnostics
+          path: tools/liferay-article-importer/test-results
+          if-no-files-found: ignore
+          retention-days: 3

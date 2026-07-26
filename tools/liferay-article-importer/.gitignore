@@ -4,3 +4,6 @@ npm-debug.log*
 .DS_Store
 public/*
 !public/.gitkeep
+evidence/
+playwright-report/
+test-results/

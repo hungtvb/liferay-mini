@@ -8,6 +8,10 @@ export const SYSTEM_TARGETS = [
   {
     dataType: 'string', fieldReference: null, key: 'system.externalReferenceCode', label: 'External Reference Code',
     name: 'externalReferenceCode', required: true, section: 'System fields', supported: true, valueKind: 'scalar'
+  },
+  {
+    dataType: 'string', fieldReference: null, key: 'system.friendlyUrlPath', label: 'Friendly URL',
+    name: 'friendlyUrlPath', required: false, section: 'System fields', supported: true, valueKind: 'friendlyUrl'
   }
 ];
 

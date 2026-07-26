@@ -1,5 +1,6 @@
 import ExcelJS from 'exceljs';
 import {assert} from './errors.js';
+import {safeFileStem} from './file-name.js';
 import {buildTargets, buildTemplateColumns, strictTemplateMapping} from './mapping.js';
 import {analyzeStructure} from './structure-analyzer.js';
 
@@ -8,12 +9,6 @@ const CONTENT_SHEET = 'Content Items';
 const GUIDE_SHEET = 'Field Guide';
 const EXAMPLE_SHEET = 'Example';
 const METADATA_SHEET = 'Metadata';
-
-function safeFileName(value) {
-  return String(value || 'structured-content')
-    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
-    .toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-}
 
 function metadataContract({folder, imageSource, locale, siteId, structure, viewableBy}) {
   const analysis = analyzeStructure(structure, locale);
@@ -139,7 +134,7 @@ export async function buildTemplateWorkbook({folder, imageSource, locale, siteId
   writeMetadata(workbook, metadata);
   return {
     buffer: await workbook.xlsx.writeBuffer(),
-    fileName: `${safeFileName(analysis.name)}-import-template.xlsx`,
+    fileName: `${safeFileStem(analysis.name)}-import-template.xlsx`,
     metadata
   };
 }

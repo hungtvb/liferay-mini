@@ -5,12 +5,14 @@ import {validateAndBuildPayload} from '../server/validation.js';
 const targets = [
   {key: 'system.title', label: 'Content Title', name: 'title', required: true, supported: true, valueKind: 'scalar', dataType: 'string'},
   {key: 'system.externalReferenceCode', label: 'External Reference Code', name: 'externalReferenceCode', required: true, supported: true, valueKind: 'scalar', dataType: 'string'},
+  {key: 'system.friendlyUrlPath', label: 'Friendly URL', name: 'friendlyUrlPath', required: false, supported: true, valueKind: 'friendlyUrl', dataType: 'string'},
   {key: 'content.body', label: 'Body', name: 'RichText123', fieldReference: 'body', required: true, supported: true, valueKind: 'scalar', dataType: 'string'},
   {key: 'content.coverImage', label: 'Cover Image', name: 'Image123', fieldReference: 'coverImage', required: true, supported: true, valueKind: 'imageReference', dataType: 'image'}
 ];
 const mapping = {
   'system.title': 'Content Title *',
   'system.externalReferenceCode': 'External Reference Code *',
+  'system.friendlyUrlPath': 'Friendly URL',
   'content.body': 'Body * [body]',
   'content.coverImage': 'Cover Image Reference * [coverImage]'
 };
@@ -25,7 +27,7 @@ const imageResolver = {
   }
 };
 
-test('builds generic payload and preserves both field identities', async () => {
+test('builds generic payload, generates friendly URL, and preserves both field identities', async () => {
   const result = await validateAndBuildPayload({
     existingContents: [],
     folder: {id: 20},
@@ -34,8 +36,9 @@ test('builds generic payload and preserves both field identities', async () => {
     mapping,
     rowNumbers: [2],
     rows: [{
-      'Content Title *': 'Hello',
+      'Content Title *': 'Xin chào Đà Nẵng',
       'External Reference Code *': 'hero-home',
+      'Friendly URL': '',
       'Body * [body]': 'Body',
       'Cover Image Reference * [coverImage]': 'file:cover.webp'
     }],
@@ -47,6 +50,8 @@ test('builds generic payload and preserves both field identities', async () => {
   assert.equal(result.payload[0].contentStructureId, 10);
   assert.equal(result.payload[0].structuredContentFolderId, 20);
   assert.equal(result.payload[0].viewableBy, 'Anyone');
+  assert.equal(result.payload[0].friendlyUrlPath, 'xin-chao-da-nang');
+  assert.equal(result.rowResults[0].friendlyUrlGenerated, true);
   assert.deepEqual(result.payload[0].contentFields[0], {contentFieldValue: {data: 'Body'}, fieldReference: 'body', name: 'RichText123'});
   assert.deepEqual(result.payload[0].contentFields[1].contentFieldValue.image, {id: 9, title: 'Cover', description: 'Cover'});
 });
@@ -57,9 +62,10 @@ test('all duplicate ERC rows and missing images are blocked', async () => {
       return {indexSummary: {}, results: new Map([['file:missing.webp', {status: 'MISSING', code: 'IMAGE_NOT_FOUND'}]])};
     }
   };
-  const rows = [2, 3].map(() => ({
-    'Content Title *': 'Hello',
+  const rows = [2, 3].map((rowNumber) => ({
+    'Content Title *': `Hello ${rowNumber}`,
     'External Reference Code *': 'same',
+    'Friendly URL': `hello-${rowNumber}`,
     'Body * [body]': 'Body',
     'Cover Image Reference * [coverImage]': 'file:missing.webp'
   }));
@@ -68,6 +74,28 @@ test('all duplicate ERC rows and missing images are blocked', async () => {
   assert.equal(result.errors.filter((item) => item.code === 'ERC_DUPLICATE_IN_WORKBOOK').length, 2);
   assert.equal(result.rowResults.filter((item) => item.status === 'BLOCKED').length, 2);
   assert(result.errors.some((item) => item.code === 'IMAGE_NOT_FOUND'));
+});
+
+test('blocks invalid, duplicate, and existing friendly URLs', async () => {
+  const rows = [
+    {'Content Title *': 'One', 'External Reference Code *': 'one', 'Friendly URL': 'Same URL', 'Body * [body]': 'Body', 'Cover Image Reference * [coverImage]': 'file:cover.webp'},
+    {'Content Title *': 'Two', 'External Reference Code *': 'two', 'Friendly URL': 'same-path', 'Body * [body]': 'Body', 'Cover Image Reference * [coverImage]': 'file:cover.webp'},
+    {'Content Title *': 'Three', 'External Reference Code *': 'three', 'Friendly URL': 'same-path', 'Body * [body]': 'Body', 'Cover Image Reference * [coverImage]': 'file:cover.webp'},
+    {'Content Title *': 'Four', 'External Reference Code *': 'four', 'Friendly URL': 'existing-path', 'Body * [body]': 'Body', 'Cover Image Reference * [coverImage]': 'file:cover.webp'}
+  ];
+  const result = await validateAndBuildPayload({
+    existingContents: [{id: 99, externalReferenceCode: 'another-item', friendlyUrlPath: 'existing-path'}],
+    folder: {id: 20},
+    imageResolver,
+    mapping,
+    rowNumbers: [2, 3, 4, 5],
+    rows,
+    structure: {id: 10},
+    targets
+  });
+  assert(result.errors.some((item) => item.code === 'FRIENDLY_URL_INVALID' && item.row === 2));
+  assert.equal(result.errors.filter((item) => item.code === 'FRIENDLY_URL_DUPLICATE_IN_WORKBOOK').length, 2);
+  assert(result.errors.some((item) => item.code === 'FRIENDLY_URL_ALREADY_EXISTS' && item.row === 5));
 });
 
 test('validates select and radio option values exactly', async () => {
@@ -85,14 +113,15 @@ test('validates select and radio option values exactly', async () => {
   const optionMapping = {
     'system.title': 'Content Title *',
     'system.externalReferenceCode': 'External Reference Code *',
+    'system.friendlyUrlPath': 'Friendly URL',
     'content.theme': 'Theme * [theme]'
   };
-  const optionTargets = [targets[0], targets[1], optionTarget];
+  const optionTargets = [targets[0], targets[1], targets[2], optionTarget];
   const result = await validateAndBuildPayload({
     folder: {id: 20},
     mapping: optionMapping,
     rowNumbers: [2],
-    rows: [{'Content Title *': 'Hello', 'External Reference Code *': 'hero-home', 'Theme * [theme]': 'Light'}],
+    rows: [{'Content Title *': 'Hello', 'External Reference Code *': 'hero-home', 'Friendly URL': '', 'Theme * [theme]': 'Light'}],
     structure: {id: 10},
     targets: optionTargets
   });
@@ -103,10 +132,11 @@ test('validates select and radio option values exactly', async () => {
 
 test('does not call image resolver for a Structure without image values', async () => {
   let calls = 0;
-  const noImageTargets = targets.slice(0, 3);
+  const noImageTargets = targets.slice(0, 4);
   const noImageMapping = {
     'system.title': 'Content Title *',
     'system.externalReferenceCode': 'External Reference Code *',
+    'system.friendlyUrlPath': 'Friendly URL',
     'content.body': 'Body * [body]'
   };
   const result = await validateAndBuildPayload({
@@ -114,11 +144,12 @@ test('does not call image resolver for a Structure without image values', async 
     imageResolver: {async resolveMany() { calls += 1; throw new Error('should not run'); }},
     mapping: noImageMapping,
     rowNumbers: [2],
-    rows: [{'Content Title *': 'Hello', 'External Reference Code *': 'faq-one', 'Body * [body]': 'Body'}],
+    rows: [{'Content Title *': 'Hello', 'External Reference Code *': 'faq-one', 'Friendly URL': '', 'Body * [body]': 'Body'}],
     structure: {id: 10},
     targets: noImageTargets
   });
 
   assert.equal(result.canImport, true);
+  assert.equal(result.payload[0].friendlyUrlPath, 'hello');
   assert.equal(calls, 0);
 });

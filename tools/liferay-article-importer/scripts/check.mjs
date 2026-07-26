@@ -37,11 +37,11 @@ if (!content['server/config.js'].includes("IMAGE_SOURCE_TYPES = ['site']")) {
   throw new Error('Demo release must expose only the configured Current Site image source');
 }
 
-for (const expected of ['Content Items', 'Field Guide', 'Example', 'Metadata', "TEMPLATE_VERSION = '6'", 'Friendly URL']) {
+for (const expected of ['Content Items', 'Field Guide', 'Example', 'Metadata', "TEMPLATE_VERSION = '6'", 'friendlyUrl']) {
   if (!content['server/workbook.js'].includes(expected)) throw new Error(`workbook.js is missing ${expected}`);
 }
 
-for (const expected of ['system.friendlyUrlPath', "valueKind: 'friendlyUrl'"]) {
+for (const expected of ['system.friendlyUrlPath', "label: 'Friendly URL'", "valueKind: 'friendlyUrl'"]) {
   if (!content['server/mapping.js'].includes(expected)) throw new Error(`mapping.js is missing ${expected}`);
 }
 

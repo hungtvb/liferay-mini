@@ -1,5 +1,5 @@
 import {useEffect, useMemo, useRef, useState} from 'react';
-import {ApiError, connect, downloadTemplate, getConfig, getImageFolders, getImportTask, getStructureAnalysis, submitImport, validateWorkbook} from './api';
+import {ApiError, connect, downloadReport, downloadTemplate, getConfig, getImageFolders, getImportTask, getStructureAnalysis, submitImport, validateWorkbook} from './api';
 import {AppHeader} from './components/AppHeader';
 import {ToastRegion, type ToastMessage} from './components/ToastRegion';
 import {WorkflowNav} from './components/WorkflowNav';
@@ -16,6 +16,7 @@ import type {
   ImporterConfig,
   ImportStrategy,
   ImportTask,
+  ReportStage,
   Selection,
   Step,
   StructureAnalysis,
@@ -34,6 +35,17 @@ function initialSelection(): Selection {
   return {structureId: '', folderId: '', imageFolderId: '', viewableBy: 'Anyone'};
 }
 
+function saveBlob(blob: Blob, fileName: string) {
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement('a');
+  anchor.href = url;
+  anchor.download = fileName;
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+  URL.revokeObjectURL(url);
+}
+
 export function App() {
   const [currentStep, setCurrentStep] = useState<Step>(1);
   const [maxUnlockedStep, setMaxUnlockedStep] = useState<Step>(1);
@@ -49,6 +61,7 @@ export function App() {
   const [imageFoldersStatus, setImageFoldersStatus] = useState<AsyncStatus>('idle');
   const [file, setFile] = useState<File | null>(null);
   const [downloadStatus, setDownloadStatus] = useState<AsyncStatus>('idle');
+  const [reportStatus, setReportStatus] = useState<Record<ReportStage, AsyncStatus>>({validation: 'idle', import: 'idle'});
   const [validationStatus, setValidationStatus] = useState<AsyncStatus>('idle');
   const [validationMessage, setValidationMessage] = useState('');
   const [validationPayload, setValidationPayload] = useState<WorkbookValidationPayload | null>(null);
@@ -92,6 +105,7 @@ export function App() {
     setValidationPayload(null);
     setValidationStatus('idle');
     setValidationMessage('');
+    setReportStatus({validation: 'idle', import: 'idle'});
     setTask(null);
     setImportStatus('idle');
     setImportError(null);
@@ -158,19 +172,28 @@ export function App() {
 
     try {
       const {blob, fileName} = await downloadTemplate(config, selection);
-      const url = URL.createObjectURL(blob);
-      const anchor = document.createElement('a');
-      anchor.href = url;
-      anchor.download = fileName;
-      document.body.appendChild(anchor);
-      anchor.click();
-      anchor.remove();
-      URL.revokeObjectURL(url);
+      saveBlob(blob, fileName);
       setDownloadStatus('success');
       showToast('Excel template downloaded');
     }
     catch (error) {
       setDownloadStatus('error');
+      showToast(messageFrom(error), 'error');
+    }
+  }
+
+  async function handleDownloadReport(stage: ReportStage) {
+    if (!validationPayload?.sessionId) return;
+    setReportStatus((current) => ({...current, [stage]: 'loading'}));
+
+    try {
+      const {blob, fileName} = await downloadReport(validationPayload.sessionId, stage);
+      saveBlob(blob, fileName);
+      setReportStatus((current) => ({...current, [stage]: 'success'}));
+      showToast(`${stage === 'import' ? 'Import' : 'Validation'} report downloaded`);
+    }
+    catch (error) {
+      setReportStatus((current) => ({...current, [stage]: 'error'}));
       showToast(messageFrom(error), 'error');
     }
   }
@@ -190,6 +213,7 @@ export function App() {
       setValidationPayload(payload);
       setValidationStatus(payload.validation.canImport ? 'success' : 'error');
       setValidationMessage(`${payload.fileName} validated. ${payload.rowCount} rows detected.`);
+      setReportStatus({validation: 'idle', import: 'idle'});
       unlockStep(4);
       if (payload.validation.canImport) unlockStep(5);
       showToast(payload.validation.canImport ? 'Workbook validation passed' : 'Workbook contains blocked rows', payload.validation.canImport ? 'success' : 'error');
@@ -228,6 +252,7 @@ export function App() {
     setImportStatus('loading');
     setImportError(null);
     setSubmissionLocked(false);
+    setReportStatus((current) => ({...current, import: 'idle'}));
 
     try {
       const initialTask = await submitImport(validationPayload.sessionId, createStrategy, importStrategy, confirmUpsert);
@@ -252,6 +277,7 @@ export function App() {
     setValidationPayload(null);
     setValidationStatus('idle');
     setValidationMessage('');
+    setReportStatus({validation: 'idle', import: 'idle'});
     setTask(null);
     setImportStatus('idle');
     setImportError(null);
@@ -313,7 +339,9 @@ export function App() {
           {currentStep === 4 && validationPayload && (
             <ValidationStep
               validation={validationPayload.validation}
+              reportStatus={reportStatus.validation}
               onBack={() => setCurrentStep(3)}
+              onDownloadReport={() => handleDownloadReport('validation')}
               onContinue={() => {
                 if (!validationPayload.validation.canImport) return;
                 unlockStep(5);
@@ -327,10 +355,12 @@ export function App() {
               validationPayload={validationPayload}
               task={task}
               status={importStatus}
+              reportStatus={reportStatus.import}
               error={importError}
               submissionLocked={submissionLocked}
               onBack={() => setCurrentStep(4)}
               onStart={handleStartImport}
+              onDownloadReport={() => handleDownloadReport('import')}
               onReset={resetRun}
             />
           )}

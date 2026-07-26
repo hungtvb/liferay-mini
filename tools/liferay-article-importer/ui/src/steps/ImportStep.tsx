@@ -1,4 +1,4 @@
-import {Check, Database} from 'lucide-react';
+import {Check, Database, Download} from 'lucide-react';
 import {useEffect, useState, type ChangeEvent} from 'react';
 import {Button} from '../components/Button';
 import type {AsyncStatus, CreateStrategy, ImportStrategy, ImportTask, WorkbookValidationPayload} from '../types';
@@ -7,14 +7,18 @@ interface ImportStepProps {
   validationPayload: WorkbookValidationPayload;
   task: ImportTask | null;
   status: AsyncStatus;
+  reportStatus: AsyncStatus;
   error?: string | null;
   submissionLocked: boolean;
   onBack: () => void;
   onStart: (createStrategy: CreateStrategy, importStrategy: ImportStrategy, confirmUpsert: boolean) => void;
+  onDownloadReport: () => void;
   onReset: () => void;
 }
 
-export function ImportStep({validationPayload, task, status, error, submissionLocked, onBack, onStart, onReset}: ImportStepProps) {
+const terminalStatuses = new Set(['COMPLETED', 'FAILED', 'CANCELLED', 'COMPLETED_WITH_ERRORS']);
+
+export function ImportStep({validationPayload, task, status, reportStatus, error, submissionLocked, onBack, onStart, onDownloadReport, onReset}: ImportStepProps) {
   const [createStrategy, setCreateStrategy] = useState<CreateStrategy>('INSERT');
   const [importStrategy, setImportStrategy] = useState<ImportStrategy>('ON_ERROR_FAIL');
   const [confirmUpsert, setConfirmUpsert] = useState(false);
@@ -27,6 +31,7 @@ export function ImportStep({validationPayload, task, status, error, submissionLo
   const processed = Number(task?.processedItemsCount || 0);
   const percent = total > 0 ? Math.min(100, Math.round((processed / total) * 100)) : 0;
   const completed = task?.executeStatus === 'COMPLETED';
+  const reportAvailable = Boolean(task && terminalStatuses.has(task.executeStatus));
 
   if (completed) {
     return (
@@ -35,7 +40,12 @@ export function ImportStep({validationPayload, task, status, error, submissionLo
           <span className="completed-icon"><Check size={32} /></span>
           <h1 id="import-completed-heading">Import completed</h1>
           <p>{processed} of {total} items processed successfully.</p>
-          <Button variant="secondary" onClick={onReset}>Start New Import</Button>
+          <div className="action-cluster">
+            <Button variant="secondary" icon={Download} loading={reportStatus === 'loading'} onClick={onDownloadReport}>
+              {reportStatus === 'loading' ? 'Exporting...' : 'Export import report'}
+            </Button>
+            <Button variant="secondary" onClick={onReset}>Start New Import</Button>
+          </div>
         </div>
       </section>
     );
@@ -89,14 +99,21 @@ export function ImportStep({validationPayload, task, status, error, submissionLo
 
       <div className="page-actions">
         <Button variant="ghost" onClick={onBack} disabled={status === 'loading'}>Back</Button>
-        <Button
-          icon={Database}
-          loading={status === 'loading' && !task}
-          disabled={(createStrategy === 'UPSERT' && !confirmUpsert) || status === 'loading' || Boolean(task) || submissionLocked}
-          onClick={() => onStart(createStrategy, importStrategy, confirmUpsert)}
-        >
-          Start import of {validationPayload.validation.stats.validRows} items
-        </Button>
+        <div className="action-cluster">
+          {reportAvailable && (
+            <Button variant="secondary" icon={Download} loading={reportStatus === 'loading'} onClick={onDownloadReport}>
+              {reportStatus === 'loading' ? 'Exporting...' : 'Export import report'}
+            </Button>
+          )}
+          <Button
+            icon={Database}
+            loading={status === 'loading' && !task}
+            disabled={(createStrategy === 'UPSERT' && !confirmUpsert) || status === 'loading' || Boolean(task) || submissionLocked}
+            onClick={() => onStart(createStrategy, importStrategy, confirmUpsert)}
+          >
+            Start import of {validationPayload.validation.stats.validRows} items
+          </Button>
+        </div>
       </div>
     </section>
   );

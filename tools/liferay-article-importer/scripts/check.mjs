@@ -7,7 +7,7 @@ const files = [
   'package.json', 'vite.config.ts', 'tsconfig.json',
   'server/config.js', 'server/app.js', 'server/index.js', 'server/structure-analyzer.js', 'server/image-resolver.js',
   'server/liferay-client.js', 'server/session-store.js', 'server/workbook.js', 'server/validation.js',
-  'server/import-service.js', 'ui/index.html', 'ui/src/App.tsx', 'ui/src/api.ts', 'ui/src/types.ts',
+  'server/friendly-url.js', 'server/report.js', 'server/import-service.js', 'ui/index.html', 'ui/src/App.tsx', 'ui/src/api.ts', 'ui/src/types.ts',
   'ui/src/components/AppHeader.tsx', 'ui/src/components/WorkflowNav.tsx',
   'ui/src/steps/ConnectStep.tsx', 'ui/src/steps/ConfigureStep.tsx', 'ui/src/steps/WorkbookStep.tsx',
   'ui/src/steps/ValidationStep.tsx', 'ui/src/steps/ImportStep.tsx', 'ui/src/styles.scss', '.env.example', 'README.md'
@@ -37,8 +37,28 @@ if (!content['server/config.js'].includes("IMAGE_SOURCE_TYPES = ['site']")) {
   throw new Error('Demo release must expose only the configured Current Site image source');
 }
 
-for (const expected of ['Content Items', 'Field Guide', 'Example', 'Metadata']) {
+for (const expected of ['Content Items', 'Field Guide', 'Example', 'Metadata', "TEMPLATE_VERSION = '6'", 'Friendly URL']) {
   if (!content['server/workbook.js'].includes(expected)) throw new Error(`workbook.js is missing ${expected}`);
+}
+
+for (const expected of ['system.friendlyUrlPath', "valueKind: 'friendlyUrl'"]) {
+  if (!content['server/mapping.js'].includes(expected)) throw new Error(`mapping.js is missing ${expected}`);
+}
+
+for (const expected of ['slugifyFriendlyUrl', 'FRIENDLY_URL_INVALID', 'Đđ']) {
+  if (!content['server/friendly-url.js'].includes(expected)) throw new Error(`friendly-url.js is missing ${expected}`);
+}
+
+for (const expected of ['FRIENDLY_URL_DUPLICATE_IN_WORKBOOK', 'FRIENDLY_URL_ALREADY_EXISTS', 'friendlyUrlPath']) {
+  if (!content['server/validation.js'].includes(expected)) throw new Error(`validation.js is missing ${expected}`);
+}
+
+for (const expected of ['Summary', 'Rows', 'Issues', 'Batch Failed Items', 'buildReportWorkbook']) {
+  if (!content['server/report.js'].includes(expected)) throw new Error(`report.js is missing ${expected}`);
+}
+
+for (const expected of ["app.get('/api/reports/:sessionId/:stage'", 'buildReportWorkbook']) {
+  if (!content['server/app.js'].includes(expected)) throw new Error(`Report API is missing ${expected}`);
 }
 
 for (const expected of ["'file'", "'erc'", 'byFileName', 'byErc']) {
@@ -53,20 +73,23 @@ for (const expected of ['vite build', 'tsc --noEmit', 'concurrently']) {
   if (!content['package.json'].includes(expected)) throw new Error(`React UI script is missing ${expected}`);
 }
 
-for (const expected of ['WorkflowNav', 'ConnectStep', 'ConfigureStep', 'WorkbookStep', 'ValidationStep', 'ImportStep']) {
+for (const expected of ['WorkflowNav', 'ConnectStep', 'ConfigureStep', 'WorkbookStep', 'ValidationStep', 'ImportStep', 'handleDownloadReport']) {
   if (!content['ui/src/App.tsx'].includes(expected)) throw new Error(`React workflow is missing ${expected}`);
 }
 
-for (const expected of ["imageSourceType: 'site'", 'imageSourceId: String(config.siteId)', 'currentSiteScope']) {
+for (const expected of ["imageSourceType: 'site'", 'imageSourceId: String(config.siteId)', 'currentSiteScope', 'downloadReport']) {
   if (!content['ui/src/api.ts'].includes(expected)) throw new Error(`Current Site API contract is missing ${expected}`);
 }
 
-for (const expected of ['INSERT', 'UPSERT', 'ON_ERROR_FAIL', 'ON_ERROR_CONTINUE']) {
+for (const expected of ['INSERT', 'UPSERT', 'ON_ERROR_FAIL', 'ON_ERROR_CONTINUE', 'Export import report']) {
   if (!content['ui/src/steps/ImportStep.tsx'].includes(expected)) throw new Error(`Import UI is missing ${expected}`);
 }
 
 if (!content['ui/src/steps/ValidationStep.tsx'].includes('disabled={!validation.canImport}')) {
   throw new Error('Validation UI must block Import navigation when errors remain');
+}
+if (!content['ui/src/steps/ValidationStep.tsx'].includes('Export validation report')) {
+  throw new Error('Validation UI must expose the Excel report');
 }
 
 for (const expected of ['BATCH_SUBMISSION_UNKNOWN', 'submissionLocked']) {
@@ -95,4 +118,4 @@ if (!content['server/liferay-client.js'].includes('/structured-content-folders?f
 if (!content['server/import-service.js'].includes('BATCH_SUBMISSION_UNKNOWN')) throw new Error('Ambiguous Batch submission lock is missing');
 if (!content['server/index.js'].includes('config.host')) throw new Error('Local host binding is missing');
 
-console.log(`Validated ${files.length} Current Site importer files and the React migration workspace.`);
+console.log(`Validated ${files.length} Current Site importer files, friendly URL support, Excel reports, and the React migration workspace.`);

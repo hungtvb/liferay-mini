@@ -1,16 +1,18 @@
-name: Flat Structured Content Importer Check
+name: Structured Content Importer CI
 
 on:
   pull_request:
     paths:
       - tools/liferay-article-importer/**
       - .github/workflows/article-importer-check.yml
-  push:
-    branches:
-      - feat/excel-web-content-importer
-    paths:
-      - tools/liferay-article-importer/**
-      - .github/workflows/article-importer-check.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: importer-ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 jobs:
   check:
@@ -20,28 +22,40 @@ jobs:
       run:
         working-directory: tools/liferay-article-importer
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: 22
-      - run: npm install --no-audit --no-fund
+          cache: npm
+          cache-dependency-path: tools/liferay-article-importer/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+
       - name: Typecheck React UI
         run: npm run typecheck
+
       - name: Build React UI
         run: npm run build
+
       - name: Verify importer contracts
         run: |
           set -o pipefail
           node scripts/check.mjs 2>&1 | tee contract-output.txt
+
       - name: Run tests
         run: |
           set -o pipefail
           npm test 2>&1 | tee test-output.txt
+
       - name: Upload failure diagnostics
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: flat-structured-content-importer-diagnostics
+          name: structured-content-importer-diagnostics
           path: |
             tools/liferay-article-importer/contract-output.txt
             tools/liferay-article-importer/test-output.txt

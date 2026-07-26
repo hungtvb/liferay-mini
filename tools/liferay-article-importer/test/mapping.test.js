@@ -7,13 +7,15 @@ const structure = {contentStructureFields:[
   {dataType:'image',fieldReference:'heroImage',name:'Image123',label:'Hero Image'}
 ]};
 
-test('generates generic system and image reference columns', () => {
+test('generates generic system, friendly URL, and image reference columns', () => {
   const columns = buildTemplateColumns(structure);
   assert.deepEqual(columns.map((item)=>item.header), [
-    'Content Title *','External Reference Code *','Heading * [heading]','Hero Image Reference [heroImage]'
+    'Content Title *','External Reference Code *','Friendly URL','Heading * [heading]','Hero Image Reference [heroImage]'
   ]);
-  assert.equal(columns[2].name,'Text123');
-  assert.equal(columns[2].fieldReference,'heading');
+  assert.equal(columns[3].name,'Text123');
+  assert.equal(columns[3].fieldReference,'heading');
+  assert.equal(columns[2].valueKind,'friendlyUrl');
+  assert.equal(columns[2].required,false);
 });
 
 test('strict mapping rejects renamed or reordered headers', () => {

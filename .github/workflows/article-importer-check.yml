@@ -25,7 +25,12 @@ jobs:
         with:
           node-version: 22
       - run: npm install --no-audit --no-fund
-      - run: npm run check
+      - name: Typecheck React UI
+        run: npm run typecheck
+      - name: Build React UI
+        run: npm run build
+      - name: Verify importer contracts
+        run: node scripts/check.mjs
       - name: Run tests
         run: npm test 2>&1 | tee test-output.txt
       - name: Upload test diagnostics

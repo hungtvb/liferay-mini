@@ -1,3 +1,5 @@
+import {resolveFriendlyUrl} from './friendly-url.js';
+
 function blank(value) {
   return value == null || (typeof value === 'string' && value.trim() === '');
 }
@@ -64,26 +66,54 @@ function validErc(value) {
   return /^[A-Za-z0-9][A-Za-z0-9._:/-]{0,254}$/.test(value);
 }
 
-function existingIndex(items) {
+function existingErcIndex(items) {
   return new Map((items || []).map((item) => [String(item.externalReferenceCode || '').trim().toLowerCase(), item]));
+}
+
+function existingFriendlyUrlIndex(items) {
+  const index = new Map();
+  for (const item of items || []) {
+    const value = String(item.friendlyUrlPath || '').trim().toLowerCase();
+    if (value) index.set(value, item);
+  }
+  return index;
+}
+
+function duplicateValueGroups(values) {
+  const groups = new Map();
+  for (const {row, value} of values) {
+    if (!value) continue;
+    const normalized = String(value).toLowerCase();
+    const current = groups.get(normalized) || [];
+    current.push(row);
+    groups.set(normalized, current);
+  }
+  return new Map([...groups].filter(([, rows]) => rows.length > 1));
 }
 
 function duplicateErcGroups({mapping, rowNumbers, rows}) {
   const header = mapping['system.externalReferenceCode'];
-  const groups = new Map();
+  if (!header) return new Map();
+  return duplicateValueGroups(rows.map((row, index) => ({row: rowNumbers[index], value: blank(row[header]) ? null : asString(row[header])})));
+}
 
-  if (!header) return groups;
+function resolveFriendlyUrls({mapping, rowNumbers, rows}) {
+  const titleHeader = mapping['system.title'];
+  const friendlyHeader = mapping['system.friendlyUrlPath'];
+  const resolved = new Map();
+  const values = [];
 
-  for (let index = 0; index < rows.length; index += 1) {
-    const raw = rows[index][header];
-    if (blank(raw)) continue;
-    const normalized = asString(raw).toLowerCase();
-    const current = groups.get(normalized) || [];
-    current.push(rowNumbers[index]);
-    groups.set(normalized, current);
-  }
+  rows.forEach((row, index) => {
+    const result = resolveFriendlyUrl({
+      friendlyUrlPath: friendlyHeader ? row[friendlyHeader] : null,
+      title: titleHeader ? row[titleHeader] : null
+    });
+    const rowNumber = rowNumbers[index];
+    resolved.set(rowNumber, result);
+    values.push({row: rowNumber, value: result.value});
+  });
 
-  return new Map([...groups].filter(([, values]) => values.length > 1));
+  return {duplicateGroups: duplicateValueGroups(values), resolved};
 }
 
 export async function validateAndBuildPayload({
@@ -102,9 +132,11 @@ export async function validateAndBuildPayload({
   const warnings = [];
   const payload = [];
   const rowResults = [];
-  const duplicateGroups = duplicateErcGroups({mapping, rowNumbers, rows});
+  const duplicateErcs = duplicateErcGroups({mapping, rowNumbers, rows});
+  const friendlyUrls = resolveFriendlyUrls({mapping, rowNumbers, rows});
   const ercRows = new Map();
-  const existingByErc = existingIndex(existingContents);
+  const existingByErc = existingErcIndex(existingContents);
+  const existingByFriendlyUrl = existingFriendlyUrlIndex(existingContents);
   const imageTargets = targets.filter((target) => target.supported && target.valueKind === 'imageReference');
   const imageValues = imageTargets.flatMap((target) => {
     const header = mapping[target.key];
@@ -129,7 +161,7 @@ export async function validateAndBuildPayload({
       viewableBy
     };
 
-    for (const target of targets.filter((candidate) => candidate.supported)) {
+    for (const target of targets.filter((candidate) => candidate.supported && candidate.key !== 'system.friendlyUrlPath')) {
       const header = mapping[target.key];
       const raw = header ? row[header] : undefined;
       if (target.required && blank(raw)) {
@@ -183,6 +215,30 @@ export async function validateAndBuildPayload({
       }
     }
 
+    const friendlyUrl = friendlyUrls.resolved.get(rowNumber) || {generated: true, value: null};
+    if (friendlyUrl.code) {
+      rowErrors.push(issue({
+        code: friendlyUrl.code,
+        field: 'friendlyUrlPath',
+        message: friendlyUrl.message,
+        row: rowNumber,
+        value: mapping['system.friendlyUrlPath'] ? row[mapping['system.friendlyUrlPath']] : null
+      }));
+    }
+    if (friendlyUrl.value) {
+      item.friendlyUrlPath = friendlyUrl.value;
+      const duplicateRows = friendlyUrls.duplicateGroups.get(friendlyUrl.value.toLowerCase());
+      if (duplicateRows) {
+        rowErrors.push(issue({
+          code: 'FRIENDLY_URL_DUPLICATE_IN_WORKBOOK',
+          field: 'friendlyUrlPath',
+          message: `Friendly URL is duplicated in rows ${duplicateRows.join(', ')}`,
+          row: rowNumber,
+          value: friendlyUrl.value
+        }));
+      }
+    }
+
     const erc = String(item.externalReferenceCode || '').trim();
     if (erc && !validErc(erc)) {
       rowErrors.push(issue({
@@ -192,7 +248,7 @@ export async function validateAndBuildPayload({
     if (erc) {
       const normalized = erc.toLowerCase();
       if (!ercRows.has(normalized)) ercRows.set(normalized, rowNumber);
-      const duplicateRows = duplicateGroups.get(normalized);
+      const duplicateRows = duplicateErcs.get(normalized);
       if (duplicateRows) {
         rowErrors.push(issue({
           code: 'ERC_DUPLICATE_IN_WORKBOOK',
@@ -204,9 +260,30 @@ export async function validateAndBuildPayload({
       }
     }
 
+    if (item.friendlyUrlPath) {
+      const existing = existingByFriendlyUrl.get(item.friendlyUrlPath.toLowerCase());
+      const existingErc = String(existing?.externalReferenceCode || '').trim().toLowerCase();
+      if (existing && (!erc || existingErc !== erc.toLowerCase())) {
+        rowErrors.push(issue({
+          code: 'FRIENDLY_URL_ALREADY_EXISTS',
+          field: 'friendlyUrlPath',
+          message: `Friendly URL "${item.friendlyUrlPath}" is already used by another Structured Content item`,
+          row: rowNumber,
+          value: item.friendlyUrlPath
+        }));
+      }
+    }
+
     errors.push(...rowErrors);
     if (rowErrors.length === 0) payload.push(item);
-    rowResults.push({externalReferenceCode: item.externalReferenceCode || null, row: rowNumber, status: rowErrors.length ? 'BLOCKED' : 'VALID', title: item.title || null});
+    rowResults.push({
+      externalReferenceCode: item.externalReferenceCode || null,
+      friendlyUrlGenerated: Boolean(friendlyUrl.generated),
+      friendlyUrlPath: item.friendlyUrlPath || null,
+      row: rowNumber,
+      status: rowErrors.length ? 'BLOCKED' : 'VALID',
+      title: item.title || null
+    });
   }
 
   const collisions = [];

@@ -12,8 +12,10 @@ Configured Current Site
 → load Web Content folders
 → load Documents and Media folders
 → generate a scope-bound Excel workbook
-→ validate rows and image references
+→ validate rows, friendly URLs, ERCs, and image references
+→ export a validation report
 → submit one Structured Content Batch Engine task
+→ export an import report
 ```
 
 Asset Library support is a planned enhancement. The demo does not call `headless-asset-library`, does not require JSONWS access, and does not expose a second content or media location in the UI.
@@ -39,7 +41,7 @@ Nested, repeatable, relationship, document, geolocation, and grid fields are not
 
 - ENV: Liferay URL, OAuth2 credentials, Site ID, default locale, default visibility, local bind address, and technical limits.
 - UI: Structure, target Web Content folder, optional Documents and Media folder, content visibility, workbook, INSERT/UPSERT, and error strategy.
-- Excel: title, ERC, dynamic Structure field values, and image references.
+- Excel: title, ERC, optional friendly URL, dynamic Structure field values, and image references.
 
 Copy `.env.example` to `.env`. Never commit secrets.
 
@@ -69,9 +71,10 @@ Open `http://127.0.0.1:4174`.
 4. Use the Current Site Documents and Media root, or restrict image resolution to one folder.
 5. Generate the Structure- and scope-bound workbook.
 6. Fill the `Content Items` sheet and upload it.
-7. Resolve every validation issue.
+7. Resolve every validation issue and optionally export the validation report.
 8. Choose existing-content handling and error handling.
 9. Submit one Batch Engine import task and poll it to completion.
+10. Export the import report with Batch status and failed-item details.
 
 `INSERT` is the default and verified folder-safe path. `UPSERT` requires confirmation because a missing item may be created at the Web Content root and existing items keep their current folder.
 
@@ -118,7 +121,7 @@ POST /o/headless-batch-engine/v1.0/import-task/com.liferay.headless.delivery.dto
   &siteId={SITE_ID}
 ```
 
-Each payload item carries `contentStructureId`, `structuredContentFolderId`, `viewableBy`, title, ERC, and dynamic fields.
+Each payload item carries `contentStructureId`, `structuredContentFolderId`, `viewableBy`, title, ERC, `friendlyUrlPath`, and dynamic fields.
 
 ## Workbook
 
@@ -134,6 +137,7 @@ System columns:
 ```text
 Content Title *
 External Reference Code *
+Friendly URL
 ```
 
 Dynamic columns are generated from the selected Structure. Both `fieldReference` and internal `name` are preserved in the final payload.
@@ -148,7 +152,29 @@ The metadata contract binds the workbook to:
 - Optional Documents and Media folder.
 - Content visibility.
 
-Changing any bound value requires generating a new template. The current template contract version is `5`.
+Changing any bound value requires generating a new template. The current template contract version is `6`.
+
+## Friendly URLs
+
+`Friendly URL` is optional.
+
+- Blank values are generated deterministically from `Content Title`.
+- Vietnamese diacritics are removed and `đ` becomes `d`.
+- Explicit values are not silently rewritten.
+- Explicit values must contain only lowercase letters, numbers, and single hyphens.
+- Leading/trailing hyphens, spaces, uppercase characters, slashes, and values longer than 255 characters are rejected.
+- Duplicate friendly URLs in the workbook block every affected row.
+- A friendly URL already used by another Structured Content item in the Site blocks the row.
+- During UPSERT, the same friendly URL is allowed when it belongs to the item with the same ERC.
+
+Examples:
+
+```text
+Title: Trà Vải Đà Nẵng 2026
+Generated friendlyUrlPath: tra-vai-da-nang-2026
+
+Explicit friendly URL: summer-campaign-2026
+```
 
 ## Image references
 
@@ -169,6 +195,29 @@ Rules:
 - An explicitly selected folder resolves only documents directly in that folder.
 - Documents are paginated once and indexed in memory by file name and ERC.
 - Missing, ambiguous, or non-image Documents block every affected row before Batch submission.
+
+## Excel reports
+
+### Validation report
+
+Available immediately after workbook validation, including blocked validation runs.
+
+Sheets:
+
+- `Summary`: selected scope and validation totals.
+- `Rows`: every workbook row, ERC, title, friendly URL, generated/manual source, status, and combined messages.
+- `Issues`: every error and warning with row, field, value, ERC, title, and friendly URL.
+
+### Import report
+
+Available after a Batch task has been submitted and reached a terminal state.
+
+It includes all validation sheets plus:
+
+- `Batch`: task ID, status, strategies, processed/failed/total counts, and error message.
+- `Batch Failed Items`: failed-item details returned by Liferay, when available.
+
+Reports are generated from the backend validation session, not from the limited UI preview.
 
 ## Visibility
 
@@ -192,11 +241,11 @@ The selected visibility is stored in workbook metadata, validation session state
 
 ### NXC Article
 
-Select `NXC Article`, the `Articles` Web Content folder, the Documents and Media folder containing the covers, and the desired visibility. Generate the template and use `file:article-cover.webp` or `erc:NXC_ARTICLE_COVER` in the Cover Image Reference column.
+Select `NXC Article`, the `Articles` Web Content folder, the Documents and Media folder containing the covers, and the desired visibility. Generate the template and use `file:article-cover.webp` or `erc:NXC_ARTICLE_COVER` in the Cover Image Reference column. Leave `Friendly URL` blank to generate it from the Article title.
 
 ### NXC Hero
 
-Select a flat `NXC Hero` Structure and the `Heroes` Web Content folder. Choose the Documents and Media folder containing Hero images. The same importer generates Heading, Description, Hero Image Reference, and CTA columns from the live Structure.
+Select a flat `NXC Hero` Structure and the `Heroes` Web Content folder. Choose the Documents and Media folder containing Hero images. The same importer generates Heading, Description, Hero Image Reference, CTA, and optional Friendly URL columns from the live Structure.
 
 ## Planned enhancements
 
@@ -206,5 +255,4 @@ Select a flat `NXC Hero` Structure and the `Heroes` Web Content folder. Choose t
 - ZIP image upload.
 - Nested and repeatable fields.
 - Per-run Site and locale selection.
-- Downloadable validation reports.
 - Database-backed import history.

@@ -1,11 +1,6 @@
 import ExcelJS from 'exceljs';
 import {assert} from './errors.js';
-
-function safeFileName(value) {
-  return String(value || 'structured-content')
-    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
-    .toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-}
+import {safeFileStem} from './file-name.js';
 
 function styleHeader(row) {
   row.font = {bold: true, color: {argb: 'FFFFFFFF'}};
@@ -34,6 +29,11 @@ function issueIndex(validation) {
   return map;
 }
 
+function friendlyUrlSource(row) {
+  if (!row.friendlyUrlPath) return row.friendlyUrlGenerated ? 'Generation failed' : 'Not provided';
+  return row.friendlyUrlGenerated ? 'Generated from title' : 'Workbook value';
+}
+
 function addRowsSheet(workbook, validation) {
   const sheet = workbook.addWorksheet('Rows', {views: [{state: 'frozen', ySplit: 1}]});
   const headers = ['Excel Row', 'External Reference Code', 'Title', 'Friendly URL', 'Friendly URL Source', 'Status', 'Errors', 'Warnings', 'Messages'];
@@ -50,7 +50,7 @@ function addRowsSheet(workbook, validation) {
       row.externalReferenceCode || '',
       row.title || '',
       row.friendlyUrlPath || '',
-      row.friendlyUrlGenerated ? 'Generated from title' : 'Workbook value',
+      friendlyUrlSource(row),
       row.status,
       errors.length,
       warnings.length,
@@ -115,6 +115,11 @@ function addFailedItemsSheet(workbook, task) {
   sheet.getColumn(4).alignment = {wrapText: true, vertical: 'top'};
 }
 
+function count(value, fallback = 0) {
+  const number = Number(value);
+  return Number.isFinite(number) ? number : fallback;
+}
+
 export async function buildReportWorkbook({config, session, stage, task = null}) {
   assert(['validation', 'import'].includes(stage), 400, 'REPORT_STAGE_INVALID', 'Report stage must be validation or import');
   const validation = session.validation;
@@ -135,12 +140,12 @@ export async function buildReportWorkbook({config, session, stage, task = null})
     ['Documents and Media folder', session.imageSource?.folderPath || session.imageSource?.folderName || 'Site root — include nested folders'],
     ['Locale', session.locale],
     ['Visibility', session.viewableBy],
-    ['Total rows', validation?.stats?.totalRows || 0],
-    ['Valid rows', validation?.stats?.validRows || 0],
-    ['Blocked rows', validation?.stats?.invalidRows || 0],
+    ['Total rows', count(validation?.stats?.totalRows)],
+    ['Valid rows', count(validation?.stats?.validRows)],
+    ['Blocked rows', count(validation?.stats?.invalidRows)],
     ['Errors', validation?.errors?.length || 0],
     ['Warnings', validation?.warnings?.length || 0],
-    ['Unique image references', validation?.imageSummary?.distinctReferenceCount || 0],
+    ['Unique image references', count(validation?.imageSummary?.distinctReferenceCount)],
     ['Existing ERC matches', validation?.ercCollisions?.length || 0]
   ];
 
@@ -150,9 +155,9 @@ export async function buildReportWorkbook({config, session, stage, task = null})
       ['Batch status', task?.executeStatus || 'UNKNOWN'],
       ['Create strategy', session.createStrategy || ''],
       ['Import strategy', session.importStrategy || ''],
-      ['Processed items', task?.processedItemsCount || 0],
-      ['Failed items', task?.failedItemsCount ?? task?.failedItems?.length ?? 0],
-      ['Total Batch items', task?.totalItemsCount || 0],
+      ['Processed items', count(task?.processedItemsCount)],
+      ['Failed items', count(task?.failedItemsCount, task?.failedItems?.length || 0)],
+      ['Total Batch items', count(task?.totalItemsCount)],
       ['Batch error', task?.errorMessage || '']
     );
   }
@@ -167,18 +172,17 @@ export async function buildReportWorkbook({config, session, stage, task = null})
       ['Status', task?.executeStatus || 'UNKNOWN'],
       ['Create strategy', session.createStrategy || ''],
       ['Import strategy', session.importStrategy || ''],
-      ['Processed items', task?.processedItemsCount || 0],
-      ['Failed items', task?.failedItemsCount ?? task?.failedItems?.length ?? 0],
-      ['Total items', task?.totalItemsCount || 0],
+      ['Processed items', count(task?.processedItemsCount)],
+      ['Failed items', count(task?.failedItemsCount, task?.failedItems?.length || 0)],
+      ['Total items', count(task?.totalItemsCount)],
       ['External Reference Code', task?.externalReferenceCode || ''],
       ['Error message', task?.errorMessage || '']
     ]);
     addFailedItemsSheet(workbook, task);
   }
 
-  const structureName = safeFileName(session.structure?.name || 'structured-content');
   return {
     buffer: await workbook.xlsx.writeBuffer(),
-    fileName: `${structureName}-${stage}-report.xlsx`
+    fileName: `${safeFileStem(session.structure?.name)}-${stage}-report.xlsx`
   };
 }

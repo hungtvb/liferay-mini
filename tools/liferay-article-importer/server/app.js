@@ -7,6 +7,7 @@ import {AppError, assert} from './errors.js';
 import {ImageResolver} from './image-resolver.js';
 import {ImportService, normalizeTask} from './import-service.js';
 import {summarizeStructure} from './mapping.js';
+import {buildReportWorkbook} from './report.js';
 import {analyzeStructure} from './structure-analyzer.js';
 import {validateAndBuildPayload} from './validation.js';
 import {buildTemplateWorkbook, parseTemplateWorkbook} from './workbook.js';
@@ -266,6 +267,24 @@ export function createApp({config, liferay, sessions}) {
 
   app.get('/api/imports/:taskId', async (request, response, next) => {
     try { response.json(normalizeTask(await liferay.getImportTask(request.params.taskId))); }
+    catch (error) { next(error); }
+  });
+
+  app.get('/api/reports/:sessionId/:stage', async (request, response, next) => {
+    try {
+      const stage = String(request.params.stage || '').toLowerCase();
+      assert(['validation', 'import'].includes(stage), 400, 'REPORT_STAGE_INVALID', 'Report stage must be validation or import');
+      const session = sessions.get(request.params.sessionId);
+      let task = null;
+      if (stage === 'import') {
+        assert(session.taskId, 409, 'IMPORT_REPORT_NOT_READY', 'Import report is available after a Batch task is submitted');
+        task = normalizeTask(await liferay.getImportTask(session.taskId));
+      }
+      const report = await buildReportWorkbook({config, session, stage, task});
+      response.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+      response.setHeader('Content-Disposition', `attachment; filename="${report.fileName}"`);
+      response.send(Buffer.from(report.buffer));
+    }
     catch (error) { next(error); }
   });
 

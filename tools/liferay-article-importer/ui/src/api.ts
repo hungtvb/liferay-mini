@@ -5,6 +5,7 @@ import type {
   ImporterConfig,
   ImportStrategy,
   ImportTask,
+  ReportStage,
   Selection,
   StructureAnalysis,
   WorkbookValidationPayload
@@ -50,6 +51,11 @@ function currentSiteScope(config: ImporterConfig, selection: Selection) {
   };
 }
 
+function responseFileName(response: Response, fallback: string) {
+  const disposition = response.headers.get('content-disposition') || '';
+  return disposition.match(/filename="([^"]+)"/)?.[1] || fallback;
+}
+
 export async function getConfig() {
   return (await request<ImporterConfig>('/api/config')).data;
 }
@@ -77,9 +83,14 @@ export async function downloadTemplate(config: ImporterConfig, selection: Select
     body: JSON.stringify(currentSiteScope(config, selection))
   });
 
-  const disposition = response.headers.get('content-disposition') || '';
-  const fileName = disposition.match(/filename="([^"]+)"/)?.[1] || 'structured-content-import-template.xlsx';
-  return {blob: data, fileName};
+  return {blob: data, fileName: responseFileName(response, 'structured-content-import-template.xlsx')};
+}
+
+export async function downloadReport(sessionId: string, stage: ReportStage) {
+  const {data, response} = await request<Blob>(
+    `/api/reports/${encodeURIComponent(sessionId)}/${encodeURIComponent(stage)}`
+  );
+  return {blob: data, fileName: responseFileName(response, `structured-content-${stage}-report.xlsx`)};
 }
 
 export async function validateWorkbook(config: ImporterConfig, selection: Selection, file: File) {

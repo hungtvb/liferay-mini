@@ -2,6 +2,11 @@ import {AppError, assert} from './errors.js';
 
 const CREATE_STRATEGIES = new Set(['INSERT', 'UPSERT']);
 const IMPORT_STRATEGIES = new Set(['ON_ERROR_FAIL', 'ON_ERROR_CONTINUE']);
+export const TERMINAL_TASK_STATUSES = new Set(['COMPLETED', 'FAILED', 'CANCELLED', 'COMPLETED_WITH_ERRORS']);
+
+export function isTerminalTask(task) {
+  return TERMINAL_TASK_STATUSES.has(String(task?.executeStatus || '').toUpperCase());
+}
 
 export function normalizeTask(task) {
   return {

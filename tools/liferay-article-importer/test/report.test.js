@@ -63,3 +63,10 @@ test('import report contains Batch summary and failed items', async () => {
   assert(workbook.getWorksheet('Batch Failed Items'));
   assert.equal(workbook.getWorksheet('Batch Failed Items').getCell('B2').value, 'article-two');
 });
+
+test('import report is blocked while the Batch task is still running', async () => {
+  await assert.rejects(
+    () => buildReportWorkbook({config: {siteId: 20125}, session, stage: 'import', task: {id: 99, executeStatus: 'STARTED'}}),
+    (error) => error.code === 'IMPORT_REPORT_NOT_READY' && error.status === 409
+  );
+});

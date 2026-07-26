@@ -2,6 +2,7 @@ export type Step = 1 | 2 | 3 | 4 | 5;
 export type ViewableBy = 'Anyone' | 'Members' | 'Owner';
 export type CreateStrategy = 'INSERT' | 'UPSERT';
 export type ImportStrategy = 'ON_ERROR_FAIL' | 'ON_ERROR_CONTINUE';
+export type ReportStage = 'validation' | 'import';
 export type AsyncStatus = 'idle' | 'loading' | 'success' | 'error';
 
 export interface ImporterConfig {
@@ -72,11 +73,14 @@ export interface ValidationIssue {
   row?: number | null;
   field?: string | null;
   severity?: 'warning' | 'error';
+  value?: unknown;
 }
 
 export interface ValidationRow {
   row: number;
   externalReferenceCode?: string | null;
+  friendlyUrlGenerated?: boolean;
+  friendlyUrlPath?: string | null;
   title?: string | null;
   status: string;
   imageReference?: string | null;

@@ -7,7 +7,7 @@ const files = [
   'package.json', 'vite.config.ts', 'tsconfig.json',
   'server/config.js', 'server/app.js', 'server/index.js', 'server/structure-analyzer.js', 'server/image-resolver.js',
   'server/liferay-client.js', 'server/session-store.js', 'server/mapping.js', 'server/workbook.js', 'server/validation.js',
-  'server/friendly-url.js', 'server/report.js', 'server/import-service.js', 'ui/index.html', 'ui/src/App.tsx', 'ui/src/api.ts', 'ui/src/types.ts',
+  'server/friendly-url.js', 'server/file-name.js', 'server/report.js', 'server/import-service.js', 'ui/index.html', 'ui/src/App.tsx', 'ui/src/api.ts', 'ui/src/types.ts',
   'ui/src/components/AppHeader.tsx', 'ui/src/components/WorkflowNav.tsx',
   'ui/src/steps/ConnectStep.tsx', 'ui/src/steps/ConfigureStep.tsx', 'ui/src/steps/WorkbookStep.tsx',
   'ui/src/steps/ValidationStep.tsx', 'ui/src/steps/ImportStep.tsx', 'ui/src/styles.scss', '.env.example', 'README.md'
@@ -37,7 +37,7 @@ if (!content['server/config.js'].includes("IMAGE_SOURCE_TYPES = ['site']")) {
   throw new Error('Demo release must expose only the configured Current Site image source');
 }
 
-for (const expected of ['Content Items', 'Field Guide', 'Example', 'Metadata', "TEMPLATE_VERSION = '6'", 'friendlyUrl']) {
+for (const expected of ['Content Items', 'Field Guide', 'Example', 'Metadata', "TEMPLATE_VERSION = '6'", 'friendlyUrl', 'safeFileStem']) {
   if (!content['server/workbook.js'].includes(expected)) throw new Error(`workbook.js is missing ${expected}`);
 }
 
@@ -49,16 +49,24 @@ for (const expected of ['slugifyFriendlyUrl', 'FRIENDLY_URL_INVALID', 'Đđ']) {
   if (!content['server/friendly-url.js'].includes(expected)) throw new Error(`friendly-url.js is missing ${expected}`);
 }
 
+for (const expected of ['safeFileStem', 'Đđ', 'structured-content']) {
+  if (!content['server/file-name.js'].includes(expected)) throw new Error(`file-name.js is missing ${expected}`);
+}
+
 for (const expected of ['FRIENDLY_URL_DUPLICATE_IN_WORKBOOK', 'FRIENDLY_URL_ALREADY_EXISTS', 'friendlyUrlPath']) {
   if (!content['server/validation.js'].includes(expected)) throw new Error(`validation.js is missing ${expected}`);
 }
 
-for (const expected of ['Summary', 'Rows', 'Issues', 'Batch Failed Items', 'buildReportWorkbook']) {
+for (const expected of ['Summary', 'Rows', 'Issues', 'Batch Failed Items', 'buildReportWorkbook', 'safeFileStem']) {
   if (!content['server/report.js'].includes(expected)) throw new Error(`report.js is missing ${expected}`);
 }
 
 for (const expected of ["app.get('/api/reports/:sessionId/:stage'", 'buildReportWorkbook']) {
   if (!content['server/app.js'].includes(expected)) throw new Error(`Report API is missing ${expected}`);
+}
+
+for (const expected of ['TERMINAL_TASK_STATUSES', 'isTerminalTask', 'BATCH_SUBMISSION_UNKNOWN']) {
+  if (!content['server/import-service.js'].includes(expected)) throw new Error(`import-service.js is missing ${expected}`);
 }
 
 for (const expected of ["'file'", "'erc'", 'byFileName', 'byErc']) {
@@ -115,7 +123,6 @@ if (!content['server/liferay-client.js'].includes('IMAGE_SOURCE_FOLDER_MISMATCH'
 if (content['server/liferay-client.js'].includes('/o/headless-asset-library/')) throw new Error('Demo release must not call Asset Library discovery');
 if (!content['server/liferay-client.js'].includes('/sites/${encodePath(source.id)}/document-folders?flatten=true')) throw new Error('Current Site Documents and Media folder listing is missing');
 if (!content['server/liferay-client.js'].includes('/structured-content-folders?flatten=true')) throw new Error('Flattened Web Content folder listing is missing');
-if (!content['server/import-service.js'].includes('BATCH_SUBMISSION_UNKNOWN')) throw new Error('Ambiguous Batch submission lock is missing');
 if (!content['server/index.js'].includes('config.host')) throw new Error('Local host binding is missing');
 
-console.log(`Validated ${files.length} Current Site importer files, friendly URL support, Excel reports, and the React migration workspace.`);
+console.log(`Validated ${files.length} Current Site importer files, friendly URL support, Excel reports, cleanup contracts, and the React migration workspace.`);

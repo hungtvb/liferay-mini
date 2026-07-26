@@ -1,6 +1,7 @@
 import ExcelJS from 'exceljs';
 import {assert} from './errors.js';
 import {safeFileStem} from './file-name.js';
+import {isTerminalTask} from './import-service.js';
 
 function styleHeader(row) {
   row.font = {bold: true, color: {argb: 'FFFFFFFF'}};
@@ -122,6 +123,10 @@ function count(value, fallback = 0) {
 
 export async function buildReportWorkbook({config, session, stage, task = null}) {
   assert(['validation', 'import'].includes(stage), 400, 'REPORT_STAGE_INVALID', 'Report stage must be validation or import');
+  if (stage === 'import') {
+    assert(task && isTerminalTask(task), 409, 'IMPORT_REPORT_NOT_READY', 'Import report is available after the Batch task reaches a terminal status');
+  }
+
   const validation = session.validation;
   const workbook = new ExcelJS.Workbook();
   workbook.creator = 'Liferay Flat Structured Content Importer';
@@ -151,14 +156,14 @@ export async function buildReportWorkbook({config, session, stage, task = null})
 
   if (stage === 'import') {
     summaryEntries.push(
-      ['Batch task ID', task?.id || session.taskId || ''],
-      ['Batch status', task?.executeStatus || 'UNKNOWN'],
+      ['Batch task ID', task.id || session.taskId || ''],
+      ['Batch status', task.executeStatus],
       ['Create strategy', session.createStrategy || ''],
       ['Import strategy', session.importStrategy || ''],
-      ['Processed items', count(task?.processedItemsCount)],
-      ['Failed items', count(task?.failedItemsCount, task?.failedItems?.length || 0)],
-      ['Total Batch items', count(task?.totalItemsCount)],
-      ['Batch error', task?.errorMessage || '']
+      ['Processed items', count(task.processedItemsCount)],
+      ['Failed items', count(task.failedItemsCount, task.failedItems?.length || 0)],
+      ['Total Batch items', count(task.totalItemsCount)],
+      ['Batch error', task.errorMessage || '']
     );
   }
 
@@ -168,15 +173,15 @@ export async function buildReportWorkbook({config, session, stage, task = null})
 
   if (stage === 'import') {
     addKeyValueSheet(workbook, 'Batch', [
-      ['Task ID', task?.id || session.taskId || ''],
-      ['Status', task?.executeStatus || 'UNKNOWN'],
+      ['Task ID', task.id || session.taskId || ''],
+      ['Status', task.executeStatus],
       ['Create strategy', session.createStrategy || ''],
       ['Import strategy', session.importStrategy || ''],
-      ['Processed items', count(task?.processedItemsCount)],
-      ['Failed items', count(task?.failedItemsCount, task?.failedItems?.length || 0)],
-      ['Total items', count(task?.totalItemsCount)],
-      ['External Reference Code', task?.externalReferenceCode || ''],
-      ['Error message', task?.errorMessage || '']
+      ['Processed items', count(task.processedItemsCount)],
+      ['Failed items', count(task.failedItemsCount, task.failedItems?.length || 0)],
+      ['Total items', count(task.totalItemsCount)],
+      ['External Reference Code', task.externalReferenceCode || ''],
+      ['Error message', task.errorMessage || '']
     ]);
     addFailedItemsSheet(workbook, task);
   }

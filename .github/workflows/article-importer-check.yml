@@ -30,13 +30,20 @@ jobs:
       - name: Build React UI
         run: npm run build
       - name: Verify importer contracts
-        run: node scripts/check.mjs
+        run: |
+          set -o pipefail
+          node scripts/check.mjs 2>&1 | tee contract-output.txt
       - name: Run tests
-        run: npm test 2>&1 | tee test-output.txt
-      - name: Upload test diagnostics
+        run: |
+          set -o pipefail
+          npm test 2>&1 | tee test-output.txt
+      - name: Upload failure diagnostics
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: flat-structured-content-importer-test-output
-          path: tools/liferay-article-importer/test-output.txt
+          name: flat-structured-content-importer-diagnostics
+          path: |
+            tools/liferay-article-importer/contract-output.txt
+            tools/liferay-article-importer/test-output.txt
+          if-no-files-found: ignore
           retention-days: 1

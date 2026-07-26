@@ -3,7 +3,6 @@ import {mkdir, writeFile} from 'node:fs/promises';
 import path from 'node:path';
 
 const evidenceRoot = path.resolve('evidence');
-
 const viewports = [
   {name: 'desktop-1440', width: 1440, height: 1100},
   {name: 'tablet-768', width: 768, height: 1024},
@@ -11,18 +10,10 @@ const viewports = [
 ] as const;
 
 const config = {
-  baseUrl: 'https://dev-portal.internal.corp',
-  connected: false,
-  defaultLocale: 'en-US',
-  defaultViewableBy: 'Anyone',
-  host: '127.0.0.1',
-  imageSourceTypes: ['site'],
-  maxImportRows: 5000,
-  maxUploadMb: 50,
-  pollIntervalMs: 30,
-  pollTimeoutMs: 5000,
-  siteId: 20125,
-  viewableByOptions: ['Anyone', 'Members', 'Owner']
+  baseUrl: 'https://dev-portal.internal.corp', connected: false, defaultLocale: 'en-US',
+  defaultViewableBy: 'Anyone', host: '127.0.0.1', imageSourceTypes: ['site'],
+  maxImportRows: 5000, maxUploadMb: 50, pollIntervalMs: 30, pollTimeoutMs: 5000,
+  siteId: 20125, viewableByOptions: ['Anyone', 'Members', 'Owner']
 };
 
 const connection = {
@@ -53,8 +44,7 @@ const analysis = {
     {label: 'Body', fieldReference: 'body', valueKind: 'richText'},
     {label: 'Cover image', fieldReference: 'coverImage', valueKind: 'image'}
   ],
-  excludedFields: [],
-  blockingFields: []
+  excludedFields: [], blockingFields: []
 };
 
 const previewRows = Array.from({length: 12}, (_, index) => ({
@@ -66,48 +56,32 @@ const previewRows = Array.from({length: 12}, (_, index) => ({
 }));
 
 const validationPayload = {
-  fileName: 'nxc-articles-import-500rows-random-covers.xlsx',
-  rowCount: 500,
-  sessionId: 'evidence-session-001',
-  structure: connection.structures[0],
-  folder: connection.folders[0],
-  imageSource: {...imageFolders.source, folderId: 34827},
+  fileName: 'nxc-articles-import-500rows-random-covers.xlsx', rowCount: 500,
+  sessionId: 'evidence-session-001', structure: connection.structures[0],
+  folder: connection.folders[0], imageSource: {...imageFolders.source, folderId: 34827},
   viewableBy: 'Anyone',
   validation: {
     canImport: true,
     stats: {totalRows: 500, validRows: 500, invalidRows: 0},
-    errors: [],
-    warnings: [],
-    rowResultsPreview: previewRows,
-    payloadPreview: [
-      {
-        externalReferenceCode: 'NXC_ARTICLE_0001',
-        title: 'Nexcent Article 001',
-        contentStructureId: 34818,
-        structuredContentFolderId: 34762,
-        viewableBy: 'Anyone',
-        contentFields: [
-          {fieldReference: 'body', contentFieldValue: {data: '<p>Evidence article body</p>'}},
-          {fieldReference: 'coverImage', contentFieldValue: {image: {id: 34831, title: 'nxc-article-cover-001.webp'}}}
-        ]
-      }
-    ],
-    imageSummary: {distinctReferenceCount: 50},
-    ercCollisions: []
+    errors: [], warnings: [], rowResultsPreview: previewRows,
+    payloadPreview: [{
+      externalReferenceCode: 'NXC_ARTICLE_0001', title: 'Nexcent Article 001',
+      contentStructureId: 34818, structuredContentFolderId: 34762, viewableBy: 'Anyone',
+      contentFields: [
+        {fieldReference: 'body', contentFieldValue: {data: '<p>Evidence article body</p>'}},
+        {fieldReference: 'coverImage', contentFieldValue: {image: {id: 34831, title: 'nxc-article-cover-001.webp'}}}
+      ]
+    }],
+    imageSummary: {distinctReferenceCount: 50}, ercCollisions: []
   }
 };
 
 function json(route: Route, body: unknown, status = 200) {
-  return route.fulfill({
-    status,
-    contentType: 'application/json',
-    body: JSON.stringify(body)
-  });
+  return route.fulfill({status, contentType: 'application/json', body: JSON.stringify(body)});
 }
 
 async function mockImporterApi(page: Page) {
   let pollCount = 0;
-
   await page.route('**/api/**', async (route) => {
     const request = route.request();
     const pathname = new URL(request.url()).pathname;
@@ -116,7 +90,6 @@ async function mockImporterApi(page: Page) {
     if (pathname === '/api/connect' && request.method() === 'POST') return json(route, connection);
     if (pathname === '/api/image-folders' && request.method() === 'POST') return json(route, imageFolders);
     if (pathname === '/api/structures/34818' && request.method() === 'GET') return json(route, {analysis});
-
     if (pathname === '/api/templates' && request.method() === 'POST') {
       return route.fulfill({
         status: 200,
@@ -127,58 +100,33 @@ async function mockImporterApi(page: Page) {
         body: Buffer.from('mock-xlsx-template')
       });
     }
-
     if (pathname === '/api/workbooks' && request.method() === 'POST') return json(route, validationPayload, 201);
-
     if (pathname === '/api/imports' && request.method() === 'POST') {
       pollCount = 0;
-      return json(route, {
-        id: 84592,
-        executeStatus: 'STARTED',
-        processedItemsCount: 0,
-        failedItemsCount: 0,
-        totalItemsCount: 500
-      }, 202);
+      return json(route, {id: 84592, executeStatus: 'STARTED', processedItemsCount: 0, failedItemsCount: 0, totalItemsCount: 500}, 202);
     }
-
     if (pathname === '/api/imports/84592' && request.method() === 'GET') {
       pollCount += 1;
       const complete = pollCount >= 2;
       return json(route, {
-        id: 84592,
-        executeStatus: complete ? 'COMPLETED' : 'STARTED',
-        processedItemsCount: complete ? 500 : 275,
-        failedItemsCount: 0,
-        totalItemsCount: 500
+        id: 84592, executeStatus: complete ? 'COMPLETED' : 'STARTED',
+        processedItemsCount: complete ? 500 : 275, failedItemsCount: 0, totalItemsCount: 500
       });
     }
-
     return json(route, {error: {code: 'MOCK_ROUTE_MISSING', message: `${request.method()} ${pathname} is not mocked`}}, 404);
   });
 }
 
 async function capture(page: Page, viewportName: string, fileName: string) {
-  await page.screenshot({
-    path: path.join(evidenceRoot, viewportName, fileName),
-    fullPage: true,
-    animations: 'disabled'
-  });
+  await page.screenshot({path: path.join(evidenceRoot, viewportName, fileName), fullPage: true, animations: 'disabled'});
 }
 
 test.beforeAll(async () => {
   await mkdir(evidenceRoot, {recursive: true});
   await writeFile(path.join(evidenceRoot, 'manifest.json'), JSON.stringify({
     generatedBy: 'Playwright against the production React importer bundle',
-    apiMode: 'deterministic browser-layer API mocks',
-    viewports,
-    screens: [
-      '01-connect.png',
-      '02-configure.png',
-      '03-workbook.png',
-      '04-validation.png',
-      '05-import-confirm.png',
-      '06-import-completed.png'
-    ]
+    apiMode: 'deterministic browser-layer API mocks', viewports,
+    screens: ['01-connect.png', '02-configure.png', '03-workbook.png', '04-validation.png', '05-import-confirm.png', '06-import-completed.png']
   }, null, 2));
 });
 
@@ -211,7 +159,7 @@ for (const viewport of viewports) {
 
     await page.getByRole('button', {name: 'Validate workbook'}).click();
     await expect(page.getByRole('heading', {name: 'Review validation'})).toBeVisible();
-    await expect(page.getByText('Validation passed')).toBeVisible();
+    await expect(page.getByRole('status').getByText('Validation passed', {exact: true})).toBeVisible();
     await capture(page, viewport.name, '04-validation.png');
 
     await page.getByRole('button', {name: 'Continue to import'}).click();
@@ -220,7 +168,7 @@ for (const viewport of viewports) {
 
     await page.getByRole('button', {name: 'Start import of 500 items'}).click();
     await expect(page.getByRole('heading', {name: 'Import completed'})).toBeVisible();
-    await expect(page.getByText('500 of 500 items processed successfully.')).toBeVisible();
+    await expect(page.getByText('500 of 500 items processed successfully.', {exact: true})).toBeVisible();
     await capture(page, viewport.name, '06-import-completed.png');
   });
 }

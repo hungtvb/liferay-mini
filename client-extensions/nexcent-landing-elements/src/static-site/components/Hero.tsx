@@ -1,6 +1,5 @@
 import {useEffect, useMemo, useState} from 'react';
 
-import content from '../fallback/content.json';
 import {resolveStaticAsset} from '../assets';
 import {
     type HeadlessStructuredContent,
@@ -29,16 +28,23 @@ type HeroSlide = {
     title: string;
 };
 
-const FALLBACK_HERO_SLIDES: HeroSlide[] = content.hero.slides.map((slide) => ({
-    buttonHref: slide.buttonHref,
-    buttonLabel: slide.buttonLabel,
+const PREVIEW_HERO_SLIDE: HeroSlide = {
+    buttonHref: '#register',
+    buttonLabel: 'Register',
     buttonTarget: '_self',
-    description: slide.description,
-    highlight: slide.highlight,
-    imageAlt: slide.imageAlt,
-    imageURL: resolveStaticAsset(slide.image),
-    title: slide.title,
-}));
+    description:
+        'Where to grow your business as a photographer: site or social media?',
+    highlight: 'from 8 years',
+    imageAlt: 'Business growth illustration',
+    imageURL: resolveStaticAsset('hero'),
+    title: 'Lessons and insights',
+};
+
+const PREVIEW_HERO_SLIDES: HeroSlide[] = [
+    PREVIEW_HERO_SLIDE,
+    PREVIEW_HERO_SLIDE,
+    PREVIEW_HERO_SLIDE,
+];
 
 function normalizeLinkTarget(value: string): string {
     const normalized = value.trim().toLowerCase();
@@ -53,26 +59,21 @@ function normalizeLinkTarget(value: string): string {
         return '_blank';
     }
 
-    if (
-        normalized === '_self' ||
-        normalized === 'self' ||
-        normalized === 'same window' ||
-        normalized === 'same-window' ||
-        normalized.includes('_self')
-    ) {
-        return '_self';
-    }
-
     return '_self';
 }
 
 export function mapHeroContent(
     structuredContent: HeadlessStructuredContent
 ): HeroSlide {
+    const title = readContentText(
+        structuredContent,
+        ['title', 'heading'],
+        structuredContent.title
+    );
     const image = readContentImage(
         structuredContent,
         ['illustration', 'image', 'heroImage', 'imageFile'],
-        {alt: '', url: ''}
+        {alt: title, url: ''}
     );
 
     return {
@@ -101,13 +102,9 @@ export function mapHeroContent(
             'highlightedText',
             'highlight',
         ]),
-        imageAlt: image.alt,
+        imageAlt: image.alt || title,
         imageURL: image.url,
-        title: readContentText(
-            structuredContent,
-            ['title', 'heading'],
-            structuredContent.title
-        ),
+        title,
     };
 }
 
@@ -129,10 +126,10 @@ export function StaticHero({host}: HeroProps) {
     const pauseOnHover = readBooleanSetting(host, 'pause-on-hover', true);
     const showPagination = readBooleanSetting(host, 'show-pagination', true);
     const {error, items: slides, status} = useStructuredContentCollection({
-        fallback: FALLBACK_HERO_SLIDES,
         host,
         mapContent: mapHeroContent,
         maxItems: maxSlides,
+        previewItems: PREVIEW_HERO_SLIDES,
         structureIdentifier,
     });
     const [activeIndex, setActiveIndex] = useState(0);
@@ -163,6 +160,10 @@ export function StaticHero({host}: HeroProps) {
     }, [autoplay, interval, paused, reduceMotion, slides.length]);
 
     const slide = slides[activeIndex] ?? slides[0];
+
+    if (!slide || (host && (status === 'loading' || status === 'empty'))) {
+        return null;
+    }
 
     return (
         <section className="home" data-runtime-state={status} id="home">
@@ -236,7 +237,7 @@ export function StaticHero({host}: HeroProps) {
 
                     {error ? (
                         <span className="sr-only" role="status">
-                            Hero is using fallback content: {error.message}
+                            Unable to load Hero content: {error.message}
                         </span>
                     ) : null}
                 </div>

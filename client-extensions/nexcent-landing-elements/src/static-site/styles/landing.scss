@@ -1,0 +1,14 @@
+@use './base/reset';
+@use './base/layout';
+@use './shared/shared';
+
+@use '../components/Header';
+@use '../components/Hero';
+@use '../components/Clients/Clients';
+@use '../components/Community/Community';
+@use '../components/Feature/Feature';
+@use '../components/Statistics/Statistics';
+@use '../components/Testimonial/Testimonial';
+@use '../components/Articles/Articles';
+@use '../components/Cta/Cta';
+@use '../components/Footer';

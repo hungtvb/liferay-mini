@@ -12,7 +12,6 @@ import {StaticHero} from './components/Hero';
 import {Statistics} from './components/Statistics/Statistics';
 import {Testimonial} from './components/Testimonial/Testimonial';
 import {StaticPage} from './StaticPage';
-import {StaticRuntimeOverrides} from './StaticRuntimeOverrides';
 import {StaticStyleBoundary} from './StaticStyleBoundary';
 
 type StaticRenderer = (element: HTMLElement) => ReactNode;
@@ -52,11 +51,7 @@ function registerShadowReactElement(name: string, renderer: StaticRenderer) {
             this.root = createRoot(shadowRoot);
             this.root.render(
                 <React.StrictMode>
-                    <StaticStyleBoundary>
-                        <StaticRuntimeOverrides>
-                            {renderer(this)}
-                        </StaticRuntimeOverrides>
-                    </StaticStyleBoundary>
+                    <StaticStyleBoundary>{renderer(this)}</StaticStyleBoundary>
                 </React.StrictMode>
             );
         }

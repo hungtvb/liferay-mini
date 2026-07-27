@@ -33,6 +33,10 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
+        with:
+          clean: false
+          persist-credentials: false
+          show-progress: false
 
       - name: Validate Fragment data source contracts
         run: node scripts/validate-data-sources.mjs

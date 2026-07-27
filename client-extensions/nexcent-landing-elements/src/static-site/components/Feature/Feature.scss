@@ -1,0 +1,37 @@
+.pixelgrade {
+    padding-top: 2.2rem;
+}
+
+.pixelgrade__container {
+    @media only screen and (max-width: 767.98px) {
+        flex-direction: column-reverse;
+        gap: 2rem;
+    }
+}
+
+.pixelgrade__item {
+    @media only screen and (max-width: 767.98px) {
+        max-width: 100%;
+    }
+}
+
+.pixelgrade__title {
+    max-width: 62rem;
+}
+
+.pixelgrade__img img {
+    max-width: max-content;
+    width: max-content;
+
+    @media only screen and (max-width: 575px) {
+        max-width: 100%;
+        width: 100%;
+    }
+}
+
+.pixelgrade__btn {
+    @media only screen and (max-width: 575px) {
+        text-align: center;
+        width: 100%;
+    }
+}

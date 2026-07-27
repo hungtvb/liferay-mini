@@ -68,7 +68,6 @@ function cachedPortalFetch<T>(path: string, locale = ''): Promise<T> {
     const request = portalFetch<T>(path, {
         headers: locale ? {'Accept-Language': locale} : undefined,
     });
-
     requestCache.set(cacheKey, request);
     request.catch(() => requestCache.delete(cacheKey));
 
@@ -166,10 +165,13 @@ export function flattenContentFields(
     const visit = (items: ContentField[]) => {
         for (const field of items) {
             if (field.contentFieldValue) {
-                result.set(field.name, field.contentFieldValue);
+                result.set(normalizeIdentifier(field.name), field.contentFieldValue);
 
                 if (field.fieldReference) {
-                    result.set(field.fieldReference, field.contentFieldValue);
+                    result.set(
+                        normalizeIdentifier(field.fieldReference),
+                        field.contentFieldValue
+                    );
                 }
             }
 
@@ -184,12 +186,102 @@ export function flattenContentFields(
     return result;
 }
 
+export function findContentFieldValue(
+    content: StructuredContent,
+    names: string[]
+): ContentFieldValue | undefined {
+    const fields = flattenContentFields(content.contentFields);
+
+    for (const name of names) {
+        const value = fields.get(normalizeIdentifier(name));
+
+        if (value) {
+            return value;
+        }
+    }
+
+    return undefined;
+}
+
+export function readContentText(
+    content: StructuredContent,
+    names: string[],
+    fallback = ''
+): string {
+    const data = findContentFieldValue(content, names)?.data;
+
+    if (data === null || data === undefined) {
+        return fallback;
+    }
+
+    return String(data).trim() || fallback;
+}
+
+export function readContentNumber(
+    content: StructuredContent,
+    names: string[],
+    fallback = 0
+): number {
+    const value = Number(readContentText(content, names, ''));
+
+    return Number.isFinite(value) ? value : fallback;
+}
+
+export function readContentBoolean(
+    content: StructuredContent,
+    names: string[],
+    fallback = false
+): boolean {
+    const value = readContentText(content, names, '');
+
+    if (!value) {
+        return fallback;
+    }
+
+    return !['false', '0', 'no', 'off'].includes(value.toLowerCase());
+}
+
+export function readContentImage(
+    content: StructuredContent,
+    names: string[],
+    fallback: {alt: string; url: string}
+): {alt: string; url: string} {
+    const fieldValue = findContentFieldValue(content, [
+        ...new Set([...names, 'coverImage']),
+    ]);
+    const directImage = fieldValue?.image ?? fieldValue?.document;
+    const rawData = fieldValue?.data;
+    let dataImage: ImageValue | undefined;
+
+    if (rawData && typeof rawData === 'object') {
+        dataImage = rawData as ImageValue;
+    }
+    else if (typeof rawData === 'string' && rawData.trim().startsWith('{')) {
+        try {
+            dataImage = JSON.parse(rawData) as ImageValue;
+        }
+        catch {
+            dataImage = undefined;
+        }
+    }
+
+    const image = directImage ?? dataImage;
+
+    return {
+        alt:
+            image?.description?.trim() ||
+            image?.title?.trim() ||
+            fallback.alt,
+        url: image?.contentUrl?.trim() || fallback.url,
+    };
+}
+
 export function readText(
     fields: Map<string, ContentFieldValue>,
     name: string,
     fallback = ''
 ): string {
-    const value = fields.get(name)?.data;
+    const value = fields.get(normalizeIdentifier(name))?.data;
 
     return typeof value === 'string' ? value : fallback;
 }
@@ -199,7 +291,7 @@ export function readNumber(
     name: string,
     fallback = 0
 ): number {
-    const value = fields.get(name)?.data;
+    const value = fields.get(normalizeIdentifier(name))?.data;
     const numberValue = typeof value === 'number' ? value : Number(value);
 
     return Number.isFinite(numberValue) ? numberValue : fallback;
@@ -210,7 +302,7 @@ export function readBoolean(
     name: string,
     fallback = false
 ): boolean {
-    const value = fields.get(name)?.data;
+    const value = fields.get(normalizeIdentifier(name))?.data;
 
     if (typeof value === 'boolean') {
         return value;
@@ -227,7 +319,7 @@ export function readImage(
     fields: Map<string, ContentFieldValue>,
     name: string
 ): ImageValue | undefined {
-    const value = fields.get(name);
+    const value = fields.get(normalizeIdentifier(name));
 
     return value?.image ?? value?.document;
 }

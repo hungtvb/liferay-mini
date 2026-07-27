@@ -1,0 +1,165 @@
+:host {
+    color: var(--nxc-color-navigation, #18191f);
+    display: block;
+    font-family: var(
+        --nxc-font-family,
+        Inter,
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        'Segoe UI',
+        sans-serif
+    );
+    font-size: 14px;
+    line-height: 1.5;
+    min-width: 0;
+    scroll-margin-top: var(--nxc-react-header-height, 80px);
+    width: 100%;
+}
+
+:host *,
+:host *::before,
+:host *::after {
+    box-sizing: border-box;
+}
+
+:host a:focus-visible,
+:host button:focus-visible,
+:host input:focus-visible {
+    outline: 2px solid var(--nxc-color-primary, #4caf4f);
+    outline-offset: 3px;
+}
+
+:host([data-site-shell-state='fallback']) {
+    --nxc-site-shell-runtime-state: fallback;
+}
+
+:host([data-site-shell-state='ready']) {
+    --nxc-site-shell-runtime-state: ready;
+}
+
+.wrapper {
+    display: flex;
+    flex-direction: column;
+    min-height: 100%;
+    overflow: hidden;
+}
+
+.page {
+    flex: 1 1 auto;
+
+    @media only screen and (max-width: 767.98px) {
+        margin-top: 6.7rem;
+    }
+}
+
+[class*='__container'] {
+    margin: 0 auto;
+    max-width: var(
+        --nxc-react-container-width,
+        var(--nxc-container-width, 1182px)
+    );
+    padding: 0 var(--nxc-react-page-gutter, var(--nxc-page-gutter, 15px));
+    width: 100%;
+}
+
+.container {
+    max-width: var(
+        --nxc-react-container-width,
+        var(--nxc-container-width, 1182px)
+    );
+    padding-inline: var(
+        --nxc-react-page-gutter,
+        var(--nxc-page-gutter, 15px)
+    );
+}
+
+.img img {
+    height: 100%;
+    max-height: 100%;
+    max-width: 100%;
+    object-fit: cover;
+    width: 100%;
+}
+
+.title {
+    margin: 0 auto;
+    text-align: center;
+
+    h2 {
+        color: #4d4d4d;
+        font-size: 3.6rem;
+        font-weight: 600;
+        line-height: 1.22;
+        margin: 0 auto;
+
+        @media only screen and (max-width: 479.98px) {
+            font-size: 2.8rem;
+        }
+    }
+
+    p {
+        color: #717171;
+        font-size: 1.6rem;
+        line-height: 1.5;
+        margin: 0.8rem auto 0;
+    }
+}
+
+.big-fs {
+    font-size: 6.4rem;
+    line-height: 1.22;
+
+    @media only screen and (max-width: 575px) {
+        font-size: 3.6rem;
+    }
+
+    @media only screen and (max-width: 479.98px) {
+        font-size: 2.8rem;
+    }
+}
+
+.bright-headline {
+    color: #4caf4f;
+}
+
+.mt {
+    margin-top: 1.6rem;
+}
+
+.sr-only {
+    clip: rect(0, 0, 0, 0);
+    clip-path: inset(50%);
+    height: 1px;
+    overflow: hidden;
+    position: absolute;
+    white-space: nowrap;
+    width: 1px;
+}
+
+.nxc-react-fade {
+    animation: nxc-react-fade 320ms ease both;
+}
+
+@keyframes nxc-react-fade {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        scroll-behavior: auto !important;
+        transition-duration: 0.01ms !important;
+    }
+}

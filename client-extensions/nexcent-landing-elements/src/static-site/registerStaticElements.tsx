@@ -1,20 +1,17 @@
 import React, {type ReactNode} from 'react';
 import {createRoot, type Root} from 'react-dom/client';
 
-import {StaticArticles} from './components/ArticleSection';
-import {
-    StaticClients,
-    StaticCommunity,
-    StaticCta,
-    StaticFeature,
-    StaticStatistics,
-    StaticTestimonial,
-} from './components/ContentSections';
-import {StaticFooter} from './components/Footer';
-import {StaticHeader} from './components/Header';
+import {Articles} from './components/Articles/Articles';
+import {Clients} from './components/Clients/Clients';
+import {Community} from './components/Community/Community';
+import {Cta} from './components/Cta/Cta';
+import {Feature} from './components/Feature/Feature';
+import {Footer} from './components/Footer/Footer';
+import {Header} from './components/Header/Header';
 import {StaticHero} from './components/Hero';
+import {Statistics} from './components/Statistics/Statistics';
+import {Testimonial} from './components/Testimonial/Testimonial';
 import {StaticPage} from './StaticPage';
-import {StaticRuntimeOverrides} from './StaticRuntimeOverrides';
 import {StaticStyleBoundary} from './StaticStyleBoundary';
 
 type StaticRenderer = (element: HTMLElement) => ReactNode;
@@ -30,6 +27,7 @@ export const staticElementNames = [
     'nexcent-react-feature-secondary',
     'nexcent-react-testimonial',
     'nexcent-react-marketing',
+    'nexcent-react-articles',
     'nexcent-react-cta',
     'nexcent-react-footer',
 ] as const;
@@ -39,7 +37,7 @@ function registerShadowReactElement(name: string, renderer: StaticRenderer) {
         return;
     }
 
-    class NexcentStaticReactElement extends HTMLElement {
+    class NexcentReactElement extends HTMLElement {
         private root?: Root;
 
         connectedCallback() {
@@ -53,11 +51,7 @@ function registerShadowReactElement(name: string, renderer: StaticRenderer) {
             this.root = createRoot(shadowRoot);
             this.root.render(
                 <React.StrictMode>
-                    <StaticStyleBoundary>
-                        <StaticRuntimeOverrides>
-                            {renderer(this)}
-                        </StaticRuntimeOverrides>
-                    </StaticStyleBoundary>
+                    <StaticStyleBoundary>{renderer(this)}</StaticStyleBoundary>
                 </React.StrictMode>
             );
         }
@@ -68,42 +62,44 @@ function registerShadowReactElement(name: string, renderer: StaticRenderer) {
         }
     }
 
-    customElements.define(name, NexcentStaticReactElement);
+    customElements.define(name, NexcentReactElement);
 }
 
 export function registerStaticElements() {
     registerShadowReactElement('nexcent-react-page', () => <StaticPage />);
     registerShadowReactElement('nexcent-react-header', (element) => (
-        <StaticHeader host={element} />
+        <Header host={element} />
     ));
     registerShadowReactElement('nexcent-react-hero', (element) => (
         <StaticHero host={element} />
     ));
     registerShadowReactElement('nexcent-react-clients', (element) => (
-        <StaticClients host={element} />
+        <Clients host={element} />
     ));
     registerShadowReactElement('nexcent-react-community', (element) => (
-        <StaticCommunity host={element} />
+        <Community host={element} />
     ));
     registerShadowReactElement('nexcent-react-feature-primary', (element) => (
-        <StaticFeature featureKey="primary" host={element} />
+        <Feature featureKey="primary" host={element} />
     ));
     registerShadowReactElement('nexcent-react-statistics', (element) => (
-        <StaticStatistics host={element} />
+        <Statistics host={element} />
     ));
     registerShadowReactElement('nexcent-react-feature-secondary', (element) => (
-        <StaticFeature featureKey="secondary" host={element} />
+        <Feature featureKey="secondary" host={element} />
     ));
     registerShadowReactElement('nexcent-react-testimonial', (element) => (
-        <StaticTestimonial host={element} />
+        <Testimonial host={element} />
     ));
-    registerShadowReactElement('nexcent-react-marketing', (element) => (
-        <StaticArticles host={element} />
-    ));
+
+    const renderArticles = (element: HTMLElement) => <Articles host={element} />;
+    registerShadowReactElement('nexcent-react-marketing', renderArticles);
+    registerShadowReactElement('nexcent-react-articles', renderArticles);
+
     registerShadowReactElement('nexcent-react-cta', (element) => (
-        <StaticCta host={element} />
+        <Cta host={element} />
     ));
     registerShadowReactElement('nexcent-react-footer', (element) => (
-        <StaticFooter host={element} />
+        <Footer host={element} />
     ));
 }

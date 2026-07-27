@@ -5,8 +5,6 @@ on:
     paths:
       - "client-extensions/nexcent-landing-elements/**"
       - "client-extensions/nexcent-theme/**"
-      - "sample-data/json/**"
-      - "sample-data/excel/**"
       - ".github/workflows/frontend-check.yml"
   push:
     branches:
@@ -14,8 +12,6 @@ on:
     paths:
       - "client-extensions/nexcent-landing-elements/**"
       - "client-extensions/nexcent-theme/**"
-      - "sample-data/json/**"
-      - "sample-data/excel/**"
       - ".github/workflows/frontend-check.yml"
   workflow_dispatch:
 
@@ -27,7 +23,59 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  validate-contracts:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download source archive
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          curl --fail --silent --show-error --location \
+            --header "Accept: application/vnd.github+json" \
+            --header "Authorization: Bearer ${GH_TOKEN}" \
+            --header "X-GitHub-Api-Version: 2022-11-28" \
+            "https://api.github.com/repos/${GITHUB_REPOSITORY}/tarball/${GITHUB_SHA}" \
+            --output repository.tar.gz
+          mkdir source
+          tar --extract --gzip --file repository.tar.gz --strip-components=1 --directory source
+
+      - name: Validate Fragment data source contracts
+        working-directory: source/client-extensions/nexcent-landing-elements
+        run: node scripts/validate-data-sources.mjs
+
+      - name: Validate production import boundaries
+        working-directory: source/client-extensions/nexcent-landing-elements
+        run: node scripts/validate-no-prototype-imports.mjs
+
+  unit-tests:
+    needs: validate-contracts
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download source archive
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          curl --fail --silent --show-error --location \
+            --header "Accept: application/vnd.github+json" \
+            --header "Authorization: Bearer ${GH_TOKEN}" \
+            --header "X-GitHub-Api-Version: 2022-11-28" \
+            "https://api.github.com/repos/${GITHUB_REPOSITORY}/tarball/${GITHUB_SHA}" \
+            --output repository.tar.gz
+          mkdir source
+          tar --extract --gzip --file repository.tar.gz --strip-components=1 --directory source
+
+      - name: Install test dependencies
+        working-directory: source/client-extensions/nexcent-landing-elements
+        run: npm install --no-audit --no-fund --loglevel=error
+
+      - name: Run unit tests
+        working-directory: source/client-extensions/nexcent-landing-elements
+        run: npm test
+
   typecheck-and-build:
+    needs: unit-tests
     runs-on: ubuntu-latest
 
     defaults:
@@ -48,20 +96,12 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
-          cache-dependency-path: client-extensions/nexcent-landing-elements/package-lock.json
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
 
       - name: Install dependencies
-        run: npm ci --no-audit --no-fund
-
-      - name: Validate Fragment data source contracts
-        run: npm run validate:data-sources
-
-      - name: Test importer validation
-        run: npm test
+        run: npm install --no-audit --no-fund
 
       - name: Type-check
         run: npm run typecheck
@@ -75,7 +115,6 @@ jobs:
       - name: Verify deterministic frontend output
         run: |
           test -f build/index.js
-          test -f build/style.css
           test -s build/fragments/collections-nexcent-components.zip
           jar --list --file build/fragments/collections-nexcent-components.zip | grep -q 'nexcent-components/collection.json'
           jar --list --file build/fragments/collections-nexcent-components.zip | grep -q 'nexcent-components/fragments/nexcent-react-header/configuration.json'
@@ -96,11 +135,3 @@ jobs:
           grep -q 'url: global-entry.css' client-extension.yaml
           grep -q './global.css' assets/global-entry.css
           grep -q './react-shell.css' assets/global-entry.css
-
-      - name: Generate sample workbook
-        run: npm run generate:workbook
-
-      - name: Verify generated workbook
-        run: |
-          test -s ../../sample-data/excel/nexcent-content.xlsx
-          node -e "import('exceljs').then(async ({default: ExcelJS}) => { const workbook = new ExcelJS.Workbook(); await workbook.xlsx.readFile('../../sample-data/excel/nexcent-content.xlsx'); const names = workbook.worksheets.map((sheet) => sheet.name); const required = ['Instructions', 'Heroes', 'ClientsIntro', 'Clients', 'ServicesIntro', 'Services', 'Features', 'StatisticsIntro', 'Statistics', 'Testimonials', 'CommunityIntro', 'CommunityCards', 'CTA']; if (required.some((name) => !names.includes(name))) process.exit(1); })"

@@ -6,7 +6,12 @@ import {
     loadStructuredContents,
 } from './headlessContentClient';
 
-export type HeadlessContentStatus = 'fallback' | 'loading' | 'preview' | 'ready';
+export type HeadlessContentStatus =
+    | 'empty'
+    | 'error'
+    | 'loading'
+    | 'preview'
+    | 'ready';
 
 type HeadlessCollectionState<T> = {
     error?: Error;
@@ -15,12 +20,14 @@ type HeadlessCollectionState<T> = {
 };
 
 type UseStructuredContentCollectionOptions<T> = {
-    fallback: T[];
     host?: HTMLElement;
     mapContent: (content: HeadlessStructuredContent, index: number) => T;
     maxItems: number;
+    previewItems?: T[];
     structureIdentifier: string;
 };
+
+const EMPTY_PREVIEW_ITEMS: never[] = [];
 
 function applyHostState(
     host: HTMLElement | undefined,
@@ -42,22 +49,27 @@ function applyHostState(
 }
 
 export function useStructuredContentCollection<T>({
-    fallback,
     host,
     mapContent,
     maxItems,
+    previewItems,
     structureIdentifier,
 }: UseStructuredContentCollectionOptions<T>): HeadlessCollectionState<T> {
+    const resolvedPreviewItems = previewItems ?? EMPTY_PREVIEW_ITEMS;
     const [state, setState] = useState<HeadlessCollectionState<T>>(() => ({
-        items: fallback.slice(0, maxItems),
-        status: host ? 'loading' : 'preview',
+        items: host ? [] : resolvedPreviewItems.slice(0, maxItems),
+        status: host
+            ? 'loading'
+            : resolvedPreviewItems.length
+              ? 'preview'
+              : 'empty',
     }));
 
     useEffect(() => {
         if (!host) {
             setState({
-                items: fallback.slice(0, maxItems),
-                status: 'preview',
+                items: resolvedPreviewItems.slice(0, maxItems),
+                status: resolvedPreviewItems.length ? 'preview' : 'empty',
             });
             return;
         }
@@ -72,19 +84,15 @@ export function useStructuredContentCollection<T>({
                     : 'Missing content structure identifier.'
             );
 
-            applyHostState(host, 'fallback', error);
-            setState({
-                error,
-                items: fallback.slice(0, maxItems),
-                status: 'fallback',
-            });
+            applyHostState(host, 'error', error);
+            setState({error, items: [], status: 'error'});
             return;
         }
 
         let active = true;
 
         applyHostState(host, 'loading');
-        setState((current) => ({...current, error: undefined, status: 'loading'}));
+        setState({items: [], status: 'loading'});
 
         loadStructuredContents({
             locale,
@@ -102,9 +110,9 @@ export function useStructuredContentCollection<T>({
                 );
 
                 if (items.length === 0) {
-                    throw new Error(
-                        `No approved content found for structure "${structureIdentifier}".`
-                    );
+                    applyHostState(host, 'empty');
+                    setState({items: [], status: 'empty'});
+                    return;
                 }
 
                 applyHostState(host, 'ready');
@@ -120,18 +128,14 @@ export function useStructuredContentCollection<T>({
                         ? cause
                         : new Error('Unable to load Headless Delivery content.');
 
-                applyHostState(host, 'fallback', error);
-                setState({
-                    error,
-                    items: fallback.slice(0, maxItems),
-                    status: 'fallback',
-                });
+                applyHostState(host, 'error', error);
+                setState({error, items: [], status: 'error'});
             });
 
         return () => {
             active = false;
         };
-    }, [fallback, host, mapContent, maxItems, structureIdentifier]);
+    }, [host, mapContent, maxItems, resolvedPreviewItems, structureIdentifier]);
 
     return state;
 }

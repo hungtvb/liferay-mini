@@ -1,9 +1,9 @@
 import {describe, expect, it} from 'vitest';
 
-import {resolveArticleDetailURL} from './ArticleSection';
+import {resolveArticleDetailURL} from './articleMapper';
 
 describe('Article detail URL', () => {
-    it('builds the default Web Content display-page URL inside a Site', () => {
+    it('builds the Web Content display-page URL inside a Site', () => {
         expect(
             resolveArticleDetailURL(
                 'http://localhost:8080/web/nexcent-public-website',

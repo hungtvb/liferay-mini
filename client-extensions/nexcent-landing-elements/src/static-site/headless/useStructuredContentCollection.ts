@@ -20,14 +20,14 @@ type HeadlessCollectionState<T> = {
 };
 
 type UseStructuredContentCollectionOptions<T> = {
-    /** @deprecated Use previewItems. Runtime errors never render these items. */
-    fallback?: T[];
     host?: HTMLElement;
     mapContent: (content: HeadlessStructuredContent, index: number) => T;
     maxItems: number;
     previewItems?: T[];
     structureIdentifier: string;
 };
+
+const EMPTY_PREVIEW_ITEMS: never[] = [];
 
 function applyHostState(
     host: HTMLElement | undefined,
@@ -49,17 +49,20 @@ function applyHostState(
 }
 
 export function useStructuredContentCollection<T>({
-    fallback = [],
     host,
     mapContent,
     maxItems,
     previewItems,
     structureIdentifier,
 }: UseStructuredContentCollectionOptions<T>): HeadlessCollectionState<T> {
-    const resolvedPreviewItems = previewItems ?? fallback;
+    const resolvedPreviewItems = previewItems ?? EMPTY_PREVIEW_ITEMS;
     const [state, setState] = useState<HeadlessCollectionState<T>>(() => ({
         items: host ? [] : resolvedPreviewItems.slice(0, maxItems),
-        status: host ? 'loading' : resolvedPreviewItems.length ? 'preview' : 'empty',
+        status: host
+            ? 'loading'
+            : resolvedPreviewItems.length
+              ? 'preview'
+              : 'empty',
     }));
 
     useEffect(() => {

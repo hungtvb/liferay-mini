@@ -144,36 +144,39 @@ for (const [fragmentName, contract] of Object.entries(shellContracts)) {
     }
 }
 
-const headerSource = await readFile(
-    path.join(projectDirectory, 'src/static-site/components/Header.tsx'),
-    'utf8'
-);
-const footerSource = await readFile(
-    path.join(projectDirectory, 'src/static-site/components/Footer.tsx'),
-    'utf8'
-);
-
-for (const [componentName, source] of [
-    ['Header', headerSource],
-    ['Footer', footerSource],
-]) {
-    if (source.includes('useSiteShell')) {
-        throw new Error(
-            `${componentName} must consume embedded Fragment props without the Site Shell BFF.`
-        );
-    }
-}
-
-const heroSource = await readFile(
-    path.join(projectDirectory, 'src/static-site/components/Hero.tsx'),
-    'utf8'
-);
-const sectionSource = await readFile(
-    path.join(projectDirectory, 'src/static-site/components/ContentSections.tsx'),
-    'utf8'
-);
-const articleSource = await readFile(
-    path.join(projectDirectory, 'src/static-site/components/ArticleSection.tsx'),
+const componentSources = {
+    Articles: await readFile(
+        path.join(
+            projectDirectory,
+            'src/static-site/components/Articles/Articles.tsx'
+        ),
+        'utf8'
+    ),
+    Community: await readFile(
+        path.join(
+            projectDirectory,
+            'src/static-site/components/Community/Community.tsx'
+        ),
+        'utf8'
+    ),
+    Footer: await readFile(
+        path.join(projectDirectory, 'src/static-site/components/Footer.tsx'),
+        'utf8'
+    ),
+    Header: await readFile(
+        path.join(projectDirectory, 'src/static-site/components/Header.tsx'),
+        'utf8'
+    ),
+    Hero: await readFile(
+        path.join(projectDirectory, 'src/static-site/components/Hero.tsx'),
+        'utf8'
+    ),
+};
+const articleMapper = await readFile(
+    path.join(
+        projectDirectory,
+        'src/static-site/components/Articles/articleMapper.ts'
+    ),
     'utf8'
 );
 const sharedHeadlessApi = await readFile(
@@ -194,14 +197,38 @@ const headlessHook = await readFile(
     ),
     'utf8'
 );
+const staticPageSource = await readFile(
+    path.join(projectDirectory, 'src/static-site/StaticPage.tsx'),
+    'utf8'
+);
 
-if (!heroSource.includes('useStructuredContentCollection')) {
-    throw new Error('Hero must load Structured Content through the shared hook.');
+for (const componentName of ['Header', 'Footer']) {
+    if (componentSources[componentName].includes('useSiteShell')) {
+        throw new Error(
+            `${componentName} must consume embedded Fragment props without the Site Shell BFF.`
+        );
+    }
 }
 
-for (const componentName of ['StaticCommunity', 'StaticMarketing']) {
-    if (!sectionSource.includes(`function ${componentName}`)) {
-        throw new Error(`Missing ${componentName}.`);
+for (const componentName of ['Hero', 'Community', 'Articles']) {
+    if (!componentSources[componentName].includes('useStructuredContentCollection')) {
+        throw new Error(
+            `${componentName} must load Structured Content through the shared hook.`
+        );
+    }
+}
+
+for (const expectedComponent of [
+    '<Clients />',
+    '<Community />',
+    '<Feature featureKey="primary" />',
+    '<Statistics />',
+    '<Testimonial />',
+    '<Articles />',
+    '<Cta />',
+]) {
+    if (!staticPageSource.includes(expectedComponent)) {
+        throw new Error(`Preview page is missing production component ${expectedComponent}.`);
     }
 }
 
@@ -228,7 +255,7 @@ for (const sharedFunction of [
 ]) {
     if (!headlessAdapter.includes(sharedFunction)) {
         throw new Error(
-            `Pixel-perfect Headless adapter must reuse ${sharedFunction}.`
+            `Headless adapter must reuse ${sharedFunction}.`
         );
     }
 }
@@ -239,23 +266,32 @@ if (headlessAdapter.includes("sort: 'contentFields/sortOrder:asc'")) {
     );
 }
 
-for (const expected of ["'coverImage'", 'content.datePublished', 'flatten: true']) {
+for (const expected of ['content.datePublished', 'flatten: true']) {
     if (!headlessAdapter.includes(expected)) {
-        throw new Error(`Article Headless delivery contract is missing ${expected}.`);
+        throw new Error(`Headless delivery contract is missing ${expected}.`);
     }
 }
 
 for (const expected of [
+    "['coverImage']",
     'structuredContent.friendlyUrlPath',
-    "'site-base-url'",
     '`$\{base}/w/$\{path}`',
 ]) {
-    if (!articleSource.includes(expected)) {
-        throw new Error(`Article detail-link contract is missing ${expected}.`);
+    if (!articleMapper.includes(expected)) {
+        throw new Error(`Article mapper contract is missing ${expected}.`);
     }
 }
 
-if (articleSource.includes('structuredContent.contentUrl')) {
+for (const expected of ["'site-base-url'", 'previewItems: PREVIEW_ARTICLES']) {
+    if (!componentSources.Articles.includes(expected)) {
+        throw new Error(`Article component contract is missing ${expected}.`);
+    }
+}
+
+if (
+    componentSources.Articles.includes('structuredContent.contentUrl') ||
+    articleMapper.includes('structuredContent.contentUrl')
+) {
     throw new Error('Article list must not depend on unsupported StructuredContent.contentUrl.');
 }
 
@@ -263,10 +299,22 @@ if (!headlessHook.includes('pageSize: maxItems')) {
     throw new Error('Fragment maximum items must be passed to the Headless loader.');
 }
 
+if (!headlessHook.includes("items: host ? []")) {
+    throw new Error('Runtime Headless loading must not render preview fixture items.');
+}
+
+for (const [componentName, source] of Object.entries(componentSources)) {
+    if (source.includes("fallback/content.json")) {
+        throw new Error(
+            `${componentName} must not import the page-level fallback content snapshot.`
+        );
+    }
+}
+
 if (sharedHeadlessApi.includes('item.name, item.id')) {
     throw new Error('Structure resolution must not use the editable display name.');
 }
 
 console.log(
-    `Validated ${headlessFragments.length} Headless sections, ${settingsFragments.length} Fragment Settings sections, ${Object.keys(shellContracts).length} embedded shell contracts, and the NXC_ARTICLE delivery contract.`
+    `Validated ${headlessFragments.length} Headless sections, ${settingsFragments.length} Fragment Settings sections, ${Object.keys(shellContracts).length} embedded shell contracts, extracted production components, and the NXC_ARTICLE delivery contract.`
 );

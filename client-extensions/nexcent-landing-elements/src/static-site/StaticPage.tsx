@@ -4,7 +4,7 @@ import {Community} from './components/Community/Community';
 import {Cta} from './components/Cta/Cta';
 import {Feature} from './components/Feature/Feature';
 import {StaticFooter} from './components/Footer';
-import {StaticHeader} from './components/Header';
+import {Header} from './components/Header/Header';
 import {StaticHero} from './components/Hero';
 import {Statistics} from './components/Statistics/Statistics';
 import {Testimonial} from './components/Testimonial/Testimonial';
@@ -12,7 +12,7 @@ import {Testimonial} from './components/Testimonial/Testimonial';
 export function StaticPage() {
     return (
         <div className="wrapper">
-            <StaticHeader />
+            <Header />
             <main className="page">
                 <StaticHero />
                 <Clients />

@@ -1,0 +1,37 @@
+:host {
+    color: #717171;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 1.42;
+}
+
+.swiper-wrapper {
+    display: flex;
+    height: 100%;
+    width: 100%;
+}
+
+.swiper-slide {
+    flex-shrink: 0;
+    height: 100%;
+    position: relative;
+    width: 100%;
+}
+
+.header__navigation-list > li {
+    overflow: hidden !important;
+}
+
+.header__navigation-list > li:has(> .header__submenu) {
+    overflow: visible !important;
+}
+
+.header__navigation-list > li:has(> .header__submenu) > .decor-line {
+    display: none;
+}
+
+.footer__form-status--idle {
+    display: none;
+    margin-top: 0;
+    min-height: 0;
+}

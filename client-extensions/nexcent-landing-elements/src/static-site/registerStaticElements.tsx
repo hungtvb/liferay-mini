@@ -7,7 +7,7 @@ import {Community} from './components/Community/Community';
 import {Cta} from './components/Cta/Cta';
 import {Feature} from './components/Feature/Feature';
 import {StaticFooter} from './components/Footer';
-import {StaticHeader} from './components/Header';
+import {Header} from './components/Header/Header';
 import {StaticHero} from './components/Hero';
 import {Statistics} from './components/Statistics/Statistics';
 import {Testimonial} from './components/Testimonial/Testimonial';
@@ -73,7 +73,7 @@ function registerShadowReactElement(name: string, renderer: StaticRenderer) {
 export function registerStaticElements() {
     registerShadowReactElement('nexcent-react-page', () => <StaticPage />);
     registerShadowReactElement('nexcent-react-header', (element) => (
-        <StaticHeader host={element} />
+        <Header host={element} />
     ));
     registerShadowReactElement('nexcent-react-hero', (element) => (
         <StaticHero host={element} />

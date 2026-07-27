@@ -23,7 +23,25 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  validate-contracts:
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: client-extensions/nexcent-landing-elements
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Validate Fragment data source contracts
+        run: node scripts/validate-data-sources.mjs
+
+      - name: Validate production import boundaries
+        run: node scripts/validate-no-prototype-imports.mjs
+
   typecheck-and-build:
+    needs: validate-contracts
     runs-on: ubuntu-latest
 
     defaults:
@@ -50,9 +68,6 @@ jobs:
 
       - name: Install dependencies
         run: npm install --no-audit --no-fund
-
-      - name: Validate Fragment data source contracts
-        run: npm run validate:data-sources
 
       - name: Run unit tests
         run: npm test

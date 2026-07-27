@@ -156,6 +156,8 @@ const sourcePaths = {
     Hook: 'src/static-site/headless/useStructuredContentCollection.ts',
     Page: 'src/static-site/StaticPage.tsx',
     Register: 'src/static-site/registerStaticElements.tsx',
+    SharedHeadless: 'src/api/structuredContent.ts',
+    HeadlessAdapter: 'src/static-site/headless/headlessContentClient.ts',
     StyleBoundary: 'src/static-site/StaticStyleBoundary.tsx',
 };
 const sources = Object.fromEntries(
@@ -252,11 +254,26 @@ if (
 }
 
 if (
-    !sources.StyleBoundary.includes("landing.scss?inline") ||
+    !sources.StyleBoundary.includes('landing.scss?inline') ||
     sources.StyleBoundary.includes('normalizeStaticCss') ||
     sources.StyleBoundary.includes('LOCAL_OVERRIDES')
 ) {
     throw new Error('Shadow styles must come from compiled landing.scss only.');
+}
+
+for (const reader of [
+    'readContentBoolean',
+    'readContentImage',
+    'readContentNumber',
+    'readContentText',
+]) {
+    if (!sources.SharedHeadless.includes(`export function ${reader}`)) {
+        throw new Error(`Shared Structured Content API must own ${reader}.`);
+    }
+
+    if (sources.HeadlessAdapter.includes(`export function ${reader}`)) {
+        throw new Error(`Headless adapter must not duplicate ${reader}.`);
+    }
 }
 
 await access(
@@ -264,5 +281,5 @@ await access(
 );
 
 console.log(
-    'Validated Fragment sources, extracted components, runtime states, Articles delivery, and the compiled SCSS contract.'
+    'Validated Fragment sources, extracted components, centralized Headless readers, runtime states, Articles delivery, and the compiled SCSS contract.'
 );

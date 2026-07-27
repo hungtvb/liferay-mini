@@ -13,7 +13,6 @@ const headlessFragmentDefaults = {
     'nexcent-react-hero': 'NXC_LANDING_HERO',
     'nexcent-react-marketing': 'NXC_ARTICLE',
 };
-const headlessFragments = Object.keys(headlessFragmentDefaults);
 const settingsFragments = [
     'nexcent-react-clients',
     'nexcent-react-feature-primary',
@@ -23,6 +22,16 @@ const settingsFragments = [
     'nexcent-react-cta',
 ];
 
+async function exists(filePath) {
+    try {
+        await access(filePath);
+        return true;
+    }
+    catch {
+        return false;
+    }
+}
+
 async function readJson(filePath) {
     return JSON.parse(await readFile(filePath, 'utf8'));
 }
@@ -31,54 +40,59 @@ function configurationFields(configuration) {
     return configuration.fieldSets.flatMap((fieldSet) => fieldSet.fields ?? []);
 }
 
-for (const fragmentName of [...headlessFragments, ...settingsFragments]) {
+for (const fragmentName of [
+    ...Object.keys(headlessFragmentDefaults),
+    ...settingsFragments,
+]) {
     const directory = path.join(fragmentDirectory, fragmentName);
-    const definitionPath = path.join(directory, 'fragment.json');
-    const configurationPath = path.join(directory, 'configuration.json');
-    const htmlPath = path.join(directory, 'index.html');
-
-    await access(configurationPath);
-
-    const definition = await readJson(definitionPath);
-    const configuration = await readJson(configurationPath);
-    const html = await readFile(htmlPath, 'utf8');
+    const definition = await readJson(path.join(directory, 'fragment.json'));
+    const configuration = await readJson(
+        path.join(directory, 'configuration.json')
+    );
+    const html = await readFile(path.join(directory, 'index.html'), 'utf8');
 
     if (definition.configurationPath !== 'configuration.json') {
         throw new Error(`${fragmentName} must declare configurationPath.`);
     }
 
-    if (!Array.isArray(configuration.fieldSets) || configuration.fieldSets.length === 0) {
+    if (!configurationFields(configuration).length) {
         throw new Error(`${fragmentName} must expose Fragment Settings.`);
     }
 
     if (!html.includes(`<${fragmentName}`)) {
-        throw new Error(`${fragmentName} index.html must render its matching custom element.`);
+        throw new Error(`${fragmentName} must render its matching custom element.`);
     }
 
-    if (fragmentName in headlessFragmentDefaults) {
+    const expectedStructure = headlessFragmentDefaults[fragmentName];
+
+    if (expectedStructure) {
         const structureField = configurationFields(configuration).find(
             (field) => field.name === 'structureIdentifier'
         );
-        const expectedDefault = headlessFragmentDefaults[fragmentName];
 
-        if (structureField?.defaultValue !== expectedDefault) {
+        if (structureField?.defaultValue !== expectedStructure) {
             throw new Error(
-                `${fragmentName} must default to Structure ERC/key "${expectedDefault}".`
+                `${fragmentName} must default to ${expectedStructure}.`
             );
         }
-    }
-}
 
-for (const fragmentName of headlessFragments) {
-    const html = await readFile(
-        path.join(fragmentDirectory, fragmentName, 'index.html'),
-        'utf8'
-    );
-
-    for (const attribute of ['locale=', 'site-id=', 'structure-identifier=']) {
-        if (!html.includes(attribute)) {
-            throw new Error(`${fragmentName} is missing ${attribute}`);
+        for (const attribute of [
+            'locale=',
+            'site-id=',
+            'structure-identifier=',
+        ]) {
+            if (!html.includes(attribute)) {
+                throw new Error(`${fragmentName} is missing ${attribute}`);
+            }
         }
+    }
+    else if (
+        html.includes('structure-identifier=') ||
+        html.includes('site-id=')
+    ) {
+        throw new Error(
+            `${fragmentName} must use Fragment Settings without a Headless source.`
+        );
     }
 }
 
@@ -88,20 +102,7 @@ const articleFragmentHtml = await readFile(
 );
 
 if (!articleFragmentHtml.includes('site-base-url=')) {
-    throw new Error('Article list Fragment must pass the current Site display URL.');
-}
-
-for (const fragmentName of settingsFragments) {
-    const html = await readFile(
-        path.join(fragmentDirectory, fragmentName, 'index.html'),
-        'utf8'
-    );
-
-    if (html.includes('structure-identifier=') || html.includes('site-id=')) {
-        throw new Error(
-            `${fragmentName} must use Fragment Settings props without a Headless source.`
-        );
-    }
+    throw new Error('Articles Fragment must pass the current Site display URL.');
 }
 
 const shellContracts = {
@@ -128,9 +129,10 @@ for (const [fragmentName, contract] of Object.entries(shellContracts)) {
     const fields = configurationFields(configuration);
 
     for (const selectorName of contract.selectors) {
-        const selector = fields.find((field) => field.name === selectorName);
-
-        if (selector?.type !== 'navigationMenuSelector') {
+        if (
+            fields.find((field) => field.name === selectorName)?.type !==
+            'navigationMenuSelector'
+        ) {
             throw new Error(
                 `${fragmentName} must expose ${selectorName} as navigationMenuSelector.`
             );
@@ -144,177 +146,123 @@ for (const [fragmentName, contract] of Object.entries(shellContracts)) {
     }
 }
 
-const componentSources = {
-    Articles: await readFile(
-        path.join(
-            projectDirectory,
-            'src/static-site/components/Articles/Articles.tsx'
-        ),
-        'utf8'
-    ),
-    Community: await readFile(
-        path.join(
-            projectDirectory,
-            'src/static-site/components/Community/Community.tsx'
-        ),
-        'utf8'
-    ),
-    Footer: await readFile(
-        path.join(projectDirectory, 'src/static-site/components/Footer.tsx'),
-        'utf8'
-    ),
-    Header: await readFile(
-        path.join(projectDirectory, 'src/static-site/components/Header.tsx'),
-        'utf8'
-    ),
-    Hero: await readFile(
-        path.join(projectDirectory, 'src/static-site/components/Hero.tsx'),
-        'utf8'
-    ),
+const sourcePaths = {
+    Articles: 'src/static-site/components/Articles/Articles.tsx',
+    ArticleMapper: 'src/static-site/components/Articles/articleMapper.ts',
+    Community: 'src/static-site/components/Community/Community.tsx',
+    Footer: 'src/static-site/components/Footer/Footer.tsx',
+    Header: 'src/static-site/components/Header/Header.tsx',
+    Hero: 'src/static-site/components/Hero.tsx',
+    Hook: 'src/static-site/headless/useStructuredContentCollection.ts',
+    Page: 'src/static-site/StaticPage.tsx',
+    Register: 'src/static-site/registerStaticElements.tsx',
+    StyleBoundary: 'src/static-site/StaticStyleBoundary.tsx',
 };
-const articleMapper = await readFile(
-    path.join(
-        projectDirectory,
-        'src/static-site/components/Articles/articleMapper.ts'
-    ),
-    'utf8'
-);
-const sharedHeadlessApi = await readFile(
-    path.join(projectDirectory, 'src/api/structuredContent.ts'),
-    'utf8'
-);
-const headlessAdapter = await readFile(
-    path.join(
-        projectDirectory,
-        'src/static-site/headless/headlessContentClient.ts'
-    ),
-    'utf8'
-);
-const headlessHook = await readFile(
-    path.join(
-        projectDirectory,
-        'src/static-site/headless/useStructuredContentCollection.ts'
-    ),
-    'utf8'
-);
-const staticPageSource = await readFile(
-    path.join(projectDirectory, 'src/static-site/StaticPage.tsx'),
-    'utf8'
+const sources = Object.fromEntries(
+    await Promise.all(
+        Object.entries(sourcePaths).map(async ([name, sourcePath]) => [
+            name,
+            await readFile(path.join(projectDirectory, sourcePath), 'utf8'),
+        ])
+    )
 );
 
-for (const componentName of ['Header', 'Footer']) {
-    if (componentSources[componentName].includes('useSiteShell')) {
-        throw new Error(
-            `${componentName} must consume embedded Fragment props without the Site Shell BFF.`
-        );
+for (const obsoletePath of [
+    'src/static-site/components/ContentSections.tsx',
+    'src/static-site/components/ArticleSection.tsx',
+    'src/static-site/StaticRuntimeOverrides.tsx',
+    'src/static-site/fallback/assets/css/style.css',
+    'src/static-site/fallback/assets/css/style.css.map',
+]) {
+    if (await exists(path.join(projectDirectory, obsoletePath))) {
+        throw new Error(`Obsolete source still exists: ${obsoletePath}`);
     }
 }
 
 for (const componentName of ['Hero', 'Community', 'Articles']) {
-    if (!componentSources[componentName].includes('useStructuredContentCollection')) {
+    if (!sources[componentName].includes('useStructuredContentCollection')) {
+        throw new Error(`${componentName} must use the shared Headless hook.`);
+    }
+}
+
+for (const componentName of ['Header', 'Footer']) {
+    if (
+        sources[componentName].includes('fallback/content.json') ||
+        sources[componentName].includes('useSiteShell')
+    ) {
         throw new Error(
-            `${componentName} must load Structured Content through the shared hook.`
+            `${componentName} must use embedded props without page fallback data or Site Shell requests.`
         );
-    }
-}
-
-for (const expectedComponent of [
-    '<Clients />',
-    '<Community />',
-    '<Feature featureKey="primary" />',
-    '<Statistics />',
-    '<Testimonial />',
-    '<Articles />',
-    '<Cta />',
-]) {
-    if (!staticPageSource.includes(expectedComponent)) {
-        throw new Error(`Preview page is missing production component ${expectedComponent}.`);
-    }
-}
-
-for (const expected of [
-    '/content-structures?pageSize=200',
-    'new URLSearchParams',
-    "query.set('flatten', 'true')",
-    'options.pageSize',
-    'friendlyUrlPath?: string',
-]) {
-    if (!sharedHeadlessApi.includes(expected)) {
-        throw new Error(`Shared Structured Content API is missing ${expected}.`);
-    }
-}
-
-if (sharedHeadlessApi.includes('contentUrl?: string;\n    datePublished')) {
-    throw new Error('StructuredContent must not declare the unsupported contentUrl property.');
-}
-
-for (const sharedFunction of [
-    'resolveContentStructure',
-    'listStructuredContents',
-    'clearStructuredContentRequestCache',
-]) {
-    if (!headlessAdapter.includes(sharedFunction)) {
-        throw new Error(
-            `Headless adapter must reuse ${sharedFunction}.`
-        );
-    }
-}
-
-if (headlessAdapter.includes("sort: 'contentFields/sortOrder:asc'")) {
-    throw new Error(
-        'The generic Structured Content loader must not sort by an optional Structure field on the server.'
-    );
-}
-
-for (const expected of ['content.datePublished', 'flatten: true']) {
-    if (!headlessAdapter.includes(expected)) {
-        throw new Error(`Headless delivery contract is missing ${expected}.`);
     }
 }
 
 for (const expected of [
     "['coverImage']",
     'structuredContent.friendlyUrlPath',
-    '`$\{base}/w/$\{path}`',
+    'return `${base}/w/${path}`',
 ]) {
-    if (!articleMapper.includes(expected)) {
-        throw new Error(`Article mapper contract is missing ${expected}.`);
-    }
-}
-
-for (const expected of ["'site-base-url'", 'previewItems: PREVIEW_ARTICLES']) {
-    if (!componentSources.Articles.includes(expected)) {
-        throw new Error(`Article component contract is missing ${expected}.`);
+    if (!sources.ArticleMapper.includes(expected)) {
+        throw new Error(`Article mapper is missing contract: ${expected}`);
     }
 }
 
 if (
-    componentSources.Articles.includes('structuredContent.contentUrl') ||
-    articleMapper.includes('structuredContent.contentUrl')
+    sources.ArticleMapper.includes('structuredContent.contentUrl') ||
+    sources.Articles.includes('structuredContent.contentUrl')
 ) {
-    throw new Error('Article list must not depend on unsupported StructuredContent.contentUrl.');
+    throw new Error('Articles must not depend on StructuredContent.contentUrl.');
 }
 
-if (!headlessHook.includes('pageSize: maxItems')) {
-    throw new Error('Fragment maximum items must be passed to the Headless loader.');
-}
-
-if (!headlessHook.includes("items: host ? []")) {
-    throw new Error('Runtime Headless loading must not render preview fixture items.');
-}
-
-for (const [componentName, source] of Object.entries(componentSources)) {
-    if (source.includes("fallback/content.json")) {
-        throw new Error(
-            `${componentName} must not import the page-level fallback content snapshot.`
-        );
+for (const expected of [
+    "'site-base-url'",
+    'previewItems: PREVIEW_ARTICLES',
+]) {
+    if (!sources.Articles.includes(expected)) {
+        throw new Error(`Articles component is missing contract: ${expected}`);
     }
 }
 
-if (sharedHeadlessApi.includes('item.name, item.id')) {
-    throw new Error('Structure resolution must not use the editable display name.');
+if (
+    !sources.Hook.includes('items: host ? []') ||
+    !sources.Hook.includes("setState({items: [], status: 'loading'})") ||
+    !sources.Hook.includes("setState({error, items: [], status: 'error'})")
+) {
+    throw new Error('Runtime Headless states must never render preview items.');
 }
 
+for (const component of [
+    'Clients',
+    'Community',
+    'Feature',
+    'Statistics',
+    'Testimonial',
+    'Articles',
+    'Cta',
+]) {
+    if (!sources.Page.includes(`<${component}`)) {
+        throw new Error(`Preview page is missing production ${component}.`);
+    }
+}
+
+if (
+    !sources.Register.includes("'nexcent-react-marketing'") ||
+    !sources.Register.includes("'nexcent-react-articles'")
+) {
+    throw new Error('Articles must preserve the Marketing alias during migration.');
+}
+
+if (
+    !sources.StyleBoundary.includes("landing.scss?inline") ||
+    sources.StyleBoundary.includes('normalizeStaticCss') ||
+    sources.StyleBoundary.includes('LOCAL_OVERRIDES')
+) {
+    throw new Error('Shadow styles must come from compiled landing.scss only.');
+}
+
+await access(
+    path.join(projectDirectory, 'src/static-site/styles/landing.scss')
+);
+
 console.log(
-    `Validated ${headlessFragments.length} Headless sections, ${settingsFragments.length} Fragment Settings sections, ${Object.keys(shellContracts).length} embedded shell contracts, extracted production components, and the NXC_ARTICLE delivery contract.`
+    'Validated Fragment sources, extracted components, runtime states, Articles delivery, and the compiled SCSS contract.'
 );

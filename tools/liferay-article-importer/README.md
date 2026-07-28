@@ -145,6 +145,24 @@ npm run cli -- import .\workbooks\articles.xlsx --non-interactive --create-strat
 
 `--confirm-upsert` is required only for non-interactive UPSERT runs so a script cannot update existing content accidentally.
 
+### Friendly failures
+
+Normal CLI output explains what happened and the next action without printing internal error codes or stack traces.
+
+Examples include:
+
+- `Cancelled by user.` for `Ctrl + C`.
+- `Import cancelled.` when an UPSERT confirmation is declined.
+- Clear guidance for missing profiles, missing workbooks, invalid workbooks, OAuth failures, permission failures, unreachable Liferay, validation failures, and uncertain Batch submissions.
+
+Use `--verbose` only when technical diagnostics are needed:
+
+```bash
+npm run cli -- import .\workbooks\articles.xlsx --verbose
+```
+
+Verbose output includes the internal code, status, sanitized details, and stack trace. Secret and token fields are redacted.
+
 The CLI validates and revalidates before submission. It prints JSON results and stores the latest confirmed Batch task so `status --latest` works in a later process. Excel report download and automatic Batch polling currently belong to the Web UI.
 
 ## Excel workbook

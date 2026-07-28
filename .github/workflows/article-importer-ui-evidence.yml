@@ -1,13 +1,17 @@
 name: Importer UI Evidence
 
 on:
+  pull_request:
+    paths:
+      - tools/liferay-article-importer/**
+      - .github/workflows/article-importer-ui-evidence.yml
   workflow_dispatch:
 
 permissions:
   contents: read
 
 concurrency:
-  group: importer-ui-evidence-${{ github.ref }}
+  group: importer-ui-evidence-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -31,6 +35,9 @@ jobs:
 
       - name: Install Chromium
         run: npx playwright install --with-deps chromium
+
+      - name: Smoke test Vite dev runtime
+        run: npm run smoke:dev
 
       - name: Capture importer UI journey
         run: npm run evidence

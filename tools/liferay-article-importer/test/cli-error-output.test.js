@@ -6,12 +6,14 @@ import {presentCliError, resolveCliExitCode} from '../cli/error-output.js';
 test('Ctrl+C style aborts are presented as a successful user cancellation', () => {
   const result = presentCliError(Object.assign(new Error('aborted'), {name: 'AbortError'}));
   assert.equal(result.exitCode, 0);
+  assert.equal(result.tone, 'info');
   assert.deepEqual(result.lines, ['Cancelled by user.']);
 });
 
 test('interactive import cancellation is not presented as an error', () => {
   const result = presentCliError(new AppError(409, 'IMPORT_CANCELLED', 'Import cancelled'));
   assert.equal(result.exitCode, 0);
+  assert.equal(result.tone, 'info');
   assert.deepEqual(result.lines, ['Import cancelled.']);
 });
 
@@ -22,9 +24,23 @@ test('interactive CLI errors exit cleanly while automation preserves failure cod
   assert.equal(resolveCliExitCode(1, {interactive: false}), 1);
 });
 
+test('missing Batch task errors are scoped to the requested task', () => {
+  const result = presentCliError(new AppError(404, 'LIFERAY_API_ERROR', 'Liferay API request failed', {
+    path: '/o/headless-batch-engine/v1.0/import-task/2',
+    status: 404
+  }));
+
+  assert.equal(result.tone, 'warning');
+  assert.match(result.lines[0], /Batch task 2 was not found/i);
+  assert.match(result.lines[1], /latest confirmed task/i);
+  assert.doesNotMatch(result.lines.join('\n'), /run npm run cli init/i);
+  assert.match(result.lines.join('\n'), /profile is still valid/i);
+});
+
 test('known Liferay errors include a useful next action', () => {
   const result = presentCliError(new AppError(502, 'LIFERAY_UNREACHABLE', 'Cannot reach the Liferay API'));
   assert.equal(result.exitCode, 1);
+  assert.equal(result.tone, 'error');
   assert.match(result.lines[0], /connect to Liferay/i);
   assert.match(result.lines[1], /LIFERAY_BASE_URL/);
 });
@@ -50,6 +66,7 @@ test('missing workbook errors show the affected path', () => {
     path: 'workbooks/missing.xlsx'
   });
   const result = presentCliError(error);
+  assert.equal(result.tone, 'warning');
   assert.match(result.lines[0], /not found/i);
   assert.match(result.lines[1], /workbooks\/missing\.xlsx/);
 });

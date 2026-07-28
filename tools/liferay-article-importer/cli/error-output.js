@@ -69,7 +69,7 @@ export function presentCliError(error, {verbose = false} = {}) {
   }
   else if (isAbortLike(error)) {
     message = 'Cancelled by user.';
-    exitCode = 130;
+    exitCode = 0;
   }
   else if (error?.code === 'PROFILE_NOT_FOUND') {
     message = 'No CLI profile is configured yet.';

@@ -1,21 +1,20 @@
 {
   "name": "@nexcent/liferay-flat-structured-content-importer",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "private": true,
   "type": "module",
   "engines": {"node": ">=22.12.0"},
   "scripts": {
+    "cli": "node cli/index.js",
     "dev": "concurrently -k -n api,ui -c auto \"npm:dev:server\" \"npm:dev:ui\"",
     "dev:server": "node --watch server/index.js",
-    "dev:ui": "vite --host 127.0.0.1",
+    "dev:ui": "vite --host 127.0.0.1 --force",
     "build": "vite build",
-    "preview": "vite preview --host 127.0.0.1 --port 4175",
     "prestart": "npm run build",
     "start": "node server/index.js",
     "typecheck": "tsc --noEmit",
     "test": "node --test",
-    "evidence": "npm run build && playwright test",
-    "check": "npm run typecheck && npm run build && node scripts/check.mjs"
+    "check": "npm run typecheck && npm run build && node scripts/check.mjs && node cli/index.js help"
   },
   "dependencies": {
     "dotenv": "17.4.2",
@@ -27,7 +26,6 @@
     "react-dom": "19.2.8"
   },
   "devDependencies": {
-    "@playwright/test": "^1.55.0",
     "@types/node": "^24.0.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",

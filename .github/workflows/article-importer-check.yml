@@ -33,6 +33,23 @@ jobs:
       - name: Install dependencies
         run: npm install --no-audit --no-fund
 
+      - name: Capture dependency audit
+        continue-on-error: true
+        run: |
+          npm audit --omit=dev --json > audit-production.json || true
+          npm audit --json > audit-all.json || true
+          node - <<'NODE'
+          const fs = require('node:fs');
+          for (const [label, file] of [['production', 'audit-production.json'], ['all', 'audit-all.json']]) {
+            const report = JSON.parse(fs.readFileSync(file, 'utf8'));
+            const counts = report.metadata?.vulnerabilities || {};
+            console.log(`${label}: ${JSON.stringify(counts)}`);
+            for (const [name, item] of Object.entries(report.vulnerabilities || {})) {
+              console.log(`- ${name}: ${item.severity}; direct=${item.isDirect}; via=${(item.via || []).map((entry) => typeof entry === 'string' ? entry : entry.title).join(' | ')}`);
+            }
+          }
+          NODE
+
       - name: Typecheck React UI
         run: npm run typecheck
 
@@ -48,6 +65,17 @@ jobs:
         run: |
           set -o pipefail
           npm test 2>&1 | tee test-output.txt
+
+      - name: Upload dependency audit
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: structured-content-importer-audit
+          path: |
+            tools/liferay-article-importer/audit-production.json
+            tools/liferay-article-importer/audit-all.json
+          if-no-files-found: ignore
+          retention-days: 3
 
       - name: Upload failure diagnostics
         if: failure()

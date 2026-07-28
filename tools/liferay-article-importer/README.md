@@ -81,11 +81,32 @@ tools/liferay-article-importer/workbooks/
 
 The folder is committed, but its `.xlsx` files are ignored by Git.
 
-Initialize a profile once:
+### Recommended interactive workflow
+
+Run one command:
 
 ```bash
-npm run cli -- init
+npm run cli
 ```
+
+The CLI then asks what you want to do:
+
+```text
+Initialize or update a profile
+Generate an Excel template
+Validate a workbook
+Import a workbook
+Check a Batch task status
+```
+
+During import, the CLI asks you to choose:
+
+```text
+INSERT or UPSERT
+ON_ERROR_FAIL or ON_ERROR_CONTINUE
+```
+
+Choosing `UPSERT` shows its folder-safety warning and asks for confirmation inside the interactive flow. No `--yes` flag is needed.
 
 `init` saves the selected Site settings, Structure, Web Content folder, Documents and Media folder, locale, visibility, and Client ID.
 
@@ -98,27 +119,28 @@ macOS/Linux: ~/.liferay-import/profiles
 
 The Client Secret stays in the local `.env`; it is never stored in the CLI profile.
 
-Generate a template. By default, it is written into `workbooks/`:
+### Direct commands and automation
+
+Direct commands can bypass npm argument forwarding by invoking the CLI file:
 
 ```bash
-npm run cli -- template
+node cli/index.js init
+node cli/index.js template
+node cli/index.js validate .\workbooks\articles.xlsx
+node cli/index.js import .\workbooks\articles.xlsx
+node cli/index.js status --latest
 ```
 
-Common commands:
+When run in an interactive terminal, omitted import strategies are still selected through prompts.
+
+For non-interactive automation, pass all required choices explicitly:
 
 ```bash
-npm run cli -- validate .\workbooks\articles.xlsx
-npm run cli -- import .\workbooks\articles.xlsx
-npm run cli -- status --latest
+node cli/index.js import .\workbooks\articles.xlsx --non-interactive --create-strategy INSERT --import-strategy ON_ERROR_FAIL
+node cli/index.js import .\workbooks\articles.xlsx --non-interactive --create-strategy UPSERT --import-strategy ON_ERROR_CONTINUE --confirm-upsert
 ```
 
-Useful import options:
-
-```bash
-npm run cli -- import .\workbooks\articles.xlsx --dry-run
-npm run cli -- import .\workbooks\articles.xlsx --create-strategy UPSERT --yes
-npm run cli -- import .\workbooks\articles.xlsx --import-strategy ON_ERROR_CONTINUE
-```
+`--confirm-upsert` is intentionally required only for non-interactive UPSERT runs so a script cannot update existing content accidentally.
 
 The CLI validates and revalidates before submission. It prints JSON results and stores the latest confirmed Batch task so `status --latest` works in a later process. Excel report download and automatic Batch polling currently belong to the Web UI.
 

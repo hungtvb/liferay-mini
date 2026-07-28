@@ -207,7 +207,7 @@ async function status(profileName, taskArg) {
 }
 
 function printHelp() {
-  output.write(`Liferay flat Structured Content importer CLI\n\nCommands:\n  liferay-import init [--profile name] [--client-id id]\n  liferay-import template [--profile name] [--output file.xlsx]\n  liferay-import validate <file.xlsx> [--profile name]\n  liferay-import import <file.xlsx> [--profile name] [--dry-run] [--create-strategy INSERT|UPSERT] [--import-strategy ON_ERROR_FAIL|ON_ERROR_CONTINUE] [--yes]\n  liferay-import status <task-id> [--profile name]\n  liferay-import status --latest\n`);
+  output.write(`Liferay Structured Content importer CLI\n\nRun inside tools/liferay-article-importer:\n  npm run cli -- init [--profile name] [--client-id id]\n  npm run cli -- template [--profile name] [--output file.xlsx]\n  npm run cli -- validate <file.xlsx> [--profile name]\n  npm run cli -- import <file.xlsx> [--profile name] [--dry-run] [--create-strategy INSERT|UPSERT] [--import-strategy ON_ERROR_FAIL|ON_ERROR_CONTINUE] [--yes]\n  npm run cli -- status <task-id> [--profile name]\n  npm run cli -- status --latest\n`);
 }
 
 async function main() {

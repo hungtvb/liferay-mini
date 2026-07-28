@@ -40,7 +40,7 @@ export function ImportStep({validationPayload, task, status, reportStatus, error
           <span className="completed-icon"><Check size={32} /></span>
           <h1 id="import-completed-heading">Import completed</h1>
           <p>{processed} of {total} items processed successfully.</p>
-          <div className="action-cluster">
+          <div className="action-cluster" style={{justifyContent: 'center', flexWrap: 'wrap'}}>
             <Button variant="secondary" icon={Download} loading={reportStatus === 'loading'} onClick={onDownloadReport}>
               {reportStatus === 'loading' ? 'Exporting...' : 'Export import report'}
             </Button>

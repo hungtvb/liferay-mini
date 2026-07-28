@@ -3,9 +3,9 @@ import test from 'node:test';
 import {AppError} from '../server/errors.js';
 import {presentCliError} from '../cli/error-output.js';
 
-test('Ctrl+C style aborts are presented as user cancellation', () => {
+test('Ctrl+C style aborts are presented as a successful user cancellation', () => {
   const result = presentCliError(Object.assign(new Error('aborted'), {name: 'AbortError'}));
-  assert.equal(result.exitCode, 130);
+  assert.equal(result.exitCode, 0);
   assert.deepEqual(result.lines, ['Cancelled by user.']);
 });
 

@@ -14,6 +14,7 @@ import {normalizeCreateStrategy, normalizeImportStrategy, requiresUpsertConfirma
 import {CliStore} from './store.js';
 
 const DEFAULT_WORKBOOK_DIR = 'workbooks';
+const DEFAULT_WORKBOOK_PATH = path.join(DEFAULT_WORKBOOK_DIR, 'articles.xlsx');
 const rl = createInterface({input, output});
 const store = new CliStore();
 
@@ -58,6 +59,12 @@ async function choose(label, items, describe = (item) => item.name || String(ite
 async function confirm(label, fallback = false) {
   const answer = (await ask(`${label} (yes/no)`, fallback ? 'yes' : 'no')).toLowerCase();
   return ['y', 'yes'].includes(answer);
+}
+
+async function resolveWorkbookPath(fileName) {
+  if (fileName) return String(fileName);
+  assert(isInteractive(), 400, 'FILE_REQUIRED', 'Provide a .xlsx workbook path');
+  return ask('Workbook path', DEFAULT_WORKBOOK_PATH);
 }
 
 function selectionFromProfile(profile) {
@@ -134,7 +141,7 @@ async function template(profileName) {
 }
 
 async function validateFile(profileName, fileName) {
-  assert(fileName, 400, 'FILE_REQUIRED', 'Provide a .xlsx workbook path');
+  fileName = await resolveWorkbookPath(fileName);
   const {profile, workflow} = await loadContext(profileName);
   const buffer = await fs.readFile(path.resolve(fileName));
   const result = await workflow.validateBuffer(buffer, selectionFromProfile(profile));
@@ -171,6 +178,7 @@ async function chooseImportStrategy() {
 }
 
 async function importFile(profileName, fileName) {
+  fileName = await resolveWorkbookPath(fileName);
   const initial = await validateFile(profileName, fileName);
   if (!initial.validation.canImport) return;
   if (flag('dry-run')) {
@@ -245,6 +253,15 @@ async function status(profileName, taskArg, useLatest = flag('latest')) {
   output.write(`${JSON.stringify(task, null, 2)}\n`);
 }
 
+async function interactiveStatus(profileName) {
+  const source = await choose('Task lookup', [
+    {id: 'latest', label: 'Use the latest confirmed task'},
+    {id: 'task', label: 'Enter a Batch task ID'}
+  ], (item) => item.label);
+  if (source.id === 'latest') return status(profileName, null, true);
+  return status(profileName, await ask('Batch task ID'), false);
+}
+
 async function interactiveMenu(profileName) {
   const action = await choose('What do you want to do?', [
     {id: 'init', label: 'Initialize or update a profile'},
@@ -257,26 +274,13 @@ async function interactiveMenu(profileName) {
 
   if (action.id === 'init') return init(profileName);
   if (action.id === 'template') return template(profileName);
-  if (action.id === 'validate') {
-    const fileName = await ask('Workbook path', path.join(DEFAULT_WORKBOOK_DIR, 'articles.xlsx'));
-    return validateFile(profileName, fileName);
-  }
-  if (action.id === 'import') {
-    const fileName = await ask('Workbook path', path.join(DEFAULT_WORKBOOK_DIR, 'articles.xlsx'));
-    return importFile(profileName, fileName);
-  }
-  if (action.id === 'status') {
-    const source = await choose('Task lookup', [
-      {id: 'latest', label: 'Use the latest confirmed task'},
-      {id: 'task', label: 'Enter a Batch task ID'}
-    ], (item) => item.label);
-    if (source.id === 'latest') return status(profileName, null, true);
-    return status(profileName, await ask('Batch task ID'), false);
-  }
+  if (action.id === 'validate') return validateFile(profileName);
+  if (action.id === 'import') return importFile(profileName);
+  if (action.id === 'status') return interactiveStatus(profileName);
 }
 
 function printHelp() {
-  output.write(`Liferay Structured Content importer CLI\n\nRecommended interactive workflow:\n  npm run cli\n\nDirect commands (run from tools/liferay-article-importer):\n  node cli/index.js init [--profile name] [--client-id id]\n  node cli/index.js template [--profile name] [--output workbooks/file.xlsx]\n  node cli/index.js validate workbooks/file.xlsx [--profile name]\n  node cli/index.js import workbooks/file.xlsx [--profile name] [--dry-run]\n  node cli/index.js status <task-id> [--profile name]\n  node cli/index.js status --latest\n\nWhen import strategy flags are omitted in an interactive terminal, the CLI asks you to choose them.\nAutomation may pass:\n  --non-interactive\n  --create-strategy INSERT|UPSERT\n  --import-strategy ON_ERROR_FAIL|ON_ERROR_CONTINUE\n  --confirm-upsert\n`);
+  output.write(`Liferay Structured Content importer CLI\n\nInteractive workflow:\n  npm run cli\n  npm run cli init\n  npm run cli template\n  npm run cli validate\n  npm run cli import\n\nYou may provide the workbook path directly:\n  npm run cli validate workbooks/file.xlsx\n  npm run cli import workbooks/file.xlsx\n\nUse npm's -- separator only when passing flags:\n  npm run cli -- status --latest\n  npm run cli -- import workbooks/file.xlsx --dry-run\n\nAutomation may pass:\n  --non-interactive\n  --create-strategy INSERT|UPSERT\n  --import-strategy ON_ERROR_FAIL|ON_ERROR_CONTINUE\n  --confirm-upsert\n`);
 }
 
 async function main() {
@@ -288,7 +292,7 @@ async function main() {
   if (command === 'template') return template(profileName);
   if (command === 'validate') return validateFile(profileName, positional);
   if (command === 'import') return importFile(profileName, positional);
-  if (command === 'status') return status(profileName, positional);
+  if (command === 'status') return positional || flag('latest') ? status(profileName, positional) : interactiveStatus(profileName);
   throw new AppError(400, 'COMMAND_UNKNOWN', `Unknown command: ${command}`);
 }
 

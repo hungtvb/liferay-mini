@@ -10,6 +10,7 @@ import {ImportWorkflow} from '../server/import-workflow.js';
 import {LiferayClient} from '../server/liferay-client.js';
 import {normalizeTask} from '../server/import-service.js';
 import {configFromProfile, resolveClientId} from './config.js';
+import {presentCliError} from './error-output.js';
 import {normalizeCreateStrategy, normalizeImportStrategy, requiresUpsertConfirmation} from './import-options.js';
 import {CliStore} from './store.js';
 
@@ -17,6 +18,7 @@ const DEFAULT_WORKBOOK_DIR = 'workbooks';
 const DEFAULT_WORKBOOK_PATH = path.join(DEFAULT_WORKBOOK_DIR, 'articles.xlsx');
 const rl = createInterface({input, output});
 const store = new CliStore();
+let interruptHandled = false;
 
 function option(name, fallback = null) {
   const index = process.argv.indexOf(`--${name}`);
@@ -30,6 +32,17 @@ function flag(name) {
 function isInteractive() {
   return Boolean(input.isTTY && output.isTTY && !flag('non-interactive'));
 }
+
+function handleInterrupt() {
+  if (interruptHandled) process.exit(130);
+  interruptHandled = true;
+  output.write('\nCancelled by user.\n');
+  rl.close();
+  process.exit(130);
+}
+
+process.once('SIGINT', handleInterrupt);
+rl.once('SIGINT', handleInterrupt);
 
 function commandArgs() {
   return process.argv.slice(2).filter((value, index, values) => {
@@ -280,7 +293,7 @@ async function interactiveMenu(profileName) {
 }
 
 function printHelp() {
-  output.write(`Liferay Structured Content importer CLI\n\nInteractive workflow:\n  npm run cli\n  npm run cli init\n  npm run cli template\n  npm run cli validate\n  npm run cli import\n\nYou may provide the workbook path directly:\n  npm run cli validate workbooks/file.xlsx\n  npm run cli import workbooks/file.xlsx\n\nUse npm's -- separator only when passing flags:\n  npm run cli -- status --latest\n  npm run cli -- import workbooks/file.xlsx --dry-run\n\nAutomation may pass:\n  --non-interactive\n  --create-strategy INSERT|UPSERT\n  --import-strategy ON_ERROR_FAIL|ON_ERROR_CONTINUE\n  --confirm-upsert\n`);
+  output.write(`Liferay Structured Content importer CLI\n\nInteractive workflow:\n  npm run cli\n  npm run cli init\n  npm run cli template\n  npm run cli validate\n  npm run cli import\n\nYou may provide the workbook path directly:\n  npm run cli validate workbooks/file.xlsx\n  npm run cli import workbooks/file.xlsx\n\nUse npm's -- separator only when passing flags:\n  npm run cli -- status --latest\n  npm run cli -- import workbooks/file.xlsx --dry-run\n\nAutomation may pass:\n  --non-interactive\n  --create-strategy INSERT|UPSERT\n  --import-strategy ON_ERROR_FAIL|ON_ERROR_CONTINUE\n  --confirm-upsert\n\nTroubleshooting:\n  --verbose  Show technical error codes, details, and stack traces.\n`);
 }
 
 async function main() {
@@ -298,8 +311,9 @@ async function main() {
 
 main()
   .catch((error) => {
-    const details = error.details ? `\n${JSON.stringify(error.details, null, 2)}` : '';
-    process.stderr.write(`[${error.code || 'ERROR'}] ${error.message}${details}\n`);
-    process.exitCode = error.status >= 500 ? 1 : 2;
+    const presentation = presentCliError(error, {verbose: flag('verbose')});
+    const stream = presentation.exitCode === 0 ? output : process.stderr;
+    stream.write(`${presentation.lines.join('\n')}\n`);
+    process.exitCode = presentation.exitCode;
   })
   .finally(() => rl.close());

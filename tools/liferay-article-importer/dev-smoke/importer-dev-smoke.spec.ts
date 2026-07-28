@@ -1,6 +1,6 @@
 import {expect, test} from '@playwright/test';
 
-test('Vite dev UI renders with one React runtime and a valid favicon', async ({page}) => {
+test('Vite dev UI renders mobile icons with one React runtime and a valid favicon', async ({page}) => {
   const pageErrors: string[] = [];
   const consoleErrors: string[] = [];
 
@@ -9,6 +9,7 @@ test('Vite dev UI renders with one React runtime and a valid favicon', async ({p
     if (message.type() === 'error') consoleErrors.push(message.text());
   });
 
+  await page.setViewportSize({width: 375, height: 812});
   await page.route('**/api/config', (route) => route.fulfill({
     status: 200,
     contentType: 'application/json',
@@ -31,10 +32,11 @@ test('Vite dev UI renders with one React runtime and a valid favicon', async ({p
   const response = await page.goto('/');
   expect(response?.ok()).toBe(true);
   await expect(page.getByRole('heading', {name: 'Connect to Liferay'})).toBeVisible();
+  await expect(page.getByRole('navigation', {name: 'Workflow progress'})).toBeVisible();
 
   const favicon = await page.request.get('/favicon.svg');
   expect(favicon.ok()).toBe(true);
-  expect(await favicon.headerValue('content-type')).toContain('image/svg+xml');
+  expect(favicon.headers()['content-type']).toContain('image/svg+xml');
 
   expect(pageErrors).toEqual([]);
   expect(consoleErrors).toEqual([]);

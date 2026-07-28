@@ -184,7 +184,7 @@ async function importFile(profileName, fileName) {
     assert(initial.validation.ercCollisions.length === 0, 409, 'ERC_ALREADY_EXISTS', 'INSERT cannot continue because one or more ERCs already exist', {collisions: initial.validation.ercCollisions});
   }
 
-  if (requiresUpsertConfirmation(createStrategy) && !flag('confirm-upsert') && !flag('yes')) {
+  if (requiresUpsertConfirmation(createStrategy) && !flag('confirm-upsert')) {
     if (isInteractive()) {
       const confirmed = await confirm('UPSERT updates existing content by ERC and does not move it between folders. Continue?');
       assert(confirmed, 409, 'IMPORT_CANCELLED', 'Import cancelled');

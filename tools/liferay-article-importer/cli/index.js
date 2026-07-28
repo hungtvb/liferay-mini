@@ -9,6 +9,7 @@ import {AppError, assert} from '../server/errors.js';
 import {ImportWorkflow} from '../server/import-workflow.js';
 import {LiferayClient} from '../server/liferay-client.js';
 import {normalizeTask} from '../server/import-service.js';
+import {configFromProfile, resolveClientId} from './config.js';
 import {CliStore} from './store.js';
 
 const rl = createInterface({input, output});
@@ -48,26 +49,6 @@ async function choose(label, items, describe = (item) => item.name || String(ite
   }
 }
 
-function configFromProfile(profile, secret = process.env.LIFERAY_OAUTH_CLIENT_SECRET) {
-  assert(secret, 500, 'CONFIG_MISSING', 'Set LIFERAY_OAUTH_CLIENT_SECRET before running this command');
-  return {
-    baseUrl: String(profile.baseUrl).replace(/\/+$/, ''),
-    batchClassName: 'com.liferay.headless.delivery.dto.v1_0.StructuredContent',
-    clientId: profile.clientId,
-    clientSecret: secret,
-    defaultLocale: profile.defaultLocale || 'en-US',
-    defaultViewableBy: profile.viewableBy || 'Anyone',
-    imageIndexPageSize: 200,
-    maxImportRows: 5000,
-    maxRetries: 3,
-    pollIntervalMs: 1500,
-    pollTimeoutMs: 600000,
-    requestTimeoutMs: 30000,
-    retryBaseDelayMs: 500,
-    siteId: Number(profile.siteId)
-  };
-}
-
 function selectionFromProfile(profile) {
   return {
     folderId: profile.folderId,
@@ -93,7 +74,10 @@ async function init(profileName) {
   catch (error) { if (error.code !== 'PROFILE_NOT_FOUND') throw error; }
 
   const baseUrl = await ask('Liferay base URL', existing.baseUrl || process.env.LIFERAY_BASE_URL || 'http://localhost:8080');
-  const clientId = await ask('OAuth2 client ID', existing.clientId || process.env.LIFERAY_OAUTH_CLIENT_ID || '');
+  const clientId = resolveClientId({
+    existingClientId: existing.clientId,
+    overrideClientId: option('client-id')
+  });
   const siteId = Number(await ask('Current Site ID', existing.siteId || process.env.LIFERAY_SITE_ID || ''));
   const defaultLocale = await ask('Default locale', existing.defaultLocale || process.env.LIFERAY_DEFAULT_LOCALE || 'en-US');
   assert(Number.isSafeInteger(siteId) && siteId > 0, 400, 'SITE_ID_INVALID', 'Current Site ID must be a positive integer');
@@ -124,6 +108,7 @@ async function init(profileName) {
   };
   const destination = await store.writeProfile(profileName, profile);
   output.write(`\nProfile saved: ${destination}\n`);
+  output.write(`OAuth2 client ID: ${clientId}\n`);
   output.write('OAuth2 client secret was not saved. Set LIFERAY_OAUTH_CLIENT_SECRET for future commands.\n');
 }
 
@@ -222,7 +207,7 @@ async function status(profileName, taskArg) {
 }
 
 function printHelp() {
-  output.write(`Liferay flat Structured Content importer CLI\n\nCommands:\n  liferay-import init [--profile name]\n  liferay-import template [--profile name] [--output file.xlsx]\n  liferay-import validate <file.xlsx> [--profile name]\n  liferay-import import <file.xlsx> [--profile name] [--dry-run] [--create-strategy INSERT|UPSERT] [--import-strategy ON_ERROR_FAIL|ON_ERROR_CONTINUE] [--yes]\n  liferay-import status <task-id> [--profile name]\n  liferay-import status --latest\n`);
+  output.write(`Liferay flat Structured Content importer CLI\n\nCommands:\n  liferay-import init [--profile name] [--client-id id]\n  liferay-import template [--profile name] [--output file.xlsx]\n  liferay-import validate <file.xlsx> [--profile name]\n  liferay-import import <file.xlsx> [--profile name] [--dry-run] [--create-strategy INSERT|UPSERT] [--import-strategy ON_ERROR_FAIL|ON_ERROR_CONTINUE] [--yes]\n  liferay-import status <task-id> [--profile name]\n  liferay-import status --latest\n`);
 }
 
 async function main() {

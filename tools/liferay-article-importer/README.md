@@ -1,138 +1,142 @@
-# Liferay Flat Structured Content Importer
+# Liferay Structured Content Importer
 
-Local Node.js migration utility for importing supported **flat, non-repeatable Liferay Structured Content** from a generated Excel workbook. Article, Hero, Service, Testimonial, Partner, FAQ, and similar Structures use the same runtime path.
+Local tool for importing flat Liferay Structured Content from Excel. It provides both a Web UI and an internal CLI for developers preparing test content.
 
-## Demo scope
-
-Version 1 is intentionally scoped to one configured Liferay Site:
-
-```text
-Configured Current Site
-→ load Content Structures
-→ load Web Content folders
-→ load Documents and Media folders
-→ generate a scope-bound Excel workbook
-→ validate rows, friendly URLs, ERCs, and image references
-→ export a validation report
-→ submit one Structured Content Batch Engine task
-→ export an import report
-```
-
-Asset Library support is a planned enhancement. The demo does not call `headless-asset-library`, does not require JSONWS access, and does not expose a second content or media location in the UI.
-
-## Supported contract
-
-One run uses:
+## Current scope
 
 - One configured Liferay Site.
-- One selected Content Structure.
-- One selected Web Content folder in that Site.
-- One optional Documents and Media folder in that Site.
-- One fixed default locale.
-- One selected visibility policy.
-- One workbook.
-- One Batch Engine task.
+- Flat, non-repeatable Content Structures.
+- Existing Web Content target folder.
+- Images already uploaded to the Current Site Documents and Media.
+- Image lookup by exact file name or external reference code.
+- `INSERT` and `UPSERT` Batch Engine imports.
+- `Anyone`, `Members`, and `Owner` visibility.
 
-Supported field types: string/rich text, boolean, date, integer/long, decimal/number, image, and single-value select/radio.
+Supported fields include text/rich text, boolean, date, integer, decimal, image, and single-value select/radio.
 
-Nested, repeatable, relationship, document, geolocation, and grid fields are not imported. A required unsupported field blocks the Structure. Optional unsupported scalar fields are excluded with a warning.
+Nested, repeatable, relationship, document, geolocation, and grid fields are not imported. A required unsupported field blocks the selected Structure.
 
-## Configuration ownership
+## Requirements
 
-- ENV: Liferay URL, OAuth2 credentials, Site ID, default locale, default visibility, local bind address, and technical limits.
-- UI: Structure, target Web Content folder, optional Documents and Media folder, content visibility, workbook, INSERT/UPSERT, and error strategy.
-- Excel: title, ERC, optional friendly URL, dynamic Structure field values, and image references.
+- Node.js `22.12+`.
+- Liferay DXP `2026.Q1.1 LTS` target environment.
+- OAuth2 Client Credentials application with permission to read the Site content and submit Batch Engine tasks.
 
-Copy `.env.example` to `.env`. Never commit secrets.
-
-The OAuth2 client must be able to:
-
-- Read the configured Site's Content Structures.
-- Read the configured Site's Web Content folders.
-- Read the configured Site's Documents and Media folders and documents.
-- Submit and read Batch Engine import tasks.
-
-## Run
+Install dependencies once:
 
 ```bash
+cd tools/liferay-article-importer
 npm install
-npm run check
-npm test
+```
+
+## Web UI
+
+The Web UI is the complete guided workflow. It supports template download, workbook validation, Excel reports, Batch submission, and automatic status polling.
+
+Copy `.env.example` to `.env` and configure:
+
+```env
+LIFERAY_BASE_URL=http://localhost:8080
+LIFERAY_SITE_ID=34371
+LIFERAY_OAUTH_CLIENT_ID=nexcent-import-tool
+LIFERAY_OAUTH_CLIENT_SECRET=your-secret
+LIFERAY_DEFAULT_LOCALE=en-US
+LIFERAY_DEFAULT_CONTENT_VIEWABLE_BY=Anyone
+```
+
+Start the tool:
+
+```bash
 npm start
 ```
 
-Open `http://127.0.0.1:4174`.
-
-## Workflow
-
-1. Connect with OAuth2 Client Credentials. Connect is read-only.
-2. Select a supported Structure and an existing Web Content folder.
-3. Select content visibility: `Anyone`, `Members`, or `Owner`.
-4. Use the Current Site Documents and Media root, or restrict image resolution to one folder.
-5. Generate the Structure- and scope-bound workbook.
-6. Fill the `Content Items` sheet and upload it.
-7. Resolve every validation issue and optionally export the validation report.
-8. Choose existing-content handling and error handling.
-9. Submit one Batch Engine import task and poll it to completion.
-10. Export the import report with Batch status and failed-item details.
-
-`INSERT` is the default and verified folder-safe path. `UPSERT` requires confirmation because a missing item may be created at the Web Content root and existing items keep their current folder.
-
-## Liferay APIs
-
-### Content Structures
+Open:
 
 ```text
-GET /o/headless-delivery/v1.0/sites/{SITE_ID}/content-structures
+http://127.0.0.1:4174
 ```
 
-### Web Content folders
+UI workflow:
 
 ```text
-GET /o/headless-delivery/v1.0/sites/{SITE_ID}/structured-content-folders?flatten=true
+Connect
+→ choose Structure, Web Content folder, image folder, and visibility
+→ download and fill the Excel template
+→ upload and validate every row
+→ download the validation report if needed
+→ choose INSERT/UPSERT and error strategy
+→ submit and monitor the Batch task
+→ download the import report
 ```
 
-### Documents and Media folders
+## Internal CLI
+
+The CLI runs only from this project directory. It is intended for developers initializing content for testers.
+
+Only the OAuth Client Secret must remain outside the saved profile:
+
+```powershell
+$env:LIFERAY_OAUTH_CLIENT_SECRET = "your-secret"
+```
+
+The default OAuth Client ID is:
 
 ```text
-GET /o/headless-delivery/v1.0/sites/{SITE_ID}/document-folders?flatten=true
+nexcent-import-tool
 ```
 
-### Documents
+Override it only when needed:
 
-Source root:
+```bash
+npm run cli -- init --client-id custom-client-id
+```
+
+Initialize a profile once:
+
+```bash
+npm run cli -- init
+```
+
+`init` connects to Liferay and saves the selected Site settings, Structure, Web Content folder, Documents and Media folder, locale, visibility, and Client ID.
+
+Profiles are stored at:
 
 ```text
-GET /o/headless-delivery/v1.0/sites/{SITE_ID}/documents?flatten=true
+Windows: %USERPROFILE%\.liferay-import\profiles
+macOS/Linux: ~/.liferay-import/profiles
 ```
 
-Selected folder:
+The Client Secret is never stored in the profile.
 
-```text
-GET /o/headless-delivery/v1.0/document-folders/{FOLDER_ID}/documents
+Common commands:
+
+```bash
+npm run cli -- template
+npm run cli -- validate .\articles.xlsx
+npm run cli -- import .\articles.xlsx
+npm run cli -- status --latest
 ```
 
-### Batch import
+Useful import options:
 
-```text
-POST /o/headless-batch-engine/v1.0/import-task/com.liferay.headless.delivery.dto.v1_0.StructuredContent
-  ?createStrategy={INSERT|UPSERT}
-  &importStrategy={ON_ERROR_FAIL|ON_ERROR_CONTINUE}
-  &siteId={SITE_ID}
+```bash
+npm run cli -- import .\articles.xlsx --dry-run
+npm run cli -- import .\articles.xlsx --create-strategy UPSERT --yes
+npm run cli -- import .\articles.xlsx --import-strategy ON_ERROR_CONTINUE
 ```
 
-Each payload item carries `contentStructureId`, `structuredContentFolderId`, `viewableBy`, title, ERC, `friendlyUrlPath`, and dynamic fields.
+The CLI validates and revalidates before submission. It prints JSON results and stores the latest confirmed Batch task so `status --latest` works in a later process. Excel report download and automatic Batch polling currently belong to the Web UI.
 
-## Workbook
+## Excel workbook
 
-Sheets:
+The generated workbook contains:
 
-- `Content Items`: headers only; this is the importable sheet.
-- `Field Guide`: field reference, internal DDM name, type, required flag, input control, options, and accepted value.
-- `Example`: sample values that cannot be imported accidentally.
-- `Metadata`: very-hidden migration binding.
+- `Content Items`: import rows.
+- `Field Guide`: field types, required flags, options, and accepted values.
+- `Example`: non-imported sample data.
+- `Metadata`: hidden binding to the selected Site, Structure, folders, locale, and visibility.
 
-System columns:
+Required system columns:
 
 ```text
 Content Title *
@@ -140,119 +144,32 @@ External Reference Code *
 Friendly URL
 ```
 
-Dynamic columns are generated from the selected Structure. Both `fieldReference` and internal `name` are preserved in the final payload.
+`Friendly URL` is optional. When blank, it is generated from the title. Duplicate or invalid friendly URLs block validation.
 
-The metadata contract binds the workbook to:
-
-- Site.
-- Structure ID and fingerprint.
-- Target Web Content folder.
-- Default locale.
-- Current Site image source ID.
-- Optional Documents and Media folder.
-- Content visibility.
-
-Changing any bound value requires generating a new template. The current template contract version is `6`.
-
-## Friendly URLs
-
-`Friendly URL` is optional.
-
-- Blank values are generated deterministically from `Content Title`.
-- Vietnamese diacritics are removed and `đ` becomes `d`.
-- Explicit values are not silently rewritten.
-- Explicit values must contain only lowercase letters, numbers, and single hyphens.
-- Leading/trailing hyphens, spaces, uppercase characters, slashes, and values longer than 255 characters are rejected.
-- Duplicate friendly URLs in the workbook block every affected row.
-- A friendly URL already used by another Structured Content item in the Site blocks the row.
-- During UPSERT, the same friendly URL is allowed when it belongs to the item with the same ERC.
-
-Examples:
+Image fields accept:
 
 ```text
-Title: Trà Vải Đà Nẵng 2026
-Generated friendlyUrlPath: tra-vai-da-nang-2026
-
-Explicit friendly URL: summer-campaign-2026
+file:article-cover.webp
+erc:NXC_ARTICLE_COVER
 ```
 
-## Image references
+Matching is exact. Missing, duplicate, ambiguous, or non-image documents block the affected rows.
 
-Every image field generates exactly one Excel column. Accepted values:
+## Import safety
 
-```text
-file:hero-home.webp
-erc:NXC_HERO_HOME
+- Local validation errors block the entire submission.
+- `INSERT` is the default and blocks existing ERC collisions.
+- `UPSERT` requires confirmation because existing content keeps its current folder.
+- Batch POST requests are not automatically retried.
+- An uncertain Batch response is recorded as `BATCH_SUBMISSION_UNKNOWN`; check Liferay Batch Engine before retrying.
+- The workbook is revalidated against current Liferay data immediately before import.
+
+## Development checks
+
+```bash
+npm run check
+npm test
+npm run evidence
 ```
 
-Rules:
-
-- `file:` exact-matches `Document.fileName`, including extension.
-- `erc:` exact-matches `Document.externalReferenceCode`.
-- Prefix is mandatory.
-- No title lookup, fuzzy matching, fallback, Document ID, or cross-source search.
-- The Site root is loaded recursively with `flatten=true`.
-- An explicitly selected folder resolves only documents directly in that folder.
-- Documents are paginated once and indexed in memory by file name and ERC.
-- Missing, ambiguous, or non-image Documents block every affected row before Batch submission.
-
-## Excel reports
-
-### Validation report
-
-Available immediately after workbook validation, including blocked validation runs.
-
-Sheets:
-
-- `Summary`: selected scope and validation totals.
-- `Rows`: every workbook row, ERC, title, friendly URL, generated/manual source, status, and combined messages.
-- `Issues`: every error and warning with row, field, value, ERC, title, and friendly URL.
-
-### Import report
-
-Available after a Batch task has been submitted and reached a terminal state.
-
-It includes all validation sheets plus:
-
-- `Batch`: task ID, status, strategies, processed/failed/total counts, and error message.
-- `Batch Failed Items`: failed-item details returned by Liferay, when available.
-
-Reports are generated from the backend validation session, not from the limited UI preview.
-
-## Visibility
-
-The ENV value:
-
-```text
-LIFERAY_DEFAULT_CONTENT_VIEWABLE_BY=Anyone
-```
-
-controls the default UI selection. Each run may choose:
-
-```text
-Anyone
-Members
-Owner
-```
-
-The selected visibility is stored in workbook metadata, validation session state, and every Structured Content payload item.
-
-## Examples
-
-### NXC Article
-
-Select `NXC Article`, the `Articles` Web Content folder, the Documents and Media folder containing the covers, and the desired visibility. Generate the template and use `file:article-cover.webp` or `erc:NXC_ARTICLE_COVER` in the Cover Image Reference column. Leave `Friendly URL` blank to generate it from the Article title.
-
-### NXC Hero
-
-Select a flat `NXC Hero` Structure and the `Heroes` Web Content folder. Choose the Documents and Media folder containing Hero images. The same importer generates Heading, Description, Hero Image Reference, CTA, and optional Friendly URL columns from the live Structure.
-
-## Planned enhancements
-
-- Connected Asset Library discovery and validation.
-- Site or Asset Library content destination.
-- Site or Asset Library media source.
-- ZIP image upload.
-- Nested and repeatable fields.
-- Per-run Site and locale selection.
-- Database-backed import history.
+Automated checks cover TypeScript, UI build, workbook contracts, validation, image resolution, reports, CLI configuration, profile persistence, and submission safety. Live Liferay runtime verification is still required for environment-specific behavior.

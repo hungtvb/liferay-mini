@@ -2,7 +2,7 @@
 
 Local Excel importer for flat, non-repeatable Liferay Structured Content.
 
-- Web UI: guided template, validation, import, and reports.
+- Web UI: template, validation, import, and Excel reports.
 - CLI: developer workflow for preparing tester content.
 - Batch strategies: `INSERT` and `UPSERT`.
 
@@ -45,23 +45,43 @@ Interactive menu:
 npm run cli
 ```
 
-Direct flows:
+Main commands:
 
 ```bash
 npm run cli init
 npm run cli template
 npm run cli validate
 npm run cli import
+npm run cli report
 npm run cli -- status --latest
 ```
 
-Pass the workbook directly or let the CLI ask for it:
+Pass a workbook directly or let the CLI ask for it:
 
 ```bash
 npm run cli import .\workbooks\articles.xlsx
+npm run cli report validation .\workbooks\articles.xlsx
 ```
 
-Safe defaults:
+Export the latest completed import report:
+
+```bash
+npm run cli -- report import --latest
+```
+
+Export a report for a specific Batch task:
+
+```bash
+npm run cli report import 12345 .\workbooks\articles.xlsx
+```
+
+Reports default to `reports/`. Override the file path with `--output`:
+
+```bash
+npm run cli -- report import --latest --output .\reports\latest-import.xlsx
+```
+
+Safe import defaults:
 
 ```text
 createStrategy = INSERT
@@ -76,9 +96,9 @@ npm run cli -- import .\workbooks\articles.xlsx --non-interactive --create-strat
 npm run cli -- import .\workbooks\articles.xlsx --non-interactive --create-strategy UPSERT --import-strategy ON_ERROR_CONTINUE --confirm-upsert
 ```
 
-Useful flags: `--profile`, `--dry-run`, `--verbose`, and `--non-interactive`.
+Useful flags: `--profile`, `--output`, `--dry-run`, `--verbose`, and `--non-interactive`.
 
-Put local Excel files in `workbooks/`. The folder is tracked; `.xlsx` files are ignored.
+Put local Excel files in `workbooks/`. Generated reports and local `.xlsx` files are ignored by Git.
 
 ## Workbook contract
 
@@ -106,23 +126,44 @@ erc:NXC_ARTICLE_COVER
 
 Upload images to the selected Documents and Media folder before import.
 
+## Reports
+
+Validation report:
+
+```text
+Summary
+Rows
+Issues
+```
+
+Import report adds:
+
+```text
+Batch
+Batch Failed Items (when available)
+```
+
+The CLI stores the original validation snapshot for each submitted Batch task so later import reports match that import run.
+
 ## Safety
 
 - Validation failures block Batch submission.
 - `INSERT` blocks existing ERC collisions.
 - `UPSERT` updates by ERC and keeps existing items in their current folder.
 - Batch POST is not retried automatically.
+- Import reports are available only after the Batch task reaches a terminal status.
 - Check Liferay Batch Engine before retrying an uncertain submission.
 
 ## Layout
 
 ```text
-cli/        CLI, terminal output, profiles, and latest-run state
-server/     Shared Liferay, workbook, validation, and import services
+cli/        CLI, terminal output, profiles, run state, and report snapshots
+server/     Shared Liferay, workbook, validation, import, and report services
 ui/         React Web UI
 scripts/    Static contract checks
 test/       Node unit and CLI regression tests
 workbooks/  Local Excel files
+reports/    Generated CLI reports
 ```
 
 ## Checks

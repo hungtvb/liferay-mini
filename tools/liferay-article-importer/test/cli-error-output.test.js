@@ -26,6 +26,7 @@ test('interactive CLI errors exit cleanly while automation preserves failure cod
 
 test('missing Batch task errors are scoped to the requested task', () => {
   const result = presentCliError(new AppError(404, 'LIFERAY_API_ERROR', 'Liferay API request failed', {
+    method: 'GET',
     path: '/o/headless-batch-engine/v1.0/import-task/2',
     status: 404
   }));
@@ -35,6 +36,17 @@ test('missing Batch task errors are scoped to the requested task', () => {
   assert.match(result.lines[1], /latest confirmed task/i);
   assert.doesNotMatch(result.lines.join('\n'), /run npm run cli init/i);
   assert.match(result.lines.join('\n'), /profile is still valid/i);
+});
+
+test('Batch submission 404 is not mislabeled as a missing task ID', () => {
+  const result = presentCliError(new AppError(404, 'LIFERAY_API_ERROR', 'Liferay API request failed', {
+    method: 'POST',
+    path: '/o/headless-batch-engine/v1.0/import-task/com.liferay.headless.delivery.dto.v1_0.StructuredContent',
+    status: 404
+  }));
+
+  assert.doesNotMatch(result.lines[0], /Batch task .* was not found/i);
+  assert.match(result.lines[0], /configured Liferay resource/i);
 });
 
 test('known Liferay errors include a useful next action', () => {

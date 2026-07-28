@@ -6,3 +6,4 @@ public/*
 !public/.gitkeep
 workbooks/*
 !workbooks/.gitkeep
+reports/

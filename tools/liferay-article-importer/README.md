@@ -81,22 +81,28 @@ tools/liferay-article-importer/workbooks/
 
 The folder is committed, but its `.xlsx` files are ignored by Git.
 
-### Recommended interactive workflow
+### Interactive workflow
 
-Run one command:
+Run the main menu:
 
 ```bash
 npm run cli
 ```
 
-The CLI then asks what you want to do:
+Or open a specific flow directly:
 
-```text
-Initialize or update a profile
-Generate an Excel template
-Validate a workbook
-Import a workbook
-Check a Batch task status
+```bash
+npm run cli init
+npm run cli template
+npm run cli validate
+npm run cli import
+```
+
+`validate` and `import` ask for the workbook path when it is not provided. You may also provide it directly:
+
+```bash
+npm run cli validate .\workbooks\articles.xlsx
+npm run cli import .\workbooks\articles.xlsx
 ```
 
 During import, the CLI asks you to choose:
@@ -106,7 +112,9 @@ INSERT or UPSERT
 ON_ERROR_FAIL or ON_ERROR_CONTINUE
 ```
 
-Choosing `UPSERT` shows its folder-safety warning and asks for confirmation inside the interactive flow. No `--yes` flag is needed.
+Pressing Enter selects the safe defaults: `INSERT` and `ON_ERROR_FAIL`.
+
+Choosing `UPSERT` shows its folder-safety warning and asks for confirmation inside the interactive flow. No `--yes` flag is used.
 
 `init` saves the selected Site settings, Structure, Web Content folder, Documents and Media folder, locale, visibility, and Client ID.
 
@@ -119,28 +127,23 @@ macOS/Linux: ~/.liferay-import/profiles
 
 The Client Secret stays in the local `.env`; it is never stored in the CLI profile.
 
-### Direct commands and automation
+### Flags and automation
 
-Direct commands can bypass npm argument forwarding by invoking the CLI file:
+Plain positional commands do not require npm's `--` separator. Use the separator when passing options that start with `--`:
 
 ```bash
-node cli/index.js init
-node cli/index.js template
-node cli/index.js validate .\workbooks\articles.xlsx
-node cli/index.js import .\workbooks\articles.xlsx
-node cli/index.js status --latest
+npm run cli -- status --latest
+npm run cli -- import .\workbooks\articles.xlsx --dry-run
 ```
-
-When run in an interactive terminal, omitted import strategies are still selected through prompts.
 
 For non-interactive automation, pass all required choices explicitly:
 
 ```bash
-node cli/index.js import .\workbooks\articles.xlsx --non-interactive --create-strategy INSERT --import-strategy ON_ERROR_FAIL
-node cli/index.js import .\workbooks\articles.xlsx --non-interactive --create-strategy UPSERT --import-strategy ON_ERROR_CONTINUE --confirm-upsert
+npm run cli -- import .\workbooks\articles.xlsx --non-interactive --create-strategy INSERT --import-strategy ON_ERROR_FAIL
+npm run cli -- import .\workbooks\articles.xlsx --non-interactive --create-strategy UPSERT --import-strategy ON_ERROR_CONTINUE --confirm-upsert
 ```
 
-`--confirm-upsert` is intentionally required only for non-interactive UPSERT runs so a script cannot update existing content accidentally.
+`--confirm-upsert` is required only for non-interactive UPSERT runs so a script cannot update existing content accidentally.
 
 The CLI validates and revalidates before submission. It prints JSON results and stores the latest confirmed Batch task so `status --latest` works in a later process. Excel report download and automatic Batch polling currently belong to the Web UI.
 

@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import {AppError} from '../server/errors.js';
-import {presentCliError} from '../cli/error-output.js';
+import {presentCliError, resolveCliExitCode} from '../cli/error-output.js';
 
 test('Ctrl+C style aborts are presented as a successful user cancellation', () => {
   const result = presentCliError(Object.assign(new Error('aborted'), {name: 'AbortError'}));
@@ -13,6 +13,13 @@ test('interactive import cancellation is not presented as an error', () => {
   const result = presentCliError(new AppError(409, 'IMPORT_CANCELLED', 'Import cancelled'));
   assert.equal(result.exitCode, 0);
   assert.deepEqual(result.lines, ['Import cancelled.']);
+});
+
+test('interactive CLI errors exit cleanly while automation preserves failure codes', () => {
+  assert.equal(resolveCliExitCode(2, {interactive: true}), 0);
+  assert.equal(resolveCliExitCode(1, {interactive: true}), 0);
+  assert.equal(resolveCliExitCode(2, {interactive: false}), 2);
+  assert.equal(resolveCliExitCode(1, {interactive: false}), 1);
 });
 
 test('known Liferay errors include a useful next action', () => {

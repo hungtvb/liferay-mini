@@ -23,7 +23,7 @@ Copy `.env.example` to `.env` and set at least:
 LIFERAY_OAUTH_CLIENT_SECRET=your-secret
 ```
 
-The Web UI reads its connection values from `.env`. CLI `init` stores non-sensitive selections in `~/.liferay-import`.
+The Web UI reads connection values from `.env`. CLI `init` stores non-sensitive selections in `~/.liferay-import`.
 
 ## Web UI
 
@@ -117,25 +117,19 @@ Upload images to the selected Documents and Media folder before import.
 ## Layout
 
 ```text
-cli/             CLI, terminal output, profiles, and latest-run state
-server/          Shared Liferay, workbook, validation, and import services
-ui/              React Web UI
-scripts/         Static contract checks
-test/            Node unit tests and CLI process regression tests
-dev-smoke/       Vite development-runtime Playwright smoke test
-evidence-tests/  Built-preview Playwright journey
-workbooks/       Local Excel files
+cli/        CLI, terminal output, profiles, and latest-run state
+server/     Shared Liferay, workbook, validation, and import services
+ui/         React Web UI
+scripts/    Static contract checks
+test/       Node unit and CLI regression tests
+workbooks/  Local Excel files
 ```
-
-The two Playwright suites are intentional: one checks Vite dev runtime behavior, the other checks the built preview.
 
 ## Checks
 
 ```bash
 npm run check
 npm test
-npm run smoke:dev
-npm run evidence
 ```
 
 `npm run check` covers typecheck, UI build, static contracts, and CLI help. Live Liferay verification is still required for runtime-dependent changes.

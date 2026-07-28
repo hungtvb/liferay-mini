@@ -13,11 +13,13 @@ import {configFromProfile, resolveClientId} from './config.js';
 import {presentCliError, resolveCliExitCode} from './error-output.js';
 import {normalizeCreateStrategy, normalizeImportStrategy, requiresUpsertConfirmation} from './import-options.js';
 import {CliStore} from './store.js';
+import {createTerminal} from './terminal.js';
 
 const DEFAULT_WORKBOOK_DIR = 'workbooks';
 const DEFAULT_WORKBOOK_PATH = path.join(DEFAULT_WORKBOOK_DIR, 'articles.xlsx');
 const rl = createInterface({input, output});
 const store = new CliStore();
+const terminal = createTerminal({output, error: process.stderr});
 let interruptHandled = false;
 
 function option(name, fallback = null) {
@@ -37,7 +39,8 @@ function handleInterrupt() {
   if (interruptHandled) return;
   interruptHandled = true;
   rl.close();
-  output.write('\nCancelled by user.\n', () => process.exit(0));
+  terminal.info('Cancelled by user.');
+  process.exit(0);
 }
 
 process.once('SIGINT', handleInterrupt);
@@ -51,20 +54,19 @@ function commandArgs() {
 }
 
 async function ask(label, fallback = '') {
-  const suffix = fallback ? ` [${fallback}]` : '';
-  const value = (await rl.question(`${label}${suffix}: `)).trim();
+  const value = (await rl.question(terminal.prompt(label, fallback))).trim();
   return value || String(fallback || '').trim();
 }
 
 async function choose(label, items, describe = (item) => item.name || String(item)) {
   assert(items.length > 0, 409, 'CHOICE_EMPTY', `No options are available for ${label}`);
-  output.write(`\n${label}\n`);
-  items.forEach((item, index) => output.write(`  ${index + 1}. ${describe(item)}\n`));
+  terminal.heading(label);
+  items.forEach((item, index) => output.write(`${terminal.choice(index + 1, describe(item))}\n`));
   while (true) {
     const raw = await ask('Select', '1');
     const index = Number(raw) - 1;
     if (Number.isInteger(index) && items[index]) return items[index];
-    output.write('Enter one of the listed numbers.\n');
+    terminal.warning('Invalid selection.', ['Enter one of the listed numbers.']);
   }
 }
 
@@ -99,6 +101,8 @@ async function loadContext(profileName) {
 }
 
 async function init(profileName) {
+  terminal.heading('Initialize profile');
+
   let existing = {};
   try { existing = await store.readProfile(profileName); }
   catch (error) { if (error.code !== 'PROFILE_NOT_FOUND') throw error; }
@@ -137,9 +141,19 @@ async function init(profileName) {
     viewableBy: visibility
   };
   const destination = await store.writeProfile(profileName, profile);
-  output.write(`\nProfile saved: ${destination}\n`);
-  output.write(`OAuth2 client ID: ${clientId}\n`);
-  output.write('OAuth2 client secret was not saved. Keep it in the local .env file or an environment variable.\n');
+
+  terminal.heading('Initialization result');
+  terminal.success('Profile initialized successfully.');
+  terminal.result('Profile', profileName);
+  terminal.result('Saved to', destination);
+  terminal.result('Site ID', siteId);
+  terminal.result('Structure', `${structure.name} (${structure.id})`);
+  terminal.result('Target folder', folder.path || folder.name);
+  terminal.result('Image source', imageFolder.path || 'Current Site root');
+  terminal.result('Visibility', visibility);
+  terminal.info('OAuth2 Client Secret was not saved.', [
+    'Keep it in the local .env file or an environment variable.'
+  ]);
 }
 
 async function template(profileName) {
@@ -149,7 +163,7 @@ async function template(profileName) {
   const destination = path.resolve(String(option('output', defaultDestination)));
   await fs.mkdir(path.dirname(destination), {recursive: true});
   await fs.writeFile(destination, Buffer.from(template.buffer));
-  output.write(`Template written: ${destination}\n`);
+  terminal.success('Excel template generated.', [`File: ${destination}`]);
 }
 
 async function validateFile(profileName, fileName) {
@@ -157,13 +171,25 @@ async function validateFile(profileName, fileName) {
   const {profile, workflow} = await loadContext(profileName);
   const buffer = await fs.readFile(path.resolve(fileName));
   const result = await workflow.validateBuffer(buffer, selectionFromProfile(profile));
-  output.write(`${JSON.stringify({
+  const summary = {
     canImport: result.validation.canImport,
     errors: result.validation.errors,
     stats: result.validation.stats,
     warnings: result.validation.warnings
-  }, null, 2)}\n`);
-  if (!result.validation.canImport) process.exitCode = 2;
+  };
+
+  terminal.heading('Validation result');
+  if (result.validation.canImport) {
+    terminal.success('Workbook validation passed.');
+  }
+  else {
+    terminal.warning('Workbook validation failed.', ['No Batch task was submitted.']);
+  }
+  terminal.writeJson(summary);
+
+  if (!result.validation.canImport) {
+    process.exitCode = resolveCliExitCode(2, {interactive: isInteractive()});
+  }
   return result;
 }
 
@@ -194,7 +220,7 @@ async function importFile(profileName, fileName) {
   const initial = await validateFile(profileName, fileName);
   if (!initial.validation.canImport) return;
   if (flag('dry-run')) {
-    output.write('Dry run complete. No Batch task was submitted.\n');
+    terminal.success('Dry run completed.', ['No Batch task was submitted.']);
     return;
   }
 
@@ -247,7 +273,12 @@ async function importFile(profileName, fileName) {
     status: normalized.executeStatus,
     taskId: normalized.id
   });
-  output.write(`${JSON.stringify(normalized, null, 2)}\n`);
+
+  terminal.heading('Import result');
+  terminal.success(`Batch task ${normalized.id} was submitted.`);
+  terminal.result('Create strategy', createStrategy);
+  terminal.result('Import strategy', importStrategy);
+  terminal.writeJson(normalized);
 }
 
 async function status(profileName, taskArg, useLatest = flag('latest')) {
@@ -262,7 +293,11 @@ async function status(profileName, taskArg, useLatest = flag('latest')) {
   const {liferay} = await loadContext(profileName);
   const task = normalizeTask(await liferay.getImportTask(taskId));
   await store.writeRun({...task, profile: profileName, status: task.executeStatus, taskId: task.id});
-  output.write(`${JSON.stringify(task, null, 2)}\n`);
+
+  terminal.heading('Batch task result');
+  terminal.success(`Batch task ${task.id} was found.`);
+  terminal.result('Status', task.executeStatus || 'Unknown');
+  terminal.writeJson(task);
 }
 
 async function interactiveStatus(profileName) {
@@ -312,8 +347,9 @@ main()
   .catch((error) => {
     if (interruptHandled) return;
     const presentation = presentCliError(error, {verbose: flag('verbose')});
-    const stream = presentation.exitCode === 0 ? output : process.stderr;
-    stream.write(`${presentation.lines.join('\n')}\n`);
+    const [title, ...details] = presentation.lines;
+    const presenter = terminal[presentation.tone] || terminal.error;
+    presenter(title, details);
     process.exitCode = resolveCliExitCode(presentation.exitCode, {interactive: isInteractive()});
   })
   .finally(() => rl.close());

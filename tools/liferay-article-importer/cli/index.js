@@ -10,6 +10,7 @@ import {ImportWorkflow} from '../server/import-workflow.js';
 import {LiferayClient} from '../server/liferay-client.js';
 import {normalizeTask} from '../server/import-service.js';
 import {configFromProfile, resolveClientId} from './config.js';
+import {normalizeCreateStrategy, normalizeImportStrategy, requiresUpsertConfirmation} from './import-options.js';
 import {CliStore} from './store.js';
 
 const DEFAULT_WORKBOOK_DIR = 'workbooks';
@@ -23,6 +24,10 @@ function option(name, fallback = null) {
 
 function flag(name) {
   return process.argv.includes(`--${name}`);
+}
+
+function isInteractive() {
+  return Boolean(input.isTTY && output.isTTY && !flag('non-interactive'));
 }
 
 function commandArgs() {
@@ -48,6 +53,11 @@ async function choose(label, items, describe = (item) => item.name || String(ite
     if (Number.isInteger(index) && items[index]) return items[index];
     output.write('Enter one of the listed numbers.\n');
   }
+}
+
+async function confirm(label, fallback = false) {
+  const answer = (await ask(`${label} (yes/no)`, fallback ? 'yes' : 'no')).toLowerCase();
+  return ['y', 'yes'].includes(answer);
 }
 
 function selectionFromProfile(profile) {
@@ -138,6 +148,28 @@ async function validateFile(profileName, fileName) {
   return result;
 }
 
+async function chooseCreateStrategy() {
+  const supplied = option('create-strategy');
+  if (supplied) return normalizeCreateStrategy(supplied);
+  if (!isInteractive()) return 'INSERT';
+  const selected = await choose('Existing content handling', [
+    {label: 'Create new only (INSERT)', value: 'INSERT'},
+    {label: 'Create or update by ERC (UPSERT)', value: 'UPSERT'}
+  ], (item) => item.label);
+  return selected.value;
+}
+
+async function chooseImportStrategy() {
+  const supplied = option('import-strategy');
+  if (supplied) return normalizeImportStrategy(supplied);
+  if (!isInteractive()) return 'ON_ERROR_FAIL';
+  const selected = await choose('Failure handling', [
+    {label: 'Stop on first failure (ON_ERROR_FAIL)', value: 'ON_ERROR_FAIL'},
+    {label: 'Continue and collect failures (ON_ERROR_CONTINUE)', value: 'ON_ERROR_CONTINUE'}
+  ], (item) => item.label);
+  return selected.value;
+}
+
 async function importFile(profileName, fileName) {
   const initial = await validateFile(profileName, fileName);
   if (!initial.validation.canImport) return;
@@ -146,16 +178,20 @@ async function importFile(profileName, fileName) {
     return;
   }
 
-  const createStrategy = String(option('create-strategy', 'INSERT')).toUpperCase();
-  const importStrategy = String(option('import-strategy', 'ON_ERROR_FAIL')).toUpperCase();
-  assert(['INSERT', 'UPSERT'].includes(createStrategy), 400, 'CREATE_STRATEGY_INVALID', 'create strategy must be INSERT or UPSERT');
-  assert(['ON_ERROR_FAIL', 'ON_ERROR_CONTINUE'].includes(importStrategy), 400, 'IMPORT_STRATEGY_INVALID', 'import strategy must be ON_ERROR_FAIL or ON_ERROR_CONTINUE');
+  const createStrategy = await chooseCreateStrategy();
+  const importStrategy = await chooseImportStrategy();
   if (createStrategy === 'INSERT') {
     assert(initial.validation.ercCollisions.length === 0, 409, 'ERC_ALREADY_EXISTS', 'INSERT cannot continue because one or more ERCs already exist', {collisions: initial.validation.ercCollisions});
   }
-  if (createStrategy === 'UPSERT' && !flag('yes')) {
-    const confirmed = (await ask('UPSERT may not move existing content between folders. Continue?', 'no')).toLowerCase();
-    assert(['y', 'yes'].includes(confirmed), 409, 'IMPORT_CANCELLED', 'Import cancelled');
+
+  if (requiresUpsertConfirmation(createStrategy) && !flag('confirm-upsert') && !flag('yes')) {
+    if (isInteractive()) {
+      const confirmed = await confirm('UPSERT updates existing content by ERC and does not move it between folders. Continue?');
+      assert(confirmed, 409, 'IMPORT_CANCELLED', 'Import cancelled');
+    }
+    else {
+      throw new AppError(409, 'UPSERT_CONFIRMATION_REQUIRED', 'Non-interactive UPSERT requires --confirm-upsert');
+    }
   }
 
   const {liferay, profile, workflow} = await loadContext(profileName);
@@ -194,9 +230,9 @@ async function importFile(profileName, fileName) {
   output.write(`${JSON.stringify(normalized, null, 2)}\n`);
 }
 
-async function status(profileName, taskArg) {
+async function status(profileName, taskArg, useLatest = flag('latest')) {
   let taskId = taskArg;
-  if (flag('latest')) {
+  if (useLatest) {
     const latest = await store.readLatestRun();
     assert(latest.taskId, 409, 'LATEST_TASK_UNKNOWN', 'The latest run has no confirmed Batch task ID');
     taskId = latest.taskId;
@@ -209,14 +245,45 @@ async function status(profileName, taskArg) {
   output.write(`${JSON.stringify(task, null, 2)}\n`);
 }
 
+async function interactiveMenu(profileName) {
+  const action = await choose('What do you want to do?', [
+    {id: 'init', label: 'Initialize or update a profile'},
+    {id: 'template', label: 'Generate an Excel template'},
+    {id: 'validate', label: 'Validate a workbook'},
+    {id: 'import', label: 'Import a workbook'},
+    {id: 'status', label: 'Check a Batch task status'},
+    {id: 'exit', label: 'Exit'}
+  ], (item) => item.label);
+
+  if (action.id === 'init') return init(profileName);
+  if (action.id === 'template') return template(profileName);
+  if (action.id === 'validate') {
+    const fileName = await ask('Workbook path', path.join(DEFAULT_WORKBOOK_DIR, 'articles.xlsx'));
+    return validateFile(profileName, fileName);
+  }
+  if (action.id === 'import') {
+    const fileName = await ask('Workbook path', path.join(DEFAULT_WORKBOOK_DIR, 'articles.xlsx'));
+    return importFile(profileName, fileName);
+  }
+  if (action.id === 'status') {
+    const source = await choose('Task lookup', [
+      {id: 'latest', label: 'Use the latest confirmed task'},
+      {id: 'task', label: 'Enter a Batch task ID'}
+    ], (item) => item.label);
+    if (source.id === 'latest') return status(profileName, null, true);
+    return status(profileName, await ask('Batch task ID'), false);
+  }
+}
+
 function printHelp() {
-  output.write(`Liferay Structured Content importer CLI\n\nRun inside tools/liferay-article-importer. Keep local Excel files in ./workbooks:\n  npm run cli -- init [--profile name] [--client-id id]\n  npm run cli -- template [--profile name] [--output workbooks/file.xlsx]\n  npm run cli -- validate workbooks/file.xlsx [--profile name]\n  npm run cli -- import workbooks/file.xlsx [--profile name] [--dry-run] [--create-strategy INSERT|UPSERT] [--import-strategy ON_ERROR_FAIL|ON_ERROR_CONTINUE] [--yes]\n  npm run cli -- status <task-id> [--profile name]\n  npm run cli -- status --latest\n`);
+  output.write(`Liferay Structured Content importer CLI\n\nRecommended interactive workflow:\n  npm run cli\n\nDirect commands (run from tools/liferay-article-importer):\n  node cli/index.js init [--profile name] [--client-id id]\n  node cli/index.js template [--profile name] [--output workbooks/file.xlsx]\n  node cli/index.js validate workbooks/file.xlsx [--profile name]\n  node cli/index.js import workbooks/file.xlsx [--profile name] [--dry-run]\n  node cli/index.js status <task-id> [--profile name]\n  node cli/index.js status --latest\n\nWhen import strategy flags are omitted in an interactive terminal, the CLI asks you to choose them.\nAutomation may pass:\n  --non-interactive\n  --create-strategy INSERT|UPSERT\n  --import-strategy ON_ERROR_FAIL|ON_ERROR_CONTINUE\n  --confirm-upsert\n`);
 }
 
 async function main() {
   const [command, positional] = commandArgs();
   const profileName = String(option('profile', 'default'));
-  if (!command || ['help', '--help', '-h'].includes(command)) return printHelp();
+  if (!command) return isInteractive() ? interactiveMenu(profileName) : printHelp();
+  if (['help', '--help', '-h'].includes(command)) return printHelp();
   if (command === 'init') return init(profileName);
   if (command === 'template') return template(profileName);
   if (command === 'validate') return validateFile(profileName, positional);

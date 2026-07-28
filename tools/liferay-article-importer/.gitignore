@@ -6,6 +6,3 @@ public/*
 !public/.gitkeep
 workbooks/*
 !workbooks/.gitkeep
-evidence/
-playwright-report/
-test-results/

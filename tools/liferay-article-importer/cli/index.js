@@ -12,6 +12,7 @@ import {normalizeTask} from '../server/import-service.js';
 import {configFromProfile, resolveClientId} from './config.js';
 import {CliStore} from './store.js';
 
+const DEFAULT_WORKBOOK_DIR = 'workbooks';
 const rl = createInterface({input, output});
 const store = new CliStore();
 
@@ -109,13 +110,15 @@ async function init(profileName) {
   const destination = await store.writeProfile(profileName, profile);
   output.write(`\nProfile saved: ${destination}\n`);
   output.write(`OAuth2 client ID: ${clientId}\n`);
-  output.write('OAuth2 client secret was not saved. Set LIFERAY_OAUTH_CLIENT_SECRET for future commands.\n');
+  output.write('OAuth2 client secret was not saved. Keep it in the local .env file or an environment variable.\n');
 }
 
 async function template(profileName) {
   const {profile, workflow} = await loadContext(profileName);
   const {template} = await workflow.buildTemplate(selectionFromProfile(profile));
-  const destination = path.resolve(String(option('output', template.fileName)));
+  const defaultDestination = path.join(DEFAULT_WORKBOOK_DIR, template.fileName);
+  const destination = path.resolve(String(option('output', defaultDestination)));
+  await fs.mkdir(path.dirname(destination), {recursive: true});
   await fs.writeFile(destination, Buffer.from(template.buffer));
   output.write(`Template written: ${destination}\n`);
 }
@@ -207,7 +210,7 @@ async function status(profileName, taskArg) {
 }
 
 function printHelp() {
-  output.write(`Liferay Structured Content importer CLI\n\nRun inside tools/liferay-article-importer:\n  npm run cli -- init [--profile name] [--client-id id]\n  npm run cli -- template [--profile name] [--output file.xlsx]\n  npm run cli -- validate <file.xlsx> [--profile name]\n  npm run cli -- import <file.xlsx> [--profile name] [--dry-run] [--create-strategy INSERT|UPSERT] [--import-strategy ON_ERROR_FAIL|ON_ERROR_CONTINUE] [--yes]\n  npm run cli -- status <task-id> [--profile name]\n  npm run cli -- status --latest\n`);
+  output.write(`Liferay Structured Content importer CLI\n\nRun inside tools/liferay-article-importer. Keep local Excel files in ./workbooks:\n  npm run cli -- init [--profile name] [--client-id id]\n  npm run cli -- template [--profile name] [--output workbooks/file.xlsx]\n  npm run cli -- validate workbooks/file.xlsx [--profile name]\n  npm run cli -- import workbooks/file.xlsx [--profile name] [--dry-run] [--create-strategy INSERT|UPSERT] [--import-strategy ON_ERROR_FAIL|ON_ERROR_CONTINUE] [--yes]\n  npm run cli -- status <task-id> [--profile name]\n  npm run cli -- status --latest\n`);
 }
 
 async function main() {

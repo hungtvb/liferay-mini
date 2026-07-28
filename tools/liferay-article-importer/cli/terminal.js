@@ -19,10 +19,16 @@ export function createTerminal({output = process.stdout, error = process.stderr,
     return `${styles.map((style) => ANSI[style]).join('')}${text}${ANSI.reset}`;
   }
 
+  function normalizeDetails(details) {
+    const values = Array.isArray(details) ? details : [details];
+    return values
+      .filter(Boolean)
+      .flatMap((value) => String(value).split('\n'));
+  }
+
   function writeBlock(stream, symbol, title, details = [], tone = 'cyan') {
-    const normalized = Array.isArray(details) ? details.filter(Boolean) : [details].filter(Boolean);
     stream.write(`${paint(symbol, 'bold', tone)} ${paint(title, 'bold', tone)}\n`);
-    normalized.forEach((line) => stream.write(`  ${paint(line, 'dim')}\n`));
+    normalizeDetails(details).forEach((line) => stream.write(`  ${paint(line, 'dim')}\n`));
   }
 
   return {

@@ -1,6 +1,6 @@
 # Liferay Structured Content Importer
 
-Local tool for importing flat Liferay Structured Content from Excel. It provides both a Web UI and an internal CLI for developers preparing test content.
+Local tool for importing flat Liferay Structured Content from Excel. It provides a guided Web UI and an internal CLI for developers preparing test content.
 
 ## Current scope
 
@@ -8,7 +8,7 @@ Local tool for importing flat Liferay Structured Content from Excel. It provides
 - Flat, non-repeatable Content Structures.
 - Existing Web Content target folder.
 - Images already uploaded to the Current Site Documents and Media.
-- Image lookup by exact file name or external reference code.
+- Exact image lookup by file name or external reference code.
 - `INSERT` and `UPSERT` Batch Engine imports.
 - `Anyone`, `Members`, and `Owner` visibility.
 
@@ -20,7 +20,7 @@ Nested, repeatable, relationship, document, geolocation, and grid fields are not
 
 - Node.js `22.12+`.
 - Liferay DXP `2026.Q1.1 LTS` target environment.
-- OAuth2 Client Credentials application with permission to read the Site content and submit Batch Engine tasks.
+- OAuth2 Client Credentials application allowed to read Site content and submit Batch Engine tasks.
 
 Install dependencies once:
 
@@ -29,11 +29,7 @@ cd tools/liferay-article-importer
 npm install
 ```
 
-## Web UI
-
-The Web UI is the complete guided workflow. It supports template download, workbook validation, Excel reports, Batch submission, and automatic status polling.
-
-Copy `.env.example` to `.env` and configure:
+Copy `.env.example` to `.env`. The local `.env` is ignored by Git.
 
 ```env
 LIFERAY_BASE_URL=http://localhost:8080
@@ -44,7 +40,11 @@ LIFERAY_DEFAULT_LOCALE=en-US
 LIFERAY_DEFAULT_CONTENT_VIEWABLE_BY=Anyone
 ```
 
-Start the tool:
+## Web UI
+
+The Web UI supports template download, workbook validation, Excel reports, Batch submission, and automatic status polling.
+
+Start:
 
 ```bash
 npm start
@@ -56,7 +56,7 @@ Open:
 http://127.0.0.1:4174
 ```
 
-UI workflow:
+Workflow:
 
 ```text
 Connect
@@ -71,25 +71,15 @@ Connect
 
 ## Internal CLI
 
-The CLI runs only from this project directory. It is intended for developers initializing content for testers.
+The CLI runs only from this project directory and is intended for developers initializing content for testers.
 
-Only the OAuth Client Secret must remain outside the saved profile:
-
-```powershell
-$env:LIFERAY_OAUTH_CLIENT_SECRET = "your-secret"
-```
-
-The default OAuth Client ID is:
+Keep local Excel files in:
 
 ```text
-nexcent-import-tool
+tools/liferay-article-importer/workbooks/
 ```
 
-Override it only when needed:
-
-```bash
-npm run cli -- init --client-id custom-client-id
-```
+The folder is committed, but its `.xlsx` files are ignored by Git.
 
 Initialize a profile once:
 
@@ -97,7 +87,7 @@ Initialize a profile once:
 npm run cli -- init
 ```
 
-`init` connects to Liferay and saves the selected Site settings, Structure, Web Content folder, Documents and Media folder, locale, visibility, and Client ID.
+`init` saves the selected Site settings, Structure, Web Content folder, Documents and Media folder, locale, visibility, and Client ID.
 
 Profiles are stored at:
 
@@ -106,23 +96,28 @@ Windows: %USERPROFILE%\.liferay-import\profiles
 macOS/Linux: ~/.liferay-import/profiles
 ```
 
-The Client Secret is never stored in the profile.
+The Client Secret stays in the local `.env`; it is never stored in the CLI profile.
+
+Generate a template. By default, it is written into `workbooks/`:
+
+```bash
+npm run cli -- template
+```
 
 Common commands:
 
 ```bash
-npm run cli -- template
-npm run cli -- validate .\articles.xlsx
-npm run cli -- import .\articles.xlsx
+npm run cli -- validate .\workbooks\articles.xlsx
+npm run cli -- import .\workbooks\articles.xlsx
 npm run cli -- status --latest
 ```
 
 Useful import options:
 
 ```bash
-npm run cli -- import .\articles.xlsx --dry-run
-npm run cli -- import .\articles.xlsx --create-strategy UPSERT --yes
-npm run cli -- import .\articles.xlsx --import-strategy ON_ERROR_CONTINUE
+npm run cli -- import .\workbooks\articles.xlsx --dry-run
+npm run cli -- import .\workbooks\articles.xlsx --create-strategy UPSERT --yes
+npm run cli -- import .\workbooks\articles.xlsx --import-strategy ON_ERROR_CONTINUE
 ```
 
 The CLI validates and revalidates before submission. It prints JSON results and stores the latest confirmed Batch task so `status --latest` works in a later process. Excel report download and automatic Batch polling currently belong to the Web UI.
@@ -169,7 +164,8 @@ Matching is exact. Missing, duplicate, ambiguous, or non-image documents block t
 ```bash
 npm run check
 npm test
+npm run smoke:dev
 npm run evidence
 ```
 
-Automated checks cover TypeScript, UI build, workbook contracts, validation, image resolution, reports, CLI configuration, profile persistence, and submission safety. Live Liferay runtime verification is still required for environment-specific behavior.
+Automated checks cover TypeScript, UI build, Vite dev runtime, workbook contracts, validation, image resolution, reports, CLI configuration, profile persistence, and submission safety. Live Liferay runtime verification is still required for environment-specific behavior.

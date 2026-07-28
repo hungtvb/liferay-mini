@@ -34,11 +34,10 @@ function isInteractive() {
 }
 
 function handleInterrupt() {
-  if (interruptHandled) process.exit(130);
+  if (interruptHandled) return;
   interruptHandled = true;
-  output.write('\nCancelled by user.\n');
   rl.close();
-  process.exit(130);
+  output.write('\nCancelled by user.\n', () => process.exit(0));
 }
 
 process.once('SIGINT', handleInterrupt);

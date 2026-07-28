@@ -1,45 +1,29 @@
 # Liferay Structured Content Importer
 
-Local tool for importing flat Liferay Structured Content from Excel.
+Local Excel importer for flat, non-repeatable Liferay Structured Content.
 
-It provides:
+- Web UI: guided template, validation, import, and reports.
+- CLI: developer workflow for preparing tester content.
+- Batch strategies: `INSERT` and `UPSERT`.
 
-- Web UI for guided migration and reports.
-- CLI for developers preparing test content.
-- Liferay Batch Engine import using `INSERT` or `UPSERT`.
-
-## Scope
-
-Supported:
-
-- One configured Liferay Site.
-- Flat, non-repeatable Content Structures.
-- Existing Web Content and Documents and Media folders.
-- Images referenced by exact file name or document ERC.
-- Visibility: `Anyone`, `Members`, or `Owner`.
-
-Not supported: nested/repeatable fields, relationships, documents, geolocation, and grids.
+Nested/repeatable fields, relationships, documents, geolocation, and grids are not supported.
 
 ## Setup
 
-Requirements:
-
-- Node.js `22.12+`.
-- Liferay DXP `2026.Q1.1 LTS` target environment.
-- OAuth2 Client Credentials application with Headless Delivery and Batch Engine access.
+Requirements: Node.js `22.12+`, Liferay DXP `2026.Q1.1 LTS`, and an OAuth2 Client Credentials application with Headless Delivery and Batch Engine access.
 
 ```bash
 cd tools/liferay-article-importer
 npm install
 ```
 
-Copy `.env.example` to `.env` and set the OAuth secret:
+Copy `.env.example` to `.env` and set at least:
 
 ```env
 LIFERAY_OAUTH_CLIENT_SECRET=your-secret
 ```
 
-The Web UI also reads the other values from `.env`. The CLI stores non-sensitive selections in `~/.liferay-import` after `init`.
+The Web UI reads its connection values from `.env`. CLI `init` stores non-sensitive selections in `~/.liferay-import`.
 
 ## Web UI
 
@@ -49,21 +33,19 @@ npm start
 
 Open `http://127.0.0.1:4174`.
 
-Flow:
-
 ```text
-Connect → Configure → Download template → Validate → Import → Export report
+Connect → Configure → Template → Validate → Import → Report
 ```
 
 ## CLI
 
-Run the interactive menu:
+Interactive menu:
 
 ```bash
 npm run cli
 ```
 
-Open a flow directly:
+Direct flows:
 
 ```bash
 npm run cli init
@@ -73,22 +55,20 @@ npm run cli import
 npm run cli -- status --latest
 ```
 
-`validate` and `import` ask for the workbook when no path is supplied:
+Pass the workbook directly or let the CLI ask for it:
 
 ```bash
 npm run cli import .\workbooks\articles.xlsx
 ```
 
-Import defaults:
+Safe defaults:
 
 ```text
 createStrategy = INSERT
 importStrategy = ON_ERROR_FAIL
 ```
 
-Interactive mode asks for both strategies. `UPSERT` requires confirmation.
-
-Full non-interactive examples:
+Non-interactive examples:
 
 ```bash
 npm run cli -- import .\workbooks\articles.xlsx --non-interactive --create-strategy INSERT --import-strategy ON_ERROR_FAIL
@@ -96,25 +76,18 @@ npm run cli -- import .\workbooks\articles.xlsx --non-interactive --create-strat
 npm run cli -- import .\workbooks\articles.xlsx --non-interactive --create-strategy UPSERT --import-strategy ON_ERROR_CONTINUE --confirm-upsert
 ```
 
-Useful flags:
+Useful flags: `--profile`, `--dry-run`, `--verbose`, and `--non-interactive`.
 
-```text
---profile <name>
---dry-run
---verbose
---non-interactive
-```
+Put local Excel files in `workbooks/`. The folder is tracked; `.xlsx` files are ignored.
 
-Local workbooks belong in `workbooks/`. The folder is tracked; `.xlsx` files are ignored.
-
-## Workbook
+## Workbook contract
 
 Generated sheets:
 
 - `Content Items`: import rows.
-- `Field Guide`: generated field contract.
-- `Example`: sample values, not imported.
-- `Metadata`: hidden binding to Site, Structure, folders, locale, and visibility.
+- `Field Guide`: field contract.
+- `Example`: sample data, not imported.
+- `Metadata`: hidden Site/Structure/folder binding.
 
 Required columns:
 
@@ -124,40 +97,39 @@ External Reference Code *
 Friendly URL
 ```
 
-Image values:
+Image values use exact matching:
 
 ```text
 file:article-cover.webp
 erc:NXC_ARTICLE_COVER
 ```
 
-Matching is exact. Upload images to the selected Documents and Media folder before import.
+Upload images to the selected Documents and Media folder before import.
 
 ## Safety
 
-- Validation errors block Batch submission.
+- Validation failures block Batch submission.
 - `INSERT` blocks existing ERC collisions.
-- `UPSERT` updates by ERC and keeps existing content in its current folder.
-- Batch POST is not automatically retried.
-- If submission status is uncertain, check Liferay Batch Engine before retrying.
-- The workbook is revalidated immediately before import.
+- `UPSERT` updates by ERC and keeps existing items in their current folder.
+- Batch POST is not retried automatically.
+- Check Liferay Batch Engine before retrying an uncertain submission.
 
-## Project layout
+## Layout
 
 ```text
-cli/             Interactive CLI and local profile storage
+cli/             CLI, terminal output, profiles, and latest-run state
 server/          Shared Liferay, workbook, validation, and import services
 ui/              React Web UI
-scripts/         Contract checks
-test/            Node unit and CLI process tests
-dev-smoke/       Vite development-runtime smoke test
-evidence-tests/  Production-preview Playwright journey
-workbooks/       Local Excel files; ignored by Git
+scripts/         Static contract checks
+test/            Node unit tests and CLI process regression tests
+dev-smoke/       Vite development-runtime Playwright smoke test
+evidence-tests/  Built-preview Playwright journey
+workbooks/       Local Excel files
 ```
 
-The two Playwright suites are intentionally separate: `dev-smoke` checks the Vite development runtime, while `evidence-tests` checks the built production preview.
+The two Playwright suites are intentional: one checks Vite dev runtime behavior, the other checks the built preview.
 
-## Development checks
+## Checks
 
 ```bash
 npm run check
@@ -166,4 +138,4 @@ npm run smoke:dev
 npm run evidence
 ```
 
-`npm run check` runs typecheck, UI build, workbook contracts, and CLI help. `npm test` runs Node tests. Live Liferay verification is still required before merging runtime-dependent changes.
+`npm run check` covers typecheck, UI build, static contracts, and CLI help. Live Liferay verification is still required for runtime-dependent changes.

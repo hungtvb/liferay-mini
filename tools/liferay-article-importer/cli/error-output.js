@@ -6,6 +6,8 @@ const INPUT_CODES = new Set([
   'FILE_REQUIRED',
   'IMAGE_SOURCE_INVALID',
   'IMPORT_STRATEGY_INVALID',
+  'REPORT_OUTPUT_INVALID',
+  'REPORT_STAGE_INVALID',
   'SITE_ID_INVALID',
   'TASK_ID_REQUIRED'
 ]);
@@ -108,6 +110,11 @@ export function presentCliError(error, {verbose = false} = {}) {
   else if (error?.code === 'PROFILE_NOT_FOUND') {
     message = 'No CLI profile is configured yet.';
     hint = 'Run npm run cli init first.';
+    tone = 'warning';
+  }
+  else if (error?.code === 'IMPORT_REPORT_NOT_READY') {
+    message = 'The import report is not ready yet.';
+    hint = error.message;
     tone = 'warning';
   }
   else if (error?.code === 'BATCH_SUBMISSION_UNKNOWN') {

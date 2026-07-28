@@ -50,6 +50,7 @@ function batchTaskIdFromPath(path = '') {
 
 function liferayApiPresentation(error) {
   const status = Number(error?.details?.status || error?.status || 0);
+  const requestMethod = String(error?.details?.method || 'GET').toUpperCase();
   const requestPath = String(error?.details?.path || '');
   const batchTaskId = batchTaskIdFromPath(requestPath);
 
@@ -67,7 +68,7 @@ function liferayApiPresentation(error) {
       tone: 'error'
     };
   }
-  if (status === 404 && batchTaskId) {
+  if (status === 404 && requestMethod === 'GET' && batchTaskId) {
     return {
       message: `Batch task ${batchTaskId} was not found.`,
       hint: 'Check the task ID or choose “Use the latest confirmed task”. Your CLI profile is still valid.',

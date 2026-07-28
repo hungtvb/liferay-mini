@@ -32,6 +32,10 @@ export function isAbortLike(error) {
     || error?.code === 'ERR_USE_AFTER_CLOSE';
 }
 
+export function resolveCliExitCode(exitCode, {interactive = false} = {}) {
+  return interactive ? 0 : Number(exitCode || 0);
+}
+
 function liferayApiPresentation(error) {
   const status = Number(error?.details?.status || error?.status || 0);
   if (status === 401) {

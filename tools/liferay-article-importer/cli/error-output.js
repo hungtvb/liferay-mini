@@ -36,59 +36,90 @@ export function resolveCliExitCode(exitCode, {interactive = false} = {}) {
   return interactive ? 0 : Number(exitCode || 0);
 }
 
+function batchTaskIdFromPath(path = '') {
+  const match = String(path).match(/\/import-task\/([^/?]+)/);
+  if (!match) return null;
+
+  try {
+    return decodeURIComponent(match[1]);
+  }
+  catch {
+    return match[1];
+  }
+}
+
 function liferayApiPresentation(error) {
   const status = Number(error?.details?.status || error?.status || 0);
+  const requestPath = String(error?.details?.path || '');
+  const batchTaskId = batchTaskIdFromPath(requestPath);
+
   if (status === 401) {
     return {
       message: 'Liferay rejected the current authentication.',
-      hint: 'Check the OAuth2 Client ID and Client Secret in the local .env file.'
+      hint: 'Check the OAuth2 Client ID and Client Secret in the local .env file.',
+      tone: 'error'
     };
   }
   if (status === 403) {
     return {
       message: 'Liferay denied this operation.',
-      hint: 'Check the OAuth2 scopes and the permissions of the configured application.'
+      hint: 'Check the OAuth2 scopes and the permissions of the configured application.',
+      tone: 'error'
+    };
+  }
+  if (status === 404 && batchTaskId) {
+    return {
+      message: `Batch task ${batchTaskId} was not found.`,
+      hint: 'Check the task ID or choose “Use the latest confirmed task”. Your CLI profile is still valid.',
+      tone: 'warning'
     };
   }
   if (status === 404) {
     return {
       message: 'A configured Liferay resource could not be found.',
-      hint: 'Run npm run cli init again and select the current Structure and folders.'
+      hint: 'Run npm run cli init again only if the selected Site, Structure, or folder was removed or changed.',
+      tone: 'warning'
     };
   }
   return {
     message: 'Liferay could not complete the request.',
-    hint: 'Review the current Site, Structure, folder, and permission settings.'
+    hint: 'Review the current Site, Structure, folder, and permission settings.',
+    tone: 'error'
   };
 }
 
 export function presentCliError(error, {verbose = false} = {}) {
   let message;
   let hint;
+  let tone = 'error';
   let exitCode = Number(error?.status) >= 500 ? 1 : 2;
 
   if (error?.code === 'IMPORT_CANCELLED') {
     message = 'Import cancelled.';
+    tone = 'info';
     exitCode = 0;
   }
   else if (isAbortLike(error)) {
     message = 'Cancelled by user.';
+    tone = 'info';
     exitCode = 0;
   }
   else if (error?.code === 'PROFILE_NOT_FOUND') {
     message = 'No CLI profile is configured yet.';
     hint = 'Run npm run cli init first.';
+    tone = 'warning';
   }
   else if (error?.code === 'BATCH_SUBMISSION_UNKNOWN') {
     message = 'The import request may have reached Liferay, but its Batch task ID was not confirmed.';
     hint = 'Check Liferay Batch Engine before retrying to avoid duplicate content.';
+    tone = 'warning';
   }
   else if (error?.code === 'LIFERAY_UNREACHABLE') {
     message = 'Could not connect to Liferay.';
     hint = 'Check LIFERAY_BASE_URL and verify that Liferay is running.';
   }
   else if (error?.code === 'LIFERAY_API_ERROR') {
-    ({message, hint} = liferayApiPresentation(error));
+    ({message, hint, tone} = liferayApiPresentation(error));
   }
   else if (AUTH_CODES.has(error?.code)) {
     message = error?.code === 'OAUTH_FAILED'
@@ -103,18 +134,22 @@ export function presentCliError(error, {verbose = false} = {}) {
     hint = error.path
       ? `Check this path: ${error.path}`
       : 'Place the .xlsx file in workbooks/ or enter its correct path.';
+    tone = 'warning';
   }
   else if (error?.code === 'WORKBOOK_INVALID') {
     message = 'The workbook could not be read.';
     hint = 'Generate a fresh template, copy only the content rows, and save it as an .xlsx file.';
+    tone = 'warning';
   }
   else if (VALIDATION_CODES.has(error?.code)) {
     message = 'The import was not started.';
     hint = error.message;
+    tone = 'warning';
   }
   else if (INPUT_CODES.has(error?.code) || (Number(error?.status) >= 400 && Number(error?.status) < 500)) {
     message = 'The command needs different input.';
     hint = error.message;
+    tone = 'warning';
   }
   else if (Number(error?.status) >= 500) {
     message = 'The command could not be completed because a service or system error occurred.';
@@ -140,5 +175,5 @@ export function presentCliError(error, {verbose = false} = {}) {
     lines.push(`Technical details:\n${JSON.stringify(technical, null, 2)}`);
   }
 
-  return {exitCode, lines};
+  return {exitCode, lines, tone};
 }

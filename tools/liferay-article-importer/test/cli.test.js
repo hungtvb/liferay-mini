@@ -24,7 +24,7 @@ test('CLI keeps safe defaults and requires the OAuth secret', () => {
   assert.throws(() => configFromProfile(profile, ''), (error) => error.code === 'CONFIG_MISSING');
 });
 
-test('CLI store excludes secrets and preserves the latest task', async (t) => {
+test('CLI store excludes secrets and preserves run report data', async (t) => {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), 'liferay-import-cli-'));
   t.after(() => fs.rm(root, {recursive: true, force: true}));
   const store = new CliStore(root);
@@ -35,13 +35,28 @@ test('CLI store excludes secrets and preserves the latest task', async (t) => {
     oauthClientSecret: 'also-do-not-save',
     siteId: 20125
   });
-  await store.writeRun({profile: 'local', status: 'INITIAL', taskId: 9876});
+  await store.writeRun({
+    createStrategy: 'INSERT',
+    fileName: 'workbooks/articles.xlsx',
+    profile: 'local',
+    status: 'INITIAL',
+    taskId: 9876
+  });
+  await store.writeReportContext(9876, {
+    fileName: 'articles.xlsx',
+    validation: {stats: {totalRows: 2}}
+  });
 
-  const saved = await fs.readFile(store.profilePath('local'), 'utf8');
+  const savedProfile = await fs.readFile(store.profilePath('local'), 'utf8');
   const latest = await new CliStore(root).readLatestRun();
-  assert.equal(saved.includes('do-not-save'), false);
+  const savedRun = await new CliStore(root).readRun(9876);
+  const reportContext = await new CliStore(root).readReportContext(9876);
+
+  assert.equal(savedProfile.includes('do-not-save'), false);
   assert.equal(latest.taskId, 9876);
-  assert.equal(latest.profile, 'local');
+  assert.equal(savedRun.fileName, 'workbooks/articles.xlsx');
+  assert.equal(savedRun.createStrategy, 'INSERT');
+  assert.equal(reportContext.validation.stats.totalRows, 2);
   assert.throws(() => store.profilePath('../escape'), /Profile name/);
 });
 
@@ -62,6 +77,17 @@ test('missing Batch task output stays scoped to status lookup', () => {
     status: 404
   }));
   assert.doesNotMatch(submit404.lines[0], /Batch task .* was not found/i);
+});
+
+test('unfinished import reports explain when they become available', () => {
+  const result = presentCliError(new AppError(
+    409,
+    'IMPORT_REPORT_NOT_READY',
+    'Batch task 12 is STARTED. Wait until it reaches a terminal status.'
+  ));
+  assert.equal(result.tone, 'warning');
+  assert.match(result.lines[0], /report is not ready/i);
+  assert.match(result.lines[1], /STARTED/);
 });
 
 test('verbose diagnostics redact secrets', () => {

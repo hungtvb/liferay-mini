@@ -10,7 +10,7 @@ import {ImportWorkflow} from '../server/import-workflow.js';
 import {LiferayClient} from '../server/liferay-client.js';
 import {normalizeTask} from '../server/import-service.js';
 import {configFromProfile, resolveClientId} from './config.js';
-import {presentCliError} from './error-output.js';
+import {presentCliError, resolveCliExitCode} from './error-output.js';
 import {normalizeCreateStrategy, normalizeImportStrategy, requiresUpsertConfirmation} from './import-options.js';
 import {CliStore} from './store.js';
 
@@ -310,9 +310,10 @@ async function main() {
 
 main()
   .catch((error) => {
+    if (interruptHandled) return;
     const presentation = presentCliError(error, {verbose: flag('verbose')});
     const stream = presentation.exitCode === 0 ? output : process.stderr;
     stream.write(`${presentation.lines.join('\n')}\n`);
-    process.exitCode = presentation.exitCode;
+    process.exitCode = resolveCliExitCode(presentation.exitCode, {interactive: isInteractive()});
   })
   .finally(() => rl.close());
